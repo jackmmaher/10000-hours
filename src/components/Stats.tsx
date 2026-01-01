@@ -3,22 +3,55 @@ import { useSessionStore } from '../stores/useSessionStore'
 import { useSwipe } from '../hooks/useSwipe'
 import {
   getStatsForWindow,
-  getProjection
+  getProjection,
+  getAdaptiveMilestone,
+  getWeeklyConsistency,
+  DayStatus
 } from '../lib/calculations'
-import { TIME_WINDOWS, GOAL_HOURS } from '../lib/constants'
+import { TIME_WINDOWS } from '../lib/constants'
 import {
   formatTotalHours,
   formatDuration,
-  formatProjectedDate,
-  formatDaysRemaining,
   formatShortMonthYear
 } from '../lib/format'
+
+const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+
+function WeekDot({ status }: { status: DayStatus }) {
+  if (status === 'completed') {
+    return <div className="w-3 h-3 rounded-full bg-indigo-deep" />
+  }
+  if (status === 'today') {
+    // Pulsing dot for today (not yet completed)
+    return (
+      <div className="w-3 h-3 rounded-full bg-indigo-deep/30 animate-pulse" />
+    )
+  }
+  if (status === 'missed') {
+    // Past day without session - subtle empty, no judgment
+    return <div className="w-3 h-3 rounded-full bg-indigo-deep/10" />
+  }
+  // Future
+  return <div className="w-3 h-3 rounded-full bg-indigo-deep/10" />
+}
 
 export function Stats() {
   const { sessions, totalSeconds, setView } = useSessionStore()
   const [windowIndex, setWindowIndex] = useState(1) // Default to 30 days
 
   const currentWindow = TIME_WINDOWS[windowIndex]
+
+  // Compute adaptive milestone
+  const milestone = useMemo(
+    () => getAdaptiveMilestone(sessions),
+    [sessions]
+  )
+
+  // Compute weekly consistency
+  const weekly = useMemo(
+    () => getWeeklyConsistency(sessions),
+    [sessions]
+  )
 
   // Compute stats for current window
   const windowStats = useMemo(
@@ -41,8 +74,6 @@ export function Stats() {
   const firstSessionDate = sessions.length > 0
     ? new Date(Math.min(...sessions.map(s => s.startTime)))
     : null
-
-  const percentComplete = (totalSeconds / (GOAL_HOURS * 3600)) * 100
 
   // Swipe to change time window
   const windowSwipeHandlers = useSwipe({
@@ -81,62 +112,55 @@ export function Stats() {
           timer
         </button>
 
-        {/* Progress header */}
+        {/* Total hours - simple, clean */}
         <div className="mb-8">
           <p className="font-serif text-display-sm text-indigo-deep tabular-nums">
             {formatTotalHours(totalSeconds)}
-            <span className="text-xl text-indigo-deep/40 ml-1">
-              / {GOAL_HOURS.toLocaleString()}
-            </span>
-          </p>
-
-          {/* Progress bar */}
-          <div className="mt-4 h-1 bg-indigo-deep/10 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-indigo-deep transition-all duration-500"
-              style={{ width: `${Math.min(percentComplete, 100)}%` }}
-            />
-          </div>
-          <p className="text-xs text-indigo-deep/40 mt-2">
-            {percentComplete.toFixed(1)}% complete
+            <span className="text-lg text-indigo-deep/30 ml-2">hours</span>
           </p>
         </div>
 
-        {/* Projection */}
-        {projection.projectedDate && (
-          <div className="mb-8 pb-8 border-b border-indigo-deep/10">
-            <p className="text-xs text-indigo-deep/50 uppercase tracking-wider mb-2">
-              Projected completion
-            </p>
-            <p className="font-serif text-2xl text-indigo-deep">
-              {formatProjectedDate(projection.projectedDate)}
-            </p>
-            <p className="text-sm text-indigo-deep/60 mt-1">
-              {formatDaysRemaining(projection.daysToCompletion!)} at current pace
-            </p>
-
-            {/* Recommendation */}
-            <div className="mt-4 text-sm text-indigo-deep/70">
-              <p>
-                You're averaging {projection.currentPace.description}.
-              </p>
-              {projection.remainingHours > 0 && (
-                <p className="mt-2">
-                  {projection.remainingHours.toLocaleString()} hours to go.
-                </p>
-              )}
-            </div>
-
-            {/* Scenarios */}
-            <div className="mt-4 space-y-1">
-              {projection.scenarios.slice(0, 3).map((scenario, i) => (
-                <p key={i} className="text-xs text-indigo-deep/50">
-                  {scenario.description} → {formatProjectedDate(scenario.completionDate)}
-                </p>
-              ))}
-            </div>
+        {/* Adaptive milestone progress */}
+        <div className="mb-8 pb-8 border-b border-indigo-deep/10">
+          <p className="text-xs text-indigo-deep/50 uppercase tracking-wider mb-2">
+            Next milestone: {milestone.milestoneName}
+          </p>
+          <div className="h-2 bg-indigo-deep/10 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-indigo-deep transition-all duration-500 rounded-full"
+              style={{ width: `${milestone.progressPercent}%` }}
+            />
           </div>
-        )}
+          <p className="text-xs text-indigo-deep/40 mt-2">
+            {milestone.currentHours} / {milestone.targetHours} hours
+          </p>
+        </div>
+
+        {/* Weekly consistency */}
+        <div className="mb-8 pb-8 border-b border-indigo-deep/10">
+          <p className="text-xs text-indigo-deep/50 uppercase tracking-wider mb-4">
+            This week
+          </p>
+
+          {/* Day dots */}
+          <div className="flex justify-between mb-2">
+            {weekly.days.map((status, i) => (
+              <div key={i} className="flex flex-col items-center">
+                <WeekDot status={status} />
+                <span className="text-[10px] text-indigo-deep/30 mt-1">
+                  {DAY_LABELS[i]}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-sm text-indigo-deep/60 mt-3">
+            {weekly.sessionsThisWeek} session{weekly.sessionsThisWeek !== 1 ? 's' : ''}
+            {weekly.hoursThisWeek > 0 && (
+              <span> · {weekly.hoursThisWeek} hours</span>
+            )}
+          </p>
+        </div>
 
         {/* Time window stats */}
         <div className="mb-8 pb-8 border-b border-indigo-deep/10">
@@ -184,48 +208,66 @@ export function Stats() {
                 {windowStats.sessionCount}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-indigo-deep/60">Avg session</span>
-              <span className="text-sm text-indigo-deep tabular-nums">
-                {formatDuration(windowStats.avgSessionMinutes * 60)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-indigo-deep/60">Daily avg</span>
-              <span className="text-sm text-indigo-deep tabular-nums">
-                {formatDuration(windowStats.dailyAverageMinutes * 60)}
-              </span>
-            </div>
+            {windowStats.sessionCount > 0 && (
+              <div className="flex justify-between">
+                <span className="text-sm text-indigo-deep/60">Avg session</span>
+                <span className="text-sm text-indigo-deep tabular-nums">
+                  {formatDuration(windowStats.avgSessionMinutes * 60)}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* All time */}
+        {/* The long view - projection */}
+        <div className="mb-8 pb-8 border-b border-indigo-deep/10">
+          <p className="text-xs text-indigo-deep/50 uppercase tracking-wider mb-2">
+            The long view
+          </p>
+          <p className="font-serif text-xl text-indigo-deep">
+            {projection.projectionMessage}
+          </p>
+          {projection.maturityLevel === 'established' && projection.currentPace.dailyMinutes > 0 && (
+            <p className="text-sm text-indigo-deep/50 mt-2">
+              Averaging {projection.currentPace.description}
+            </p>
+          )}
+          <p className="text-xs text-indigo-deep/30 mt-3 italic">
+            10,000 hours is the horizon, not the point.
+          </p>
+        </div>
+
+        {/* All time summary */}
         <div className="mb-8">
           <p className="text-xs text-indigo-deep/50 uppercase tracking-wider mb-4">
             All time
           </p>
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-sm text-indigo-deep/60">Sessions logged</span>
+              <span className="text-sm text-indigo-deep/60">Sessions</span>
               <span className="text-sm text-indigo-deep tabular-nums">
                 {allTimeStats.sessionCount}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-indigo-deep/60">Avg session</span>
-              <span className="text-sm text-indigo-deep tabular-nums">
-                {formatDuration(allTimeStats.avgSessionMinutes * 60)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-indigo-deep/60">Longest session</span>
-              <span className="text-sm text-indigo-deep tabular-nums">
-                {formatDuration(allTimeStats.longestSessionMinutes * 60)}
-              </span>
-            </div>
+            {allTimeStats.sessionCount > 0 && (
+              <>
+                <div className="flex justify-between">
+                  <span className="text-sm text-indigo-deep/60">Avg session</span>
+                  <span className="text-sm text-indigo-deep tabular-nums">
+                    {formatDuration(allTimeStats.avgSessionMinutes * 60)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-indigo-deep/60">Longest</span>
+                  <span className="text-sm text-indigo-deep tabular-nums">
+                    {formatDuration(allTimeStats.longestSessionMinutes * 60)}
+                  </span>
+                </div>
+              </>
+            )}
             {firstSessionDate && (
               <div className="flex justify-between">
-                <span className="text-sm text-indigo-deep/60">Practicing since</span>
+                <span className="text-sm text-indigo-deep/60">Since</span>
                 <span className="text-sm text-indigo-deep">
                   {formatShortMonthYear(firstSessionDate)}
                 </span>

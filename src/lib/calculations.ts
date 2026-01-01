@@ -10,6 +10,23 @@ export interface WindowStats {
   longestSessionMinutes: number
 }
 
+export interface AdaptiveMilestone {
+  currentHours: number
+  targetHours: number
+  progressPercent: number
+  milestoneName: string
+}
+
+export interface WeeklyConsistency {
+  days: DayStatus[]  // Monday to Sunday
+  sessionsThisWeek: number
+  hoursThisWeek: number
+  todayIndex: number  // 0-6, which day is today
+  todayHasSession: boolean
+}
+
+export type DayStatus = 'completed' | 'today' | 'future' | 'missed'
+
 export interface ProjectionInsight {
   remainingHours: number
   remainingSeconds: number
@@ -20,18 +37,10 @@ export interface ProjectionInsight {
     dailyMinutes: number
     description: string
   }
-  recommendation: {
-    dailyMinutesRequired: number
-    description: string
-  }
-  scenarios: ProjectionScenario[]
-}
-
-export interface ProjectionScenario {
-  description: string
-  dailyMinutes: number
-  daysToCompletion: number
-  completionDate: Date
+  // Maturity level determines what we show
+  maturityLevel: 'new' | 'building' | 'established'
+  // Softened projection message
+  projectionMessage: string
 }
 
 export interface MonthData {
@@ -48,6 +57,16 @@ function daysSinceFirst(sessions: Session[]): number {
   const first = Math.min(...sessions.map(s => s.startTime))
   const days = (Date.now() - first) / (24 * 60 * 60 * 1000)
   return Math.max(1, days)
+}
+
+// Count unique days with sessions
+function uniqueDaysWithSessions(sessions: Session[]): number {
+  const days = new Set<string>()
+  for (const session of sessions) {
+    const date = new Date(session.startTime)
+    days.add(`${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`)
+  }
+  return days.size
 }
 
 export function getStatsForWindow(
@@ -77,61 +96,155 @@ export function getStatsForWindow(
   }
 }
 
+// Adaptive milestone system
+const MILESTONE_HOURS = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 7500, 10000]
+
+export function getAdaptiveMilestone(sessions: Session[]): AdaptiveMilestone {
+  const totalSeconds = sessions.reduce((sum, s) => sum + s.durationSeconds, 0)
+  const currentHours = totalSeconds / 3600
+
+  // Find the next milestone
+  let targetHours = MILESTONE_HOURS[MILESTONE_HOURS.length - 1]
+  let prevMilestone = 0
+
+  for (let i = 0; i < MILESTONE_HOURS.length; i++) {
+    if (currentHours < MILESTONE_HOURS[i]) {
+      targetHours = MILESTONE_HOURS[i]
+      prevMilestone = i > 0 ? MILESTONE_HOURS[i - 1] : 0
+      break
+    }
+    prevMilestone = MILESTONE_HOURS[i]
+  }
+
+  // Calculate progress within this milestone band
+  const progressInBand = currentHours - prevMilestone
+  const bandSize = targetHours - prevMilestone
+  const progressPercent = bandSize > 0 ? (progressInBand / bandSize) * 100 : 100
+
+  // Format milestone name
+  const milestoneName = targetHours >= 1000
+    ? `${(targetHours / 1000).toFixed(targetHours % 1000 === 0 ? 0 : 1)}k hours`
+    : `${targetHours} hours`
+
+  return {
+    currentHours: Math.round(currentHours * 10) / 10,
+    targetHours,
+    progressPercent: Math.min(100, Math.round(progressPercent * 10) / 10),
+    milestoneName
+  }
+}
+
+// Weekly consistency tracking
+export function getWeeklyConsistency(sessions: Session[]): WeeklyConsistency {
+  const now = new Date()
+  const today = now.getDay() // 0 = Sunday, 1 = Monday, etc.
+
+  // Convert to Monday-based index (0 = Monday, 6 = Sunday)
+  const todayIndex = today === 0 ? 6 : today - 1
+
+  // Get start of this week (Monday 00:00)
+  const startOfWeek = new Date(now)
+  startOfWeek.setDate(now.getDate() - todayIndex)
+  startOfWeek.setHours(0, 0, 0, 0)
+
+  // Get sessions this week
+  const weekSessions = sessions.filter(s => s.startTime >= startOfWeek.getTime())
+
+  // Calculate hours this week
+  const hoursThisWeek = weekSessions.reduce((sum, s) => sum + s.durationSeconds, 0) / 3600
+
+  // Determine which days have sessions
+  const daysWithSessions = new Set<number>()
+  for (const session of weekSessions) {
+    const sessionDate = new Date(session.startTime)
+    const dayOfWeek = sessionDate.getDay()
+    const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+    daysWithSessions.add(dayIndex)
+  }
+
+  // Build day status array
+  const days: DayStatus[] = []
+  for (let i = 0; i < 7; i++) {
+    if (daysWithSessions.has(i)) {
+      days.push('completed')
+    } else if (i === todayIndex) {
+      days.push('today')
+    } else if (i < todayIndex) {
+      days.push('missed')  // Past day without session (but we don't emphasize this)
+    } else {
+      days.push('future')
+    }
+  }
+
+  return {
+    days,
+    sessionsThisWeek: weekSessions.length,
+    hoursThisWeek: Math.round(hoursThisWeek * 10) / 10,
+    todayIndex,
+    todayHasSession: daysWithSessions.has(todayIndex)
+  }
+}
+
 export function getProjection(sessions: Session[]): ProjectionInsight {
   const totalSeconds = sessions.reduce((sum, s) => sum + s.durationSeconds, 0)
   const remainingSeconds = Math.max(0, GOAL_SECONDS - totalSeconds)
   const remainingHours = remainingSeconds / 3600
   const percentComplete = (totalSeconds / GOAL_SECONDS) * 100
 
-  // Use 90-day rolling average for projection
-  const recent90 = getStatsForWindow(sessions, 90)
-  const dailyAverageSeconds = recent90.dailyAverageMinutes * 60
+  // Determine maturity level
+  const daysSinceStart = daysSinceFirst(sessions)
+  const uniqueDays = uniqueDaysWithSessions(sessions)
+
+  let maturityLevel: 'new' | 'building' | 'established'
+  if (daysSinceStart < 7 || uniqueDays < 5) {
+    maturityLevel = 'new'
+  } else if (daysSinceStart < 30) {
+    maturityLevel = 'building'
+  } else {
+    maturityLevel = 'established'
+  }
+
+  // Use 30-day rolling average for projection (more responsive than 90)
+  const recent30 = getStatsForWindow(sessions, 30)
+  const dailyAverageSeconds = recent30.dailyAverageMinutes * 60
 
   const daysToCompletion = dailyAverageSeconds > 0
     ? remainingSeconds / dailyAverageSeconds
     : null
 
-  const projectedDate = daysToCompletion
+  const projectedDate = daysToCompletion && daysToCompletion < 365 * 100  // Cap at 100 years
     ? new Date(Date.now() + daysToCompletion * 24 * 60 * 60 * 1000)
     : null
 
   // Format current pace description
-  const paceMinutes = Math.round(recent90.dailyAverageMinutes)
+  const paceMinutes = Math.round(recent30.dailyAverageMinutes)
   const paceDescription = paceMinutes >= 60
     ? `${Math.floor(paceMinutes / 60)}h ${paceMinutes % 60}m daily`
     : `${paceMinutes} min daily`
 
-  // Recommendation to complete by projected date
-  const requiredDaily = daysToCompletion
-    ? Math.round((remainingSeconds / daysToCompletion) / 60)
-    : 0
+  // Generate softened projection message
+  let projectionMessage: string
 
-  const requiredDescription = requiredDaily >= 60
-    ? `${Math.floor(requiredDaily / 60)}h ${requiredDaily % 60}m daily`
-    : `${requiredDaily} min daily`
+  if (maturityLevel === 'new') {
+    projectionMessage = 'Keep sitting. Projections appear after your first week.'
+  } else if (maturityLevel === 'building') {
+    projectionMessage = 'Building your rhythm. Full projections after 30 days.'
+  } else if (!projectedDate || !daysToCompletion) {
+    projectionMessage = 'Focus on the practice, not the finish line.'
+  } else {
+    const yearsToCompletion = daysToCompletion / 365
 
-  // Alternative scenarios
-  const scenarios = [30, 60, 90, 120].map(dailyMinutes => {
-    const dailySeconds = dailyMinutes * 60
-    const days = remainingSeconds / dailySeconds
-    const completionDate = new Date(Date.now() + days * 24 * 60 * 60 * 1000)
-
-    let description: string
-    if (dailyMinutes < 60) {
-      description = `${dailyMinutes} min daily`
-    } else if (dailyMinutes % 60 === 0) {
-      description = `${dailyMinutes / 60} hour${dailyMinutes > 60 ? 's' : ''} daily`
+    if (yearsToCompletion > 30) {
+      projectionMessage = 'This is a lifetime practice.'
+    } else if (yearsToCompletion > 15) {
+      projectionMessage = 'A long path ahead. That\'s the point.'
+    } else if (yearsToCompletion > 10) {
+      projectionMessage = `A decade or more of practice ahead.`
     } else {
-      description = `${Math.floor(dailyMinutes / 60)}h ${dailyMinutes % 60}m daily`
+      const year = projectedDate.getFullYear()
+      projectionMessage = `At current pace: ~${year}`
     }
-
-    return {
-      description,
-      dailyMinutes,
-      daysToCompletion: Math.ceil(days),
-      completionDate
-    }
-  })
+  }
 
   return {
     remainingHours: Math.round(remainingHours * 10) / 10,
@@ -143,11 +256,8 @@ export function getProjection(sessions: Session[]): ProjectionInsight {
       dailyMinutes: paceMinutes,
       description: paceDescription
     },
-    recommendation: {
-      dailyMinutesRequired: requiredDaily,
-      description: requiredDescription
-    },
-    scenarios
+    maturityLevel,
+    projectionMessage
   }
 }
 
