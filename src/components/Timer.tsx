@@ -120,7 +120,7 @@ export function Timer() {
                 {formatTotalHours(totalSeconds)}
               </p>
               <p className="text-sm text-indigo-deep/40 mt-2">
-                toward 10,000
+                toward 10,000 hours
               </p>
             </>
           )}

@@ -12,7 +12,7 @@ import {
   formatFullDate,
   formatDuration,
   formatTime,
-  formatTotalHours
+  formatTotalHoursDecimal
 } from '../lib/format'
 
 const DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
@@ -350,7 +350,7 @@ export function Calendar() {
                     {/* Cumulative since this date */}
                     <div className="mt-4 pt-4 border-t border-indigo-deep/5">
                       <p className="text-xs text-indigo-deep/40">
-                        Since this date: {formatTotalHours(
+                        Since this date: {formatTotalHoursDecimal(
                           sessions
                             .filter(s => s.startTime >= selectedDate.getTime())
                             .reduce((sum, s) => sum + s.durationSeconds, 0)

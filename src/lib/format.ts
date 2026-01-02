@@ -11,8 +11,15 @@ export function formatTimer(seconds: number): string {
   ].join(':')
 }
 
-// Format total hours with one decimal
+// Format total hours as H:MM
 export function formatTotalHours(seconds: number): string {
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  return `${hours}:${minutes.toString().padStart(2, '0')}`
+}
+
+// Format total hours as decimal (for compact displays)
+export function formatTotalHoursDecimal(seconds: number): string {
   const hours = seconds / 3600
   return hours.toFixed(1)
 }

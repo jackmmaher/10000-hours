@@ -15,6 +15,8 @@ export interface AdaptiveMilestone {
   targetHours: number
   progressPercent: number
   milestoneName: string
+  currentFormatted: string  // H:MM format
+  targetFormatted: string   // H:MM format
 }
 
 export interface WeeklyConsistency {
@@ -25,7 +27,7 @@ export interface WeeklyConsistency {
   todayHasSession: boolean
 }
 
-export type DayStatus = 'completed' | 'today' | 'future' | 'missed'
+export type DayStatus = 'completed' | 'today' | 'future' | 'missed' | 'next'
 
 export interface ProjectionInsight {
   remainingHours: number
@@ -99,6 +101,13 @@ export function getStatsForWindow(
 // Adaptive milestone system
 const MILESTONE_HOURS = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 7500, 10000]
 
+// Helper to format hours as H:MM
+function formatHoursAsHMM(hours: number): string {
+  const h = Math.floor(hours)
+  const m = Math.floor((hours - h) * 60)
+  return `${h}:${m.toString().padStart(2, '0')}`
+}
+
 export function getAdaptiveMilestone(sessions: Session[]): AdaptiveMilestone {
   const totalSeconds = sessions.reduce((sum, s) => sum + s.durationSeconds, 0)
   const currentHours = totalSeconds / 3600
@@ -130,7 +139,9 @@ export function getAdaptiveMilestone(sessions: Session[]): AdaptiveMilestone {
     currentHours: Math.round(currentHours * 10) / 10,
     targetHours,
     progressPercent: Math.min(100, Math.round(progressPercent * 10) / 10),
-    milestoneName
+    milestoneName,
+    currentFormatted: formatHoursAsHMM(currentHours),
+    targetFormatted: `${targetHours}:00`
   }
 }
 
@@ -163,12 +174,18 @@ export function getWeeklyConsistency(sessions: Session[]): WeeklyConsistency {
   }
 
   // Build day status array
+  const todayHasSession = daysWithSessions.has(todayIndex)
+  const tomorrowIndex = todayIndex < 6 ? todayIndex + 1 : null  // null if today is Sunday
+
   const days: DayStatus[] = []
   for (let i = 0; i < 7; i++) {
     if (daysWithSessions.has(i)) {
       days.push('completed')
     } else if (i === todayIndex) {
       days.push('today')
+    } else if (todayHasSession && tomorrowIndex !== null && i === tomorrowIndex) {
+      // Today is complete, tomorrow gets the "next" glow
+      days.push('next')
     } else if (i < todayIndex) {
       days.push('missed')  // Past day without session (but we don't emphasize this)
     } else {
@@ -181,7 +198,7 @@ export function getWeeklyConsistency(sessions: Session[]): WeeklyConsistency {
     sessionsThisWeek: weekSessions.length,
     hoursThisWeek: Math.round(hoursThisWeek * 10) / 10,
     todayIndex,
-    todayHasSession: daysWithSessions.has(todayIndex)
+    todayHasSession
   }
 }
 

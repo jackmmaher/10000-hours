@@ -21,10 +21,13 @@ function WeekDot({ status }: { status: DayStatus }) {
   if (status === 'completed') {
     return <div className="w-3 h-3 rounded-full bg-indigo-deep" />
   }
-  if (status === 'today') {
-    // Pulsing dot for today (not yet completed)
+  if (status === 'today' || status === 'next') {
+    // Glowing, breathing dot for today (incomplete) or tomorrow (after today is done)
     return (
-      <div className="w-3 h-3 rounded-full bg-indigo-deep/30 animate-pulse" />
+      <div
+        className="w-3 h-3 rounded-full bg-indigo-deep/30 animate-breathe"
+        style={{ boxShadow: '0 0 8px rgba(26, 26, 46, 0.2)' }}
+      />
     )
   }
   if (status === 'missed') {
@@ -116,7 +119,6 @@ export function Stats() {
         <div className="mb-8">
           <p className="font-serif text-display-sm text-indigo-deep tabular-nums">
             {formatTotalHours(totalSeconds)}
-            <span className="text-lg text-indigo-deep/30 ml-2">hours</span>
           </p>
         </div>
 
@@ -132,7 +134,7 @@ export function Stats() {
             />
           </div>
           <p className="text-xs text-indigo-deep/40 mt-2">
-            {milestone.currentHours} / {milestone.targetHours} hours
+            {milestone.currentFormatted} / {milestone.targetFormatted}
           </p>
         </div>
 
