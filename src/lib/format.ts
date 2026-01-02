@@ -11,26 +11,13 @@ export function formatTimer(seconds: number): string {
   ].join(':')
 }
 
-// Format total hours as H:MM
+// Format total hours as Xh Ym (e.g., "1h 24m", "28m", "2h")
 export function formatTotalHours(seconds: number): string {
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-  return `${hours}:${minutes.toString().padStart(2, '0')}`
-}
-
-// Format total hours as decimal (for compact displays)
-export function formatTotalHoursDecimal(seconds: number): string {
-  const hours = seconds / 3600
-  return hours.toFixed(1)
-}
-
-// Format duration in human readable form
-export function formatDuration(seconds: number): string {
   const hours = Math.floor(seconds / 3600)
   const minutes = Math.floor((seconds % 3600) / 60)
 
   if (hours === 0) {
-    return `${minutes} min`
+    return `${minutes}m`
   }
 
   if (minutes === 0) {
@@ -40,20 +27,36 @@ export function formatDuration(seconds: number): string {
   return `${hours}h ${minutes}m`
 }
 
-// Format as "+ X min" or "+ X hr Y min" for session complete feedback
+// Format duration in human readable form (e.g., "1h 22m", "28m", "2h")
+export function formatDuration(seconds: number): string {
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+
+  if (hours === 0) {
+    return `${minutes}m`
+  }
+
+  if (minutes === 0) {
+    return `${hours}h`
+  }
+
+  return `${hours}h ${minutes}m`
+}
+
+// Format as "+Xm" or "+Xh Ym" for session complete feedback
 export function formatSessionAdded(seconds: number): string {
   const hours = Math.floor(seconds / 3600)
   const minutes = Math.floor((seconds % 3600) / 60)
 
   if (hours === 0) {
-    return `+${minutes} min`
+    return `+${minutes}m`
   }
 
   if (minutes === 0) {
-    return `+${hours} hr`
+    return `+${hours}h`
   }
 
-  return `+${hours} hr ${minutes} min`
+  return `+${hours}h ${minutes}m`
 }
 
 // Format date as "January 2026"

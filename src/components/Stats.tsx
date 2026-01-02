@@ -159,7 +159,7 @@ export function Stats() {
           <p className="text-sm text-indigo-deep/60 mt-3">
             {weekly.sessionsThisWeek} session{weekly.sessionsThisWeek !== 1 ? 's' : ''}
             {weekly.hoursThisWeek > 0 && (
-              <span> · {weekly.hoursThisWeek} hours</span>
+              <span> · {formatDuration(weekly.hoursThisWeek * 3600)}</span>
             )}
           </p>
         </div>
@@ -201,7 +201,7 @@ export function Stats() {
             <div className="flex justify-between">
               <span className="text-sm text-indigo-deep/60">Total</span>
               <span className="text-sm text-indigo-deep tabular-nums">
-                {windowStats.totalHours.toFixed(1)} hrs
+                {formatDuration(windowStats.totalSeconds)}
               </span>
             </div>
             <div className="flex justify-between">

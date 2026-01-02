@@ -101,11 +101,20 @@ export function getStatsForWindow(
 // Adaptive milestone system
 const MILESTONE_HOURS = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 7500, 10000]
 
-// Helper to format hours as H:MM
-function formatHoursAsHMM(hours: number): string {
+// Helper to format hours as Xh Ym
+function formatHoursCompact(hours: number): string {
   const h = Math.floor(hours)
   const m = Math.floor((hours - h) * 60)
-  return `${h}:${m.toString().padStart(2, '0')}`
+
+  if (h === 0) {
+    return `${m}m`
+  }
+
+  if (m === 0) {
+    return `${h}h`
+  }
+
+  return `${h}h ${m}m`
 }
 
 export function getAdaptiveMilestone(sessions: Session[]): AdaptiveMilestone {
@@ -140,8 +149,8 @@ export function getAdaptiveMilestone(sessions: Session[]): AdaptiveMilestone {
     targetHours,
     progressPercent: Math.min(100, Math.round(progressPercent * 10) / 10),
     milestoneName,
-    currentFormatted: formatHoursAsHMM(currentHours),
-    targetFormatted: `${targetHours}:00`
+    currentFormatted: formatHoursCompact(currentHours),
+    targetFormatted: `${targetHours}h`
   }
 }
 
