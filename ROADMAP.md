@@ -1,14 +1,19 @@
 # 10,000 Hours - iOS Commercialization Roadmap
 
+**Status:** FINALIZED | **Date:** January 2026
+
+---
+
 ## Vision
 
 Transform the minimalist meditation timer PWA into a commercially viable iOS app while preserving its zen philosophy. The app's restraint IS the product - we enhance without bloating.
 
 **Core additions:**
-- Frictionless trial → $6.99 one-time purchase
+- Feature-gated freemium (unlimited free timer, paid premium features)
+- $2.99/year OR $9.99 lifetime pricing
 - Cloud sync via Supabase
-- The Garden: A living, growing tree that visualizes your meditation journey
-- Year-end summary (Spotify Wrapped style)
+- The Garden: A living, growing tree that visualizes your meditation journey (PREMIUM)
+- Year-end summary (Spotify Wrapped style) (PREMIUM)
 
 ---
 
@@ -31,17 +36,58 @@ Transform the minimalist meditation timer PWA into a commercially viable iOS app
 
 ### Screen Flow
 
-| Screen | Purpose | Access |
-|--------|---------|--------|
-| **Timer** | Meditation (home) | App launch |
-| **Stats** | Analytics, milestones | Swipe up from Timer |
-| **Calendar** | History, heatmap | Swipe from Stats |
-| **Garden** | Living tree visualization | Swipe from Calendar |
-| **Settings** | Account, sync, sounds | ⚙️ icon on Stats |
-| **Onboarding** | First-time intro | Auto on first launch |
-| **Paywall** | Purchase prompt | Auto at trial end |
-| **Auth Modal** | Sign in/up | From Paywall or Settings |
-| **Year Summary** | Annual review | January auto + Settings |
+| Screen | Purpose | Free | Premium |
+|--------|---------|------|---------|
+| **Timer** | Meditation (home) | Full access | Full access |
+| **Stats** | Analytics | Basic only | Full milestones, projections |
+| **Calendar** | History, heatmap | Preview (locked) | Full access |
+| **Garden** | Living tree | Preview (locked) | Full access |
+| **Settings** | Account, sync | Basic | Full (sync, bells, export) |
+| **Onboarding** | First-time intro | Yes | Yes |
+| **Paywall** | Purchase prompt | Trigger on locked feature | N/A |
+| **Auth Modal** | Sign in/up | After purchase | Anytime |
+| **Year Summary** | Annual review | Preview (locked) | Full access |
+
+---
+
+## Free vs Premium Tiers
+
+### Feature Breakdown
+
+| Feature | Free | Premium |
+|---------|------|---------|
+| **Timer** | Unlimited sessions | Unlimited sessions |
+| **Basic Stats** | Total hours, this week | Full stats |
+| **Milestones** | See next milestone only | Full milestone history |
+| **Projections** | Hidden | Full projections |
+| **Calendar** | 🔒 Preview (blurred) | Full heatmap |
+| **Garden** | 🔒 Preview (teaser) | Full living tree |
+| **Spirit** | 🔒 Preview (glimpse) | Full companion |
+| **Cloud Sync** | No | Yes |
+| **Year Summary** | 🔒 Preview | Full + shareable |
+| **Interval Bells** | No | Yes |
+| **Apple Health** | No | Yes |
+| **Export Data** | No | Yes |
+
+### Monetization Philosophy
+
+**The meditation is ALWAYS free. You pay for the beautiful garden around it.**
+
+| What's Free | What's Premium |
+|-------------|----------------|
+| The practice itself | The visualization of progress |
+| Unlimited session length | Seeing your tree grow |
+| Unlimited session count | Full analytics & history |
+| Basic progress tracking | Cloud sync & export |
+
+**Why no session limits:**
+- Free users can meditate for hours - we WANT them to build investment
+- More hours = bigger tree waiting behind the blur = stronger FOMO
+- Cutting off meditation would create anxiety, not desire
+- The hook is "look what you've grown" not "you've run out of time"
+- Conversion comes from wanting to SEE results, not from artificial friction
+
+**This is philosophically aligned:** Like a meditation center that's free to sit in, but you pay for the beautiful garden view and your progress journal.
 
 ---
 
@@ -135,6 +181,147 @@ const leafDensity = growthLevel * 0.8;
 
 **Spirit companion:** AI-generated PNG sprites at evolution stages, animated via CSS
 
+**References:**
+- [L-System Fractal Trees P5](https://github.com/hey24sheep/LSystem_Fractal_Trees_P5)
+- [p5.js React Integration](https://shivanshbakshi.dev/blog/p5-react/integrate-p5-with-react/)
+
+### Garden Preview (Free Users)
+
+When free users navigate to Garden, they see an **enticing preview**:
+
+```
+┌─────────────────────────────────────┐
+│                                     │
+│     [BLURRED/DIMMED TREE]           │
+│     Their actual tree at current    │
+│     growth level, but obscured      │
+│                                     │
+│     ┌─────────────────────────┐     │
+│     │  🌱 Your garden awaits  │     │
+│     │                         │     │
+│     │  You've grown 5.2 hours │     │
+│     │  See your tree flourish │     │
+│     └─────────────────────────┘     │
+│                                     │
+│     ┌─────────────────────────┐     │
+│     │   Unlock Your Garden    │     │
+│     │        ↓                │     │
+│     └─────────────────────────┘     │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+**Preview mechanics:**
+1. Tree IS rendered at user's actual growth level
+2. Gaussian blur + reduced opacity overlay
+3. Subtle animation still visible through blur (enticing motion)
+4. Spirit companion as silhouette/shadow
+5. User's actual hours shown ("You've grown X hours")
+6. Single tap → Paywall slides up
+
+**Psychology:**
+- User sees THEIR tree, not a generic preview
+- Motion through blur creates curiosity
+- Personal data ("your 5.2 hours") creates ownership
+- One tap to unlock reduces friction
+
+### Stats Preview (Free Users)
+
+Free users see **partial stats** with premium features teased:
+
+```
+┌─────────────────────────────────────┐
+│  ←                         Stats    │
+├─────────────────────────────────────┤
+│                                     │
+│       42.5 hours                    │  ← Always visible
+│       toward 10,000                 │
+│                                     │
+│  ┌─────────────────────────────┐    │
+│  │  This week: 2.3 hours       │    │  ← Always visible
+│  │  Sessions: 12               │    │
+│  └─────────────────────────────┘    │
+│                                     │
+│  ┌─────────────────────────────┐    │
+│  │  Next milestone: 50 hours   │    │  ← Free: next only
+│  │  ████████░░░░░ 85%          │    │
+│  └─────────────────────────────┘    │
+│                                     │
+│  ┌─────────────────────────────┐    │
+│  │  🔒 Full milestone history  │    │  ← Locked
+│  │  🔒 Projections & pace      │    │
+│  │  🔒 Detailed analytics      │    │
+│  │                             │    │
+│  │     [Unlock Premium]        │    │
+│  └─────────────────────────────┘    │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+### Calendar Preview (Free Users)
+
+Free users see a **blurred heatmap** with their actual data:
+
+```
+┌─────────────────────────────────────┐
+│  ←                      Calendar    │
+├─────────────────────────────────────┤
+│                                     │
+│     [BLURRED HEATMAP]               │
+│     Real data, but obscured         │
+│     Colors/patterns visible         │
+│                                     │
+│     ┌─────────────────────────┐     │
+│     │  📅 Your meditation     │     │
+│     │     history awaits      │     │
+│     │                         │     │
+│     │  147 sessions tracked   │     │  ← Real count
+│     │  See your patterns      │     │
+│     └─────────────────────────┘     │
+│                                     │
+│     ┌─────────────────────────┐     │
+│     │   Unlock Calendar       │     │
+│     │        ↓                │     │
+│     └─────────────────────────┘     │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+### Year Summary Preview (Free Users)
+
+In January, free users get a **teaser card**:
+
+```
+┌─────────────────────────────────────┐
+│                                     │
+│         2025                        │
+│    The year you sat.                │
+│                                     │
+│         ✨ 42.5 hours ✨            │  ← Real number
+│                                     │
+│     ┌─────────────────────────┐     │
+│     │  See your full journey  │     │
+│     │                         │     │
+│     │  • Your deepest sit     │     │
+│     │  • Your longest streak  │     │
+│     │  • Your meditation      │     │
+│     │    rhythm               │     │
+│     │  • Your tree's growth   │     │
+│     │                         │     │
+│     │    [Unlock Summary]     │     │
+│     └─────────────────────────┘     │
+│                                     │
+│         Maybe later                 │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+**Preview strategy across all screens:**
+- Always show user's REAL data (hours, sessions, dates)
+- Blur or partially hide the rich visualizations
+- Single tap → Paywall
+- Personal data creates emotional investment
+
 ---
 
 ## Year-End Summary (Wrapped Style)
@@ -171,28 +358,101 @@ const leafDensity = growthLevel * 0.8;
 
 ## Monetization
 
-### Pricing
+### Pricing Model: Choice Architecture
 
-| Product | Price | Type |
-|---------|-------|------|
-| Lifetime Premium | $6.99 | Non-consumable IAP |
-| Small Tip | $2.99 | Consumable |
-| Medium Tip | $5.99 | Consumable |
-| Large Tip | $9.99 | Consumable |
+| Product | Price | Net (after Apple 30%) | Type |
+|---------|-------|----------------------|------|
+| **Annual Premium** | $2.99/year | $2.09/year | Auto-renewing subscription |
+| **Lifetime Premium** | $9.99 | $6.99 | Non-consumable IAP |
+| Small Tip | $2.99 | $2.09 | Consumable |
+| Medium Tip | $5.99 | $4.19 | Consumable |
+| Large Tip | $9.99 | $6.99 | Consumable |
 
-### Trial Flow
+### Why Two Options?
 
-1. **No signup to start** - Zero friction
-2. **Sessions stored locally** - Investment builds
-3. **After 5 sessions OR 7 days** - Soft paywall
-4. **2 grace sessions** - Reduces pressure
-5. **On purchase** - Prompt for account
-6. **Local data migrates** - No progress lost
+- **$2.99/year** - Lower barrier, captures casual users who may churn
+- **$9.99 lifetime** - Better value after 4 years, captures committed users
+- Most will choose lifetime (it's obviously better for long-term)
+- Annual provides recurring revenue from uncertain users
+
+### Paywall Screen Design
+
+```
+┌─────────────────────────────────────┐
+│                                     │
+│        Unlock Your Garden           │
+│                                     │
+│   Full stats • Calendar • Sync      │
+│   The living tree • Year summary    │
+│                                     │
+│  ┌─────────────────────────────┐    │
+│  │                             │    │
+│  │      $2.99 / year           │    │
+│  │      Billed annually        │    │
+│  │                             │    │
+│  │      [Subscribe]            │    │
+│  │                             │    │
+│  └─────────────────────────────┘    │
+│                                     │
+│  ┌─────────────────────────────┐    │
+│  │                             │    │
+│  │   $9.99 lifetime ⭐ BEST    │    │
+│  │   One payment, yours forever│    │
+│  │   Saves after ~4 years      │    │
+│  │                             │    │
+│  │   [     Buy Once     ]      │    │  ← Apple Pay enabled
+│  │                             │    │
+│  └─────────────────────────────┘    │
+│                                     │
+│         Restore Purchases           │
+│                                     │
+│              Maybe later            │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+### One-Click Checkout Flow
+
+1. User taps "Buy Once" or "Subscribe"
+2. **Apple Pay sheet appears** (if enabled) - Face ID → Done
+3. OR standard App Store purchase dialog
+4. On success: Immediate unlock + prompt for account (for sync)
+5. **No account required to purchase** - Can use locally forever
+6. Account only needed for cloud sync
+
+### Paywall Triggers
+
+Paywall appears when free user tries to:
+- View full Calendar (not just preview)
+- Enter Garden (not just preview)
+- Access Year Summary
+- Enable cloud sync
+- Use interval bells
+- Export data
+
+**NOT** when:
+- Using timer (always free)
+- Viewing basic stats (always free)
+
+### Revenue Projections (Feature-Gated Model)
+
+Assumptions:
+- 5% conversion (industry standard for good freemium)
+- 60% choose lifetime, 40% choose annual
+- 40% annual retention year 2, declining
+
+| Downloads/Year | Paid (5%) | Year 1 Revenue | 5-Year Revenue |
+|----------------|-----------|----------------|----------------|
+| 10,000 | 500 | ~$2,500 | ~$2,850 |
+| 50,000 | 2,500 | ~$12,500 | ~$14,250 |
+| 100,000 | 5,000 | ~$25,000 | ~$28,500 |
 
 ### Economics
 
-- Apple takes 30%: $6.99 → $4.89 net
-- Break-even: ~23 sales/year
+- Apple takes 30% on all transactions
+- $9.99 lifetime → $6.99 net
+- $2.99/year → $2.09 net
+- Break-even: ~16 lifetime sales OR ~53 annual subscriptions
 - Yearly costs: ~$111 (Apple $99 + domain $12)
 
 ---
@@ -219,9 +479,10 @@ const leafDensity = growthLevel * 0.8;
 CREATE TABLE profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id),
   is_premium BOOLEAN DEFAULT FALSE,
+  premium_type TEXT,                    -- 'lifetime' | 'annual' | NULL
   purchase_date TIMESTAMPTZ,
+  subscription_expires_at TIMESTAMPTZ,  -- For annual subscribers
   has_reached_enlightenment BOOLEAN DEFAULT FALSE,
-  trial_started_at TIMESTAMPTZ,
   last_sync_at TIMESTAMPTZ
 );
 
@@ -251,12 +512,13 @@ CREATE TABLE sessions (
 
 | File | Changes |
 |------|---------|
-| `src/lib/db.ts` | Add sync fields, SyncQueue table, trial tracking |
-| `src/stores/useSessionStore.ts` | Add auth/trial state, sync triggers |
+| `src/lib/db.ts` | Add sync fields, SyncQueue table |
+| `src/stores/useSessionStore.ts` | Add sync triggers |
 | `src/App.tsx` | Add Garden route, auth provider, new screen routing |
-| `src/components/Timer.tsx` | Paywall check, post-session Garden prompt |
-| `src/components/Stats.tsx` | Settings gear icon |
-| `src/lib/constants.ts` | Trial thresholds, growth rate constants |
+| `src/components/Timer.tsx` | Post-session Garden prompt (premium users) |
+| `src/components/Stats.tsx` | Settings gear icon, free/premium UI states |
+| `src/components/Calendar.tsx` | Add locked preview state for free users |
+| `src/lib/constants.ts` | Growth rate constants, premium feature flags |
 | `package.json` | New dependencies |
 
 ## New Files to Create
@@ -272,17 +534,19 @@ src/
 
   stores/
     useAuthStore.ts       # Auth state
+    usePremiumStore.ts    # Premium status, feature-gating logic
     useGardenStore.ts     # Tree/spirit state, growth level
 
   components/
-    Garden.tsx            # The garden screen (tree + spirit + UI)
+    Garden.tsx            # The garden screen (tree + spirit + UI) - handles both locked/unlocked
     TreeCanvas.tsx        # p5.js React wrapper for L-system tree
     Spirit.tsx            # Spirit companion with CSS animations
+    LockedOverlay.tsx     # Reusable blur + unlock CTA overlay
     Onboarding.tsx        # Intro flow (3 screens)
-    Paywall.tsx           # Purchase screen
+    Paywall.tsx           # Purchase screen (dual pricing)
     Settings.tsx          # Settings screen
     AuthModal.tsx         # Sign in/up
-    YearSummary.tsx       # Wrapped-style summary
+    YearSummary.tsx       # Wrapped-style summary - handles both locked/unlocked
     IntervalBells.tsx     # Sound settings
 
   assets/
@@ -322,13 +586,13 @@ ROADMAP.md               # This document (north star)
 - [ ] Conflict resolution
 - [ ] Test offline scenarios
 
-### Phase 3: Trial & Paywall
-- [ ] Add trial tracking (session count, start date)
-- [ ] Create `Paywall.tsx`
-- [ ] Implement threshold checks
+### Phase 3: Feature-Gating & Paywall
+- [ ] Add `usePremiumStore.ts` for premium status tracking
+- [ ] Create `Paywall.tsx` with dual pricing ($2.99/year, $9.99 lifetime)
+- [ ] Implement feature-gate checks (Calendar, Garden, Sync, etc.)
 - [ ] Set up RevenueCat account
-- [ ] Integrate RevenueCat SDK
-- [ ] Configure IAPs in App Store Connect
+- [ ] Integrate RevenueCat SDK (subscription + non-consumable)
+- [ ] Configure IAPs in App Store Connect (annual sub + lifetime)
 
 ### Phase 4: Core UI Screens
 - [ ] Create `Onboarding.tsx` (3 screens)
@@ -449,7 +713,7 @@ No custom admin needed - use existing dashboards:
 | Apple Sign-In | Medium | Tedious portal work |
 | Sync engine | **High** | Hardest part |
 | RevenueCat | Medium | Fiddly IAP setup |
-| Garden (MVP) | Medium | SVG + CSS approach |
+| Garden (MVP) | Medium | p5.js + L-systems |
 | Garden (V2) | High | Full Rive animation |
 | Capacitor | Low-Medium | Config + signing |
 
@@ -467,21 +731,28 @@ No custom admin needed - use existing dashboards:
 4. **The horizon, not the point** - 10,000 hours is direction, not destination
 5. **Earn the Garden** - It's at the end of the journey through screens
 6. **Breathe** - Everything should feel slow, intentional, alive
+7. **The timer is sacred** - Never limit session length or count. The meditation itself is always free.
 
 ---
 
 ## Build Execution Notes
 
-**When implementing this plan:**
-- Use `/frontend` skill for React component development
-- Enable auto-accept edits for faster iteration
+**First step after planning:**
+1. Sync this plan to `ROADMAP.md` in the GitHub repository
+2. Commit the updated roadmap
+
+**When implementing:**
+- Follow phases in order (Infrastructure → Sync → Paywall → UI → Garden → etc.)
 - Test each phase before moving to next
 - Commit at logical checkpoints (end of each phase)
+- Use feature branches for each phase
 
-**Commands to start:**
-```bash
-# Invoke frontend skill for component work
-/frontend
-
-# Or enable auto-accept in Claude Code settings
+**Key implementation order:**
+```
+Phase 1: Supabase + Auth foundation
+Phase 2: Sync engine (hardest part)
+Phase 3: RevenueCat + Paywall
+Phase 4: UI screens (Onboarding, Settings, Auth)
+Phase 5: The Garden (the fun part)
+Phase 6-9: Polish, Capacitor, Launch
 ```
