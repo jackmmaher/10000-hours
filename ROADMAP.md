@@ -10,7 +10,7 @@ Transform the minimalist meditation timer PWA into a commercially viable iOS app
 
 **Core additions:**
 - Feature-gated freemium (unlimited free timer, paid premium features)
-- $2.99/year OR $9.99 lifetime pricing
+- $29.99/year OR $99.99 lifetime pricing (3-tier model: Free / Annual / Lifetime)
 - Cloud sync via Supabase
 - The Garden: A living, growing tree that visualizes your meditation journey (PREMIUM)
 - Year-end summary (Spotify Wrapped style) (PREMIUM)
@@ -358,22 +358,28 @@ In January, free users get a **teaser card**:
 
 ## Monetization
 
-### Pricing Model: Choice Architecture
+### Pricing Model: Three Tiers (Research-Backed)
 
-| Product | Price | Net (after Apple 30%) | Type |
+| Product | Price | Net (after Apple 15%*) | Type |
 |---------|-------|----------------------|------|
-| **Annual Premium** | $2.99/year | $2.09/year | Auto-renewing subscription |
-| **Lifetime Premium** | $9.99 | $6.99 | Non-consumable IAP |
-| Small Tip | $2.99 | $2.09 | Consumable |
-| Medium Tip | $5.99 | $4.19 | Consumable |
-| Large Tip | $9.99 | $6.99 | Consumable |
+| **Free** | $0 | — | Unlimited timer, basic stats |
+| **Annual Premium** | $29.99/year | $25.49/year | Auto-renewing subscription |
+| **Lifetime Premium** | $99.99 | $84.99 | Non-consumable IAP |
 
-### Why Two Options?
+*Apple Small Business Program: 15% commission for developers earning under $1M/year
 
-- **$2.99/year** - Lower barrier, captures casual users who may churn
-- **$9.99 lifetime** - Better value after 4 years, captures committed users
-- Most will choose lifetime (it's obviously better for long-term)
-- Annual provides recurring revenue from uncertain users
+### Why This Pricing?
+
+**Research findings (RevenueCat 2025, Adapty):**
+- Annual subscriptions have 33.9% 12-month retention vs 13.8% for monthly
+- Annual subscribers are 2.4x more profitable than monthly
+- 3 pricing tiers optimal (17% higher conversion than 5+ tiers)
+- No monthly option: aligns with commitment philosophy of meditation
+
+**Why no introductory discounts:**
+- Transparent, honest pricing ("no dark patterns" principle)
+- No "gotcha" at renewal — annual auto-renews at same price
+- Lifetime acts as anchor, making annual look like great value
 
 ### Paywall Screen Design
 
@@ -387,8 +393,9 @@ In January, free users get a **teaser card**:
 │                                     │
 │  ┌─────────────────────────────┐    │
 │  │                             │    │
-│  │      $2.99 / year           │    │
-│  │      Billed annually        │    │
+│  │  $29.99 / year ⭐ Best Value│    │
+│  │  Billed annually            │    │
+│  │  Auto-renews at same price  │    │
 │  │                             │    │
 │  │      [Subscribe]            │    │
 │  │                             │    │
@@ -396,9 +403,8 @@ In January, free users get a **teaser card**:
 │                                     │
 │  ┌─────────────────────────────┐    │
 │  │                             │    │
-│  │   $9.99 lifetime ⭐ BEST    │    │
+│  │   $99.99 lifetime           │    │
 │  │   One payment, yours forever│    │
-│  │   Saves after ~4 years      │    │
 │  │                             │    │
 │  │   [     Buy Once     ]      │    │  ← Apple Pay enabled
 │  │                             │    │
@@ -438,22 +444,26 @@ Paywall appears when free user tries to:
 
 Assumptions:
 - 5% conversion (industry standard for good freemium)
-- 60% choose lifetime, 40% choose annual
-- 40% annual retention year 2, declining
+- 70% choose annual, 30% choose lifetime
+- 33.9% annual retention year 2 (RevenueCat benchmark)
 
 | Downloads/Year | Paid (5%) | Year 1 Revenue | 5-Year Revenue |
 |----------------|-----------|----------------|----------------|
-| 10,000 | 500 | ~$2,500 | ~$2,850 |
-| 50,000 | 2,500 | ~$12,500 | ~$14,250 |
-| 100,000 | 5,000 | ~$25,000 | ~$28,500 |
+| 10,000 | 500 | ~$17,500 | ~$19,000 |
+| 50,000 | 2,500 | ~$87,500 | ~$95,000 |
+| 100,000 | 5,000 | ~$175,000 | ~$190,000 |
+
+**Target: $100K/year revenue (~$65K net profit after Apple 15% + Irish taxes)**
+- Downloads needed: ~50,000 at 5% conversion
+- Achievable with: Strong ASO, word-of-mouth, 1-2 press mentions
 
 ### Economics
 
-- Apple takes 30% on all transactions
-- $9.99 lifetime → $6.99 net
-- $2.99/year → $2.09 net
-- Break-even: ~16 lifetime sales OR ~53 annual subscriptions
-- Yearly costs: ~$111 (Apple $99 + domain $12)
+- Apple takes 15% (Small Business Program for <$1M revenue)
+- $99.99 lifetime → $84.99 net
+- $29.99/year → $25.49 net
+- Break-even: ~4 lifetime sales OR ~4 annual subscriptions
+- Yearly costs: ~$200 (Apple $99 + Supabase ~$25 + domain $12 + misc)
 
 ---
 
@@ -588,7 +598,7 @@ ROADMAP.md               # This document (north star)
 
 ### Phase 3: Feature-Gating & Paywall
 - [ ] Add `usePremiumStore.ts` for premium status tracking
-- [ ] Create `Paywall.tsx` with dual pricing ($2.99/year, $9.99 lifetime)
+- [ ] Create `Paywall.tsx` with 3-tier pricing (Free / $29.99 annual / $99.99 lifetime)
 - [ ] Implement feature-gate checks (Calendar, Garden, Sync, etc.)
 - [ ] Set up RevenueCat account
 - [ ] Integrate RevenueCat SDK (subscription + non-consumable)
