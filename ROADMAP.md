@@ -13,7 +13,8 @@ Transform the minimalist meditation timer PWA into a commercially viable iOS app
 - $29.99/year OR $99.99 lifetime pricing (3-tier model: Free / Annual / Lifetime)
 - Cloud sync via Supabase
 - The Garden: A living, growing tree that visualizes your meditation journey (PREMIUM)
-- Year-end summary (Spotify Wrapped style) (PREMIUM)
+- Year-end summary: "The Tree Remembers" — a temporal journey through your tree's growth (PREMIUM)
+- Ghibli-inspired design language: warm colors, organic animation, generous Ma (空間)
 
 ---
 
@@ -289,32 +290,31 @@ Free users see a **blurred heatmap** with their actual data:
 
 ### Year Summary Preview (Free Users)
 
-In January, free users get a **teaser card**:
+In January, free users experience the **same tree journey**, but obscured:
 
 ```
 ┌─────────────────────────────────────┐
 │                                     │
 │         2025                        │
-│    The year you sat.                │
 │                                     │
-│         ✨ 42.5 hours ✨            │  ← Real number
+│     [BLURRED TREE SILHOUETTE]       │
+│     Motion visible through blur     │
+│     Spirit as shadow outline        │
+│                                     │
+│         42.5 hours                  │  ← Real number still shown
+│                                     │
+│     The tree grows, rewinds,        │
+│     tells its story—but you         │
+│     can't quite see it clearly      │
 │                                     │
 │     ┌─────────────────────────┐     │
-│     │  See your full journey  │     │
-│     │                         │     │
-│     │  • Your deepest sit     │     │
-│     │  • Your longest streak  │     │
-│     │  • Your meditation      │     │
-│     │    rhythm               │     │
-│     │  • Your tree's growth   │     │
-│     │                         │     │
-│     │    [Unlock Summary]     │     │
+│     │  See what you've grown  │     │
 │     └─────────────────────────┘     │
-│                                     │
-│         Maybe later                 │
 │                                     │
 └─────────────────────────────────────┘
 ```
+
+**The FOMO is visceral:** You KNOW your tree is in there. You can see it moving. The story is being told. You just can't see it clearly.
 
 **Preview strategy across all screens:**
 - Always show user's REAL data (hours, sessions, dates)
@@ -324,35 +324,117 @@ In January, free users get a **teaser card**:
 
 ---
 
-## Year-End Summary (Wrapped Style)
+## Year-End Summary: The Tree Remembers
 
-### Data Captured
+The Year Summary is not a separate feature—it's a **temporal journey through your tree itself**. You're not reading stats; you're watching your tree grow through time. The tree IS the summary.
 
-| Metric | Emotional Framing |
-|--------|-------------------|
-| Total hours | "You sat with yourself for X hours" |
-| Total sessions | "X moments of stillness" |
-| Longest session | "Your deepest sit" |
-| Longest streak | "X days unbroken" |
-| Favorite time | "You're a morning/evening meditator" |
-| Milestones hit | "You crossed X thresholds" |
+### Philosophy
 
-### Card Sequence (8-10 swipeable screens)
+- The tree tells its own story
+- Data is whispered context, not the main event
+- The emotional payoff is watching what you grew
+- No gamification, no comparisons, no sharing prompts
+- This is a personal ritual, not a shareable trophy
 
-1. **Opening** - "2025. The year you sat."
-2. **The Number** - Total hours (counts up)
-3. **Sessions** - "X times you chose stillness"
-4. **The Deep Sit** - Longest session with date
-5. **Consistency** - Longest streak
-6. **Rhythm** - Time of day pattern
-7. **The Tree** - Animated growth visualization
-8. **The Horizon** - Hours toward 10,000
-9. **Share** - Shareable summary card
+### The Experience
 
-### Animation Style
-- Slow fades (meditative pace)
-- Count-up numbers (satisfying, not gamified)
-- Tree growth sequence as centerpiece
+**1. Opening: Now**
+Your tree as it currently is, full screen, breathing. Spirit at current evolution. Text fades in: "2025". Wind through leaves. A moment of presence.
+
+**2. The Rewind**
+The tree begins to **un-grow**. Leaves release, branches retract, spirit shrinks and glows smaller. Time flows backward until—a seed. Or tiny sprout. "January."
+
+A beat of stillness. Then growth begins.
+
+**3. Growth Sequence**
+Time flows forward. The tree grows organically—continuous transformation, not jumps. Key moments are marked by the **environment responding**:
+
+| Moment | Visual | Text |
+|--------|--------|------|
+| **First sit** | First branches appear, spirit orb blinks into existence | "Your first sit. 12 minutes." |
+| **Spring growth** | Leaves unfurl, soft spring light | "By spring, 15 hours had taken root." |
+| **The deep sit** | Time pauses, a branch glows softly, spirit looks up | "March 14th. Your deepest sit. 1h 23m." |
+| **The streak** | Accelerated growth, golden pulses through trunk (23 pulses for 23 days) | "23 days. Unbroken." |
+| **Seasonal passage** | Light shifts warmer then cooler, environment evolves | "The summer you found your rhythm." |
+
+**4. Arrival: Now (Again)**
+The tree reaches current full form. But now you've seen the journey—it means something different. Spirit looks at you. A long moment. Settles back to idle.
+
+**5. The Horizon**
+View pulls back slightly. The tree remains, but beyond it—soft mist. The suggestion of the full 10,000-hour tree in the distance. What it could become.
+
+"The horizon. Not the point."
+
+Fade to your garden, live, waiting.
+
+### Visual Sequence (Wireframe)
+
+```
+[1. NOW]                    [2. REWIND]                 [3. JANUARY]
+┌─────────────────┐         ┌─────────────────┐         ┌─────────────────┐
+│                 │         │                 │         │                 │
+│   [Full tree]   │         │   [Tree        │         │                 │
+│   breathing     │   →     │    un-growing] │   →     │       .         │
+│      ✧          │         │      ✧→·       │         │      🌱         │
+│                 │         │                 │         │                 │
+│     2025        │         │                 │         │    January      │
+└─────────────────┘         └─────────────────┘         └─────────────────┘
+
+[4. FIRST SIT]              [5. DEEP SIT]               [6. STREAK]
+┌─────────────────┐         ┌─────────────────┐         ┌─────────────────┐
+│                 │         │                 │         │                 │
+│      🌱         │         │      🌳         │         │      🌲         │
+│     / \         │         │    (glowing    │         │   (pulsing     │
+│      ·          │         │     branch)    │         │    gold)       │
+│                 │         │      ✧↑        │         │      ✧✧        │
+│  Your first sit │         │  March 14th    │         │   23 days      │
+│   12 minutes    │         │  1h 23m        │         │   unbroken     │
+└─────────────────┘         └─────────────────┘         └─────────────────┘
+
+[7. NOW AGAIN]              [8. HORIZON]
+┌─────────────────┐         ┌─────────────────┐
+│                 │         │  ░░░░░░░░░░░░░  │  ← Misty future tree
+│   [Full tree]   │         │  ░░░░░░░░░░░░░  │
+│   Spirit looks  │         │                 │
+│   at you        │         │   [Your tree]   │
+│      ✧          │         │      ✧          │
+│                 │         │                 │
+│   42.5 hours    │         │  The horizon    │
+│  still growing  │         │  not the point  │
+└─────────────────┘         └─────────────────┘
+```
+
+### Interaction Model
+
+- **Auto-advance** with slow pace (8-10s per moment)
+- Swipe to advance available but not prompted
+- No "skip" button—this is meant to be sat with
+- Total duration: ~60-90 seconds
+
+### Free User Experience
+
+Same sequence, but:
+- Tree is blurred/silhouetted throughout
+- Spirit is a shadow/outline
+- Data text still appears ("42.5 hours")
+- Ends with: "Unlock your garden to see what you've grown"
+
+The FOMO: "That blur is MY tree. I want to see it."
+
+### Technical Requirements
+
+- Garden rendering must support **growth level scrubbing**—given timestamp or hour-count, render tree at that historical state
+- Spirit evolution stages need defined hour thresholds
+- Environmental elements (seasons, lighting) tied to time/hour milestones
+- Animation system needs smooth interpolation between growth states
+- Tree must be deterministic: same hours = same tree appearance (via randomSeed)
+
+### Sharing (If Any)
+
+No stats overlay. If user wants to share:
+- "Save your tree" → generates image of just the tree
+- Beautiful, minimal, no numbers
+- More "look at this thing I grew" than "look at my achievements"
 
 ---
 
@@ -556,7 +638,7 @@ src/
     Paywall.tsx           # Purchase screen (dual pricing)
     Settings.tsx          # Settings screen
     AuthModal.tsx         # Sign in/up
-    YearSummary.tsx       # Wrapped-style summary - handles both locked/unlocked
+    YearSummary.tsx       # "The Tree Remembers" - temporal garden journey, handles locked/unlocked
     IntervalBells.tsx     # Sound settings
 
   assets/
@@ -624,14 +706,34 @@ ROADMAP.md               # This document (north star)
 - [ ] Add "View garden" prompt after sessions
 - [ ] Test growth progression (0h → 100h → 1000h → 10000h)
 
-### Phase 6: Enhancements
+### Phase 6: Design System (Ghibli)
+- [ ] Update color palette in Tailwind config (cream → warmer, indigo → softer ink)
+- [ ] Add Google Fonts: Cormorant Garamond (display), Nunito (body)
+- [ ] Implement breathing animation keyframes with asymmetric timing
+- [ ] Add organic easing curves to transitions
+- [ ] Refactor Stats screen: remove borders, increase spacing (Scroll Garden)
+- [ ] Add living number animations to key statistics
+- [ ] Update weekly dots with micro-animations (pulse, glow states)
+- [ ] Add paper texture to backgrounds (subtle, optional)
+
+### Phase 7: Year Summary (The Tree Remembers)
+- [ ] Add growth level scrubbing to TreeCanvas (render tree at any historical hour-count)
+- [ ] Implement tree "rewind" animation (un-growth sequence)
+- [ ] Create YearSummary.tsx as temporal Garden journey
+- [ ] Add key moment detection (first sit, deep sit, streaks)
+- [ ] Implement environment/lighting changes for seasons
+- [ ] Spirit reactions at milestone moments
+- [ ] Auto-advance timing with swipe-to-skip
+- [ ] Blurred/silhouette mode for free users
+- [ ] "Save your tree" image export (no stats overlay)
+
+### Phase 8: Enhancements
 - [ ] Apple Health integration
 - [ ] Interval bells (sounds + settings)
-- [ ] Dark mode
+- [ ] Dark mode (respect Ghibli palette in dark variant)
 - [ ] iOS widgets (small: hours only)
-- [ ] Year Summary foundation
 
-### Phase 7: Capacitor & iOS
+### Phase 9: Capacitor & iOS
 - [ ] Install Capacitor + plugins
 - [ ] Generate iOS project
 - [ ] Configure capabilities
@@ -639,17 +741,17 @@ ROADMAP.md               # This document (north star)
 - [ ] Test on physical device
 - [ ] Haptic feedback on session end
 
-### Phase 8: Launch
+### Phase 10: Launch
 - [ ] Privacy policy + Terms of Service
 - [ ] App Store listing copy
 - [ ] Screenshots + preview video
 - [ ] TestFlight beta
 - [ ] Submit for review
 
-### Phase 9: Post-Launch (December)
-- [ ] Year Summary feature (for January release)
-- [ ] Milestone shareable cards
-- [ ] Tree art upgrade (Rive/Lottie)
+### Phase 11: Post-Launch
+- [ ] Milestone shareable cards (tree images, no stats)
+- [ ] Tree art upgrade (Rive/Lottie for smoother animation)
+- [ ] Seasonal environment variations
 
 ---
 
@@ -745,6 +847,149 @@ No custom admin needed - use existing dashboards:
 
 ---
 
+## Design Language: Ghibli-Inspired
+
+The app's visual language draws from Studio Ghibli's design philosophy—not as imitation, but as principled inspiration. Ghibli's aesthetic is built on specific foundations that align naturally with meditation.
+
+### Core Ghibli Principles Applied
+
+| Ghibli Principle | Application in 10,000 Hours |
+|------------------|----------------------------|
+| **Ma (間)** — meaningful emptiness | Generous whitespace, content floats in space, no borders |
+| **Nature as presence** | The Garden IS the app's soul, not decoration |
+| **Watercolor philosophy** | Soft gradients, warm tones, no harsh contrasts |
+| **Always breathing** | Subtle animation on key elements, nothing is static |
+| **Earned emotion through restraint** | Quiet confidence, no exclamation points, observational language |
+
+### Color Palette
+
+```css
+/* Warm paper tones - like aged washi */
+--cream: #FAF8F3;           /* Primary background - warmer, more alive */
+--cream-warm: #F5F1E8;      /* Working surfaces */
+--cream-deep: #EDE8DC;      /* Cards, elevated surfaces */
+
+/* Organic inks - like sumi ink, not printer ink */
+--ink: #2D3436;             /* Primary text - softer than pure black */
+--ink-soft: #4A5568;        /* Secondary text */
+--ink-mist: #718096;        /* Tertiary, hints */
+
+/* Nature accents (used sparingly) */
+--moss: #7C9A6E;            /* Growth, the garden, positive states */
+--bark: #8B7355;            /* Grounding, earth tones */
+--sky: #87CEEB;             /* Reserved for special moments only */
+```
+
+**Key insight:** Ghibli never uses pure black. Darks are always tinged with warmth—like weathered wood, sumi ink, or shadow in afternoon light.
+
+### Typography
+
+| Use | Font | Reasoning |
+|-----|------|-----------|
+| **Display** | Cormorant Garamond | Organic curves, "hand-touched" feeling, breathing letterforms |
+| **Body** | Nunito or Work Sans | Rounded terminals = softer, more human, warm |
+
+The font should feel *written*, not *typeset*.
+
+### Spacing Philosophy (Ma)
+
+- **No borders** — Separate content with generous space, not lines
+- **Vertical rhythm** — 2-3x typical app spacing between sections
+- **Floating content** — Elements exist in space, not in containers
+- **Dashed paths** — Where visual separation is needed, use soft dashed lines (like forest trails)
+
+### Animation Principles
+
+**Breathing animation (revised):**
+```css
+@keyframes subtle-breathe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  40% { transform: scale(0.997); opacity: 0.92; }
+  70% { transform: scale(0.995); opacity: 0.88; }
+}
+/* 5-6 second cycle, asymmetric timing, imperceptible scale */
+```
+
+**Organic easing:**
+```css
+/* Natural deceleration - things settle like water finding its level */
+transition: all 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+```
+
+**Principles:**
+- Longer cycles (5-6s) feel more meditative than 4s
+- Asymmetric timing — in-breath and out-breath have different qualities
+- Subtle scale changes (0.5-1%) create life without distraction
+- Nothing happens instantly — micro-moment of anticipation before response
+
+### Stats Screen Design: The Scroll Garden
+
+The Stats screen maintains full information density but presents it as a **vertical journey**—each stat area is a "clearing" you arrive at, with generous spacing creating the sense of walking through a path.
+
+**Layout principles:**
+- Remove ALL solid borders (`border-b border-indigo-deep/10`)
+- Use generous vertical spacing instead (2-3x current `mb-8`)
+- Soft dashed "path" lines between major sections (optional)
+- Content floats in space rather than being contained in boxes
+
+**Living Numbers:**
+Key statistics use subtle breathing animation—numbers are alive, not static text.
+
+```css
+.stat-number {
+  animation: subtle-breathe 6s ease-in-out infinite;
+}
+
+.progress-fill {
+  /* Slight overshoot, then settle—like water finding its level */
+  transition: width 800ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+```
+
+**Visual treatment:**
+```
+┌─────────────────────────────────┐
+│                                 │
+│          42.5 hours             │  ← Breathing animation
+│                                 │
+│                                 │
+│                                 │  ← Generous "walk" between sections
+│                                 │
+│    ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈     │  ← Soft dashed path (optional)
+│                                 │
+│                                 │
+│      next: 50 hours             │
+│      ██████████░░░░ 85%         │  ← Progress bar with organic fill
+│                                 │
+│                                 │
+│                                 │
+│    ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈     │
+│                                 │
+│                                 │
+│       M  T  W  T  F  S  S       │
+│       ●  ●  ●  ◐  ○  ○  ○       │  ← Weekly dots with micro-animations
+│                                 │
+│       3 sessions · 2h 15m       │
+│                                 │
+│                                 │
+│            · · ·                │  ← Continuation hint
+│                                 │
+└─────────────────────────────────┘
+```
+
+**Weekly dot animations:**
+- Completed days: gentle pulse every ~8 seconds
+- Today (incomplete): breathing glow
+- Future days: completely still (contrast creates the sense of life)
+
+**Ghibli alignment:**
+- Scrolling feels like walking through a garden path
+- Each section is a "clearing" you pause in
+- The journey continues below (` · · · ` hint)
+- Numbers breathe because living things breathe
+
+---
+
 ## Build Execution Notes
 
 **First step after planning:**
@@ -764,5 +1009,8 @@ Phase 2: Sync engine (hardest part)
 Phase 3: RevenueCat + Paywall
 Phase 4: UI screens (Onboarding, Settings, Auth)
 Phase 5: The Garden (the fun part)
-Phase 6-9: Polish, Capacitor, Launch
+Phase 6: Design System (Ghibli aesthetic overhaul)
+Phase 7: Year Summary (The Tree Remembers)
+Phase 8: Enhancements (Health, bells, widgets)
+Phase 9-11: Capacitor, Launch, Post-launch polish
 ```
