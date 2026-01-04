@@ -992,9 +992,37 @@ Key statistics use subtle breathing animation—numbers are alive, not static te
 
 ## Build Execution Notes
 
-**First step after planning:**
-1. Sync this plan to `ROADMAP.md` in the GitHub repository
-2. Commit the updated roadmap
+### Git Workflow & Safety
+
+**Rollback point established:**
+- Tag `v1.0.0-pwa` marks the working PWA before commercialization
+- To return to safe state: `git checkout v1.0.0-pwa`
+
+**Branch strategy:**
+```
+main (protected, always deployable)
+  └── feature/phase-1-supabase
+  └── feature/phase-2-sync
+  └── feature/phase-5-garden
+  └── etc.
+```
+
+**Workflow per phase:**
+1. Create branch: `git checkout -b feature/phase-X-name`
+2. Build and test the feature
+3. Merge to main only when stable: `git checkout main && git merge feature/phase-X-name`
+4. Tag milestones: `git tag -a v1.1.0 -m "Phase X complete"`
+5. Delete branch: `git branch -d feature/phase-X-name`
+
+**Rollback commands:**
+| Situation | Command |
+|-----------|---------|
+| Return to working PWA | `git checkout v1.0.0-pwa` |
+| Undo last commit (not pushed) | `git reset --soft HEAD~1` |
+| Revert a merged feature | `git revert <commit>` |
+| Abandon broken branch | `git branch -D feature/broken-thing` |
+
+### Implementation Notes
 
 **When implementing:**
 - Follow phases in order (Infrastructure → Sync → Paywall → UI → Garden → etc.)
