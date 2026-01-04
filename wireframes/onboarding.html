@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Onboarding - 10,000 Hours Wireframe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Onboarding - Ghibli styling with generous Ma and organic animations */
+
+    .onboarding-screen {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: var(--cream);
+    }
+
+    .onboarding-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-2xl);
+      text-align: center;
+    }
+
+    .onboarding-illustration {
+      width: 200px;
+      height: 200px;
+      margin-bottom: var(--space-2xl);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .onboarding-title {
+      font-family: var(--font-display);
+      font-size: 36px;
+      font-weight: 300;
+      color: var(--ink);
+      margin-bottom: var(--space-lg);
+      line-height: 1.2;
+      letter-spacing: -1px;
+      animation: breathe 6s ease-in-out infinite;
+    }
+
+    .onboarding-desc {
+      font-size: 16px;
+      color: var(--ink-muted);
+      line-height: 1.6;
+      max-width: 280px;
+    }
+
+    .onboarding-footer {
+      padding: var(--space-xl);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    .onboarding-dots {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-lg);
+    }
+
+    .onboarding-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--ink-light);
+      transition: all 400ms var(--ease-organic);
+    }
+
+    .onboarding-dot-active {
+      width: 28px;
+      border-radius: 4px;
+      background: var(--ink);
+    }
+
+    /* Step 1 - Concentric circles with number */
+    .step1-illustration svg {
+      width: 140px;
+      height: 140px;
+      color: var(--ink);
+      animation: breathe 6s ease-in-out infinite;
+    }
+
+    /* Step 2 - Tap gesture */
+    .step2-illustration {
+      position: relative;
+    }
+
+    .step2-illustration svg {
+      width: 160px;
+      height: 160px;
+    }
+
+    .tap-ripple {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 120px;
+      height: 120px;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      opacity: 0;
+      animation: ripple-out 2s ease-out infinite;
+    }
+
+    .tap-ripple:nth-child(2) {
+      animation-delay: 0.5s;
+    }
+
+    @keyframes ripple-out {
+      0% {
+        opacity: 0.5;
+        transform: translate(-50%, -50%) scale(0.5);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.2);
+      }
+    }
+
+    /* Step 3 - Tree preview with spirit */
+    .step3-illustration {
+      position: relative;
+    }
+
+    .step3-tree {
+      width: 140px;
+      height: 180px;
+    }
+
+    .step3-spirit {
+      position: absolute;
+      bottom: 60px;
+      right: 10px;
+      width: 28px;
+      height: 28px;
+      background: radial-gradient(circle, rgba(212, 165, 116, 0.9) 0%, rgba(212, 165, 116, 0) 70%);
+      border-radius: 50%;
+      animation: spirit-float 3s ease-in-out infinite;
+    }
+
+    .step3-spirit-core {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 12px;
+      height: 12px;
+      background: var(--gold);
+      border-radius: 50%;
+    }
+
+    @keyframes spirit-float {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-8px) scale(1.05); }
+    }
+
+    /* State tabs for demo */
+    .state-tabs {
+      position: fixed;
+      top: var(--space-md);
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: var(--space-xs);
+      background: white;
+      padding: var(--space-xs);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      z-index: 1000;
+    }
+
+    .state-tab {
+      padding: var(--space-sm) var(--space-md);
+      font-size: 12px;
+      font-weight: 600;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      color: var(--ink-muted);
+      text-decoration: none;
+      transition: all 300ms var(--ease-organic);
+    }
+
+    .state-tab:hover,
+    .state-tab.active {
+      background: var(--cream-deep);
+      color: var(--ink);
+    }
+
+    /* Hide steps by default, show via JS */
+    .step {
+      display: none;
+    }
+
+    .step.active {
+      display: flex;
+    }
+
+    /* Ghost button override for onboarding */
+    .btn-ghost-soft {
+      background: transparent;
+      color: var(--ink-muted);
+      border: none;
+    }
+
+    .btn-ghost-soft:hover {
+      background: var(--cream-deep);
+      color: var(--ink);
+    }
+  </style>
+</head>
+<body>
+  <!-- Step selector tabs -->
+  <div class="state-tabs">
+    <button class="state-tab active" onclick="showStep(1)">Step 1</button>
+    <button class="state-tab" onclick="showStep(2)">Step 2</button>
+    <button class="state-tab" onclick="showStep(3)">Step 3</button>
+  </div>
+
+  <div class="device-frame">
+    <div class="screen onboarding-screen">
+      <!-- Step 1: Welcome -->
+      <div class="step active" id="step1">
+        <div class="onboarding-content">
+          <div class="onboarding-illustration step1-illustration">
+            <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="0.75">
+              <!-- Concentric circles representing infinity/time -->
+              <circle cx="50" cy="50" r="45" stroke-opacity="0.1"/>
+              <circle cx="50" cy="50" r="38" stroke-opacity="0.15"/>
+              <circle cx="50" cy="50" r="31" stroke-opacity="0.2"/>
+              <circle cx="50" cy="50" r="24" stroke-opacity="0.3"/>
+              <!-- Number display -->
+              <text x="50" y="56" text-anchor="middle" font-family="Cormorant Garamond" font-size="18" fill="currentColor" stroke="none">10,000</text>
+            </svg>
+          </div>
+          <h1 class="onboarding-title">10,000 hours</h1>
+          <p class="onboarding-desc">A meditation practice measured not in days, but in the quiet hours spent sitting with yourself.</p>
+        </div>
+        <div class="onboarding-footer">
+          <div class="onboarding-dots">
+            <div class="onboarding-dot onboarding-dot-active"></div>
+            <div class="onboarding-dot"></div>
+            <div class="onboarding-dot"></div>
+          </div>
+          <button class="btn btn-primary btn-block" onclick="showStep(2)">Continue</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Timer -->
+      <div class="step" id="step2">
+        <div class="onboarding-content">
+          <div class="onboarding-illustration step2-illustration">
+            <div class="tap-ripple"></div>
+            <div class="tap-ripple"></div>
+            <svg viewBox="0 0 160 160" fill="none">
+              <!-- Outer glow -->
+              <circle cx="80" cy="80" r="60" fill="var(--cream-deep)" opacity="0.5"/>
+              <!-- Inner circle -->
+              <circle cx="80" cy="80" r="40" fill="var(--cream-warm)"/>
+              <!-- Hand/finger touch point -->
+              <circle cx="80" cy="80" r="6" fill="var(--ink)" opacity="0.3"/>
+            </svg>
+          </div>
+          <h1 class="onboarding-title">Tap to begin</h1>
+          <p class="onboarding-desc">Start your meditation with a simple tap. Tap again when you're ready to end. That's all there is to it.</p>
+        </div>
+        <div class="onboarding-footer">
+          <div class="onboarding-dots">
+            <div class="onboarding-dot"></div>
+            <div class="onboarding-dot onboarding-dot-active"></div>
+            <div class="onboarding-dot"></div>
+          </div>
+          <button class="btn btn-primary btn-block" onclick="showStep(3)">Continue</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Garden preview -->
+      <div class="step" id="step3">
+        <div class="onboarding-content">
+          <div class="onboarding-illustration step3-illustration">
+            <svg class="step3-tree" viewBox="0 0 140 180" fill="none">
+              <!-- Ground shadow -->
+              <ellipse cx="70" cy="175" rx="40" ry="5" fill="var(--moss)" opacity="0.15"/>
+
+              <!-- Trunk with organic shape -->
+              <path d="M62 175 Q58 150 60 120 Q62 100 64 85 L76 85 Q78 100 80 120 Q82 150 78 175 Z" fill="var(--bark)"/>
+
+              <!-- Organic leaf clusters -->
+              <ellipse cx="70" cy="55" rx="38" ry="32" fill="var(--moss)" opacity="0.9"/>
+              <ellipse cx="38" cy="70" rx="22" ry="18" fill="var(--moss)" opacity="0.85"/>
+              <ellipse cx="102" cy="70" rx="22" ry="18" fill="var(--moss)" opacity="0.85"/>
+              <ellipse cx="70" cy="30" rx="24" ry="20" fill="var(--moss)" opacity="0.8"/>
+              <ellipse cx="50" cy="42" rx="16" ry="14" fill="var(--moss)" opacity="0.75"/>
+              <ellipse cx="90" cy="42" rx="16" ry="14" fill="var(--moss)" opacity="0.75"/>
+            </svg>
+            <div class="step3-spirit">
+              <div class="step3-spirit-core"></div>
+            </div>
+          </div>
+          <h1 class="onboarding-title">Watch it grow</h1>
+          <p class="onboarding-desc">Your meditation hours become a living tree. With premium, watch your garden flourish as your practice deepens.</p>
+        </div>
+        <div class="onboarding-footer">
+          <div class="onboarding-dots">
+            <div class="onboarding-dot"></div>
+            <div class="onboarding-dot"></div>
+            <div class="onboarding-dot onboarding-dot-active"></div>
+          </div>
+          <a href="timer.html" class="btn btn-primary btn-block">Begin your journey</a>
+          <a href="paywall.html" class="btn btn-ghost-soft btn-block">Learn about Premium</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showStep(stepNum) {
+      // Hide all steps
+      document.querySelectorAll('.step').forEach(step => {
+        step.classList.remove('active');
+      });
+      // Show selected step
+      document.getElementById('step' + stepNum).classList.add('active');
+      // Update tabs
+      document.querySelectorAll('.state-tab').forEach((tab, index) => {
+        tab.classList.toggle('active', index === stepNum - 1);
+      });
+    }
+  </script>
+</body>
+</html>

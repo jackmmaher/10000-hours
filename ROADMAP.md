@@ -885,8 +885,8 @@ Before moving to Phase 4:
   - VERIFY: New colors applied, app builds
 
 - [ ] **Add typography (Google Fonts)**
-  - Display: Cormorant Garamond (headings, numbers)
-  - Body: Nunito (softer, rounded)
+  - Display: Palatino Linotype (Spirited Away authentic — calligraphic warmth)
+  - Body: Raleway (humanist-geometric hybrid)
   - Import in index.html or CSS
   - VERIFY: Fonts load and display correctly
 
@@ -1541,10 +1541,10 @@ The app's visual language draws from Studio Ghibli's design philosophy—not as 
 
 | Use | Font | Reasoning |
 |-----|------|-----------|
-| **Display** | Cormorant Garamond | Organic curves, "hand-touched" feeling, breathing letterforms |
-| **Body** | Nunito or Work Sans | Rounded terminals = softer, more human, warm |
+| **Display** | Palatino Linotype | Spirited Away authentic — calligraphic warmth, pen-drawn curves (Hermann Zapf) |
+| **Body** | Raleway | Humanist-geometric hybrid — approachable, clean, bridges warmth and legibility |
 
-The font should feel *written*, not *typeset*.
+Palatino was the actual font used in Spirited Away. Its calligraphic heritage gives it organic, handmade warmth — the font feels *written*, not *typeset*.
 
 ### Spacing Philosophy (Ma)
 

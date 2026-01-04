@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Font Pairing Comparison - 10,000 Hours</title>
+
+  <!-- Load all fonts from Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cardo:wght@400;700&family=Crimson+Pro:wght@300;400;500&family=EB+Garamond:wght@400;500;600&family=Karla:wght@400;500;600&family=Lato:wght@300;400;700&family=Lora:wght@400;500;600&family=Nunito+Sans:wght@400;500;600&family=Playfair+Display:wght@400;500;600&family=Poppins:wght@300;400;500&family=Quicksand:wght@400;500;600&family=Raleway:wght@300;400;500&family=Sorts+Mill+Goudy&family=Source+Sans+3:wght@300;400;500&family=Spectral:wght@300;400;500&family=Work+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #F7F5F2;
+      min-height: 100vh;
+      padding: 40px 20px;
+      font-family: system-ui, sans-serif;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 400;
+      color: #2D3436;
+      margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: #2D343680;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 32px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      position: relative;
+    }
+
+    .card-number {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 28px;
+      height: 28px;
+      background: #F7F5F2;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: #2D3436;
+    }
+
+    .sample-display {
+      font-size: 64px;
+      font-weight: 300;
+      color: #2D3436;
+      line-height: 1;
+      letter-spacing: -2px;
+      margin-bottom: 8px;
+    }
+
+    .sample-subtitle {
+      font-size: 14px;
+      color: #2D343680;
+      margin-bottom: 24px;
+      letter-spacing: 0.3px;
+    }
+
+    .sample-body {
+      font-size: 15px;
+      color: #2D3436;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .font-labels {
+      padding-top: 16px;
+      border-top: 1px solid #F0EDE8;
+    }
+
+    .font-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #2D343680;
+      margin-bottom: 4px;
+    }
+
+    .font-label span:last-child {
+      font-weight: 500;
+      color: #2D3436;
+    }
+
+    /* Pair 1: Palatino + Raleway */
+    .pair-1 .sample-display { font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif; }
+    .pair-1 .sample-subtitle,
+    .pair-1 .sample-body { font-family: 'Raleway', sans-serif; }
+
+    /* Pair 2: Playfair Display + Source Sans 3 */
+    .pair-2 .sample-display { font-family: 'Playfair Display', serif; }
+    .pair-2 .sample-subtitle,
+    .pair-2 .sample-body { font-family: 'Source Sans 3', sans-serif; }
+
+    /* Pair 3: Lora + Quicksand */
+    .pair-3 .sample-display { font-family: 'Lora', serif; }
+    .pair-3 .sample-subtitle,
+    .pair-3 .sample-body { font-family: 'Quicksand', sans-serif; }
+
+    /* Pair 4: Crimson Pro + Karla */
+    .pair-4 .sample-display { font-family: 'Crimson Pro', serif; }
+    .pair-4 .sample-subtitle,
+    .pair-4 .sample-body { font-family: 'Karla', sans-serif; }
+
+    /* Pair 5: Spectral + Nunito Sans */
+    .pair-5 .sample-display { font-family: 'Spectral', serif; }
+    .pair-5 .sample-subtitle,
+    .pair-5 .sample-body { font-family: 'Nunito Sans', sans-serif; }
+
+    /* Pair 6: EB Garamond + Lato */
+    .pair-6 .sample-display { font-family: 'EB Garamond', serif; }
+    .pair-6 .sample-subtitle,
+    .pair-6 .sample-body { font-family: 'Lato', sans-serif; }
+
+    /* Pair 7: Sorts Mill Goudy + Work Sans */
+    .pair-7 .sample-display { font-family: 'Sorts Mill Goudy', serif; }
+    .pair-7 .sample-subtitle,
+    .pair-7 .sample-body { font-family: 'Work Sans', sans-serif; }
+
+    /* Pair 8: Cardo + Poppins */
+    .pair-8 .sample-display { font-family: 'Cardo', serif; }
+    .pair-8 .sample-subtitle,
+    .pair-8 .sample-body { font-family: 'Poppins', sans-serif; }
+
+    @media (max-width: 720px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sample-display {
+        font-size: 56px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-header">
+    <h1 class="page-title">Ghibli-Inspired Font Pairings</h1>
+    <p class="page-subtitle">8 options for review - each with display serif + body sans-serif</p>
+  </div>
+
+  <div class="grid">
+    <!-- Pair 1: Palatino + Raleway -->
+    <div class="card pair-1">
+      <div class="card-number">1</div>
+      <div class="sample-display">42.5</div>
+      <div class="sample-subtitle">toward 10,000 hours</div>
+      <p class="sample-body">Each session adds to your journey. The path of 10,000 hours is walked one moment at a time.</p>
+      <div class="font-labels">
+        <div class="font-label"><span>Display</span><span>Palatino Linotype</span></div>
+        <div class="font-label"><span>Body</span><span>Raleway</span></div>
+      </div>
+    </div>
+
+    <!-- Pair 2: Playfair Display + Source Sans 3 -->
+    <div class="card pair-2">
+      <div class="card-number">2</div>
+      <div class="sample-display">42.5</div>
+      <div class="sample-subtitle">toward 10,000 hours</div>
+      <p class="sample-body">Each session adds to your journey. The path of 10,000 hours is walked one moment at a time.</p>
+      <div class="font-labels">
+        <div class="font-label"><span>Display</span><span>Playfair Display</span></div>
+        <div class="font-label"><span>Body</span><span>Source Sans 3</span></div>
+      </div>
+    </div>
+
+    <!-- Pair 3: Lora + Quicksand -->
+    <div class="card pair-3">
+      <div class="card-number">3</div>
+      <div class="sample-display">42.5</div>
+      <div class="sample-subtitle">toward 10,000 hours</div>
+      <p class="sample-body">Each session adds to your journey. The path of 10,000 hours is walked one moment at a time.</p>
+      <div class="font-labels">
+        <div class="font-label"><span>Display</span><span>Lora</span></div>
+        <div class="font-label"><span>Body</span><span>Quicksand</span></div>
+      </div>
+    </div>
+
+    <!-- Pair 4: Crimson Pro + Karla -->
+    <div class="card pair-4">
+      <div class="card-number">4</div>
+      <div class="sample-display">42.5</div>
+      <div class="sample-subtitle">toward 10,000 hours</div>
+      <p class="sample-body">Each session adds to your journey. The path of 10,000 hours is walked one moment at a time.</p>
+      <div class="font-labels">
+        <div class="font-label"><span>Display</span><span>Crimson Pro</span></div>
+        <div class="font-label"><span>Body</span><span>Karla</span></div>
+      </div>
+    </div>
+
+    <!-- Pair 5: Spectral + Nunito Sans -->
+    <div class="card pair-5">
+      <div class="card-number">5</div>
+      <div class="sample-display">42.5</div>
+      <div class="sample-subtitle">toward 10,000 hours</div>
+      <p class="sample-body">Each session adds to your journey. The path of 10,000 hours is walked one moment at a time.</p>
+      <div class="font-labels">
+        <div class="font-label"><span>Display</span><span>Spectral</span></div>
+        <div class="font-label"><span>Body</span><span>Nunito Sans</span></div>
+      </div>
+    </div>
+
+    <!-- Pair 6: EB Garamond + Lato -->
+    <div class="card pair-6">
+      <div class="card-number">6</div>
+      <div class="sample-display">42.5</div>
+      <div class="sample-subtitle">toward 10,000 hours</div>
+      <p class="sample-body">Each session adds to your journey. The path of 10,000 hours is walked one moment at a time.</p>
+      <div class="font-labels">
+        <div class="font-label"><span>Display</span><span>EB Garamond</span></div>
+        <div class="font-label"><span>Body</span><span>Lato</span></div>
+      </div>
+    </div>
+
+    <!-- Pair 7: Sorts Mill Goudy + Work Sans -->
+    <div class="card pair-7">
+      <div class="card-number">7</div>
+      <div class="sample-display">42.5</div>
+      <div class="sample-subtitle">toward 10,000 hours</div>
+      <p class="sample-body">Each session adds to your journey. The path of 10,000 hours is walked one moment at a time.</p>
+      <div class="font-labels">
+        <div class="font-label"><span>Display</span><span>Sorts Mill Goudy</span></div>
+        <div class="font-label"><span>Body</span><span>Work Sans</span></div>
+      </div>
+    </div>
+
+    <!-- Pair 8: Cardo + Poppins -->
+    <div class="card pair-8">
+      <div class="card-number">8</div>
+      <div class="sample-display">42.5</div>
+      <div class="sample-subtitle">toward 10,000 hours</div>
+      <p class="sample-body">Each session adds to your journey. The path of 10,000 hours is walked one moment at a time.</p>
+      <div class="font-labels">
+        <div class="font-label"><span>Display</span><span>Cardo</span></div>
+        <div class="font-label"><span>Body</span><span>Poppins</span></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

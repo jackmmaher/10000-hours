@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paywall - 10,000 Hours Wireframe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Paywall - Matches roadmap wireframe exactly */
+    /* Lines 429-460 of ROADMAP.md */
+
+    .paywall-screen {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: var(--cream);
+    }
+
+    .paywall-content {
+      flex: 1;
+      padding: var(--space-lg);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .paywall-header {
+      text-align: center;
+      margin-bottom: var(--space-xl);
+      margin-top: var(--space-xl);
+    }
+
+    .paywall-title {
+      font-family: var(--font-display);
+      font-size: 32px;
+      font-weight: 300;
+      color: var(--ink);
+      margin-bottom: var(--space-md);
+      letter-spacing: -1px;
+      animation: breathe 6s ease-in-out infinite;
+    }
+
+    /* Feature list - matches roadmap format */
+    .features-inline {
+      text-align: center;
+      font-size: 14px;
+      color: var(--ink-muted);
+      margin-bottom: var(--space-2xl);
+      line-height: 1.8;
+    }
+
+    .features-inline span {
+      white-space: nowrap;
+    }
+
+    .features-inline .separator {
+      margin: 0 var(--space-xs);
+      color: var(--ink-light);
+    }
+
+    /* Pricing cards - exactly as roadmap ASCII shows */
+    .pricing-cards {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+      margin-bottom: var(--space-xl);
+    }
+
+    .pricing-card {
+      background: white;
+      border-radius: var(--radius-xl);
+      padding: var(--space-xl);
+      position: relative;
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      transition: all 400ms var(--ease-organic);
+    }
+
+    .pricing-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .pricing-card-selected {
+      box-shadow: 0 0 0 2px var(--gold), var(--shadow-md);
+    }
+
+    /* Best Value badge - roadmap shows this on Annual */
+    .value-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--gold);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 16px;
+      border-radius: var(--radius-full);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .pricing-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .pricing-info {
+      flex: 1;
+    }
+
+    .pricing-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: var(--space-xs);
+    }
+
+    .pricing-price {
+      font-family: var(--font-display);
+      font-size: 32px;
+      font-weight: 400;
+      color: var(--ink);
+      margin-bottom: var(--space-xs);
+    }
+
+    .pricing-price .period {
+      font-size: 16px;
+      color: var(--ink-muted);
+      font-family: var(--font-body);
+    }
+
+    .pricing-details {
+      font-size: 13px;
+      color: var(--ink-muted);
+      line-height: 1.5;
+    }
+
+    /* Radio-style check circle */
+    .pricing-check {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid var(--cream-deep);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-left: var(--space-md);
+      transition: all 300ms var(--ease-organic);
+    }
+
+    .pricing-check-selected {
+      background: var(--gold);
+      border-color: var(--gold);
+    }
+
+    .pricing-check svg {
+      width: 16px;
+      height: 16px;
+      color: white;
+      opacity: 0;
+      transition: opacity 200ms;
+    }
+
+    .pricing-check-selected svg {
+      opacity: 1;
+    }
+
+    /* Subscribe button - matches roadmap [Subscribe] */
+    .subscribe-btn {
+      width: 100%;
+      padding: var(--space-lg);
+      background: var(--ink);
+      color: white;
+      border: none;
+      border-radius: var(--radius-lg);
+      font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-sm);
+      transition: all 400ms var(--ease-organic);
+      margin-top: auto;
+    }
+
+    .subscribe-btn:hover {
+      background: #3d4648;
+      transform: translateY(-1px);
+    }
+
+    .subscribe-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Footer links - Restore Purchases, Maybe later */
+    .paywall-footer {
+      text-align: center;
+      padding: var(--space-lg);
+    }
+
+    .restore-link {
+      display: block;
+      font-size: 14px;
+      color: var(--ink-muted);
+      text-decoration: none;
+      margin-bottom: var(--space-lg);
+      transition: color 300ms;
+    }
+
+    .restore-link:hover {
+      color: var(--ink);
+    }
+
+    .maybe-later {
+      font-size: 14px;
+      color: var(--ink-light);
+      text-decoration: none;
+      transition: color 300ms;
+    }
+
+    .maybe-later:hover {
+      color: var(--ink-muted);
+    }
+
+    /* Close button */
+    .close-btn {
+      position: absolute;
+      top: 60px;
+      right: var(--space-md);
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--cream-deep);
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      color: var(--ink-muted);
+      transition: all 300ms var(--ease-organic);
+      z-index: 10;
+      text-decoration: none;
+    }
+
+    .close-btn:hover {
+      background: var(--cream-warm);
+      color: var(--ink);
+    }
+
+    .close-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="device-frame">
+    <div class="screen paywall-screen">
+      <!-- Close button (Maybe later) -->
+      <a href="timer.html" class="close-btn" title="Maybe later">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </a>
+
+      <div class="paywall-content">
+        <!-- Header - exactly as roadmap: "Unlock Your Garden" -->
+        <div class="paywall-header">
+          <h1 class="paywall-title">Unlock Your Garden</h1>
+        </div>
+
+        <!-- Features inline - matches roadmap format -->
+        <div class="features-inline">
+          <span>Full stats</span>
+          <span class="separator">*</span>
+          <span>Calendar</span>
+          <span class="separator">*</span>
+          <span>Sync</span>
+          <br>
+          <span>The living tree</span>
+          <span class="separator">*</span>
+          <span>Year summary</span>
+        </div>
+
+        <!-- Pricing cards - matches roadmap ASCII -->
+        <div class="pricing-cards">
+          <!-- Annual - Best Value (matches roadmap exactly) -->
+          <div class="pricing-card pricing-card-selected" onclick="selectPlan('annual')">
+            <div class="value-badge">Best Value</div>
+            <div class="pricing-row">
+              <div class="pricing-info">
+                <div class="pricing-price">$29.99 <span class="period">/ year</span></div>
+                <div class="pricing-details">
+                  Billed annually<br>
+                  Auto-renews at same price
+                </div>
+              </div>
+              <div class="pricing-check pricing-check-selected" id="check-annual">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lifetime - matches roadmap exactly -->
+          <div class="pricing-card" onclick="selectPlan('lifetime')">
+            <div class="pricing-row">
+              <div class="pricing-info">
+                <div class="pricing-price">$99.99 <span class="period">lifetime</span></div>
+                <div class="pricing-details">
+                  One payment, yours forever
+                </div>
+              </div>
+              <div class="pricing-check" id="check-lifetime">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subscribe button with Apple Pay icon -->
+        <button class="subscribe-btn" id="subscribe-btn">
+          <svg fill="currentColor" viewBox="0 0 24 24">
+            <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+          </svg>
+          <span id="btn-text">Subscribe</span>
+        </button>
+
+        <!-- Footer links - matches roadmap -->
+        <div class="paywall-footer">
+          <a href="#" class="restore-link">Restore Purchases</a>
+          <a href="timer.html" class="maybe-later">Maybe later</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let selectedPlan = 'annual';
+
+    function selectPlan(plan) {
+      selectedPlan = plan;
+
+      // Update card selection
+      document.querySelectorAll('.pricing-card').forEach(card => {
+        card.classList.remove('pricing-card-selected');
+      });
+      document.querySelectorAll('.pricing-check').forEach(check => {
+        check.classList.remove('pricing-check-selected');
+      });
+
+      if (plan === 'annual') {
+        document.querySelectorAll('.pricing-card')[0].classList.add('pricing-card-selected');
+        document.getElementById('check-annual').classList.add('pricing-check-selected');
+        document.getElementById('btn-text').textContent = 'Subscribe';
+      } else {
+        document.querySelectorAll('.pricing-card')[1].classList.add('pricing-card-selected');
+        document.getElementById('check-lifetime').classList.add('pricing-check-selected');
+        document.getElementById('btn-text').textContent = 'Buy Once';
+      }
+    }
+  </script>
+</body>
+</html>

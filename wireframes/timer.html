@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timer - 10,000 Hours Wireframe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Timer-specific styles - Maximum Ma, breathing everything */
+    .timer-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: var(--space-2xl);
+      cursor: pointer;
+      transition: background 600ms var(--ease-gentle);
+      background: var(--cream);
+    }
+
+    .timer-screen-running {
+      background: var(--cream-warm);
+    }
+
+    .timer-display {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Large display number - Cormorant Garamond, breathing */
+    .timer-hours {
+      font-family: var(--font-display);
+      font-size: 80px;
+      font-weight: 300;
+      color: var(--ink);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -2px;
+      animation: breathe 6s ease-in-out infinite;
+    }
+
+    .timer-subtitle {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--ink-muted);
+      margin-top: var(--space-md);
+      letter-spacing: 0.5px;
+    }
+
+    .timer-elapsed {
+      font-family: var(--font-display);
+      font-size: 72px;
+      font-weight: 300;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -2px;
+      animation: breathe 6s ease-in-out infinite;
+    }
+
+    .timer-added {
+      font-family: var(--font-body);
+      font-size: 15px;
+      color: var(--moss);
+      margin-top: var(--space-md);
+      animation: fadeInUp 600ms var(--ease-organic);
+    }
+
+    /* First session indicator - single dot */
+    .first-session-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--ink-light);
+      margin-bottom: var(--space-2xl);
+      animation: pulse-soft 3s ease-in-out infinite;
+    }
+
+    /* Stats navigation hint */
+    .stats-hint {
+      position: absolute;
+      bottom: 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      color: var(--ink-light);
+      text-decoration: none;
+      transition: all 400ms var(--ease-organic);
+    }
+
+    .stats-hint:hover {
+      color: var(--ink-muted);
+      transform: translateY(-3px);
+    }
+
+    .stats-hint-text {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: lowercase;
+    }
+
+    .stats-hint-icon {
+      width: 18px;
+      height: 18px;
+      opacity: 0.6;
+    }
+
+    /* Running state hint */
+    .tap-hint {
+      position: absolute;
+      bottom: 60px;
+      font-size: 13px;
+      color: var(--ink-light);
+      letter-spacing: 0.5px;
+    }
+
+    /* Settings button - very subtle */
+    .settings-btn {
+      position: absolute;
+      top: 60px;
+      right: var(--space-md);
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-light);
+      text-decoration: none;
+      border-radius: var(--radius-full);
+      transition: all 400ms var(--ease-organic);
+    }
+
+    .settings-btn:hover {
+      color: var(--ink-muted);
+      background: var(--ink-subtle);
+    }
+
+    .settings-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* State tabs for demo */
+    .state-tabs {
+      position: fixed;
+      top: var(--space-md);
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: var(--space-xs);
+      background: white;
+      padding: var(--space-xs);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      z-index: 1000;
+    }
+
+    .state-tab {
+      padding: var(--space-sm) var(--space-md);
+      font-size: 12px;
+      font-weight: 600;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      color: var(--ink-muted);
+      transition: all 300ms var(--ease-organic);
+    }
+
+    .state-tab:hover,
+    .state-tab.active {
+      background: var(--cream-deep);
+      color: var(--ink);
+    }
+  </style>
+</head>
+<body>
+  <!-- State selector tabs -->
+  <div class="state-tabs">
+    <button class="state-tab active" onclick="showState('idle')">Idle</button>
+    <button class="state-tab" onclick="showState('running')">Running</button>
+    <button class="state-tab" onclick="showState('complete')">Complete</button>
+  </div>
+
+  <div class="device-frame">
+    <div class="screen">
+      <!-- Settings button (top right) - very subtle -->
+      <a href="settings.html" class="settings-btn" title="Settings">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </a>
+
+      <!-- IDLE STATE -->
+      <div id="state-idle" class="timer-screen">
+        <div class="timer-display">
+          <span class="timer-hours">42.5</span>
+          <span class="timer-subtitle">toward 10,000 hours</span>
+        </div>
+
+        <!-- Nav hint to stats -->
+        <a href="stats.html" class="stats-hint">
+          <span class="stats-hint-text">stats</span>
+          <svg class="stats-hint-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 15l7-7 7 7"/>
+          </svg>
+        </a>
+      </div>
+
+      <!-- RUNNING STATE -->
+      <div id="state-running" class="timer-screen timer-screen-running" style="display: none;">
+        <div class="timer-display">
+          <span class="timer-elapsed">12:34</span>
+        </div>
+        <span class="tap-hint">tap to end</span>
+      </div>
+
+      <!-- COMPLETE STATE -->
+      <div id="state-complete" class="timer-screen" style="display: none;">
+        <div class="timer-display animate-fade-in-up">
+          <span class="timer-hours">42.7</span>
+          <span class="timer-added">+12 minutes</span>
+        </div>
+
+        <a href="stats.html" class="stats-hint">
+          <span class="stats-hint-text">stats</span>
+          <svg class="stats-hint-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 15l7-7 7 7"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showState(state) {
+      // Hide all states
+      document.getElementById('state-idle').style.display = 'none';
+      document.getElementById('state-running').style.display = 'none';
+      document.getElementById('state-complete').style.display = 'none';
+
+      // Show selected state
+      document.getElementById('state-' + state).style.display = 'flex';
+
+      // Update tab styles
+      document.querySelectorAll('.state-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>
