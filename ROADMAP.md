@@ -1,6 +1,6 @@
 # 10,000 Hours - iOS Commercialization Roadmap
 
-**Status:** FINALIZED | **Date:** January 2026
+**Status:** REVISED | **Date:** January 2026
 
 ---
 
@@ -14,25 +14,25 @@ Transform the minimalist meditation timer PWA into a commercially viable iOS app
 - Cloud sync via Supabase
 - The Garden: A living, growing tree that visualizes your meditation journey (PREMIUM)
 - Year-end summary: "The Tree Remembers" — a temporal journey through your tree's growth (PREMIUM)
-- Ghibli-inspired design language: warm colors, organic animation, generous Ma (空間)
+- Ghibli-inspired design language: warm colors, organic animation, generous Ma (empty space)
 
 ---
 
 ## Navigation Architecture
 
 ```
-                    ┌──────────────┐
-                    │  ONBOARDING  │  (first launch only)
-                    └──────┬───────┘
-                           ↓
-┌──────────────────────────────────────────────────────────┐
-│                                                          │
-│   TIMER  →  STATS  →  CALENDAR  →  GARDEN               │
-│   (home)    (⚙️→Settings)          (the tree)            │
-│                                                          │
-│   Overlays: Paywall, Auth Modal, Year Summary            │
-│                                                          │
-└──────────────────────────────────────────────────────────┘
+                    +--------------+
+                    |  ONBOARDING  |  (first launch only)
+                    +------+-------+
+                           |
++----------------------------------------------------------+
+|                                                          |
+|   TIMER  ->  STATS  ->  CALENDAR  ->  GARDEN             |
+|   (home)    (gear->Settings)          (the tree)         |
+|                                                          |
+|   Overlays: Paywall, Auth Modal, Year Summary            |
+|                                                          |
++----------------------------------------------------------+
 ```
 
 ### Screen Flow
@@ -61,11 +61,11 @@ Transform the minimalist meditation timer PWA into a commercially viable iOS app
 | **Basic Stats** | Total hours, this week | Full stats |
 | **Milestones** | See next milestone only | Full milestone history |
 | **Projections** | Hidden | Full projections |
-| **Calendar** | 🔒 Preview (blurred) | Full heatmap |
-| **Garden** | 🔒 Preview (teaser) | Full living tree |
-| **Spirit** | 🔒 Preview (glimpse) | Full companion |
+| **Calendar** | Preview (blurred) | Full heatmap |
+| **Garden** | Preview (teaser) | Full living tree |
+| **Spirit** | Preview (glimpse) | Full companion |
 | **Cloud Sync** | No | Yes |
-| **Year Summary** | 🔒 Preview | Full + shareable |
+| **Year Summary** | Preview | Full + shareable |
 | **Interval Bells** | No | Yes |
 | **Apple Health** | No | Yes |
 | **Export Data** | No | Yes |
@@ -161,7 +161,7 @@ Why this approach:
 
 **Implementation:**
 ```typescript
-// Growth level: 0.0 (seed) → 1.0 (full tree)
+// Growth level: 0.0 (seed) -> 1.0 (full tree)
 const growthLevel = totalHours / 10000;
 
 // L-system parameters scale with growth
@@ -191,25 +191,24 @@ const leafDensity = growthLevel * 0.8;
 When free users navigate to Garden, they see an **enticing preview**:
 
 ```
-┌─────────────────────────────────────┐
-│                                     │
-│     [BLURRED/DIMMED TREE]           │
-│     Their actual tree at current    │
-│     growth level, but obscured      │
-│                                     │
-│     ┌─────────────────────────┐     │
-│     │  🌱 Your garden awaits  │     │
-│     │                         │     │
-│     │  You've grown 5.2 hours │     │
-│     │  See your tree flourish │     │
-│     └─────────────────────────┘     │
-│                                     │
-│     ┌─────────────────────────┐     │
-│     │   Unlock Your Garden    │     │
-│     │        ↓                │     │
-│     └─────────────────────────┘     │
-│                                     │
-└─────────────────────────────────────┘
++-------------------------------------+
+|                                     |
+|     [BLURRED/DIMMED TREE]           |
+|     Their actual tree at current    |
+|     growth level, but obscured      |
+|                                     |
+|     +-------------------------+     |
+|     |  Your garden awaits     |     |
+|     |                         |     |
+|     |  You've grown 5.2 hours |     |
+|     |  See your tree flourish |     |
+|     +-------------------------+     |
+|                                     |
+|     +-------------------------+     |
+|     |   Unlock Your Garden    |     |
+|     +-------------------------+     |
+|                                     |
++-------------------------------------+
 ```
 
 **Preview mechanics:**
@@ -218,7 +217,7 @@ When free users navigate to Garden, they see an **enticing preview**:
 3. Subtle animation still visible through blur (enticing motion)
 4. Spirit companion as silhouette/shadow
 5. User's actual hours shown ("You've grown X hours")
-6. Single tap → Paywall slides up
+6. Single tap -> Paywall slides up
 
 **Psychology:**
 - User sees THEIR tree, not a generic preview
@@ -231,32 +230,32 @@ When free users navigate to Garden, they see an **enticing preview**:
 Free users see **partial stats** with premium features teased:
 
 ```
-┌─────────────────────────────────────┐
-│  ←                         Stats    │
-├─────────────────────────────────────┤
-│                                     │
-│       42.5 hours                    │  ← Always visible
-│       toward 10,000                 │
-│                                     │
-│  ┌─────────────────────────────┐    │
-│  │  This week: 2.3 hours       │    │  ← Always visible
-│  │  Sessions: 12               │    │
-│  └─────────────────────────────┘    │
-│                                     │
-│  ┌─────────────────────────────┐    │
-│  │  Next milestone: 50 hours   │    │  ← Free: next only
-│  │  ████████░░░░░ 85%          │    │
-│  └─────────────────────────────┘    │
-│                                     │
-│  ┌─────────────────────────────┐    │
-│  │  🔒 Full milestone history  │    │  ← Locked
-│  │  🔒 Projections & pace      │    │
-│  │  🔒 Detailed analytics      │    │
-│  │                             │    │
-│  │     [Unlock Premium]        │    │
-│  └─────────────────────────────┘    │
-│                                     │
-└─────────────────────────────────────┘
++-------------------------------------+
+|  <-                         Stats    |
++-------------------------------------+
+|                                     |
+|       42.5 hours                    |  <- Always visible
+|       toward 10,000                 |
+|                                     |
+|  +-----------------------------+    |
+|  |  This week: 2.3 hours       |    |  <- Always visible
+|  |  Sessions: 12               |    |
+|  +-----------------------------+    |
+|                                     |
+|  +-----------------------------+    |
+|  |  Next milestone: 50 hours   |    |  <- Free: next only
+|  |  ████████░░░░░ 85%          |    |
+|  +-----------------------------+    |
+|                                     |
+|  +-----------------------------+    |
+|  |  [locked] Full milestone    |    |  <- Locked
+|  |  [locked] Projections       |    |
+|  |  [locked] Detailed stats    |    |
+|  |                             |    |
+|  |     [Unlock Premium]        |    |
+|  +-----------------------------+    |
+|                                     |
++-------------------------------------+
 ```
 
 ### Calendar Preview (Free Users)
@@ -264,28 +263,27 @@ Free users see **partial stats** with premium features teased:
 Free users see a **blurred heatmap** with their actual data:
 
 ```
-┌─────────────────────────────────────┐
-│  ←                      Calendar    │
-├─────────────────────────────────────┤
-│                                     │
-│     [BLURRED HEATMAP]               │
-│     Real data, but obscured         │
-│     Colors/patterns visible         │
-│                                     │
-│     ┌─────────────────────────┐     │
-│     │  📅 Your meditation     │     │
-│     │     history awaits      │     │
-│     │                         │     │
-│     │  147 sessions tracked   │     │  ← Real count
-│     │  See your patterns      │     │
-│     └─────────────────────────┘     │
-│                                     │
-│     ┌─────────────────────────┐     │
-│     │   Unlock Calendar       │     │
-│     │        ↓                │     │
-│     └─────────────────────────┘     │
-│                                     │
-└─────────────────────────────────────┘
++-------------------------------------+
+|  <-                      Calendar    |
++-------------------------------------+
+|                                     |
+|     [BLURRED HEATMAP]               |
+|     Real data, but obscured         |
+|     Colors/patterns visible         |
+|                                     |
+|     +-------------------------+     |
+|     |  Your meditation        |     |
+|     |  history awaits         |     |
+|     |                         |     |
+|     |  147 sessions tracked   |     |  <- Real count
+|     |  See your patterns      |     |
+|     +-------------------------+     |
+|                                     |
+|     +-------------------------+     |
+|     |   Unlock Calendar       |     |
+|     +-------------------------+     |
+|                                     |
++-------------------------------------+
 ```
 
 ### Year Summary Preview (Free Users)
@@ -293,25 +291,25 @@ Free users see a **blurred heatmap** with their actual data:
 In January, free users experience the **same tree journey**, but obscured:
 
 ```
-┌─────────────────────────────────────┐
-│                                     │
-│         2025                        │
-│                                     │
-│     [BLURRED TREE SILHOUETTE]       │
-│     Motion visible through blur     │
-│     Spirit as shadow outline        │
-│                                     │
-│         42.5 hours                  │  ← Real number still shown
-│                                     │
-│     The tree grows, rewinds,        │
-│     tells its story—but you         │
-│     can't quite see it clearly      │
-│                                     │
-│     ┌─────────────────────────┐     │
-│     │  See what you've grown  │     │
-│     └─────────────────────────┘     │
-│                                     │
-└─────────────────────────────────────┘
++-------------------------------------+
+|                                     |
+|         2025                        |
+|                                     |
+|     [BLURRED TREE SILHOUETTE]       |
+|     Motion visible through blur     |
+|     Spirit as shadow outline        |
+|                                     |
+|         42.5 hours                  |  <- Real number still shown
+|                                     |
+|     The tree grows, rewinds,        |
+|     tells its story--but you        |
+|     can't quite see it clearly      |
+|                                     |
+|     +-------------------------+     |
+|     |  See what you've grown  |     |
+|     +-------------------------+     |
+|                                     |
++-------------------------------------+
 ```
 
 **The FOMO is visceral:** You KNOW your tree is in there. You can see it moving. The story is being told. You just can't see it clearly.
@@ -319,7 +317,7 @@ In January, free users experience the **same tree journey**, but obscured:
 **Preview strategy across all screens:**
 - Always show user's REAL data (hours, sessions, dates)
 - Blur or partially hide the rich visualizations
-- Single tap → Paywall
+- Single tap -> Paywall
 - Personal data creates emotional investment
 
 ---
@@ -367,43 +365,6 @@ View pulls back slightly. The tree remains, but beyond it—soft mist. The sugge
 
 Fade to your garden, live, waiting.
 
-### Visual Sequence (Wireframe)
-
-```
-[1. NOW]                    [2. REWIND]                 [3. JANUARY]
-┌─────────────────┐         ┌─────────────────┐         ┌─────────────────┐
-│                 │         │                 │         │                 │
-│   [Full tree]   │         │   [Tree        │         │                 │
-│   breathing     │   →     │    un-growing] │   →     │       .         │
-│      ✧          │         │      ✧→·       │         │      🌱         │
-│                 │         │                 │         │                 │
-│     2025        │         │                 │         │    January      │
-└─────────────────┘         └─────────────────┘         └─────────────────┘
-
-[4. FIRST SIT]              [5. DEEP SIT]               [6. STREAK]
-┌─────────────────┐         ┌─────────────────┐         ┌─────────────────┐
-│                 │         │                 │         │                 │
-│      🌱         │         │      🌳         │         │      🌲         │
-│     / \         │         │    (glowing    │         │   (pulsing     │
-│      ·          │         │     branch)    │         │    gold)       │
-│                 │         │      ✧↑        │         │      ✧✧        │
-│  Your first sit │         │  March 14th    │         │   23 days      │
-│   12 minutes    │         │  1h 23m        │         │   unbroken     │
-└─────────────────┘         └─────────────────┘         └─────────────────┘
-
-[7. NOW AGAIN]              [8. HORIZON]
-┌─────────────────┐         ┌─────────────────┐
-│                 │         │  ░░░░░░░░░░░░░  │  ← Misty future tree
-│   [Full tree]   │         │  ░░░░░░░░░░░░░  │
-│   Spirit looks  │         │                 │
-│   at you        │         │   [Your tree]   │
-│      ✧          │         │      ✧          │
-│                 │         │                 │
-│   42.5 hours    │         │  The horizon    │
-│  still growing  │         │  not the point  │
-└─────────────────┘         └─────────────────┘
-```
-
 ### Interaction Model
 
 - **Auto-advance** with slow pace (8-10s per moment)
@@ -432,7 +393,7 @@ The FOMO: "That blur is MY tree. I want to see it."
 ### Sharing (If Any)
 
 No stats overlay. If user wants to share:
-- "Save your tree" → generates image of just the tree
+- "Save your tree" -> generates image of just the tree
 - Beautiful, minimal, no numbers
 - More "look at this thing I grew" than "look at my achievements"
 
@@ -466,43 +427,43 @@ No stats overlay. If user wants to share:
 ### Paywall Screen Design
 
 ```
-┌─────────────────────────────────────┐
-│                                     │
-│        Unlock Your Garden           │
-│                                     │
-│   Full stats • Calendar • Sync      │
-│   The living tree • Year summary    │
-│                                     │
-│  ┌─────────────────────────────┐    │
-│  │                             │    │
-│  │  $29.99 / year ⭐ Best Value│    │
-│  │  Billed annually            │    │
-│  │  Auto-renews at same price  │    │
-│  │                             │    │
-│  │      [Subscribe]            │    │
-│  │                             │    │
-│  └─────────────────────────────┘    │
-│                                     │
-│  ┌─────────────────────────────┐    │
-│  │                             │    │
-│  │   $99.99 lifetime           │    │
-│  │   One payment, yours forever│    │
-│  │                             │    │
-│  │   [     Buy Once     ]      │    │  ← Apple Pay enabled
-│  │                             │    │
-│  └─────────────────────────────┘    │
-│                                     │
-│         Restore Purchases           │
-│                                     │
-│              Maybe later            │
-│                                     │
-└─────────────────────────────────────┘
++-------------------------------------+
+|                                     |
+|        Unlock Your Garden           |
+|                                     |
+|   Full stats * Calendar * Sync      |
+|   The living tree * Year summary    |
+|                                     |
+|  +-----------------------------+    |
+|  |                             |    |
+|  |  $29.99 / year  Best Value  |    |
+|  |  Billed annually            |    |
+|  |  Auto-renews at same price  |    |
+|  |                             |    |
+|  |      [Subscribe]            |    |
+|  |                             |    |
+|  +-----------------------------+    |
+|                                     |
+|  +-----------------------------+    |
+|  |                             |    |
+|  |   $99.99 lifetime           |    |
+|  |   One payment, yours forever|    |
+|  |                             |    |
+|  |   [     Buy Once     ]      |    |  <- Apple Pay enabled
+|  |                             |    |
+|  +-----------------------------+    |
+|                                     |
+|         Restore Purchases           |
+|                                     |
+|              Maybe later            |
+|                                     |
++-------------------------------------+
 ```
 
 ### One-Click Checkout Flow
 
 1. User taps "Buy Once" or "Subscribe"
-2. **Apple Pay sheet appears** (if enabled) - Face ID → Done
+2. **Apple Pay sheet appears** (if enabled) - Face ID -> Done
 3. OR standard App Store purchase dialog
 4. On success: Immediate unlock + prompt for account (for sync)
 5. **No account required to purchase** - Can use locally forever
@@ -542,8 +503,8 @@ Assumptions:
 ### Economics
 
 - Apple takes 15% (Small Business Program for <$1M revenue)
-- $99.99 lifetime → $84.99 net
-- $29.99/year → $25.49 net
+- $99.99 lifetime -> $84.99 net
+- $29.99/year -> $25.49 net
 - Break-even: ~4 lifetime sales OR ~4 annual subscriptions
 - Yearly costs: ~$200 (Apple $99 + Supabase ~$25 + domain $12 + misc)
 
@@ -662,145 +623,844 @@ ROADMAP.md               # This document (north star)
 
 ## Implementation Phases
 
-### Phase 1: Infrastructure
-- [ ] Create Supabase project
-- [ ] Create tables with RLS policies
-- [ ] Add `src/lib/supabase.ts`
-- [ ] Implement Apple Sign-In
-- [ ] Create `useAuthStore.ts`
-- [ ] Extend Dexie schema with sync fields
+### Phase 0: Account & Service Setup
+**Do FIRST, before any code. Some steps take days to process.**
 
-### Phase 2: Sync Engine
-- [ ] Create `src/lib/sync.ts`
-- [ ] Implement sync queue
-- [ ] Push/pull sync logic
-- [ ] Local → cloud migration on first sign-in
-- [ ] Conflict resolution
-- [ ] Test offline scenarios
+- [ ] **Apple Developer Program enrollment ($99/year)**
+  - Go to developer.apple.com/programs/enroll
+  - VERIFY: Can log into developer.apple.com/account
+  - NOTE: Approval can take 24-48 hours for individuals
 
-### Phase 3: Feature-Gating & Paywall
-- [ ] Add `usePremiumStore.ts` for premium status tracking
-- [ ] Create `Paywall.tsx` with 3-tier pricing (Free / $29.99 annual / $99.99 lifetime)
-- [ ] Implement feature-gate checks (Calendar, Garden, Sync, etc.)
-- [ ] Set up RevenueCat account
-- [ ] Integrate RevenueCat SDK (subscription + non-consumable)
-- [ ] Configure IAPs in App Store Connect (annual sub + lifetime)
+- [ ] **Create App ID in Apple Developer Portal**
+  - Certificates, Identifiers & Profiles -> Identifiers -> App IDs -> (+)
+  - Bundle ID: `com.yourname.tenthousandhours`
+  - Enable capability: "Sign in with Apple"
+  - VERIFY: App ID appears in list with SIWA enabled
 
-### Phase 4: Core UI Screens
-- [ ] Create `Onboarding.tsx` (3 screens)
-- [ ] Create `Settings.tsx`
-- [ ] Create `AuthModal.tsx`
-- [ ] Add navigation to Garden position
-- [ ] Wire up all screen transitions
+- [ ] **Create Supabase project**
+  - Go to supabase.com -> New Project
+  - Choose region closest to your users (EU West for Ireland)
+  - SAVE THESE VALUES: Project URL, anon public key, service role key
+  - VERIFY: Can access Supabase dashboard for your project
 
-### Phase 5: The Garden
-- [ ] Install p5 and react-p5 dependencies
-- [ ] Create L-system grammar (`src/lib/lsystem.ts`)
-- [ ] Create growth calculation system (`src/lib/growth.ts`)
-- [ ] Implement `TreeCanvas.tsx` (p5.js React wrapper)
-- [ ] Add idle breathing animation (sway, leaf movement)
-- [ ] Generate spirit PNG sprites (AI-assisted)
-- [ ] Implement `Spirit.tsx` with CSS animations
-- [ ] Add post-session growth animation (golden light ripple)
-- [ ] Create `Garden.tsx` screen
-- [ ] Add "View garden" prompt after sessions
-- [ ] Test growth progression (0h → 100h → 1000h → 10000h)
+- [ ] **App Store Connect setup**
+  - Go to appstoreconnect.apple.com
+  - My Apps -> (+) New App
+  - Platform: iOS, Name: "10,000 Hours", Bundle ID: (select your App ID)
+  - VERIFY: App appears in "My Apps"
 
-### Phase 6: Design System (Ghibli)
-- [ ] Update color palette in Tailwind config (cream → warmer, indigo → softer ink)
-- [ ] Add Google Fonts: Cormorant Garamond (display), Nunito (body)
-- [ ] Implement breathing animation keyframes with asymmetric timing
-- [ ] Add organic easing curves to transitions
-- [ ] Refactor Stats screen: remove borders, increase spacing (Scroll Garden)
-- [ ] Add living number animations to key statistics
-- [ ] Update weekly dots with micro-animations (pulse, glow states)
-- [ ] Add paper texture to backgrounds (subtle, optional)
+- [ ] **App Store Connect: Agreements, Tax, Banking**
+  - Users and Access -> Agreements, Tax, and Banking
+  - Accept Paid Apps agreement
+  - Enter banking and tax information
+  - VERIFY: Status shows "Active" (can take 1-3 business days)
+  - NOTE: Cannot test purchases until this is complete
+
+- [ ] **Create RevenueCat account**
+  - Go to app.revenuecat.com -> Sign up
+  - Create new project: "10000 Hours"
+  - Platform: Apple App Store
+  - Enter App Store Connect shared secret
+  - VERIFY: RevenueCat shows your app with green checkmark
+
+- [ ] **Create IAP products in App Store Connect**
+  - My Apps -> Your App -> In-App Purchases
+  - Subscription: Reference Name "Premium Annual", Product ID `premium_annual`, $29.99/year
+  - Non-consumable: Reference Name "Premium Lifetime", Product ID `premium_lifetime`, $99.99
+  - Submit for review (can take 24-48 hours)
+  - VERIFY: Products show "Ready to Submit" or "Approved"
+
+- [ ] **Configure products in RevenueCat**
+  - Products -> Add Product (for each IAP)
+  - Match Product IDs exactly (case-sensitive)
+  - Create Entitlement: "premium"
+  - Create Offering: "default" with both products
+  - VERIFY: Products show in RevenueCat dashboard with checkmarks
+
+#### Phase 0 - TEST CHECKLIST
+Before moving to Phase 1:
+- [ ] Can log into Apple Developer account
+- [ ] App ID exists with Sign in with Apple enabled
+- [ ] Supabase project accessible, credentials saved securely
+- [ ] App appears in App Store Connect
+- [ ] Banking/tax shows "Active" status
+- [ ] RevenueCat shows green checkmarks for both products
+- [ ] IAP products approved in App Store Connect
+
+---
+
+### Phase 1: Infrastructure + Auth
+**REQUIRES: Phase 0 complete (Apple Developer, Supabase accounts)**
+
+- [ ] **Create Supabase tables with RLS**
+  - Create `profiles` and `sessions` tables per schema above
+  - Enable Row Level Security on both tables
+  - Add policies: users can only read/write their own data
+  - VERIFY: SQL executes without errors in Supabase SQL editor
+
+- [ ] **Configure Supabase Auth for Apple Sign-In**
+  - Authentication -> Providers -> Apple
+  - Enter Services ID, Team ID, Key ID, Private Key
+  - Follow: https://supabase.com/docs/guides/auth/social-login/auth-apple
+  - VERIFY: Apple provider shows "Enabled"
+
+- [ ] **Add Supabase client to project**
+  - `npm install @supabase/supabase-js`
+  - Create `src/lib/supabase.ts` with client initialization
+  - Use environment variables for credentials
+  - VERIFY: `npm run build` succeeds
+
+- [ ] **Create useAuthStore.ts**
+  - Track: user, session, isLoading, isAuthenticated
+  - Actions: signInWithApple, signOut, refreshSession
+  - Initialize: check existing session on app load
+  - VERIFY: Store compiles without TypeScript errors
+
+- [ ] **Implement Apple Sign-In flow**
+  - Add sign-in button to Settings (or temporary test location)
+  - Use `supabase.auth.signInWithOAuth({ provider: 'apple' })`
+  - Handle redirect callback
+  - VERIFY: Button appears and can be tapped
+
+- [ ] **Create profile on first sign-in**
+  - After successful auth, check if profile exists
+  - If not, insert new profile row
+  - Set `is_premium: false` initially
+  - VERIFY: Profile appears in Supabase profiles table
+
+#### Phase 1 - TEST CHECKLIST
+Before moving to Phase 2:
+- [ ] `npm run build` succeeds with no errors
+- [ ] Timer still works (start/stop meditation)
+- [ ] Existing sessions still appear in Stats
+- [ ] Can tap "Sign in with Apple" button
+- [ ] Apple auth sheet appears (in browser/simulator)
+- [ ] After signing in:
+  - [ ] User appears in Supabase auth.users table
+  - [ ] Profile row created in profiles table
+  - [ ] is_premium is false
+- [ ] Can sign out
+- [ ] Can sign in again with same account
+- [ ] Session persists after page refresh (if applicable)
+
+**ESCAPE HATCH - If Apple Sign-In won't work:**
+- Check bundle ID matches EXACTLY in Supabase config
+- Check team ID matches your Apple Developer Team ID
+- Try email auth temporarily: `supabase.auth.signUp({ email, password })`
+- Consult: https://supabase.com/docs/guides/auth/social-login/auth-apple
+
+---
+
+### Phase 2: Core UI Screens
+**REQUIRES: Phase 1 complete (can display logged-in state)**
+
+- [ ] **Create Onboarding.tsx (3 screens)**
+  - Screen 1: "Your meditation companion" - app intro
+  - Screen 2: "Track your journey" - what the app does
+  - Screen 3: "Get started" - tap to begin
+  - Store `hasSeenOnboarding` in localStorage
+  - VERIFY: Onboarding appears on first launch only
+
+- [ ] **Create Settings.tsx**
+  - Account section: email/sign out (if signed in) or sign in button
+  - Sync status indicator (placeholder for now)
+  - Premium status display
+  - Links: Privacy Policy, Terms of Service
+  - Version number at bottom
+  - VERIFY: Settings accessible from Stats screen
+
+- [ ] **Create AuthModal.tsx**
+  - Modal/overlay that slides up
+  - "Sign in with Apple" button
+  - "Why sign in?" explanation text
+  - Close button
+  - VERIFY: Modal appears when triggered, can close
+
+- [ ] **Add navigation to new screens**
+  - Settings: gear icon on Stats screen -> Settings
+  - Onboarding: shows before Timer on first launch
+  - AuthModal: triggered from Settings or after purchase
+  - VERIFY: All navigation paths work
+
+- [ ] **Add LockedOverlay.tsx component**
+  - Reusable component for locked features
+  - Blurred background
+  - Message + "Unlock" CTA button
+  - VERIFY: Component renders correctly in isolation
+
+#### Phase 2 - TEST CHECKLIST
+Before moving to Phase 3:
+- [ ] `npm run build` succeeds
+- [ ] Timer still works
+- [ ] Onboarding shows on first launch (clear localStorage to test)
+- [ ] Onboarding does NOT show on subsequent launches
+- [ ] Can navigate: Timer -> Stats -> Settings
+- [ ] Can navigate back from Settings
+- [ ] Settings shows sign-in button when logged out
+- [ ] Settings shows account info when logged in
+- [ ] AuthModal opens and closes correctly
+- [ ] LockedOverlay renders with blur and CTA
+
+---
+
+### Phase 3: Paywall + Monetization
+**REQUIRES: Phase 0 complete (RevenueCat configured), Phase 2 complete (UI shell)**
+
+- [ ] **Install RevenueCat SDK**
+  - `npm install @revenuecat/purchases-capacitor` (for Capacitor)
+  - OR use web SDK for initial testing: `npm install @revenuecat/purchases-js`
+  - VERIFY: Package installed, no dependency errors
+
+- [ ] **Create src/lib/purchases.ts**
+  - Initialize RevenueCat with API key
+  - Functions: getOfferings, purchasePackage, restorePurchases
+  - Handle purchase success/failure callbacks
+  - VERIFY: File compiles without errors
+
+- [ ] **Create usePremiumStore.ts**
+  - Track: isPremium, premiumType ('annual' | 'lifetime' | null)
+  - Actions: checkPremiumStatus, setPremiumStatus
+  - Initialize: check RevenueCat subscription status on app load
+  - Sync with Supabase profile (if logged in)
+  - VERIFY: Store compiles, isPremium defaults to false
+
+- [ ] **Create Paywall.tsx**
+  - Two pricing cards: Annual ($29.99) and Lifetime ($99.99)
+  - Annual marked as "Best Value"
+  - Purchase buttons trigger RevenueCat
+  - "Restore Purchases" link at bottom
+  - "Maybe later" dismiss option
+  - VERIFY: Paywall renders correctly with both options
+
+- [ ] **Implement feature-gate checks**
+  - Create helper: `isPremiumFeature(feature: string): boolean`
+  - Gate: Calendar (full view), Garden, Year Summary, Sync, Bells, Export
+  - When non-premium user accesses gated feature -> show Paywall
+  - VERIFY: Tapping locked feature shows Paywall
+
+- [ ] **Handle purchase completion**
+  - On successful purchase: update usePremiumStore
+  - Update Supabase profile (if logged in)
+  - Dismiss Paywall, show success feedback
+  - Prompt for sign-in (for sync) if not already signed in
+  - VERIFY: Purchase flow completes (use sandbox account)
+
+#### Phase 3 - TEST CHECKLIST
+Before moving to Phase 4:
+- [ ] `npm run build` succeeds
+- [ ] Timer still works
+- [ ] Paywall appears when tapping locked feature
+- [ ] Both pricing options display correctly
+- [ ] Can dismiss Paywall with "Maybe later"
+- [ ] "Restore Purchases" button is present
+- [ ] **Sandbox testing (requires TestFlight or device):**
+  - [ ] Can complete test purchase (annual)
+  - [ ] Can complete test purchase (lifetime)
+  - [ ] After purchase, locked features unlock
+  - [ ] Restore Purchases works after reinstall
+  - [ ] Premium status persists after app restart
+
+**ESCAPE HATCH - If "Invalid Product ID" error:**
+- Product IDs are case-sensitive: check exact match
+- Products need Apple review: wait 24-48 hours after creating
+- Check RevenueCat dashboard for product fetch errors
+- Use RevenueCat debug logs: `Purchases.setDebugLogsEnabled(true)`
+
+---
+
+### Phase 4: Design System (Ghibli)
+**REQUIRES: Phase 2 complete (UI screens to style)**
+
+- [ ] **Update color palette in Tailwind config**
+  ```js
+  // tailwind.config.js
+  cream: '#FAF8F3',        // Warmer paper tone
+  'cream-warm': '#F5F1E8', // Working surfaces
+  'cream-deep': '#EDE8DC', // Cards
+  ink: '#2D3436',          // Softer than black
+  'ink-soft': '#4A5568',   // Secondary text
+  moss: '#7C9A6E',         // Growth, positive
+  bark: '#8B7355',         // Earth tones
+  ```
+  - VERIFY: New colors applied, app builds
+
+- [ ] **Add typography (Google Fonts)**
+  - Display: Cormorant Garamond (headings, numbers)
+  - Body: Nunito (softer, rounded)
+  - Import in index.html or CSS
+  - VERIFY: Fonts load and display correctly
+
+- [ ] **Implement breathing animations**
+  ```css
+  @keyframes subtle-breathe {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.92; transform: scale(0.997); }
+  }
+  /* 6 second cycle */
+  ```
+  - Apply to key statistics
+  - VERIFY: Numbers have subtle breathing effect
+
+- [ ] **Update Stats screen (Scroll Garden style)**
+  - Remove ALL borders
+  - Increase vertical spacing between sections (2-3x)
+  - Content floats in space
+  - Add soft dashed "path" separators (optional)
+  - VERIFY: Stats feels spacious, zen
+
+- [ ] **Add organic easing to transitions**
+  - `transition: all 400ms cubic-bezier(0.34, 1.56, 0.64, 1);`
+  - Apply to buttons, modals, navigation
+  - VERIFY: Transitions feel natural, not mechanical
+
+- [ ] **Update weekly dots with micro-animations**
+  - Completed days: gentle pulse every ~8 seconds
+  - Today: breathing glow
+  - Future: completely still (contrast)
+  - VERIFY: Dots animate appropriately
+
+#### Phase 4 - TEST CHECKLIST
+Before moving to Phase 5:
+- [ ] `npm run build` succeeds
+- [ ] Timer still works
+- [ ] Color palette is warm (cream backgrounds, softer text)
+- [ ] Typography loads (Cormorant Garamond for numbers)
+- [ ] Stats screen has generous spacing, no harsh borders
+- [ ] Key numbers have subtle breathing animation
+- [ ] Weekly dots animate (completed pulse, today glows)
+- [ ] Transitions feel organic, not abrupt
+- [ ] Overall app feels "Ghibli-like" - warm, alive, breathing
+
+---
+
+### Phase 5a: Garden Foundation (Math & Logic)
+**REQUIRES: Phase 1 complete (have session data to calculate from)**
+
+- [ ] **Install p5 dependencies**
+  - `npm install p5 @types/p5`
+  - Consider: `npm install react-p5` or build custom wrapper
+  - VERIFY: Packages install without errors, `npm run build` succeeds
+
+- [ ] **Create src/lib/growth.ts**
+  - `calculateGrowthLevel(totalHours: number): number` -> 0.0 to 1.0
+  - `getSpiritStage(totalHours: number): SpiritStage` -> enum of stages
+  - `getGrowthRate(totalHours: number): number` -> changes per hour
+  - VERIFY: Functions return expected values for test inputs
+
+- [ ] **Create src/lib/lsystem.ts**
+  - L-system grammar: axiom, rules, angle, iterations
+  - `generateTree(growthLevel: number): TreeData`
+  - Deterministic: use `randomSeed(totalHours)` for consistent trees
+  - VERIFY: Console.log shows valid tree data for different levels
+
+- [ ] **Create src/stores/useGardenStore.ts**
+  - Track: growthLevel, spiritStage, isAnimating
+  - Derive from useSessionStore.totalSeconds
+  - VERIFY: Store updates when session count changes
+
+#### Phase 5a - TEST CHECKLIST
+Before moving to Phase 5b:
+- [ ] `npm run build` succeeds
+- [ ] Timer still works
+- [ ] p5 imported without errors
+- [ ] growth.ts: `calculateGrowthLevel(0)` returns 0
+- [ ] growth.ts: `calculateGrowthLevel(10000)` returns 1
+- [ ] growth.ts: `calculateGrowthLevel(50)` returns ~0.005
+- [ ] lsystem.ts: generates tree data without errors
+- [ ] lsystem.ts: same hours produces same tree (deterministic)
+- [ ] useGardenStore reflects correct growth level from session data
+
+---
+
+### Phase 5b: Garden Rendering (Visual)
+**REQUIRES: Phase 5a complete (growth calculations, L-system logic)**
+
+- [ ] **Create TreeCanvas.tsx (p5.js wrapper)**
+  - Use p5.js instance mode in React
+  - Render tree from L-system data
+  - Accept `growthLevel` prop
+  - Handle resize events
+  - VERIFY: Basic tree renders on screen
+
+- [ ] **Render tree at multiple growth levels**
+  - Test: growthLevel 0.1, 0.5, 0.9
+  - Tree should look different at each level
+  - VERIFY: Visual difference between growth stages
+
+- [ ] **Add idle breathing animation**
+  - Leaves sway gently
+  - Branch micro-movements
+  - 5-6 second cycle, asymmetric
+  - VERIFY: Tree is "always alive" - subtle motion at rest
+
+- [ ] **Add color variations based on growth**
+  - Young tree: lighter greens, thin branches
+  - Mature tree: deeper colors, thicker trunk
+  - VERIFY: Color changes are visible between stages
+
+#### Phase 5b - TEST CHECKLIST
+Before moving to Phase 5c:
+- [ ] `npm run build` succeeds
+- [ ] Timer still works
+- [ ] TreeCanvas renders a tree on screen
+- [ ] Tree visually changes at different growth levels
+- [ ] Tree has idle breathing animation
+- [ ] Tree colors evolve with growth
+- [ ] No console errors from p5.js
+- [ ] Canvas resizes correctly on window resize
+
+**ESCAPE HATCH - If p5.js won't render:**
+- Check browser console for errors
+- Test p5.js in standalone HTML file first (outside React)
+- Ensure instance mode setup: `new p5((p) => { ... }, containerRef)`
+- Try simpler canvas drawing first, then add L-system complexity
+- Reference: https://shivanshbakshi.dev/blog/p5-react/integrate-p5-with-react/
+
+---
+
+### Phase 5c: Garden Integration (Full Feature)
+**REQUIRES: Phase 5b complete (tree renders), Phase 3 complete (premium gating)**
+
+- [ ] **Generate Spirit PNG sprites**
+  - AI-generate 5-6 evolution stages
+  - Formats: idle, happy, looking up
+  - Place in `src/assets/spirit/`
+  - VERIFY: Images load correctly
+
+- [ ] **Create Spirit.tsx component**
+  - Display sprite based on spirit stage
+  - CSS animations: blinking, breathing, shifting weight
+  - Position relative to tree
+  - VERIFY: Spirit appears and animates
+
+- [ ] **Create Garden.tsx screen**
+  - Full-screen tree + spirit
+  - Display user's growth level
+  - Handle premium vs free state
+  - VERIFY: Garden screen renders correctly
+
+- [ ] **Implement locked overlay for free users**
+  - Use LockedOverlay component from Phase 2
+  - Tree renders but blurred
+  - "Your garden awaits" + unlock CTA
+  - VERIFY: Free users see blur + unlock prompt
+
+- [ ] **Add Garden to navigation**
+  - Position: after Calendar in navigation flow
+  - Swipe from Calendar -> Garden
+  - Or direct link from Stats
+  - VERIFY: Can navigate to Garden
+
+- [ ] **Add post-session growth animation**
+  - After session ends, if user views garden:
+  - Golden light ripple effect
+  - Spirit reacts with joy
+  - New growth appears
+  - VERIFY: Animation plays after completing a session
+
+#### Phase 5c - TEST CHECKLIST
+Before moving to Phase 6:
+- [ ] `npm run build` succeeds
+- [ ] Timer still works
+- [ ] Garden screen accessible via navigation
+- [ ] Tree renders at correct growth level
+- [ ] Spirit appears and animates
+- [ ] **Free user experience:**
+  - [ ] Tree is blurred
+  - [ ] "Your garden awaits" message shows
+  - [ ] Tapping unlock shows Paywall
+- [ ] **Premium user experience:**
+  - [ ] Tree is clear, not blurred
+  - [ ] Full interaction available
+- [ ] Post-session growth animation works
+- [ ] Garden shows correct hours ("You've grown X hours")
+
+---
+
+### Phase 6: Sync Engine
+**REQUIRES: Phase 1 complete (Supabase auth + tables), Phase 3 complete (user may be premium)**
+**NOTE: This is the hardest phase. Work incrementally. Test thoroughly.**
+
+#### Phase 6a: One-Way Sync (Local -> Cloud)
+
+- [ ] **Extend Dexie schema with sync fields**
+  - Add to sessions: `syncedAt`, `needsSync`
+  - Create SyncQueue table for pending uploads
+  - VERIFY: Database migration runs without errors
+
+- [ ] **Create sync queue mechanism**
+  - On session save, add to SyncQueue
+  - Queue persists across app restarts
+  - VERIFY: New sessions appear in SyncQueue
+
+- [ ] **Implement push sync**
+  - Background job processes SyncQueue
+  - Uploads sessions to Supabase
+  - Marks as synced on success
+  - VERIFY: Session appears in Supabase within 30 seconds
+
+- [ ] **Handle offline gracefully**
+  - If offline, queue grows
+  - When online, process queue
+  - VERIFY: Sessions sync after coming back online
+
+#### Phase 6a - TEST CHECKLIST
+- [ ] Complete meditation session while signed in
+- [ ] Check Supabase: session appears in sessions table
+- [ ] Complete session while offline
+- [ ] Go online: session syncs automatically
+- [ ] SyncQueue is empty after successful sync
+
+#### Phase 6b: Cloud Pull (Initial Sync)
+
+- [ ] **Implement pull sync on sign-in**
+  - Fetch all sessions from Supabase for user
+  - Merge with local sessions
+  - Deduplicate by UUID
+  - VERIFY: Cloud sessions appear locally after sign-in
+
+- [ ] **Handle first-time sign-in on new device**
+  - No local sessions yet
+  - Pull all from cloud
+  - VERIFY: All sessions appear on new device
+
+- [ ] **Handle sign-in with existing local data**
+  - Merge cloud + local
+  - Avoid duplicates
+  - VERIFY: No duplicate sessions after merge
+
+#### Phase 6b - TEST CHECKLIST
+- [ ] Sign in on new browser/device
+- [ ] All previous sessions appear
+- [ ] Hours total matches what you had before
+- [ ] No duplicate sessions in list
+- [ ] Stats/Calendar show complete history
+
+#### Phase 6c: Conflict Resolution
+
+- [ ] **Implement conflict detection**
+  - Same client_uuid, different data
+  - Compare timestamps
+  - VERIFY: Conflicts are detected
+
+- [ ] **Implement last-write-wins**
+  - Server timestamp takes precedence
+  - Update local with server data
+  - VERIFY: Conflict resolves to server version
+
+- [ ] **Add sync status indicator**
+  - Settings shows: "Synced", "Syncing...", "Offline"
+  - Last sync timestamp
+  - VERIFY: Status reflects actual sync state
+
+#### Phase 6c - TEST CHECKLIST
+Before moving to Phase 7:
+- [ ] `npm run build` succeeds
+- [ ] Timer still works
+- [ ] All sessions sync to Supabase
+- [ ] New device shows all sessions after sign-in
+- [ ] Offline sessions sync when back online
+- [ ] No duplicate sessions ever created
+- [ ] Sync status indicator works correctly
+- [ ] Edge case: edit session on device A while offline, edit same on device B, both sync -> no data loss
+
+**ESCAPE HATCH - If sync has bugs:**
+- Add extensive console.log for debugging
+- Check Supabase dashboard for actual data
+- Temporarily disable two-way sync, use one-way only
+- Consider: manual export/import JSON as fallback
+
+---
 
 ### Phase 7: Year Summary (The Tree Remembers)
-- [ ] Add growth level scrubbing to TreeCanvas (render tree at any historical hour-count)
-- [ ] Implement tree "rewind" animation (un-growth sequence)
-- [ ] Create YearSummary.tsx as temporal Garden journey
-- [ ] Add key moment detection (first sit, deep sit, streaks)
-- [ ] Implement environment/lighting changes for seasons
-- [ ] Spirit reactions at milestone moments
-- [ ] Auto-advance timing with swipe-to-skip
-- [ ] Blurred/silhouette mode for free users
-- [ ] "Save your tree" image export (no stats overlay)
+**REQUIRES: Phase 5c complete (Garden renders), Phase 6 complete (have sync data)**
+
+- [ ] **Add growth level scrubbing to TreeCanvas**
+  - Accept `historicalHours` prop
+  - Render tree at any historical point
+  - VERIFY: Can render tree at past hour counts
+
+- [ ] **Implement tree rewind animation**
+  - Animate from current -> 0 (un-growth)
+  - Smooth transition over ~5 seconds
+  - VERIFY: Tree shrinks back organically
+
+- [ ] **Create YearSummary.tsx**
+  - Full-screen temporal journey
+  - Sequence: Now -> Rewind -> January -> Growth -> Now -> Horizon
+  - Auto-advance with 8-10s per moment
+  - VERIFY: Full sequence plays correctly
+
+- [ ] **Detect and display key moments**
+  - First sit of the year
+  - Deepest sit
+  - Longest streak
+  - Total for the year
+  - VERIFY: Moments are accurate from data
+
+- [ ] **Add environment/lighting changes**
+  - January: cool tones, bare
+  - Spring: warmer, growth
+  - Summer: full, bright
+  - Fall: golden
+  - VERIFY: Seasonal progression visible
+
+- [ ] **Spirit reactions at milestones**
+  - Happy at first sit
+  - Proud at streak
+  - Serene at year end
+  - VERIFY: Spirit responds to moments
+
+- [ ] **Implement blurred mode for free users**
+  - Same sequence, but tree blurred
+  - Data still shows (hours, moments)
+  - Ends with unlock CTA
+  - VERIFY: Free users see enticing blur
+
+- [ ] **Add "Save your tree" export**
+  - Button at end of sequence
+  - Generates image of tree (no stats)
+  - VERIFY: Can save/share tree image
+
+#### Phase 7 - TEST CHECKLIST
+Before moving to Phase 8:
+- [ ] `npm run build` succeeds
+- [ ] Timer still works
+- [ ] Year Summary accessible from Settings
+- [ ] Full sequence plays (Now -> Rewind -> Growth -> Now -> Horizon)
+- [ ] Key moments detected correctly
+- [ ] Seasonal lighting changes visible
+- [ ] Spirit reacts at milestones
+- [ ] Free users see blurred version
+- [ ] Premium users see clear version
+- [ ] Can save tree image
+- [ ] Total duration: ~60-90 seconds
+- [ ] Swipe-to-advance works
+
+---
 
 ### Phase 8: Enhancements
-- [ ] Apple Health integration
-- [ ] Interval bells (sounds + settings)
-- [ ] Dark mode (respect Ghibli palette in dark variant)
-- [ ] iOS widgets (small: hours only)
+**REQUIRES: Phase 7 complete (core features done)**
+
+- [ ] **Apple Health integration**
+  - Add HealthKit capability in Xcode
+  - Request mindfulness write permission
+  - Sync sessions as mindfulness minutes
+  - VERIFY: Sessions appear in Health app
+
+- [ ] **Interval bells**
+  - Add bell sound files to assets
+  - Settings UI for intervals (15, 30, 60 min)
+  - Play bell during meditation
+  - VERIFY: Bell sounds at configured intervals
+
+- [ ] **Dark mode support**
+  - Adapt Ghibli palette for dark
+  - Respect system preference
+  - Toggle in Settings
+  - VERIFY: Dark mode looks good, not harsh
+
+- [ ] **Data export**
+  - Export sessions as JSON/CSV
+  - Share sheet integration
+  - Premium-only feature
+  - VERIFY: Export produces valid file
+
+#### Phase 8 - TEST CHECKLIST
+Before moving to Phase 9:
+- [ ] `npm run build` succeeds
+- [ ] Timer still works
+- [ ] Apple Health shows meditation data (requires device)
+- [ ] Interval bells work during session
+- [ ] Dark mode toggle works
+- [ ] Dark mode preserves Ghibli feel
+- [ ] Export creates downloadable file
+- [ ] All enhancements are premium-gated correctly
+
+---
 
 ### Phase 9: Capacitor & iOS
-- [ ] Install Capacitor + plugins
-- [ ] Generate iOS project
-- [ ] Configure capabilities
-- [ ] App icons + splash screens
-- [ ] Test on physical device
-- [ ] Haptic feedback on session end
+**REQUIRES: Phase 8 complete (feature-complete)**
 
-### Phase 10: Launch
-- [ ] Privacy policy + Terms of Service
-- [ ] App Store listing copy
-- [ ] Screenshots + preview video
-- [ ] TestFlight beta
-- [ ] Submit for review
+- [ ] **Install Capacitor**
+  - `npm install @capacitor/core @capacitor/ios`
+  - `npx cap init "10000 Hours" com.yourname.tenthousandhours`
+  - VERIFY: capacitor.config.ts created
+
+- [ ] **Add required plugins**
+  - `@capacitor/app` - lifecycle events
+  - `@capacitor/haptics` - vibration feedback
+  - `@capacitor/status-bar` - iOS status bar styling
+  - VERIFY: Plugins install without errors
+
+- [ ] **Generate iOS project**
+  - `npm run build && npx cap add ios`
+  - VERIFY: `ios/` folder created
+
+- [ ] **Configure iOS capabilities**
+  - Open in Xcode: `npx cap open ios`
+  - Add capabilities: Sign in with Apple, HealthKit
+  - Configure bundle ID to match Apple Developer
+  - VERIFY: App builds in Xcode
+
+- [ ] **Create app icons and splash screens**
+  - Icon: 1024x1024 (App Store) + all required sizes
+  - Splash: centered logo on cream background
+  - Use Capacitor splash screen plugin
+  - VERIFY: Icons display correctly
+
+- [ ] **Test on physical device**
+  - Connect iPhone, trust computer
+  - Build and run from Xcode
+  - Test all flows on device
+  - VERIFY: App runs correctly on device
+
+- [ ] **Add haptic feedback**
+  - Session start: subtle tap
+  - Session end: success pattern
+  - VERIFY: Haptics feel appropriate
+
+#### Phase 9 - TEST CHECKLIST
+Before moving to Phase 10:
+- [ ] App builds and runs on iOS simulator
+- [ ] App builds and runs on physical iPhone
+- [ ] App icon displays correctly
+- [ ] Splash screen shows on launch
+- [ ] Sign in with Apple works on device
+- [ ] In-App Purchase works on device (sandbox)
+- [ ] Timer works correctly
+- [ ] Garden renders correctly
+- [ ] Haptic feedback fires appropriately
+- [ ] No crashes in 30 minutes of use
+
+---
+
+### Phase 10: Launch Preparation
+**REQUIRES: Phase 9 complete (app runs on device)**
+
+- [ ] **Write Privacy Policy**
+  - What data is collected
+  - How it's stored (Supabase, local)
+  - No selling of data
+  - Host on simple webpage
+  - VERIFY: URL accessible, content accurate
+
+- [ ] **Write Terms of Service**
+  - Usage terms
+  - Subscription terms
+  - Refund policy (Apple handles this)
+  - Host on simple webpage
+  - VERIFY: URL accessible, content accurate
+
+- [ ] **Create App Store listing**
+  - App name: "10,000 Hours - Meditation Timer"
+  - Subtitle: "Track your meditation journey"
+  - Description: focus on zen philosophy, no pressure
+  - Keywords for ASO
+  - VERIFY: All text fields complete
+
+- [ ] **Create screenshots**
+  - 6.7" (iPhone 15 Pro Max), 6.5" (iPhone 14 Plus), 5.5" (iPhone 8 Plus)
+  - Show: Timer, Stats, Calendar, Garden
+  - Clean, minimal, no device frames needed
+  - VERIFY: Screenshots uploaded to App Store Connect
+
+- [ ] **Create preview video (optional)**
+  - 15-30 second walkthrough
+  - Show meditation flow, tree growth
+  - No voiceover, just visuals + music
+  - VERIFY: Video meets Apple specs
+
+- [ ] **TestFlight beta**
+  - Upload build to App Store Connect
+  - Invite 5-10 beta testers
+  - Collect feedback for 1-2 weeks
+  - VERIFY: Beta testers can install and use app
+
+- [ ] **Submit for App Store review**
+  - Complete all metadata
+  - Answer review questions
+  - Submit and wait (1-3 days typical)
+  - VERIFY: Status changes to "In Review"
+
+#### Phase 10 - TEST CHECKLIST
+Before launch:
+- [ ] Privacy Policy URL works
+- [ ] Terms of Service URL works
+- [ ] App Store listing is complete
+- [ ] All screenshots uploaded
+- [ ] TestFlight build works for testers
+- [ ] All critical bugs from beta addressed
+- [ ] App submitted for review
+- [ ] App APPROVED (status: Ready for Sale)
+
+---
 
 ### Phase 11: Post-Launch
-- [ ] Milestone shareable cards (tree images, no stats)
-- [ ] Tree art upgrade (Rive/Lottie for smoother animation)
-- [ ] Seasonal environment variations
+**After App Store approval**
+
+- [ ] **Monitor first-week metrics**
+  - RevenueCat: conversion rate, revenue
+  - App Store: downloads, ratings
+  - Crashes: any reports?
+  - VERIFY: Dashboard access, data flowing
+
+- [ ] **Respond to reviews**
+  - Thank positive reviewers
+  - Address concerns constructively
+  - Note feature requests
+  - VERIFY: All reviews acknowledged within 48 hours
+
+- [ ] **Plan v1.1 features**
+  - Milestone shareable cards
+  - Tree art upgrade (Rive/Lottie)
+  - Seasonal environment variations
+  - Widget support
+  - VERIFY: Prioritized list created
 
 ---
 
 ## Settings Screen Structure
 
 ```
-┌─────────────────────────────────────┐
-│  ←                       Settings   │
-├─────────────────────────────────────┤
-│                                     │
-│  ACCOUNT                            │
-│  ┌─────────────────────────────┐    │
-│  │ jack@email.com              │    │
-│  │ Sign Out                    │    │
-│  └─────────────────────────────┘    │
-│                                     │
-│  SYNC                               │
-│  ┌─────────────────────────────┐    │
-│  │ ● Synced (2 min ago)        │    │
-│  └─────────────────────────────┘    │
-│                                     │
-│  MEDITATION                         │
-│  ┌─────────────────────────────┐    │
-│  │ Interval bells        [off] │    │
-│  │ Sound              [bell ▾] │    │
-│  │ Intervals     [15,30,60 ▾]  │    │
-│  └─────────────────────────────┘    │
-│                                     │
-│  SUPPORT THE JOURNEY                │
-│  ┌─────────────────────────────┐    │
-│  │ Leave a tip              →  │    │
-│  └─────────────────────────────┘    │
-│                                     │
-│  DATA                               │
-│  ┌─────────────────────────────┐    │
-│  │ Apple Health sync     [on]  │    │
-│  │ Export sessions          →  │    │
-│  │ View 2025 Summary        →  │    │
-│  └─────────────────────────────┘    │
-│                                     │
-│  ABOUT                              │
-│  ┌─────────────────────────────┐    │
-│  │ Privacy Policy           →  │    │
-│  │ Terms of Service         →  │    │
-│  │ Version 1.0.0               │    │
-│  └─────────────────────────────┘    │
-│                                     │
-│  Restore Purchases                  │
-└─────────────────────────────────────┘
++-------------------------------------+
+|  <-                       Settings   |
++-------------------------------------+
+|                                     |
+|  ACCOUNT                            |
+|  +-----------------------------+    |
+|  | jack@email.com              |    |
+|  | Sign Out                    |    |
+|  +-----------------------------+    |
+|                                     |
+|  SYNC                               |
+|  +-----------------------------+    |
+|  | * Synced (2 min ago)        |    |
+|  +-----------------------------+    |
+|                                     |
+|  MEDITATION                         |
+|  +-----------------------------+    |
+|  | Interval bells        [off] |    |
+|  | Sound              [bell v] |    |
+|  | Intervals     [15,30,60 v]  |    |
+|  +-----------------------------+    |
+|                                     |
+|  DATA                               |
+|  +-----------------------------+    |
+|  | Apple Health sync     [on]  |    |
+|  | Export sessions          -> |    |
+|  | View 2025 Summary        -> |    |
+|  +-----------------------------+    |
+|                                     |
+|  ABOUT                              |
+|  +-----------------------------+    |
+|  | Privacy Policy           -> |    |
+|  | Terms of Service         -> |    |
+|  | Version 1.0.0               |    |
+|  +-----------------------------+    |
+|                                     |
+|  Restore Purchases                  |
++-------------------------------------+
 ```
 
 ---
@@ -817,21 +1477,16 @@ No custom admin needed - use existing dashboards:
 
 ---
 
-## Complexity & Timeline
+## Complexity & Risk Assessment
 
-| Component | Difficulty | Notes |
-|-----------|------------|-------|
-| Supabase setup | Low | Standard config |
-| Apple Sign-In | Medium | Tedious portal work |
-| Sync engine | **High** | Hardest part |
-| RevenueCat | Medium | Fiddly IAP setup |
-| Garden (MVP) | Medium | p5.js + L-systems |
-| Garden (V2) | High | Full Rive animation |
-| Capacitor | Low-Medium | Config + signing |
-
-**Timeline:**
-- Part-time: 6-8 weeks (with Garden)
-- Full-time: 3-4 weeks
+| Component | Difficulty | Risk | Mitigation |
+|-----------|------------|------|------------|
+| Supabase setup | Low | Low | Follow docs |
+| Apple Sign-In | Medium | Medium | Test early, check IDs |
+| Sync engine | **High** | **High** | Build incrementally, test exhaustively |
+| RevenueCat | Medium | Medium | Sandbox test, check product IDs |
+| Garden (p5.js) | **High** | Medium | Build standalone prototype first |
+| Capacitor | Low-Medium | Low | Standard config |
 
 ---
 
@@ -855,7 +1510,7 @@ The app's visual language draws from Studio Ghibli's design philosophy—not as 
 
 | Ghibli Principle | Application in 10,000 Hours |
 |------------------|----------------------------|
-| **Ma (間)** — meaningful emptiness | Generous whitespace, content floats in space, no borders |
+| **Ma** — meaningful emptiness | Generous whitespace, content floats in space, no borders |
 | **Nature as presence** | The Garden IS the app's soul, not decoration |
 | **Watercolor philosophy** | Soft gradients, warm tones, no harsh contrasts |
 | **Always breathing** | Subtle animation on key elements, nothing is static |
@@ -927,8 +1582,8 @@ transition: all 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
 The Stats screen maintains full information density but presents it as a **vertical journey**—each stat area is a "clearing" you arrive at, with generous spacing creating the sense of walking through a path.
 
 **Layout principles:**
-- Remove ALL solid borders (`border-b border-indigo-deep/10`)
-- Use generous vertical spacing instead (2-3x current `mb-8`)
+- Remove ALL solid borders
+- Use generous vertical spacing instead (2-3x current margins)
 - Soft dashed "path" lines between major sections (optional)
 - Content floats in space rather than being contained in boxes
 
@@ -948,33 +1603,33 @@ Key statistics use subtle breathing animation—numbers are alive, not static te
 
 **Visual treatment:**
 ```
-┌─────────────────────────────────┐
-│                                 │
-│          42.5 hours             │  ← Breathing animation
-│                                 │
-│                                 │
-│                                 │  ← Generous "walk" between sections
-│                                 │
-│    ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈     │  ← Soft dashed path (optional)
-│                                 │
-│                                 │
-│      next: 50 hours             │
-│      ██████████░░░░ 85%         │  ← Progress bar with organic fill
-│                                 │
-│                                 │
-│                                 │
-│    ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈     │
-│                                 │
-│                                 │
-│       M  T  W  T  F  S  S       │
-│       ●  ●  ●  ◐  ○  ○  ○       │  ← Weekly dots with micro-animations
-│                                 │
-│       3 sessions · 2h 15m       │
-│                                 │
-│                                 │
-│            · · ·                │  ← Continuation hint
-│                                 │
-└─────────────────────────────────┘
++-------------------------------+
+|                               |
+|        42.5 hours             |  <- Breathing animation
+|                               |
+|                               |
+|                               |  <- Generous "walk" between sections
+|                               |
+|  - - - - - - - - - - - - - -  |  <- Soft dashed path (optional)
+|                               |
+|                               |
+|    next: 50 hours             |
+|    ██████████░░░░ 85%         |  <- Progress bar with organic fill
+|                               |
+|                               |
+|                               |
+|  - - - - - - - - - - - - - -  |
+|                               |
+|                               |
+|     M  T  W  T  F  S  S       |
+|     *  *  *  o  .  .  .       |  <- Weekly dots with micro-animations
+|                               |
+|     3 sessions - 2h 15m       |
+|                               |
+|                               |
+|          . . .                |  <- Continuation hint
+|                               |
++-------------------------------+
 ```
 
 **Weekly dot animations:**
@@ -985,14 +1640,12 @@ Key statistics use subtle breathing animation—numbers are alive, not static te
 **Ghibli alignment:**
 - Scrolling feels like walking through a garden path
 - Each section is a "clearing" you pause in
-- The journey continues below (` · · · ` hint)
+- The journey continues below (`. . .` hint)
 - Numbers breathe because living things breathe
 
 ---
 
-## Build Execution Notes
-
-### Git Workflow & Safety
+## Git Workflow & Safety
 
 **Rollback point established:**
 - Tag `v1.0.0-pwa` marks the working PWA before commercialization
@@ -1001,18 +1654,20 @@ Key statistics use subtle breathing animation—numbers are alive, not static te
 **Branch strategy:**
 ```
 main (protected, always deployable)
-  └── feature/phase-1-supabase
-  └── feature/phase-2-sync
-  └── feature/phase-5-garden
-  └── etc.
+  +-- feature/phase-0-setup
+  +-- feature/phase-1-auth
+  +-- feature/phase-2-ui
+  +-- feature/phase-3-paywall
+  +-- etc.
 ```
 
 **Workflow per phase:**
 1. Create branch: `git checkout -b feature/phase-X-name`
 2. Build and test the feature
-3. Merge to main only when stable: `git checkout main && git merge feature/phase-X-name`
-4. Tag milestones: `git tag -a v1.1.0 -m "Phase X complete"`
-5. Delete branch: `git branch -d feature/phase-X-name`
+3. Run phase test checklist
+4. Merge to main only when stable: `git checkout main && git merge feature/phase-X-name`
+5. Tag milestones: `git tag -a v1.X.0 -m "Phase X complete"`
+6. Delete branch: `git branch -d feature/phase-X-name`
 
 **Rollback commands:**
 | Situation | Command |
@@ -1022,23 +1677,42 @@ main (protected, always deployable)
 | Revert a merged feature | `git revert <commit>` |
 | Abandon broken branch | `git branch -D feature/broken-thing` |
 
-### Implementation Notes
+---
 
-**When implementing:**
-- Follow phases in order (Infrastructure → Sync → Paywall → UI → Garden → etc.)
-- Test each phase before moving to next
-- Commit at logical checkpoints (end of each phase)
-- Use feature branches for each phase
+## When You Get Stuck
 
-**Key implementation order:**
-```
-Phase 1: Supabase + Auth foundation
-Phase 2: Sync engine (hardest part)
-Phase 3: RevenueCat + Paywall
-Phase 4: UI screens (Onboarding, Settings, Auth)
-Phase 5: The Garden (the fun part)
-Phase 6: Design System (Ghibli aesthetic overhaul)
-Phase 7: Year Summary (The Tree Remembers)
-Phase 8: Enhancements (Health, bells, widgets)
-Phase 9-11: Capacitor, Launch, Post-launch polish
-```
+**Rule: If stuck on a phase for more than 2 days, pause and ask for help.**
+
+**Debug checklist:**
+1. Does `npm run build` succeed?
+2. What does the browser console show?
+3. What does the Supabase/RevenueCat dashboard show?
+4. Can you isolate the problem to one file/function?
+
+**Common issues and solutions:**
+
+| Problem | Check |
+|---------|-------|
+| Apple Sign-In fails | Bundle ID exact match? Team ID correct? |
+| "Invalid Product ID" | Product IDs case-sensitive match? Apple approved? |
+| Sync not working | Network tab in devtools? Supabase RLS policies? |
+| p5.js not rendering | Instance mode setup correct? Container ref passed? |
+| Capacitor build fails | Xcode signing? Correct bundle ID? |
+
+---
+
+## Success Metrics
+
+**Launch success (first 30 days):**
+- [ ] 100+ downloads
+- [ ] 5+ ratings (4+ star average)
+- [ ] 5+ paid conversions
+- [ ] Zero critical crashes
+- [ ] At least one user reaches Garden
+
+**6-month success:**
+- [ ] 10,000+ total downloads
+- [ ] 500+ paid subscribers
+- [ ] 4.5+ star rating
+- [ ] Featured in "Meditation" category (goal)
+- [ ] At least one user reaches 100 hours
