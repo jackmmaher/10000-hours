@@ -9,7 +9,14 @@
       "Bash(git fetch:*)",
       "Bash(git checkout:*)",
       "Bash(git merge:*)",
-      "Bash(gh pr create:*)"
+      "Bash(gh pr create:*)",
+      "WebSearch",
+      "WebFetch(domain:www.citizensinformation.ie)",
+      "Bash(git tag:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(git remote:*)",
+      "Bash(git branch:*)",
+      "Bash(git restore:*)"
     ]
   }
 }
