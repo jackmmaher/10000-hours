@@ -85,7 +85,7 @@ The app continues to work, but the experience is fundamentally inferior:
 | **Timer** | Rolling weekly hours: "2.3 hours this week" |
 | **Stats** | 7d and 30d windows only, others grayed |
 | **Milestones** | Frozen: "✓ 10 hours achieved" (can't see next) |
-| **Goals** | Weekly goal: "2.3 of 5 hours" (rolling, fluctuates) |
+| **Goals** | Weekly goal: "2.3 of 3.5 hours" (adaptive, based on trial average) |
 | **Projections** | Hidden: "Unlock to see your path..." |
 | **Calendar** | 90-day lookback with logarithmic fade |
 
@@ -204,8 +204,9 @@ MILESTONES
 ```
 THIS WEEK (Rolling 7-day)
 ┌─────────────────────────────────────┐
-│ ████████░░░░░░░░░░░ 46%             │
-│ 2.3 of 5 hours                      │  ← Fluctuates!
+│ ████████░░░░░░░░░░░ 66%             │
+│ 2.3 of 3.5 hours                    │  ← Adaptive goal (80% of trial avg)
+│ (based on your first 30 days)       │
 └─────────────────────────────────────┘
 
 MILESTONES
@@ -217,6 +218,11 @@ MILESTONES
 ```
 
 **Why weekly goal fluctuates:** It's a rolling 7-day window. Each day, the oldest day's sessions roll off. New sessions add. The number goes UP and DOWN — unlike cumulative which only grows. This is inherently less satisfying.
+
+**Adaptive goal formula:** `weeklyGoal = avg(dailyMinutes during trial) * 7 * 0.8`
+- Calculates 80% of user's trial-period average, making it achievable
+- Minimum 1 hour, maximum 35 hours (capped at 5h/day equivalent)
+- Fallback to 5 hours if no trial data available
 
 ---
 
@@ -327,6 +333,7 @@ No nagging popups. The degraded experience IS the reminder.
 | State | Zustand |
 | Local DB | Dexie (IndexedDB) |
 | Payments | RevenueCat |
+| Analytics | RevenueCat Custom Events |
 | iOS Wrapper | Capacitor |
 | Styling | Tailwind CSS |
 | Crash Reporting | Sentry |
@@ -364,6 +371,7 @@ interface UserProfile {
   originalPurchaseDate?: number;
   firstSessionDate?: number;    // For Day 31 trigger
   trialExpired: boolean;        // Has seen Day 31 banner
+  trialEndDate?: number;        // When trial ended (for adaptive goal calculation)
 }
 
 interface UserSettings {
@@ -415,7 +423,10 @@ export const db = new AppDatabase();
 src/
   lib/
     purchases.ts          # RevenueCat integration
-    tierLogic.ts          # Day 31 trigger, visibility rules, fade calculations
+    tierLogic.ts          # Day 31 trigger, visibility rules, fade calculations, adaptive goal
+    analytics.ts          # RevenueCat custom events wrapper
+    __tests__/
+      tierLogic.test.ts   # Tier logic unit tests (12+ test cases)
 
   stores/
     usePremiumStore.ts    # Subscription status (free/premium + expiry)
@@ -426,7 +437,7 @@ src/
     Settings.tsx          # Settings screen with upgrade banner
     PaywallPremium.tsx    # Day 31 paywall + upgrade prompts
     LockedOverlay.tsx     # Reusable blur + unlock CTA
-    WeeklyGoal.tsx        # Rolling 7-day goal display
+    WeeklyGoal.tsx        # Rolling 7-day goal display (adaptive target)
     FrozenMilestone.tsx   # Achieved milestone (frozen state)
 ```
 
@@ -508,19 +519,63 @@ src/
 
 - [ ] **Update Dexie schema**
   - Add `profile`, `settings` tables
+  - Add `trialEndDate` field to UserProfile (for adaptive goal calculation)
   - Migration: backfill `firstSessionDate` from existing sessions
   - VERIFY: Schema upgrade works for existing users
 
 - [ ] **Create usePremiumStore.ts**
-  - Track: tier, premiumExpiryDate, trialExpired
+  - Track: tier, premiumExpiryDate, trialExpired, trialEndDate
   - Helper: `isPremium()`, `isTrialActive()`, `getDaysSinceFirstSession()`
   - VERIFY: Store compiles, defaults correctly
 
 - [ ] **Create tierLogic.ts**
   - `getSessionVisibility(session, tier, daysSinceFirst)`
   - `shouldTriggerPaywall(daysSinceFirst, trialExpired)`
-  - `getCalendarFadeOpacity(monthAge)`
+  - `getCalendarFadeOpacity(dayAge)`
+  - `getWeeklyRollingHours(sessions)`
+  - `calculateAdaptiveWeeklyGoal(sessions, trialEndDate)` - 80% of trial average
   - VERIFY: Logic matches spec
+
+- [ ] **Create tier logic unit tests**
+  - Test file: `src/lib/__tests__/tierLogic.test.ts`
+  - Required test cases:
+    ```typescript
+    // Paywall trigger tests
+    shouldTriggerPaywall(daysSinceFirst=30) → false
+    shouldTriggerPaywall(daysSinceFirst=31) → true
+    shouldTriggerPaywall(daysSinceFirst=31, trialExpired=true) → false
+
+    // Calendar fade tests
+    getCalendarFadeOpacity(dayAge=29) → 1.0
+    getCalendarFadeOpacity(dayAge=45) → 0.6
+    getCalendarFadeOpacity(dayAge=60) → 0.3
+    getCalendarFadeOpacity(dayAge=90) → 0.1
+
+    // Rolling window tests
+    getWeeklyRollingHours([]) → 0
+    getWeeklyRollingHours(sessions) → correct calculation
+
+    // Session visibility tests
+    isSessionVisible(session, 'premium') → true (always)
+    isSessionVisible(session, 'free', dayAge=29) → true
+    isSessionVisible(session, 'free', dayAge=91) → false
+
+    // Adaptive goal tests
+    calculateAdaptiveWeeklyGoal([], trialEndDate) → 5 (fallback)
+    calculateAdaptiveWeeklyGoal(sessions, trialEndDate) → correct value
+    ```
+  - VERIFY: All 12+ tests pass with `npm run test`
+
+- [ ] **Set up analytics tracking**
+  - Create `src/lib/analytics.ts` using RevenueCat custom events
+  - Events to track:
+    - `Day31TriggerShown` - paywall shown on Day 31
+    - `PaywallDismissed` - user dismisses paywall
+    - `PaywallConverted` - user completes purchase
+    - `StatsTapWhenLocked` - user taps locked stats window
+    - `CalendarFadeTapped` - user taps faded calendar area
+    - `HideTimeToggled` - user toggles hide time setting
+  - VERIFY: Events fire correctly in RevenueCat dashboard
 
 #### Phase 1 - TEST CHECKLIST
 - [ ] `npm run build` succeeds
@@ -528,13 +583,23 @@ src/
 - [ ] Sentry receives test crash
 - [ ] Schema migration works
 - [ ] Tier logic calculations correct
+- [ ] **Tier logic tests:** All 12+ test cases pass
+- [ ] **Analytics:** Test events appear in RevenueCat dashboard
 
 ---
 
-### Phase 2: Core UI + Premium Gating
+### Phase 2a: Trial/Downgrade Logic
 **REQUIRES: Phase 1 complete**
 
-#### Trial → Downgrade UI
+#### Tier Logic Implementation
+
+- [ ] **Create src/lib/tierLogic.ts** (if not done in Phase 1)
+  - `shouldTriggerPaywall(daysSinceFirst: number, trialExpired: boolean): boolean`
+  - `getSessionVisibility(session: Session, tier: TierType, daysSinceFirst: number): VisibilityResult`
+  - `getCalendarFadeOpacity(dayAge: number): number`
+  - `getWeeklyRollingHours(sessions: Session[]): number`
+  - `calculateAdaptiveWeeklyGoal(sessions: Session[], trialEndDate: number): number`
+  - VERIFY: All functions have corresponding unit tests
 
 - [ ] **Update Timer.tsx**
   - Trial/Premium: Show cumulative "42.5 toward 10,000 hours"
@@ -545,9 +610,16 @@ src/
 - [ ] **Update Stats.tsx**
   - Trial/Premium: All time windows available
   - Day 31+ FREE: 7d/30d only, others grayed (not locked icon)
-  - Add WeeklyGoal component (rolling 7-day)
+  - Add WeeklyGoal component (rolling 7-day, adaptive target)
   - Add FrozenMilestone component
   - VERIFY: Gating works correctly
+
+- [ ] **Create WeeklyGoal.tsx component**
+  - Display rolling 7-day hours toward adaptive weekly goal
+  - Calculate goal from trial period average: `weeklyGoal = avg(dailyMinutes during trial) * 7 * 0.8`
+  - Show progress bar and fluctuating total
+  - Display "(based on your first 30 days)" subtitle
+  - VERIFY: Goal adapts to user's practice pattern
 
 - [ ] **Update Calendar.tsx**
   - Trial/Premium: Full history
@@ -561,51 +633,13 @@ src/
   - Soft messaging, no lock icons
   - VERIFY: Component renders in isolation
 
-#### Paywall + Purchase
+- [ ] **Create FrozenMilestone.tsx**
+  - Display achieved milestone in frozen state
+  - "Your journey continues..." message
+  - VERIFY: Component renders correctly
 
-- [ ] **Install RevenueCat SDK**
-  - `npm install @revenuecat/purchases-capacitor`
-  - VERIFY: No dependency errors
-
-- [ ] **Create purchases.ts**
-  - Initialize RevenueCat
-  - `getOfferings()`, `purchasePackage()`, `restorePurchases()`
-  - VERIFY: Compiles without errors
-
-- [ ] **Create PaywallPremium.tsx**
-  - Day 31 trigger message
-  - "Your first 30 days are complete..."
-  - Price: $4.99/year
-  - "Keep practicing" (dismiss) + "See full journey" (purchase)
-  - VERIFY: Paywall renders
-
-- [ ] **Handle Day 31 trigger**
-  - Check on session start
-  - Show paywall once, set `trialExpired: true`
-  - Immediate UI reversion on dismiss
-  - VERIFY: Trigger fires correctly
-
-#### Settings + Hide Time
-
-- [ ] **Create Settings.tsx**
-  - Tier status display
-  - "Unlock full journey" banner (Day 31+ FREE)
-  - Hide Time Display toggle (Premium only)
-  - Privacy Policy, Terms, Restore Purchase
-  - VERIFY: Settings accessible
-
-- [ ] **Implement Hide Time Display**
-  - Timer idle: "Just start meditating"
-  - Timer running: Breathing circle, no numbers
-  - Timer complete: "Meditation complete"
-  - VERIFY: Works in all states
-
-- [ ] **Create Onboarding.tsx**
-  - 3 screens: intro, tracking, insights preview
-  - Store `hasSeenOnboarding`
-  - VERIFY: Shows on first launch only
-
-#### Phase 2 - TEST CHECKLIST
+#### Phase 2a - TEST CHECKLIST
+Before moving to Phase 2b:
 - [ ] `npm run build` succeeds
 - [ ] `npm run test` passes
 - [ ] **Days 1-30 (Trial):**
@@ -613,29 +647,125 @@ src/
   - [ ] All stats windows available
   - [ ] Full calendar history
   - [ ] Full milestones visible
-- [ ] **Day 31 trigger:**
-  - [ ] Paywall appears on first Day 31 session
-  - [ ] "Keep practicing" dismisses and reverts UI
 - [ ] **Day 31+ FREE:**
   - [ ] Timer shows "X hours this week" (rolling)
   - [ ] Stats: 7d/30d only, others grayed
-  - [ ] Weekly goal fluctuates correctly
+  - [ ] Weekly goal displays with adaptive target
+  - [ ] Weekly goal fluctuates correctly (rolling window)
   - [ ] Milestone frozen, shows achievement
   - [ ] Calendar: 90-day limit with fade
   - [ ] Blurred months show session counts
-- [ ] **Premium purchase:**
-  - [ ] Sandbox purchase completes
-  - [ ] UI immediately restores to full
-  - [ ] Restore Purchase works
-- [ ] **Hide Time Display:**
-  - [ ] Locked for FREE tier
-  - [ ] Works correctly for Premium
-- [ ] Settings shows correct tier status
+  - [ ] Fade opacity matches spec (100%/60%/30%/10%)
+
+---
+
+### Phase 2b: Settings, Onboarding, Paywall, Hide Time
+**REQUIRES: Phase 2a complete**
+
+#### Onboarding
+
+- [ ] **Create Onboarding.tsx (3 screens)**
+  - Screen 1: "Your meditation companion" - app intro
+  - Screen 2: "Track your journey" - what the app does
+  - Screen 3: "30 days of full access" - trial preview
+  - Store `hasSeenOnboarding` in localStorage
+  - VERIFY: Onboarding appears on first launch only
+
+#### Settings
+
+- [ ] **Create Settings.tsx**
+  - Tier status display (FREE / PREMIUM)
+  - "Unlock full journey" banner (Day 31+ FREE)
+  - Hide Time Display toggle (Premium only)
+  - Privacy Policy, Terms, Restore Purchase links
+  - Version number at bottom
+  - VERIFY: Settings accessible from Stats screen
+
+- [ ] **Create useSettingsStore.ts**
+  - Track hideTimeDisplay setting
+  - Persist to Dexie UserSettings table
+  - VERIFY: Settings persist across app restarts
+
+#### Paywall + Purchase
+
+- [ ] **Install RevenueCat SDK**
+  - `npm install @revenuecat/purchases-capacitor`
+  - VERIFY: Package installed, no dependency errors
+
+- [ ] **Create src/lib/purchases.ts**
+  - Initialize RevenueCat with API key
+  - Functions: getOfferings, purchasePackage, restorePurchases
+  - Handle Premium subscription (auto-renewing)
+  - Check entitlement: isPremium
+  - VERIFY: Compiles without errors
+
+- [ ] **Create PaywallPremium.tsx**
+  - Day 31 trigger message: "Your first 30 days are complete..."
+  - Price: $4.99/year
+  - "Keep practicing" (dismiss) + "See full journey" (purchase)
+  - "Restore Purchase" link
+  - Fire `Day31TriggerShown` analytics event
+  - VERIFY: Paywall renders correctly
+
+- [ ] **Handle Day 31 trigger**
+  - Check on session start
+  - Show paywall once, set `trialExpired: true`, set `trialEndDate`
+  - Fire analytics events on dismiss/convert
+  - Immediate UI reversion on dismiss
+  - VERIFY: Trigger fires correctly
+
+- [ ] **Handle subscription completion**
+  - On purchase: setTier('premium'), set premiumExpiryDate
+  - Store in Dexie UserProfile
+  - Dismiss paywall and restore full UI
+  - VERIFY: Purchase flow completes (sandbox)
+
+#### Hide Time Display
+
+- [ ] **Implement Hide Time Display**
+  - Timer idle: "Just start meditating"
+  - Timer running: Breathing circle, no numbers
+  - Timer complete: "Meditation complete"
+  - Setting persists in useSettingsStore
+  - Fire `HideTimeToggled` analytics event
+  - VERIFY: Works in all states, Premium only
+
+#### Phase 2b - TEST CHECKLIST
+Before moving to Phase 3:
+- [ ] `npm run build` succeeds
+- [ ] `npm run test` passes
+- [ ] Onboarding shows on first launch only
+- [ ] Can navigate to Settings from Stats
+- [ ] **Day 31 trigger:**
+  - [ ] Paywall appears on first Day 31 session
+  - [ ] "Keep practicing" dismisses and reverts UI
+  - [ ] `trialEndDate` is recorded for adaptive goal
+- [ ] **Paywall:**
+  - [ ] PaywallPremium shows $4.99/year
+  - [ ] Shows personalized "X days meditating" message
+  - [ ] "Maybe Later" option available (non-guilt)
+  - [ ] "Restore Purchase" button present
+- [ ] **Sandbox testing:**
+  - [ ] Can complete Premium subscription ($4.99/year)
+  - [ ] After subscription: full history unlocks
+  - [ ] Restore Purchase works after reinstall
+- [ ] **Hide Time Display (Premium only):**
+  - [ ] Setting toggle disabled for FREE tier
+  - [ ] Setting toggle works for PREMIUM tier
+  - [ ] Timer shows "Just start meditating" when hidden
+  - [ ] Timer shows breathing circle during session when hidden
+  - [ ] Timer shows "Meditation complete" at end when hidden
+  - [ ] Setting persists after app restart
+- [ ] **Analytics:**
+  - [ ] `Day31TriggerShown` fires on paywall display
+  - [ ] `PaywallDismissed` fires on dismiss
+  - [ ] `PaywallConverted` fires on purchase
+  - [ ] `HideTimeToggled` fires on setting change
 
 ---
 
 ### Phase 3: Design System (Ghibli)
-**REQUIRES: Phase 2 complete**
+**REQUIRES: Phase 2b complete**
 
 - [ ] **Update color palette**
   ```js
