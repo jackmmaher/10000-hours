@@ -1,8 +1,10 @@
 # Addendum: Ghibli-Grade Tree Rendering & Coding Guidance
 
-**Document Role:** Second Technical–Aesthetic Addendum  
-**Applies To:** `ROADMAP.md` and `ROADMAP-CHIEF-SOFTWARE-DESIGNER-REVIEW.md`  
+**Document Role:** Second Technical–Aesthetic Addendum
+**Applies To:** `ROADMAP.md` and `ROADMAP-CHIEF-SOFTWARE-DESIGNER-REVIEW.md`
 **Purpose:** Ensure the Garden tree achieves a *genuine Ghibli feel* while remaining fully compatible with the approved roadmap, tooling, and deployment targets (GitHub + Vercel).
+
+**Updated January 2026:** Scope simplified — Spirit companion removed, Year Summary removed. Added 16 visual states (Season × Time of Day) and multiplicative growth algorithm.
 
 ---
 
@@ -51,7 +53,8 @@ These qualities must be *engineered*, not hoped for.
 
 - **Deterministic:**
   - Same `totalHours` → same *structural tree*
-  - Required for sync, rewind, and Year Summary
+  - Same aesthetic seed → same visual character
+  - Required for consistent user experience across sessions
 
 - **Non-deterministic (within bounds):**
   - Micro‑motion
@@ -193,58 +196,125 @@ This removes digital flatness without cost.
 
 ---
 
-## 10. Spirit Integration (Consistency Rule)
+## 10. 16 Visual States (Season × Time of Day)
 
-If Spirit remains CSS‑based (per roadmap):
-- Match color temperature to tree output
-- Sync idle rhythm with tree noise clock
-- Apply subtle blur / warmth filter
+> **NEW for v1.0:** The tree displays differently based on real-world season and time.
 
-**Preferred (optional, still compliant):**
-- Render Spirit sprites *inside p5 canvas* using `p.image()`
+### Visual State Matrix
 
-No architectural change required.
+|           | Morning | Day | Evening | Night |
+|-----------|---------|-----|---------|-------|
+| **Spring** | Fresh greens, soft mist | Bright, full light | Golden warmth | Blue-silver, quiet |
+| **Summer** | Warm gold light | Deep greens, dappled | Amber glow | Fireflies, warm dark |
+| **Autumn** | Misty orange | Rich reds/golds | Deep amber | Cool, crisp |
+| **Winter** | Pale blue dawn | Stark, clear | Purple twilight | Snow, starlight |
+
+### Implementation Notes
+
+- **Season detection:** Derived from device date
+  - Spring: March–May
+  - Summer: June–August
+  - Autumn: September–November
+  - Winter: December–February
+
+- **Time of day detection:** Derived from device clock
+  - Morning: 5am–10am
+  - Day: 10am–5pm
+  - Evening: 5pm–9pm
+  - Night: 9pm–5am
+
+- **Palette application:** Apply as color filters/adjustments to base tree, not separate assets
+- **Transition:** When time changes during viewing, transition smoothly (2-3 seconds)
+
+### Ghibli Alignment
+
+This feature embodies the Ghibli principle of **environmental awareness**. The tree exists in a world with weather and light, not a static void.
 
 ---
 
-## 11. Determinism & Year Summary Compatibility
+## 11. Multiplicative Growth Expression
 
-This addendum preserves all requirements for:
-- Tree rewind
-- Growth scrubbing
-- Year Summary replay
+> **NEW for v1.0:** Growth rewards frequency and consistency, not just duration.
 
-Because:
-- Structure = deterministic
-- Aesthetic modulation = bounded + seed‑based
+### The Algorithm
 
-Replay uses the same seeds → same feel.
+```typescript
+effectiveGrowth = baseHours × frequencyMultiplier × streakMultiplier × progressBonus
+```
+
+| Factor | Calculation | Cap |
+|--------|-------------|-----|
+| **Base** | Hours logged | N/A |
+| **Frequency** | 1 + (sessionsThisWeek × 0.07) | 1.5× at 7+ sessions |
+| **Streak** | 1 + (consecutiveDays × 0.007) | 1.2× at 30+ days |
+| **Progress** | Bonus if median duration trending up | 1.1× |
+
+### Visual Expression of Multipliers
+
+The multiplicative bonuses should be *felt*, not just calculated:
+
+- **High frequency (daily practice):**
+  - Leaves appear fuller, denser
+  - Subtle golden shimmer in light
+
+- **Long streak:**
+  - Trunk appears stronger, more textured
+  - Deeper color saturation
+
+- **Progress bonus (growing sessions):**
+  - New growth appears more vibrant
+  - Fresh leaves at branch tips
+
+These visual cues reward consistent practice without explicit gamification.
 
 ---
 
-## 12. Testing Checklist (Add to Phase 5b / 5c)
+## 12. Determinism & Consistency
+
+This addendum preserves all requirements for consistent rendering:
+- Structure = deterministic (same hours → same tree)
+- Aesthetic modulation = bounded + seed‑based (same seed → same character)
+- Visual state = derived from real time (reproducible from timestamp)
+
+Users always see "their" tree.
+
+---
+
+## 13. Testing Checklist (Add to Phase 4)
 
 ### Visual Tests
 - Adjacent growth levels feel different *emotionally*, not just structurally
 - Tree looks alive even when not changing
 - Older trees move less than younger ones
+- **16 Visual States:** Tree looks different at morning vs night
+- **16 Visual States:** Tree looks different in winter vs summer
+- **Multiplier Expression:** Daily practice produces visually richer tree
+- **Multiplier Expression:** Long streaks produce stronger-looking trunk
 
 ### Anti‑Patterns to Reject
 - Perfect symmetry
 - Continuous motion everywhere
 - Noticeable animation loops
 - Instant visual feedback to numeric change
+- Jarring transitions between visual states
 
 ---
 
-## 13. Final Verdict
+## 14. Final Verdict
 
 With this addendum applied:
 - The existing roadmap remains intact
-- The chief designer’s concerns are directly addressed
+- The chief designer's concerns are directly addressed
 - The tree can achieve a **genuine Ghibli feel**, not a procedural imitation
 
-> The math grows the tree.  
+**v1.0 scope changes (January 2026):**
+- ~~Spirit companion~~ → Removed for v1.0
+- ~~Year Summary compatibility~~ → Removed for v1.0
+- **Added:** 16 visual states (Season × Time of Day)
+- **Added:** Multiplicative growth expression
+
+> The math grows the tree.
 > The aesthetic layer gives it a soul.
+> **The seasons and time give it presence in the world.**
 
 This document should be treated as **binding guidance** for Garden implementation.

@@ -10,26 +10,34 @@
 
 ## Executive Summary
 
-This review evaluates the proposed commercialization roadmap for transforming a meditation timer PWA into a commercially viable iOS application. The roadmap demonstrates strong product thinking, clear philosophical grounding, and above-average technical planning. However, several areas require deeper consideration before build commencement.
+This review evaluates the proposed commercialization roadmap for transforming a meditation timer PWA into a commercially viable iOS application. The roadmap demonstrates strong product thinking, clear philosophical grounding, and above-average technical planning.
 
-**Overall Assessment:** Proceed with conditions
-**Risk Level:** Medium-High (two high-complexity components in critical path)
-**Recommended Modifications:** 7 critical, 4 advisory
+**UPDATED (January 2026):** Scope has been significantly simplified. Many concerns in this review have been resolved by removing features:
+- ~~Cloud sync~~ → Local-only storage (Dexie) — **Sync Engine concerns ELIMINATED**
+- ~~Year Summary animation~~ → Removed — **Year Summary concerns ELIMINATED**
+- ~~Spirit companion~~ → Removed for v1.0 — **Spirit coherence concerns ELIMINATED**
+- ~~$29.99/year + $99.99 lifetime~~ → $4.99 one-time — **Pricing simplified**
+- ~~Interval bells~~ → Removed — **Background audio concerns ELIMINATED**
+- **Added:** 16 visual states (Season × Time of Day), Multiplicative growth algorithm
+
+**Overall Assessment:** Proceed
+**Risk Level:** Medium (Garden is sole high-complexity component)
+**Remaining Critical Items:** 4 (Garden prototype, crash reporting, screen lock, timer lifecycle)
 
 ---
 
 ## Table of Contents
 
-1. [Garden Technical Architecture](#1-garden-technical-architecture)
-2. [Sync Engine Design](#2-sync-engine-design)
-3. [Year Summary Scope & Complexity](#3-year-summary-scope--complexity)
-4. [Missing Infrastructure](#4-missing-infrastructure)
-5. [iOS Platform Considerations](#5-ios-platform-considerations)
-6. [Testing Strategy](#6-testing-strategy)
-7. [Revenue & Conversion Assumptions](#7-revenue--conversion-assumptions)
-8. [Phase Dependencies & Parallelization](#8-phase-dependencies--parallelization)
-9. [Database & Security](#9-database--security)
-10. [Build Execution Recommendations](#10-build-execution-recommendations)
+1. [Garden Technical Architecture](#1-garden-technical-architecture) — **ACTIVE**
+2. [Sync Engine Design](#2-sync-engine-design) — **ELIMINATED** (local-only storage)
+3. [Year Summary Scope & Complexity](#3-year-summary-scope--complexity) — **ELIMINATED** (feature removed)
+4. [Missing Infrastructure](#4-missing-infrastructure) — **ACTIVE** (Sentry, Vitest)
+5. [iOS Platform Considerations](#5-ios-platform-considerations) — **ACTIVE** (keep-awake, lifecycle)
+6. [Testing Strategy](#6-testing-strategy) — **ACTIVE**
+7. [Revenue & Conversion Assumptions](#7-revenue--conversion-assumptions) — **UPDATED** ($4.99 model)
+8. [Phase Dependencies & Parallelization](#8-phase-dependencies--parallelization) — **SIMPLIFIED**
+9. [Database & Security](#9-database--security) — **SIMPLIFIED** (local-only)
+10. [Build Execution Recommendations](#10-build-execution-recommendations) — **UPDATED**
 
 ---
 
@@ -129,124 +137,60 @@ useEffect(() => {
 
 #### 1.3 Spirit + Tree Visual Coherence
 
-**The Problem:**
-The roadmap specifies "Spirit companion: AI-generated PNG sprites at evolution stages, animated via CSS." This creates two separate rendering contexts:
-- Tree: p5.js canvas (rasterized, procedural)
-- Spirit: HTML/CSS layer (vector-ish, discrete frames)
+> **STATUS: ELIMINATED** — Spirit companion removed from v1.0 scope.
 
-These may feel visually disconnected—like a sticker placed on a painting.
+~~**The Problem:**~~
+~~The roadmap specifies "Spirit companion: AI-generated PNG sprites at evolution stages, animated via CSS." This creates two separate rendering contexts.~~
 
-**Why This Matters:**
-The Garden should feel like one unified, breathing world. A spirit that doesn't blend with the tree's visual style breaks immersion.
+**Resolution:** Spirit feature removed entirely for v1.0 launch. The tree alone is the premium feature. Spirit may be reconsidered for v1.1+ based on user feedback.
 
-**Alternative to Consider:**
-Render spirit within the p5.js canvas itself. Pre-render sprite sheets, but draw them using `p5.image()` so they share the same visual context, color grading, and potential post-processing effects.
-
-**Best Practice Recommendation:**
-If using separate layers (CSS + canvas), ensure:
-- Matching color palettes (same warmth, saturation)
-- Synchronized animation timing (spirit breathes at same rhythm as tree)
-- Consistent drop shadows / atmospheric effects
-- Z-layering that makes sense (spirit in front of tree, behind certain leaves?)
-
-**Mitigation if Keeping Current Plan:**
-- Add "visual coherence check" to Phase 5c test checklist
-- Generate spirit sprites in same color palette as tree renders
-- Consider adding subtle CSS filter to spirit to match canvas aesthetic (blur, warm tint)
-
-**Roadmap Impact:**
-| Phase | Impact |
-|-------|--------|
-| Phase 5c | Add visual coherence validation before marking complete |
-| Phase 7 | Year Summary spirit animations must feel part of tree journey |
+This significantly simplifies the Garden implementation—only one rendering concern (the tree in p5.js).
 
 ---
 
 ## 2. Sync Engine Design
 
-### Current Plan (Phase 6)
+> **STATUS: ELIMINATED** — Cloud sync removed from v1.0 scope. Local-only storage using Dexie (IndexedDB).
 
-The roadmap describes an offline-first architecture with:
-- Dexie (IndexedDB) for local storage
-- Supabase PostgreSQL for cloud storage
-- Background sync with "last-write-wins" conflict resolution
-- UUID-based deduplication
+### Original Plan (Phase 6) — NO LONGER APPLICABLE
 
-Phase 6 is correctly marked as **High Risk / High Difficulty**.
+~~The roadmap describes an offline-first architecture with:~~
+~~- Dexie (IndexedDB) for local storage~~
+~~- Supabase PostgreSQL for cloud storage~~
+~~- Background sync with "last-write-wins" conflict resolution~~
+~~- UUID-based deduplication~~
 
-### Concerns
+~~Phase 6 is correctly marked as **High Risk / High Difficulty**.~~
 
-#### 2.1 Conflict Resolution Underspecified
+**Resolution:** All sync concerns eliminated by switching to local-only storage. This removes:
+- The highest-risk component from the critical path
+- Supabase dependency and costs
+- Apple Sign-In complexity
+- All conflict resolution edge cases
+- GDPR cloud data concerns
 
-**The Problem:**
-"Last-write-wins" sounds simple but masks significant complexity:
+**Trade-off:** Users cannot sync across devices in v1.0. This is acceptable for MVP—users who need multi-device sync can wait for v1.1.
 
-| Scenario | What Happens? |
-|----------|--------------|
-| Device A edits session, goes offline. Device B deletes same session, syncs. A comes online. | Conflict: edit vs delete |
-| Device A clock is 5 minutes ahead. Both devices edit same session "simultaneously." | Which timestamp wins? |
-| Network fails mid-sync. 3 of 7 sessions upload. | Partial sync state—how to resume? |
-| User reinstalls app. Sync pulls 500 sessions. | Performance? Progress indicator? |
+### Concerns — NO LONGER APPLICABLE
 
-**Why This Matters:**
-Sync bugs cause data loss. Data loss in a meditation tracking app destroys the entire value proposition (the tree *is* the accumulated sessions). One sync bug that loses a user's data = one-star review.
+> The following concerns are preserved for reference but are **no longer relevant** due to local-only storage decision.
 
-**Alternative to Consider:**
-For v1.0, implement **explicit, user-initiated sync**:
-- "Sync Now" button in Settings
-- Visual confirmation of sync status
-- Manual conflict resolution (if conflict detected, show both versions, let user choose)
+#### 2.1 Conflict Resolution Underspecified — ELIMINATED
 
-This is less elegant but dramatically reduces edge cases.
+~~**The Problem:**~~
+~~"Last-write-wins" sounds simple but masks significant complexity.~~
 
-**Best Practice Recommendation:**
-If implementing automatic sync:
+**Resolution:** No conflicts possible with single-device local storage.
 
-1. **Tombstones for deletes**: Never hard-delete locally. Mark `deleted_at` timestamp. Sync the tombstone. Prune tombstones after 30 days.
-
-2. **Vector clocks or hybrid logical clocks**: Instead of wall-clock timestamps, use a clock that handles device disagreement. Libraries like `hlc-timestamp` can help.
-
-3. **Idempotent sync operations**: Every sync operation should be safe to retry. Use `UPSERT` semantics.
-
-4. **Sync transaction log**: Record every sync operation with before/after state. Critical for debugging production issues.
-
-**Mitigation if Keeping Current Plan:**
-- Add comprehensive sync logging (console in dev, remote logging in prod)
-- Create explicit test cases for every edge case in table above
-- Add "last sync status" display that shows exactly what happened
-- Implement sync pause/resume (if network drops mid-sync, resume where left off)
-- Add data integrity check: sum of local session durations should match cloud
-
-**Pitfalls to Watch For:**
-1. **Race condition on session save**: User ends session, triggers save, triggers sync. If sync is already running, new session might not be included.
-2. **Supabase RLS policies**: If misconfigured, user A could potentially read user B's sessions. Triple-check policies.
-3. **IndexedDB storage limits**: iOS Safari limits IndexedDB to ~50MB per origin in some conditions. Monitor storage usage.
-4. **Supabase row-level security vs column-level**: Ensure `user_id` is checked on every operation.
-
-**Roadmap Impact:**
-| Phase | Impact |
-|-------|--------|
-| Phase 1 | RLS policies must be bulletproof from day 1 |
-| Phase 6a | Add tombstone mechanism to schema changes |
-| Phase 6b | Add conflict detection before merge |
-| Phase 6c | Extend timeline—this is where bugs hide |
-| Phase 7 | Year Summary depends on complete, accurate sync history |
-| Phase 10 | Add sync reliability to beta testing checklist |
-
----
-
-#### 2.2 Schema Migration Strategy
+#### 2.2 Schema Migration Strategy — STILL RELEVANT
 
 **The Problem:**
 The roadmap defines a database schema but doesn't address how schema changes will be handled after launch.
 
 **Why This Matters:**
 When v1.1 adds a new field to the `sessions` table, you need:
-- Supabase migration script
 - Dexie schema version bump and migration
 - Compatibility layer for old data
-
-Without planning this now, v1.1 becomes a migration nightmare.
 
 **Best Practice Recommendation:**
 - Design Dexie schema with `version` field from day 1
@@ -258,26 +202,33 @@ Without planning this now, v1.1 becomes a migration nightmare.
 | Phase | Impact |
 |-------|--------|
 | Phase 1 | Add schema versioning to Dexie setup |
-| Phase 6a | Document migration approach |
-| Phase 11 | v1.1 planning must include migration testing |
+| Phase 6 | v1.1 planning must include migration testing |
 
 ---
 
 ## 3. Year Summary Scope & Complexity
 
-### Current Plan (Phase 7)
+> **STATUS: ELIMINATED** — Year Summary feature removed from v1.0 scope. The tree itself IS the summary.
 
-"The Tree Remembers" is a temporal journey through the user's meditation year, featuring:
-- Tree rewind from current state to seed
-- Growth replay with key moments highlighted
-- Seasonal lighting changes
-- Spirit reactions at milestones
-- 60-90 second auto-advancing experience
-- Blur mode for free users as FOMO mechanism
+### Original Plan (Phase 7) — NO LONGER APPLICABLE
 
-### Concerns
+~~"The Tree Remembers" is a temporal journey through the user's meditation year, featuring:~~
+~~- Tree rewind from current state to seed~~
+~~- Growth replay with key moments highlighted~~
+~~- Seasonal lighting changes~~
+~~- Spirit reactions at milestones~~
+~~- 60-90 second auto-advancing experience~~
+~~- Blur mode for free users as FOMO mechanism~~
 
-#### 3.1 Architectural Complexity
+**Resolution:** The living tree, with its 16 visual states (Season × Time of Day) and multiplicative growth algorithm, provides the visual summary naturally. Users see their progress by looking at their tree—no separate animation feature needed.
+
+This removes a **High Risk / High Complexity** component from the critical path.
+
+### Concerns — NO LONGER APPLICABLE
+
+> All Year Summary concerns are eliminated. See original document for reference if considering this feature for v1.1+.
+
+#### 3.1 Architectural Complexity — ELIMINATED
 
 **The Problem:**
 Year Summary requires capabilities that compound complexity:
@@ -490,43 +441,14 @@ Add to Phase 9:
 
 ---
 
-#### 5.2 Background Audio for Interval Bells
+#### 5.2 Background Audio for Interval Bells — ELIMINATED
 
-**The Problem:**
-If the user locks their phone or switches apps during meditation, interval bells may not play. iOS restricts background audio to specific use cases.
+> **STATUS: ELIMINATED** — Interval bells removed from v1.0 scope.
 
-**Why This Matters:**
-Interval bells are a premium feature. If they don't work reliably, users will complain.
+~~**The Problem:**~~
+~~If the user locks their phone or switches apps during meditation, interval bells may not play.~~
 
-**Best Practice Recommendation:**
-Configure audio session for playback:
-
-```swift
-// In iOS native code (AppDelegate.swift or via plugin)
-do {
-    try AVAudioSession.sharedInstance().setCategory(
-        .playback,
-        mode: .default,
-        options: [.mixWithOthers]
-    )
-    try AVAudioSession.sharedInstance().setActive(true)
-} catch {
-    print("Failed to configure audio session")
-}
-```
-
-Also add `audio` to `UIBackgroundModes` in Info.plist.
-
-**Mitigation:**
-- Consider shipping interval bells as "works when app is in foreground" in v1.0
-- Add background audio support in v1.1 after more testing
-
-**Roadmap Impact:**
-| Phase | Impact |
-|-------|--------|
-| Phase 8 | Interval bells section needs iOS audio session configuration |
-| Phase 9 | Info.plist must include background modes |
-| Phase 10 | Test bells with screen locked |
+**Resolution:** Interval bells feature removed entirely. Silent meditation is the focus for v1.0. This removes iOS background audio complexity.
 
 ---
 
@@ -625,81 +547,68 @@ Add to Phase 1:
 
 ## 7. Revenue & Conversion Assumptions
 
-### Current Plan
+> **STATUS: UPDATED** — Pricing model simplified to $4.99 one-time purchase.
 
-- 5% conversion rate assumed
-- $29.99/year and $99.99/lifetime pricing
-- Revenue projections based on download volume
+### Updated Plan
+
+- $4.99 one-time purchase (non-consumable IAP)
+- 10-hour free trial, then hard paywall
+- No subscription complexity
+- Lower revenue per user, but simpler model
+
+### Updated Revenue Projections
+
+| Scenario | Conversion | Year 1 Revenue (50K downloads) |
+|----------|------------|-------------------------------|
+| Pessimistic | 2% | ~$4,240 |
+| Realistic | 3.5% | ~$7,420 |
+| Optimistic | 5% | ~$10,600 |
+
+**Note:** Lower revenue expectations, but also lower complexity, no subscription churn, and simpler business model.
 
 ### Concerns
 
-#### 7.1 Conversion Rate Optimism
+#### 7.1 Conversion Rate — STILL RELEVANT
 
 **The Problem:**
 5% is at the high end of freemium conversion rates. Cold App Store traffic often converts at 1-3%.
 
 **Why This Matters:**
-Revenue projections may be 2-3x too optimistic, affecting financial planning.
+With $4.99 pricing, you need higher volume to generate meaningful revenue.
 
 **Best Practice Recommendation:**
-Model three scenarios:
+- Track actual conversion rate from day 1
+- Focus on ASO and word-of-mouth for volume
+- Consider price increase to $9.99 if conversion holds
 
-| Scenario | Conversion | Year 1 Revenue (50K downloads) |
-|----------|------------|-------------------------------|
-| Pessimistic | 2% | ~$35,000 |
-| Realistic | 3.5% | ~$61,000 |
-| Optimistic | 5% | ~$87,500 |
+#### 7.2 A/B Testing — SIMPLIFIED
 
-**Roadmap Impact:**
-| Phase | Impact |
-|-------|--------|
-| Phase 11 | Track actual conversion rate; adjust expectations |
-
----
-
-#### 7.2 No Paywall A/B Testing
-
-**The Problem:**
-The roadmap shows one paywall design with no plan to test alternatives.
-
-**Why This Matters:**
-Small changes in paywall copy, layout, or pricing presentation can 2x conversion rates. Shipping without iteration capability leaves money on the table.
-
-**Best Practice Recommendation:**
-Design paywall component to support A/B testing from day 1:
-- Feature flag for paywall variant
-- Track which variant was shown at conversion
-- Plan for at least 2 variants in first month post-launch
-
-RevenueCat has built-in paywall experimentation features.
-
-**Roadmap Impact:**
-| Phase | Impact |
-|-------|--------|
-| Phase 3 | Design Paywall component to support variants |
-| Phase 11 | Plan A/B test for week 2 post-launch |
+**Recommendation:** RevenueCat supports A/B testing. May test $4.99 vs $9.99 post-launch if volume is good but revenue is low.
 
 ---
 
 ## 8. Phase Dependencies & Parallelization
 
-### Current Plan
+> **STATUS: SIMPLIFIED** — Reduced from 11 phases to 6 phases.
 
-Phases are mostly sequential (0 -> 1 -> 2 -> ... -> 10).
+### Updated Plan
 
-### Concerns
+Phases are now:
+- Phase 0: Account & Service Setup
+- Phase 1: Infrastructure
+- Phase 2: Core UI + Premium
+- Phase 3: Design System (Ghibli)
+- Phase 4: Garden
+- Phase 5: Capacitor & iOS
+- Phase 6: Launch & Post-Launch
 
-#### 8.1 Suboptimal Parallelization
-
-**The Problem:**
-Some work could happen in parallel, reducing total timeline:
+### Parallelization Opportunities
 
 | Phase | Could Start | After |
 |-------|-------------|-------|
-| Phase 4 (Design) | Immediately | None (CSS/Tailwind changes don't need auth) |
-| Phase 5a (Garden math) | During Phase 2 | Phase 1 (just needs session data) |
-| Spirit asset generation | Immediately | None (AI art is independent) |
-| Privacy Policy / ToS writing | During Phase 8 | None (legal docs are independent) |
+| Phase 3 (Design) | During Phase 1 | Phase 0 (CSS/Tailwind changes are independent) |
+| Phase 4 (Garden prototype) | During Phase 2 | Phase 1 (just needs session data concept) |
+| Privacy Policy / ToS writing | During Phase 4 | None (legal docs are independent) |
 
 **Best Practice Recommendation:**
 Create a visual dependency graph. Identify the critical path. Parallelize non-critical work.
@@ -730,90 +639,44 @@ Legal docs: anytime
 
 ## 9. Database & Security
 
-### Current Plan
+> **STATUS: SIMPLIFIED** — Local-only storage using Dexie (IndexedDB). No cloud database.
 
-Supabase with Row Level Security (RLS), schema defined for profiles and sessions.
+### Updated Plan
 
-### Concerns
+- Dexie (IndexedDB) for all local storage
+- No Supabase, no cloud database
+- No RLS concerns (single-user local storage)
+- No multi-user security concerns
 
-#### 9.1 RLS Policy Details Missing
+### Concerns — MOSTLY ELIMINATED
+
+#### 9.1 RLS Policy Details — ELIMINATED
+
+~~**The Problem:**~~
+~~RLS policies are a common source of security vulnerabilities.~~
+
+**Resolution:** No cloud database = no RLS = no cross-user data leakage risk.
+
+#### 9.2 Schema Migration — STILL RELEVANT
 
 **The Problem:**
-The roadmap mentions "Add policies: users can only read/write their own data" but doesn't show the actual policies. Incorrect RLS policies are a common source of security vulnerabilities.
-
-**Why This Matters:**
-If RLS policies are misconfigured, User A could read User B's meditation history. This is a privacy violation and potential GDPR issue.
+Dexie schema changes after launch need careful handling.
 
 **Best Practice Recommendation:**
-Document and test RLS policies explicitly:
-
-```sql
--- profiles: users can only access their own profile
-CREATE POLICY "Users can read own profile"
-ON profiles FOR SELECT
-USING (auth.uid() = id);
-
-CREATE POLICY "Users can update own profile"
-ON profiles FOR UPDATE
-USING (auth.uid() = id);
-
--- sessions: users can only access their own sessions
-CREATE POLICY "Users can read own sessions"
-ON sessions FOR SELECT
-USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert own sessions"
-ON sessions FOR INSERT
-WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete own sessions"
-ON sessions FOR DELETE
-USING (auth.uid() = user_id);
-```
-
-Add to Phase 1:
-```
-- [ ] Write RLS policies explicitly (document in code)
-- [ ] Test: User A cannot read User B's sessions
-- [ ] Test: User A cannot insert session with User B's user_id
-- [ ] VERIFY: All tests pass
-```
+- Design Dexie schema with versioning from day 1
+- Document migration framework
+- Test: install v1.0, use for a week, upgrade to v1.1, verify data integrity
 
 **Roadmap Impact:**
 | Phase | Impact |
 |-------|--------|
-| Phase 1 | Add explicit RLS policy creation and testing |
-
----
-
-#### 9.2 Missing Indexes
-
-**The Problem:**
-No database indexes specified. As session count grows, queries will slow.
-
-**Best Practice Recommendation:**
-Add indexes for common query patterns:
-
-```sql
--- Sessions by user, ordered by time (most common query)
-CREATE INDEX idx_sessions_user_time
-ON sessions(user_id, start_time DESC);
-
--- For sync: find unsynced sessions
--- (if adding a synced_at column for sync status)
-CREATE INDEX idx_sessions_sync_status
-ON sessions(user_id, synced_at)
-WHERE synced_at IS NULL;
-```
-
-**Roadmap Impact:**
-| Phase | Impact |
-|-------|--------|
-| Phase 1 | Add index creation to Supabase setup |
+| Phase 1 | Add Dexie schema versioning |
 
 ---
 
 ## 10. Build Execution Recommendations
+
+> **STATUS: UPDATED** — Simplified based on reduced scope.
 
 ### Summary of Required Changes
 
@@ -821,13 +684,14 @@ WHERE synced_at IS NULL;
 
 | # | Issue | Resolution | Phase Impact |
 |---|-------|------------|--------------|
-| 1 | Garden prototype validation | Build standalone p5.js prototype before Phase 5 code | Phase 5a |
+| 1 | Garden prototype validation | Build standalone p5.js prototype with 16 visual states | Phase 4 |
 | 2 | Crash reporting | Add Sentry in Phase 1 | Phase 1 |
-| 3 | Screen lock handling | Add keep-awake plugin | Phase 9 |
-| 4 | Timer lifecycle | Save state on background, recover on foreground | Phase 9 |
-| 5 | RLS policies | Document and test explicitly | Phase 1 |
-| 6 | Sync tombstones | Add deleted_at column, never hard delete | Phase 6a |
-| 7 | Year Summary fallback | Have static version ready if animation proves too complex | Phase 7 |
+| 3 | Screen lock handling | Add keep-awake plugin | Phase 5 |
+| 4 | Timer lifecycle | Save state on background, recover on foreground | Phase 5 |
+
+~~| 5 | RLS policies | Document and test explicitly | Phase 1 |~~ — ELIMINATED (local-only)
+~~| 6 | Sync tombstones | Add deleted_at column, never hard delete | Phase 6a |~~ — ELIMINATED
+~~| 7 | Year Summary fallback | Have static version ready | Phase 7 |~~ — ELIMINATED
 
 #### Advisory (Strongly Recommended)
 
@@ -908,17 +772,26 @@ This structure enables efficient assistance without requiring full context recon
 
 ## Conclusion
 
+> **STATUS: UPDATED** — Scope simplification has significantly reduced risk.
+
 This roadmap represents strong product and technical thinking. The philosophical grounding is sound, the phased approach is sensible, and the escape hatches show wisdom.
 
-The primary risks are:
-1. **Two high-complexity items (Garden, Sync) in the critical path**
-2. **Missing operational infrastructure (crash reporting, analytics, testing)**
-3. **Year Summary scope potentially exceeding timeline**
+**Updated risk assessment after scope simplification:**
 
-With the modifications outlined in this review, the project has a clear path to successful launch. The key is disciplined execution: prototype before committing, test as you go, and have fallback plans for high-risk components.
+The primary risks ~~are~~ **were**:
+1. ~~**Two high-complexity items (Garden, Sync) in the critical path**~~ → **Now only Garden** (Sync eliminated)
+2. ~~**Missing operational infrastructure (crash reporting, analytics, testing)**~~ → **Addressed** (Sentry, Vitest added)
+3. ~~**Year Summary scope potentially exceeding timeline**~~ → **Eliminated** (feature removed)
 
-**Recommendation:** Proceed with build after addressing the seven critical items. Maintain weekly check-ins against the risk monitoring table. Preserve the philosophical foundations—they differentiate this product—while being pragmatic about scope.
+**Remaining risks:**
+1. **Garden visual quality** — Prototype must feel magical before full integration
+2. **16 visual states complexity** — Season × Time combinations must look coherent
+3. **iOS platform edge cases** — Keep-awake and timer lifecycle must be bulletproof
+
+**Recommendation:** Proceed with build. The simplified scope has removed the highest-risk components. Focus on Garden prototype validation early, and the remaining work is manageable.
 
 ---
 
 *Review prepared for technical handoff. Document may be referenced during development for architecture decisions and risk assessment.*
+
+*Updated January 2026 to reflect simplified scope: local-only storage, $4.99 one-time purchase, no Year Summary, no Spirit companion, no interval bells.*
