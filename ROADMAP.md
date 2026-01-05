@@ -1,6 +1,6 @@
 # 10,000 Hours - iOS Commercialization Roadmap
 
-**Status:** REVISED (Insight Journal) | **Date:** January 2026
+**Status:** REVISED (Insight Journal + Wisdom Stream + Hide Time) | **Date:** January 2026
 
 ---
 
@@ -13,17 +13,20 @@ Transform the minimalist meditation timer PWA into a commercially viable iOS app
 **Core additions:**
 - Freemium model: $3.99/month or $29.99 lifetime
 - Insight Journal: Voice notes, on-device transcription, searchable archive (PREMIUM)
+- Wisdom Stream: Anonymous crowd-sourced insights from the community (read FREE, share PREMIUM)
 - Word cloud visualization: See your vocabulary of understanding evolve
+- Hide Time Display: Optional setting for number-free meditation experience
 - Ghibli-inspired design language: warm colors, organic animation, generous Ma (empty space)
-- Local-only storage (Dexie/IndexedDB) - no cloud sync in v1.0
+- Supabase backend for Wisdom Stream (anonymous, no auth required)
+- Local storage (Dexie/IndexedDB) for personal data
 
 **What was removed from original scope:**
-- ~~Cloud sync (Supabase)~~ -> Local-only for simplicity
-- ~~Apple Sign-In~~ -> No auth needed without cloud
+- ~~Apple Sign-In~~ -> Anonymous device hash for Wisdom Stream
 - ~~Interval bells~~ -> Silent meditation focus
 - ~~Year Summary animation~~ -> Insight archive IS the summary
 - ~~Spirit companion~~ -> v2 consideration
 - ~~Garden visualization~~ -> Replaced by Insight Journal (more authentic value)
+- ~~Full social features~~ -> Wisdom Stream is read-only, Like + Save only
 
 ---
 
@@ -46,14 +49,14 @@ Meditators have insights during practice -> Want to capture them immediately -> 
                     |  ONBOARDING  |  (first launch only)
                     +------+-------+
                            |
-+----------------------------------------------------------+
-|                                                          |
-|   TIMER  ->  STATS  ->  CALENDAR  ->  INSIGHTS           |
-|   (home)    (gear->Settings)          (voice journal)    |
-|                                                          |
-|   Overlay: Paywall (when accessing premium features)     |
-|                                                          |
-+----------------------------------------------------------+
++------------------------------------------------------------------+
+|                                                                  |
+|   TIMER  ->  STATS  ->  WISDOM  ->  CALENDAR  ->  INSIGHTS       |
+|   (home)    (gear->Settings)  (community)         (voice journal)|
+|                                                                  |
+|   Overlay: Paywall (when accessing premium features)             |
+|                                                                  |
++------------------------------------------------------------------+
 ```
 
 ### Screen Flow
@@ -62,6 +65,7 @@ Meditators have insights during practice -> Want to capture them immediately -> 
 |--------|---------|------|---------|
 | **Timer** | Meditation (home) | Full access | Full access |
 | **Stats** | Analytics | Full access | Full access |
+| **Wisdom** | Community insights stream | Read only | Read + Share |
 | **Calendar** | History, heatmap | Full access | Full access |
 | **Insights** | Voice journal, archive, word cloud | Blurred preview | Full access |
 | **Settings** | Preferences | Full access | Full access |
@@ -80,10 +84,13 @@ Meditators have insights during practice -> Want to capture them immediately -> 
 | **Stats** | Full access | Full access |
 | **Calendar** | Full heatmap | Full heatmap |
 | **Session History** | Full access | Full access |
+| **Wisdom Stream (read)** | Full access | Full access |
+| **Wisdom Stream (share)** | N/A | Share insights (requires 50+ hours) |
 | **Insights** | Blurred preview | Voice recording, transcription, archive |
 | **Word Cloud** | N/A | See vocabulary evolve over time |
 | **Search** | N/A | Full-text search across insights |
-| **Data** | Local storage | Local storage |
+| **Hide Time Display** | Full access | Full access |
+| **Data** | Local + community read | Local + community read + share |
 
 ### Monetization Philosophy
 
@@ -197,6 +204,156 @@ When free users navigate to Insights, they see an **enticing preview**:
 
 ---
 
+## The Wisdom Stream (Community Feature)
+
+Anonymous, crowd-sourced meditation insights - like Kindle's "most highlighted passages" but for meditation wisdom.
+
+### Philosophy
+- **Collective wisdom** - See what resonates across the community
+- **Anonymous by design** - No profiles, no followers, just insights
+- **Trust through practice** - 50+ hours required to share (filters trolls)
+- **Read freely, share premium** - Everyone benefits from community wisdom
+
+### How It Works
+
+**For Readers (FREE):**
+1. Navigate to Wisdom screen (between Stats and Calendar)
+2. Browse anonymous pearls of wisdom
+3. See hour milestone of each contributor
+4. Like pearls that resonate
+5. Save favorites to personal collection
+
+**For Contributors (PREMIUM, 50+ hours):**
+1. Record voice note after meditation
+2. After saving insight, see "Share this wisdom?" prompt
+3. AI or manual extraction creates 1-2 sentence pearl
+4. Review and edit before sharing
+5. Pearl appears in community stream (anonymous)
+
+### Wisdom Stream Screen
+
+```
++-------------------------------------+
+|        Pearls of Wisdom             |
++-------------------------------------+
+|                                     |
+|  "The space between thoughts is     |
+|   where I live now."                |
+|   ─── 847 hours · 23 likes          |
+|                          [♡] [⊕]    |
+|                                     |
+|  ───────────────────────────────    |
+|                                     |
+|  "Resistance is just another        |
+|   sensation to observe."            |
+|   ─── 2,341 hours · 89 likes        |
+|                          [♡] [⊕]    |
+|                                     |
++-------------------------------------+
+|     [Saved] [All] [New]             |
++-------------------------------------+
+```
+
+- `[♡]` = Like (influences ranking)
+- `[⊕]` = Save to personal collection
+- Hour milestone shown (establishes credibility)
+- Tabs: Saved | All | New
+
+### Ranking Algorithm
+
+```
+score = (likes × 1.0) + (saves × 2.0) + recency_decay
+
+recency_decay = 1.0 / (1 + days_since_posted × 0.1)
+```
+
+Saves weighted higher than likes (indicates deeper resonance).
+
+### Moderation
+
+1. **Hour-gate**: 50+ hours required to share (no drive-by trolling)
+2. **AI filter**: Basic profanity/harassment detection
+3. **Report button**: Community can flag inappropriate content
+4. **No pre-review**: Trust earned through practice, community self-polices
+
+### Why This Matters
+
+From Reddit research (12,503 comments):
+- Highest engagement posts are people sharing insights
+- Users value seeing others' journeys
+- No existing tool captures and shares meditation wisdom
+
+This feature creates value for everyone:
+- Free users get community wisdom
+- Premium users get recognition for sharing
+- App gets differentiation and retention
+
+---
+
+## Hide Time Display (User Setting)
+
+Optional setting for practitioners who prefer number-free meditation.
+
+### Research Validation
+> *"One feature that would make it simply perfect — an option to NOT show the numbers while it's running."* (App Store review, echoed in Reddit research)
+
+### Philosophy
+- **Presence over measurement** - Some practitioners find numbers distracting
+- **Advanced feature** - For those who've moved beyond tracking
+- **Reveal in Stats** - Still track hours, just don't show during meditation
+
+### User Flow (Hide Time Enabled)
+
+```
+IDLE STATE:
++-------------------------------------+
+|                                     |
+|                                     |
+|       Just start meditating         |
+|                                     |
+|            [ Begin ]                |
+|                                     |
++-------------------------------------+
+
+RUNNING STATE:
++-------------------------------------+
+|                                     |
+|                                     |
+|          ◯                          |  <- Breathing/pulsing animation
+|       (pulsing)                     |     Acknowledges timer is running
+|                                     |     NO time displayed
+|                                     |
+|         Tap to end                  |
+|                                     |
++-------------------------------------+
+
+COMPLETE STATE:
++-------------------------------------+
+|                                     |
+|                                     |
+|      Meditation complete            |
+|                                     |
+|        [ View Stats ]               |  <- See time in Stats
+|                                     |
++-------------------------------------+
+```
+
+### Implementation
+
+- Setting toggle in Settings screen
+- Persists in Dexie database
+- Timer.tsx conditionally renders based on setting
+- Default: OFF (show time normally)
+
+### Design Considerations
+
+- Breathing animation is crucial - user needs acknowledgment timer is running
+- "Tap to end" instruction prevents confusion
+- Stats screen becomes the reveal moment
+- Aligns with zen philosophy: presence over measurement
+
+---
+
 ## Monetization
 
 ### Pricing Model: Subscription + Lifetime
@@ -304,7 +461,9 @@ Assumptions:
 | Speech Recognition | iOS SFSpeechRecognizer (via Capacitor plugin) |
 | Audio Recording | Web MediaRecorder API / Capacitor plugin |
 
-### Database Schema (Dexie - Local Only)
+### Database Schema
+
+#### Dexie (Local Storage)
 
 ```typescript
 // src/lib/db.ts
@@ -327,6 +486,16 @@ interface Insight {
   transcript: string;     // Transcribed text
   durationSeconds: number;
   totalHoursAtRecording: number; // Hour milestone when recorded
+  sharedAt?: Date;        // When shared to Wisdom Stream
+  sharedPearlUuid?: string; // Link to Supabase pearl
+}
+
+interface SavedPearl {
+  id?: number;
+  pearlUuid: string;      // Supabase pearl ID
+  savedAt: Date;
+  content: string;        // Cached locally
+  hoursAtCreation: number;
 }
 
 interface UserProfile {
@@ -337,10 +506,17 @@ interface UserProfile {
   expirationDate?: Date;  // For monthly subscriptions
 }
 
+interface UserSettings {
+  id: 1;                  // Single row
+  hideTimeDisplay: boolean; // Hide time during meditation
+}
+
 class AppDatabase extends Dexie {
   sessions!: Table<Session>;
   insights!: Table<Insight>;
+  savedPearls!: Table<SavedPearl>;
   profile!: Table<UserProfile>;
+  settings!: Table<UserSettings>;
 
   constructor() {
     super('TenThousandHours');
@@ -349,7 +525,9 @@ class AppDatabase extends Dexie {
     this.version(1).stores({
       sessions: '++id, uuid, startTime',
       insights: '++id, uuid, sessionUuid, recordedAt, transcript',
-      profile: 'id'
+      savedPearls: '++id, pearlUuid, savedAt',
+      profile: 'id',
+      settings: 'id'
     });
   }
 }
@@ -359,47 +537,126 @@ export const db = new AppDatabase();
 
 **Note:** Full-text search on transcripts via Dexie's `where('transcript').startsWithIgnoreCase()` or simple `.filter()` for contains queries.
 
+#### Supabase (Cloud - Wisdom Stream)
+
+```sql
+-- Wisdom pearls table
+CREATE TABLE wisdoms (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  content TEXT NOT NULL,
+  hours_at_creation INTEGER NOT NULL,
+  device_hash TEXT NOT NULL,  -- Anonymous device identifier (hashed)
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  likes_count INTEGER DEFAULT 0,
+  saves_count INTEGER DEFAULT 0,
+  reported BOOLEAN DEFAULT FALSE,
+  hidden BOOLEAN DEFAULT FALSE
+);
+
+-- Interactions (likes/saves per device)
+CREATE TABLE wisdom_interactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  wisdom_id UUID REFERENCES wisdoms(id) ON DELETE CASCADE,
+  device_hash TEXT NOT NULL,
+  interaction_type TEXT NOT NULL, -- 'like' or 'save'
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(wisdom_id, device_hash, interaction_type)
+);
+
+-- Reports for moderation
+CREATE TABLE wisdom_reports (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  wisdom_id UUID REFERENCES wisdoms(id) ON DELETE CASCADE,
+  device_hash TEXT NOT NULL,
+  reason TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(wisdom_id, device_hash)
+);
+
+-- Indexes for performance
+CREATE INDEX idx_wisdoms_created_at ON wisdoms(created_at DESC);
+CREATE INDEX idx_wisdoms_likes ON wisdoms(likes_count DESC);
+CREATE INDEX idx_wisdom_interactions_wisdom ON wisdom_interactions(wisdom_id);
+
+-- Row Level Security (RLS)
+ALTER TABLE wisdoms ENABLE ROW LEVEL SECURITY;
+ALTER TABLE wisdom_interactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE wisdom_reports ENABLE ROW LEVEL SECURITY;
+
+-- Policies: Anyone can read non-hidden wisdoms
+CREATE POLICY "Public can read wisdoms" ON wisdoms
+  FOR SELECT USING (hidden = FALSE);
+
+-- Only device owner can insert their own wisdoms
+CREATE POLICY "Devices can insert wisdoms" ON wisdoms
+  FOR INSERT WITH CHECK (TRUE);
+
+-- Interactions: Anyone can insert one per wisdom per type
+CREATE POLICY "Devices can interact" ON wisdom_interactions
+  FOR INSERT WITH CHECK (TRUE);
+
+CREATE POLICY "Public can read interactions" ON wisdom_interactions
+  FOR SELECT USING (TRUE);
+
+-- Reports: Anyone can report once per wisdom
+CREATE POLICY "Devices can report" ON wisdom_reports
+  FOR INSERT WITH CHECK (TRUE);
+```
+
+**Anonymous Identity:** Uses device hash (generated once, stored locally) instead of user accounts. No authentication required.
+
 ---
 
 ## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/lib/db.ts` | Add insights table, premium status |
-| `src/stores/useSessionStore.ts` | Add post-session insight prompt |
-| `src/App.tsx` | Add Insights route, premium gating |
-| `src/components/Timer.tsx` | Post-session "Capture insight?" prompt |
-| `src/components/Stats.tsx` | Settings gear icon |
+| `src/lib/db.ts` | Add insights, savedPearls, settings tables |
+| `src/stores/useSessionStore.ts` | Add post-session insight prompt, wisdom view |
+| `src/App.tsx` | Add Insights + Wisdom routes, premium gating |
+| `src/components/Timer.tsx` | Post-session prompt, hide time display mode |
+| `src/components/Stats.tsx` | Settings gear icon, swipe to Wisdom |
+| `src/components/Calendar.tsx` | Swipe targets for Wisdom screen |
+| `src/hooks/useSwipe.ts` | Update for 5-screen navigation |
 | `src/lib/constants.ts` | Word cloud stopwords |
-| `package.json` | New dependencies |
+| `package.json` | New dependencies (Supabase, RevenueCat, etc.) |
 
 ## New Files to Create
 
 ```
 src/
   lib/
+    supabase.ts           # Supabase client initialization
     purchases.ts          # RevenueCat integration
     transcription.ts      # iOS Speech Recognition wrapper
     wordcloud.ts          # Word extraction and frequency analysis
+    contentFilter.ts      # Basic profanity/harassment filter
+    deviceHash.ts         # Anonymous device identifier generation
 
   stores/
     usePremiumStore.ts    # Premium status, subscription tracking
-    useInsightsStore.ts   # Insights state, recording state
+    useInsightsStore.ts   # Personal insights state, recording
+    useWisdomStore.ts     # Community wisdoms, likes, saves
+    useSettingsStore.ts   # User settings (hide time, etc.)
 
   components/
-    Insights.tsx          # Insights archive screen
+    Insights.tsx          # Personal insights archive screen
     InsightRecorder.tsx   # Voice recording modal
     InsightCard.tsx       # Individual insight in list
+    Wisdom.tsx            # Community wisdom stream screen
+    PearlCard.tsx         # Individual pearl in wisdom stream
+    ShareFlow.tsx         # Pearl extraction + approval flow
     WordCloud.tsx         # Word cloud visualization
     LockedOverlay.tsx     # Reusable blur + unlock CTA overlay
     Onboarding.tsx        # Intro flow (3 screens)
     Paywall.tsx           # Purchase screen (monthly + lifetime)
-    Settings.tsx          # Settings screen
+    Settings.tsx          # Settings screen (with hide time toggle)
 
 .github/
   workflows/
     ci.yml                # GitHub Actions CI/CD
 
+.env.local                # Supabase credentials (gitignored)
 capacitor.config.ts
 ios/                      # Generated by Capacitor
 ROADMAP.md               # This document (north star)
@@ -408,8 +665,10 @@ ROADMAP.md               # This document (north star)
 **New dependencies:**
 ```json
 {
+  "@supabase/supabase-js": "^2.x.x",
   "@sentry/capacitor": "^0.x.x",
   "@sentry/react": "^7.x.x",
+  "@revenuecat/purchases-capacitor": "^7.x.x",
   "vitest": "^1.x.x",
   "@testing-library/react": "^14.x.x",
   "@capacitor-community/keep-awake": "^3.x.x",
@@ -468,6 +727,23 @@ ROADMAP.md               # This document (north star)
   - Create Offering: "default" with both products
   - VERIFY: Products show in RevenueCat dashboard with checkmarks
 
+- [ ] **Create Supabase project (for Wisdom Stream)**
+  - Go to supabase.com -> New project
+  - Project name: "10000-hours"
+  - Region: Choose closest to target users
+  - VERIFY: Project dashboard accessible
+
+- [ ] **Create Supabase database schema**
+  - Create `wisdoms` table (see Database Schema section)
+  - Create `wisdom_interactions` table
+  - Configure Row Level Security (RLS)
+  - VERIFY: Tables created, RLS policies active
+
+- [ ] **Get Supabase credentials**
+  - Settings -> API -> Project URL + anon key
+  - Store securely for environment variables
+  - VERIFY: Credentials copied to secure location
+
 #### Phase 0 - TEST CHECKLIST
 Before moving to Phase 1:
 - [ ] Can log into Apple Developer account
@@ -476,6 +752,8 @@ Before moving to Phase 1:
 - [ ] Banking/tax shows "Active" status
 - [ ] RevenueCat shows green checkmarks for both products
 - [ ] IAP products approved in App Store Connect
+- [ ] Supabase project created and accessible
+- [ ] Supabase tables created with RLS configured
 
 ---
 
@@ -507,6 +785,24 @@ Before moving to Phase 1:
   - Handle subscription expiration checks
   - VERIFY: Store compiles, isPremium defaults to false
 
+- [ ] **Install Supabase client**
+  - `npm install @supabase/supabase-js`
+  - VERIFY: Package installed without errors
+
+- [ ] **Create src/lib/supabase.ts**
+  - Initialize Supabase client with env vars
+  - Export typed client for wisdoms table
+  - VERIFY: File compiles, client initializes
+
+- [ ] **Add environment variables**
+  - Create `.env.local` with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+  - Add `.env.local` to `.gitignore`
+  - VERIFY: Env vars load correctly in dev
+
+- [ ] **Test Supabase connection**
+  - Create simple test query to wisdoms table
+  - VERIFY: Connection works, can read from database
+
 #### Phase 1 - TEST CHECKLIST
 Before moving to Phase 2:
 - [ ] `npm run build` succeeds with no errors
@@ -516,6 +812,8 @@ Before moving to Phase 2:
 - [ ] **Sentry:** Test crash appears in Sentry dashboard
 - [ ] **Schema:** Dexie versioning documented for future migrations
 - [ ] usePremiumStore tracks premium status correctly
+- [ ] **Supabase:** Connection test succeeds
+- [ ] **Supabase:** Can read wisdoms table (empty is fine)
 
 ---
 
@@ -533,16 +831,29 @@ Before moving to Phase 2:
 
 - [ ] **Create Settings.tsx**
   - Premium status display
+  - **Hide Time Display toggle** (see Hide Time Display section)
   - Links: Privacy Policy, Terms of Service
   - Restore Purchases button
   - Version number at bottom
   - VERIFY: Settings accessible from Stats screen
 
+- [ ] **Implement Hide Time Display setting**
+  - Add `hideTimeDisplay` to user settings in Dexie
+  - Create useSettingsStore.ts for settings state
+  - VERIFY: Setting persists across app restarts
+
+- [ ] **Update Timer.tsx for hidden mode**
+  - Idle: Show "Just start meditating" instead of hours
+  - Running: Show breathing circle + "Tap to end" instead of HH:MM:SS
+  - Complete: Show "Meditation complete" instead of "+32m"
+  - VERIFY: Timer works correctly in both modes
+
 - [ ] **Add navigation to new screens**
   - Settings: gear icon on Stats screen -> Settings
-  - Insights: fourth position after Calendar
+  - Wisdom: third position after Stats (before Calendar)
+  - Insights: fifth position after Calendar
   - Onboarding: shows before Timer on first launch
-  - VERIFY: All navigation paths work
+  - VERIFY: All navigation paths work (Timer -> Stats -> Wisdom -> Calendar -> Insights)
 
 - [ ] **Add LockedOverlay.tsx component**
   - Reusable component for locked features
@@ -581,11 +892,17 @@ Before moving to Phase 3:
 - [ ] `npm run test` passes
 - [ ] Timer still works
 - [ ] Onboarding shows on first launch
-- [ ] Can navigate: Timer -> Stats -> Calendar -> Insights
+- [ ] Can navigate: Timer -> Stats -> Wisdom -> Calendar -> Insights
 - [ ] Can navigate to Settings
 - [ ] LockedOverlay renders with blur and CTA
 - [ ] Paywall shows both pricing options
 - [ ] "Restore Purchases" button is present
+- [ ] **Hide Time Display:**
+  - [ ] Setting toggle works in Settings
+  - [ ] Timer shows "Just start meditating" when hidden
+  - [ ] Timer shows breathing circle during session when hidden
+  - [ ] Timer shows "Meditation complete" at end when hidden
+  - [ ] Setting persists after app restart
 - [ ] **Sandbox testing:**
   - [ ] Can complete test subscription
   - [ ] Can complete lifetime purchase
@@ -719,7 +1036,61 @@ Before moving to Phase 4:
   - Hour milestone filter ("0-100h", "100-500h", etc.)
   - VERIFY: Search returns relevant results
 
-#### 4c: Word Cloud
+#### 4c: Wisdom Stream (Community)
+
+> **REQUIRES: Supabase configured in Phase 0/1**
+
+- [ ] **Create useWisdomStore.ts**
+  - Load community wisdoms from Supabase
+  - Track liked/saved pearls locally
+  - Actions: fetchWisdoms, likePearl, savePearl, reportPearl
+  - VERIFY: Store fetches and displays wisdoms
+
+- [ ] **Create Wisdom.tsx screen**
+  - Scrollable list of PearlCards
+  - Tabs: Saved | All | New
+  - Pull-to-refresh
+  - Empty state for no wisdoms
+  - VERIFY: Screen displays community wisdoms
+
+- [ ] **Create PearlCard.tsx component**
+  - Pearl content (1-2 sentences)
+  - Hour milestone badge
+  - Like count + Like button
+  - Save button
+  - VERIFY: Card renders correctly with interactions
+
+- [ ] **Implement pearl extraction flow**
+  - After saving insight, prompt: "Share this wisdom?"
+  - AI or manual extraction to 1-2 sentence pearl
+  - User approves/edits before sharing
+  - Only show for users with 50+ hours
+  - VERIFY: Extraction flow works for eligible users
+
+- [ ] **Create ShareFlow.tsx component**
+  - Preview extracted pearl
+  - Edit capability
+  - Confirm/Cancel buttons
+  - Upload to Supabase on confirm
+  - VERIFY: Pearl appears in Wisdom Stream after sharing
+
+- [ ] **Implement ranking algorithm**
+  - `score = (likes × 1.0) + (saves × 2.0) + recency_decay`
+  - Supabase function or client-side sorting
+  - VERIFY: Higher-ranked pearls appear first
+
+- [ ] **Add content moderation**
+  - Basic profanity/harassment filter
+  - Report button on each pearl
+  - Hour-gate: 50+ hours required to share
+  - VERIFY: Inappropriate content filtered, reports logged
+
+- [ ] **Gate sharing behind premium**
+  - Reading Wisdom Stream: FREE for all users
+  - Sharing to Wisdom Stream: PREMIUM only
+  - VERIFY: Free users can read, premium can share
+
+#### 4d: Word Cloud
 
 - [ ] **Create src/lib/wordcloud.ts**
   - `extractWords(transcripts: string[]): Map<string, number>`
@@ -739,7 +1110,7 @@ Before moving to Phase 4:
   - Tapping word filters list below
   - VERIFY: Word cloud integrated with filtering
 
-#### 4d: Premium Gating
+#### 4e: Premium Gating
 
 - [ ] **Implement locked overlay for free users**
   - Use LockedOverlay component
@@ -751,6 +1122,11 @@ Before moving to Phase 4:
   - Post-session prompt only for premium users
   - Free users see "Upgrade to capture insights"
   - VERIFY: Free users cannot record
+
+- [ ] **Gate Wisdom sharing behind premium**
+  - Share flow only appears for premium users
+  - Free users can read all wisdoms
+  - VERIFY: Premium users can share, free users cannot
 
 #### Phase 4 - TEST CHECKLIST
 Before moving to Phase 5:
@@ -767,12 +1143,20 @@ Before moving to Phase 5:
   - [ ] Can play back audio
   - [ ] Search finds relevant insights
   - [ ] Filters work correctly
+- [ ] **Wisdom Stream:**
+  - [ ] Wisdoms load from Supabase
+  - [ ] Can like and save pearls
+  - [ ] Saved pearls appear in Saved tab
+  - [ ] Premium users can share (with 50+ hours)
+  - [ ] Free users can read but not share
+  - [ ] Report button works
 - [ ] **Word Cloud:**
   - [ ] Words sized by frequency
   - [ ] Tapping word filters list
 - [ ] **Premium gating:**
-  - [ ] Free users see blurred preview
+  - [ ] Free users see blurred preview on Insights
   - [ ] Free users cannot record
+  - [ ] Free users can read Wisdom Stream
   - [ ] Premium users have full access
 
 ---
