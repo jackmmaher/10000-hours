@@ -1,7 +1,7 @@
 # 10,000 Hours - Build Log
 
 **Started:** January 5, 2026
-**Status:** Phase 1 - Infrastructure
+**Status:** Phase 2b - Complete
 
 ---
 
@@ -107,13 +107,35 @@
 ---
 
 ## Phase 2b: Settings, Onboarding, Paywall
-**Status:** NOT STARTED
+**Status:** COMPLETE
 
-- [ ] Create Onboarding.tsx (3 screens)
-- [ ] Create Settings.tsx
-- [ ] Create PaywallPremium.tsx
-- [ ] Implement Hide Time Display feature
-- [ ] Create `src/lib/purchases.ts` (mock mode)
+- [x] Create Onboarding.tsx (3 screens)
+- [x] Create Settings.tsx
+- [x] Create PaywallPremium.tsx
+- [x] Implement Hide Time Display feature
+- [x] Create `src/lib/purchases.ts` (mock mode)
+- [x] Wire up Day 31 trigger in App.tsx
+- [x] Update useSessionStore with 'settings' view
+- [x] Add Settings navigation to Stats.tsx
+
+### Progress Log
+
+| Date | Task | Status | Notes |
+|------|------|--------|-------|
+| Jan 5, 2026 | Phase 2b complete | Complete | Onboarding, Settings, Paywall, Day 31 trigger all wired up |
+
+### Files Created/Modified
+
+| File | Changes |
+|------|---------|
+| `src/components/Onboarding.tsx` | NEW - 3-screen intro with localStorage tracking |
+| `src/components/Settings.tsx` | NEW - Tier status, Hide Time toggle, Restore Purchase |
+| `src/components/PaywallPremium.tsx` | NEW - Day 31 paywall with soft messaging |
+| `src/lib/purchases.ts` | NEW - Mock RevenueCat integration |
+| `src/components/Timer.tsx` | Added Hide Time Display feature (breathing circle mode) |
+| `src/stores/useSessionStore.ts` | Added 'settings' to AppView type |
+| `src/App.tsx` | Full wiring: onboarding, paywall, Day 31 trigger, purchase handlers |
+| `src/components/Stats.tsx` | Added Settings navigation link |
 
 ---
 
@@ -155,26 +177,39 @@
 
 ## Technical Notes
 
-### Existing Codebase (as of Jan 5, 2026)
+### Current Codebase (as of Jan 5, 2026 - Phase 2b Complete)
 
 ```
 src/
   lib/
-    db.ts           # Dexie v1 (sessions, appState)
+    db.ts           # Dexie v2 (sessions, appState, profile, settings)
     calculations.ts # Stats, milestones, projections
-    constants.ts    # GOAL_SECONDS
+    constants.ts    # GOAL_SECONDS, TIME_WINDOWS
     format.ts       # Formatting utilities
+    tierLogic.ts    # Trial/downgrade logic, paywall triggers
+    analytics.ts    # Event tracking (mock mode)
+    purchases.ts    # RevenueCat integration (mock mode)
+    __tests__/
+      tierLogic.test.ts  # 38 unit tests
   stores/
     useSessionStore.ts  # Timer + session state
+    usePremiumStore.ts  # Subscription/tier state
+    useSettingsStore.ts # User preferences
   hooks/
     useSwipe.ts
     useTimer.ts
   components/
-    Timer.tsx
-    Stats.tsx
-    Calendar.tsx
+    Timer.tsx           # Hide Time Display mode
+    Stats.tsx           # Tier-gated windows
+    Calendar.tsx        # 90-day limit, fade
     ZenMessage.tsx
-  App.tsx
+    WeeklyGoal.tsx      # Rolling 7-day goal
+    FrozenMilestone.tsx # FREE tier frozen state
+    LockedOverlay.tsx   # Blur overlay
+    Onboarding.tsx      # 3-screen intro
+    Settings.tsx        # User preferences
+    PaywallPremium.tsx  # Day 31 paywall
+  App.tsx               # Full flow wiring
   main.tsx
   index.css
 ```

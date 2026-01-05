@@ -368,16 +368,24 @@ export function Stats() {
           </div>
         </div>
 
-        {/* Calendar link */}
-        <button
-          onClick={() => setView('calendar')}
-          className="w-full py-3 text-sm text-indigo-deep/70 hover:text-indigo-deep transition-colors flex items-center justify-center"
-        >
-          Calendar
-          <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
+        {/* Navigation links */}
+        <div className="flex justify-center gap-6">
+          <button
+            onClick={() => setView('calendar')}
+            className="py-3 text-sm text-indigo-deep/70 hover:text-indigo-deep transition-colors flex items-center"
+          >
+            Calendar
+            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+          <button
+            onClick={() => setView('settings')}
+            className="py-3 text-sm text-indigo-deep/50 hover:text-indigo-deep/70 transition-colors"
+          >
+            Settings
+          </button>
+        </div>
       </div>
     </div>
   )

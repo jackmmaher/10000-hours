@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useMemo } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
 import { usePremiumStore } from '../stores/usePremiumStore'
+import { useSettingsStore } from '../stores/useSettingsStore'
 import { useTimer, useWakeLock } from '../hooks/useTimer'
 import { useSwipe } from '../hooks/useSwipe'
 import { formatTimer, formatTotalHours, formatSessionAdded } from '../lib/format'
@@ -24,6 +25,7 @@ export function Timer() {
   } = useSessionStore()
 
   const { isPremiumOrTrial } = usePremiumStore()
+  const { hideTimeDisplay } = useSettingsStore()
 
   const { elapsed, isRunning } = useTimer()
 
@@ -32,6 +34,9 @@ export function Timer() {
     () => getWeeklyRollingHours(sessions),
     [sessions]
   )
+
+  // Only hide time if setting is on AND user has premium access
+  const shouldHideTime = hideTimeDisplay && isPremiumOrTrial
 
   // Keep screen awake during session
   useWakeLock(isRunning)
@@ -109,30 +114,54 @@ export function Timer() {
         {/* Total hours display (idle/complete) or running timer */}
         <div className="flex flex-col items-center">
           {timerPhase === 'complete' && lastSessionDuration ? (
-            // Just completed - show added time
+            // Just completed
             <div className="animate-fade-in">
-              <p className="font-serif text-display text-indigo-deep tabular-nums">
-                {isPremiumOrTrial ? formatTotalHours(totalSeconds) : `${weeklyHours}h`}
-              </p>
-              <p className="text-sm text-indigo-deep/50 mt-2 text-center">
-                {formatSessionAdded(lastSessionDuration)}
-              </p>
+              {shouldHideTime ? (
+                // Hide time mode - just show completion message
+                <p className="font-serif text-2xl text-indigo-deep">
+                  Meditation complete
+                </p>
+              ) : (
+                // Normal mode - show added time
+                <>
+                  <p className="font-serif text-display text-indigo-deep tabular-nums">
+                    {isPremiumOrTrial ? formatTotalHours(totalSeconds) : `${weeklyHours}h`}
+                  </p>
+                  <p className="text-sm text-indigo-deep/50 mt-2 text-center">
+                    {formatSessionAdded(lastSessionDuration)}
+                  </p>
+                </>
+              )}
             </div>
           ) : isRunning ? (
-            // Running - show elapsed timer with breathing animation
-            <p className="font-serif text-display text-indigo-deep tabular-nums animate-breathe">
-              {formatTimer(elapsed)}
-            </p>
+            // Running
+            shouldHideTime ? (
+              // Hide time mode - show breathing circle
+              <div className="w-20 h-20 rounded-full bg-indigo-deep/10 animate-breathe" />
+            ) : (
+              // Normal mode - show elapsed timer with breathing animation
+              <p className="font-serif text-display text-indigo-deep tabular-nums animate-breathe">
+                {formatTimer(elapsed)}
+              </p>
+            )
           ) : (
-            // Idle - show total or weekly hours based on tier
-            <>
-              <p className="font-serif text-display text-indigo-deep tabular-nums">
-                {isPremiumOrTrial ? formatTotalHours(totalSeconds) : `${weeklyHours}h`}
+            // Idle
+            shouldHideTime ? (
+              // Hide time mode - simple prompt
+              <p className="font-serif text-2xl text-indigo-deep">
+                Just start meditating
               </p>
-              <p className="text-sm text-indigo-deep/40 mt-2">
-                {isPremiumOrTrial ? 'toward 10,000 hours' : 'this week'}
-              </p>
-            </>
+            ) : (
+              // Normal mode - show total or weekly hours based on tier
+              <>
+                <p className="font-serif text-display text-indigo-deep tabular-nums">
+                  {isPremiumOrTrial ? formatTotalHours(totalSeconds) : `${weeklyHours}h`}
+                </p>
+                <p className="text-sm text-indigo-deep/40 mt-2">
+                  {isPremiumOrTrial ? 'toward 10,000 hours' : 'this week'}
+                </p>
+              </>
+            )
           )}
         </div>
 

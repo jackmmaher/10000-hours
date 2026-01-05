@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { Session, addSession, getAllSessions, initAppState, markEnlightenmentReached } from '../lib/db'
 import { GOAL_SECONDS } from '../lib/constants'
 
-type AppView = 'timer' | 'stats' | 'calendar'
+type AppView = 'timer' | 'stats' | 'calendar' | 'settings'
 type TimerPhase = 'idle' | 'preparing' | 'running' | 'complete' | 'enlightenment'
 
 interface SessionState {
