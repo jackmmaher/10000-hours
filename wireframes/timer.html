@@ -146,22 +146,28 @@
       height: 20px;
     }
 
-    /* State tabs for demo */
-    .state-tabs {
+    /* Mode & State tabs for demo */
+    .demo-controls {
       position: fixed;
       top: var(--space-md);
       left: 50%;
       transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      z-index: 1000;
+    }
+
+    .mode-tabs, .state-tabs {
       display: flex;
       gap: var(--space-xs);
       background: white;
       padding: var(--space-xs);
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-md);
-      z-index: 1000;
     }
 
-    .state-tab {
+    .mode-tab, .state-tab {
       padding: var(--space-sm) var(--space-md);
       font-size: 12px;
       font-weight: 600;
@@ -173,19 +179,97 @@
       transition: all 300ms var(--ease-organic);
     }
 
-    .state-tab:hover,
-    .state-tab.active {
+    .mode-tab:hover, .state-tab:hover,
+    .mode-tab.active, .state-tab.active {
       background: var(--cream-deep);
       color: var(--ink);
+    }
+
+    .mode-tab.active {
+      background: var(--ink);
+      color: var(--cream);
+    }
+
+    /* Hidden mode - pulsing circle */
+    .hidden-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: var(--cream-deep);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: circle-breathe 4s ease-in-out infinite;
+    }
+
+    .hidden-circle-running {
+      background: var(--moss-light);
+      animation: circle-pulse 2s ease-in-out infinite;
+    }
+
+    .hidden-circle-complete {
+      background: var(--moss-light);
+      animation: none;
+    }
+
+    @keyframes circle-breathe {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 0.8;
+      }
+      50% {
+        transform: scale(1.05);
+        opacity: 1;
+      }
+    }
+
+    @keyframes circle-pulse {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(124, 154, 110, 0.4);
+      }
+      50% {
+        transform: scale(1.02);
+        box-shadow: 0 0 0 20px rgba(124, 154, 110, 0);
+      }
+    }
+
+    .hidden-text {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 400;
+      color: var(--ink);
+      text-align: center;
+      max-width: 200px;
+      line-height: 1.4;
+    }
+
+    .hidden-text-small {
+      font-family: var(--font-body);
+      font-size: 16px;
+      color: var(--ink-muted);
+      margin-top: var(--space-lg);
+    }
+
+    .hidden-complete-icon {
+      width: 48px;
+      height: 48px;
+      color: var(--moss);
     }
   </style>
 </head>
 <body>
-  <!-- State selector tabs -->
-  <div class="state-tabs">
-    <button class="state-tab active" onclick="showState('idle')">Idle</button>
-    <button class="state-tab" onclick="showState('running')">Running</button>
-    <button class="state-tab" onclick="showState('complete')">Complete</button>
+  <!-- Demo controls -->
+  <div class="demo-controls">
+    <div class="mode-tabs">
+      <button class="mode-tab active" onclick="setMode('standard')">Standard</button>
+      <button class="mode-tab" onclick="setMode('hidden')">Hidden</button>
+    </div>
+    <div class="state-tabs">
+      <button class="state-tab active" onclick="showState('idle')">Idle</button>
+      <button class="state-tab" onclick="showState('running')">Running</button>
+      <button class="state-tab" onclick="showState('complete')">Complete</button>
+    </div>
   </div>
 
   <div class="device-frame">
@@ -198,8 +282,10 @@
         </svg>
       </a>
 
-      <!-- IDLE STATE -->
-      <div id="state-idle" class="timer-screen">
+      <!-- ==================== STANDARD MODE ==================== -->
+
+      <!-- STANDARD: IDLE STATE -->
+      <div id="standard-idle" class="timer-screen">
         <div class="timer-display">
           <span class="timer-hours">42.5</span>
           <span class="timer-subtitle">toward 10,000 hours</span>
@@ -214,19 +300,59 @@
         </a>
       </div>
 
-      <!-- RUNNING STATE -->
-      <div id="state-running" class="timer-screen timer-screen-running" style="display: none;">
+      <!-- STANDARD: RUNNING STATE -->
+      <div id="standard-running" class="timer-screen timer-screen-running" style="display: none;">
         <div class="timer-display">
           <span class="timer-elapsed">12:34</span>
         </div>
         <span class="tap-hint">tap to end</span>
       </div>
 
-      <!-- COMPLETE STATE -->
-      <div id="state-complete" class="timer-screen" style="display: none;">
+      <!-- STANDARD: COMPLETE STATE -->
+      <div id="standard-complete" class="timer-screen" style="display: none;">
         <div class="timer-display animate-fade-in-up">
           <span class="timer-hours">42.7</span>
           <span class="timer-added">+12 minutes</span>
+        </div>
+
+        <a href="stats.html" class="stats-hint">
+          <span class="stats-hint-text">stats</span>
+          <svg class="stats-hint-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 15l7-7 7 7"/>
+          </svg>
+        </a>
+      </div>
+
+      <!-- ==================== HIDDEN MODE ==================== -->
+
+      <!-- HIDDEN: IDLE STATE -->
+      <div id="hidden-idle" class="timer-screen" style="display: none;">
+        <div class="hidden-circle"></div>
+        <span class="hidden-text-small" style="margin-top: var(--space-2xl);">Just start meditating</span>
+
+        <a href="stats.html" class="stats-hint">
+          <span class="stats-hint-text">stats</span>
+          <svg class="stats-hint-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 15l7-7 7 7"/>
+          </svg>
+        </a>
+      </div>
+
+      <!-- HIDDEN: RUNNING STATE -->
+      <div id="hidden-running" class="timer-screen timer-screen-running" style="display: none;">
+        <div class="hidden-circle hidden-circle-running"></div>
+        <span class="tap-hint">tap to end</span>
+      </div>
+
+      <!-- HIDDEN: COMPLETE STATE -->
+      <div id="hidden-complete" class="timer-screen" style="display: none;">
+        <div class="timer-display animate-fade-in-up">
+          <div class="hidden-circle hidden-circle-complete">
+            <svg class="hidden-complete-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <span class="hidden-text" style="margin-top: var(--space-xl);">Meditation complete</span>
         </div>
 
         <a href="stats.html" class="stats-hint">
@@ -240,20 +366,47 @@
   </div>
 
   <script>
+    let currentMode = 'standard';
+    let currentState = 'idle';
+
+    function setMode(mode) {
+      currentMode = mode;
+
+      // Update mode tab styles
+      document.querySelectorAll('.mode-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      updateDisplay();
+    }
+
     function showState(state) {
-      // Hide all states
-      document.getElementById('state-idle').style.display = 'none';
-      document.getElementById('state-running').style.display = 'none';
-      document.getElementById('state-complete').style.display = 'none';
+      currentState = state;
 
-      // Show selected state
-      document.getElementById('state-' + state).style.display = 'flex';
-
-      // Update tab styles
+      // Update state tab styles
       document.querySelectorAll('.state-tab').forEach(tab => {
         tab.classList.remove('active');
       });
       event.target.classList.add('active');
+
+      updateDisplay();
+    }
+
+    function updateDisplay() {
+      // Hide all states
+      const allStates = [
+        'standard-idle', 'standard-running', 'standard-complete',
+        'hidden-idle', 'hidden-running', 'hidden-complete'
+      ];
+
+      allStates.forEach(id => {
+        document.getElementById(id).style.display = 'none';
+      });
+
+      // Show current mode + state
+      const activeId = currentMode + '-' + currentState;
+      document.getElementById(activeId).style.display = 'flex';
     }
   </script>
 </body>

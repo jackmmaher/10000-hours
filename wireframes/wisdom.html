@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wisdom Stream - 10,000 Hours Wireframe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Wisdom Stream styles */
+
+    /* Tab Navigation */
+    .wisdom-tabs {
+      display: flex;
+      padding: var(--space-sm) var(--space-md);
+      gap: var(--space-xs);
+      border-bottom: 1px solid var(--cream-deep);
+    }
+
+    .wisdom-tab {
+      flex: 1;
+      padding: var(--space-sm) var(--space-md);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink-muted);
+      background: none;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 300ms var(--ease-organic);
+    }
+
+    .wisdom-tab:hover {
+      color: var(--ink-soft);
+    }
+
+    .wisdom-tab.active {
+      color: var(--ink);
+      background: var(--cream-deep);
+    }
+
+    /* Pull to refresh indicator */
+    .pull-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-md);
+      color: var(--ink-light);
+      font-size: 12px;
+      gap: var(--space-sm);
+    }
+
+    .pull-indicator svg {
+      width: 16px;
+      height: 16px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Pearl Cards List */
+    .pearl-list {
+      padding: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    /* Pearl Card */
+    .pearl-card {
+      background: white;
+      border-radius: var(--radius-xl);
+      padding: var(--space-xl);
+      box-shadow: var(--shadow-sm);
+      transition: all 400ms var(--ease-organic);
+    }
+
+    .pearl-card:hover {
+      box-shadow: var(--shadow-md);
+    }
+
+    .pearl-text {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 400;
+      line-height: 1.5;
+      color: var(--ink);
+      margin-bottom: var(--space-lg);
+    }
+
+    .pearl-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .pearl-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .pearl-milestone {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--bark);
+      background: var(--bark-light);
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+    }
+
+    .pearl-milestone svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .pearl-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+    }
+
+    .pearl-action-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: var(--space-sm) var(--space-md);
+      background: none;
+      border: none;
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      color: var(--ink-muted);
+      cursor: pointer;
+      transition: all 300ms var(--ease-organic);
+    }
+
+    .pearl-action-btn:hover {
+      background: var(--cream-deep);
+      color: var(--ink-soft);
+    }
+
+    .pearl-action-btn.liked {
+      color: var(--moss);
+    }
+
+    .pearl-action-btn.saved {
+      color: var(--gold);
+    }
+
+    .pearl-action-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* More menu */
+    .pearl-more-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      border-radius: var(--radius-full);
+      color: var(--ink-light);
+      cursor: pointer;
+      transition: all 300ms var(--ease-organic);
+    }
+
+    .pearl-more-btn:hover {
+      background: var(--cream-deep);
+      color: var(--ink-muted);
+    }
+
+    .pearl-more-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Share wisdom CTA (for premium contributors) */
+    .share-wisdom-cta {
+      position: fixed;
+      bottom: calc(34px + var(--space-lg));
+      right: var(--space-md);
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--gold);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-lg);
+      cursor: pointer;
+      transition: all 300ms var(--ease-organic);
+      z-index: 10;
+    }
+
+    .share-wisdom-cta:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 32px rgba(212, 165, 116, 0.4);
+    }
+
+    .share-wisdom-cta svg {
+      width: 24px;
+      height: 24px;
+      color: white;
+    }
+
+    /* Empty state for Saved tab */
+    .empty-saved {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-4xl) var(--space-xl);
+      text-align: center;
+    }
+
+    .empty-saved-icon {
+      width: 56px;
+      height: 56px;
+      color: var(--ink-light);
+      margin-bottom: var(--space-lg);
+    }
+
+    .empty-saved-title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      color: var(--ink);
+      margin-bottom: var(--space-sm);
+    }
+
+    .empty-saved-text {
+      font-size: 14px;
+      color: var(--ink-muted);
+      line-height: 1.5;
+    }
+
+    /* Contributor badge */
+    .contributor-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-sm);
+      padding: var(--space-md);
+      background: var(--gold-light);
+      margin: var(--space-md);
+      margin-top: 0;
+      border-radius: var(--radius-lg);
+    }
+
+    .contributor-header svg {
+      width: 16px;
+      height: 16px;
+      color: var(--gold);
+    }
+
+    .contributor-text {
+      font-size: 13px;
+      color: var(--bark);
+    }
+
+    /* State tabs for demo */
+    .state-tabs {
+      position: fixed;
+      top: var(--space-md);
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: var(--space-xs);
+      background: white;
+      padding: var(--space-xs);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      z-index: 1000;
+    }
+
+    .state-tab {
+      padding: var(--space-sm) var(--space-md);
+      font-size: 12px;
+      font-weight: 600;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      color: var(--ink-muted);
+      transition: all 300ms var(--ease-organic);
+    }
+
+    .state-tab:hover,
+    .state-tab.active {
+      background: var(--cream-deep);
+      color: var(--ink);
+    }
+  </style>
+</head>
+<body>
+  <!-- State selector tabs -->
+  <div class="state-tabs">
+    <button class="state-tab active" onclick="showState('reader')">Free Reader</button>
+    <button class="state-tab" onclick="showState('contributor')">Contributor (50+ hrs)</button>
+    <button class="state-tab" onclick="showState('saved-empty')">Saved (Empty)</button>
+  </div>
+
+  <div class="device-frame">
+    <!-- FREE READER VIEW -->
+    <div class="screen" id="state-reader">
+      <!-- Header -->
+      <div class="header">
+        <a href="stats.html" class="header-btn" title="Back">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+        </a>
+        <span class="header-title">Wisdom</span>
+        <div class="header-btn"></div>
+      </div>
+
+      <!-- Tab Navigation -->
+      <div class="wisdom-tabs">
+        <button class="wisdom-tab">Saved</button>
+        <button class="wisdom-tab active">All</button>
+        <button class="wisdom-tab">New</button>
+      </div>
+
+      <div class="screen-content">
+        <!-- Pull to refresh -->
+        <div class="pull-indicator">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          Pull to refresh
+        </div>
+
+        <!-- Pearl Cards -->
+        <div class="pearl-list">
+          <!-- Pearl 1 -->
+          <div class="pearl-card">
+            <p class="pearl-text">The practice isn't about reaching stillness. It's about noticing you left and coming back. That return is the practice itself.</p>
+            <div class="pearl-footer">
+              <div class="pearl-meta">
+                <span class="pearl-milestone">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  500+ hours
+                </span>
+              </div>
+              <div class="pearl-actions">
+                <button class="pearl-action-btn liked">
+                  <svg fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+                  24
+                </button>
+                <button class="pearl-action-btn">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                  </svg>
+                </button>
+                <button class="pearl-more-btn">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pearl 2 -->
+          <div class="pearl-card">
+            <p class="pearl-text">At some point, you stop measuring progress by how quiet your mind gets. You measure it by how gently you treat yourself when it isn't.</p>
+            <div class="pearl-footer">
+              <div class="pearl-meta">
+                <span class="pearl-milestone">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  1000+ hours
+                </span>
+              </div>
+              <div class="pearl-actions">
+                <button class="pearl-action-btn">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                  </svg>
+                  18
+                </button>
+                <button class="pearl-action-btn saved">
+                  <svg fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                  </svg>
+                </button>
+                <button class="pearl-more-btn">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pearl 3 -->
+          <div class="pearl-card">
+            <p class="pearl-text">Every session is a first session. The hours are just for the ego. The breath is always new.</p>
+            <div class="pearl-footer">
+              <div class="pearl-meta">
+                <span class="pearl-milestone">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  200+ hours
+                </span>
+              </div>
+              <div class="pearl-actions">
+                <button class="pearl-action-btn">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                  </svg>
+                  12
+                </button>
+                <button class="pearl-action-btn">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                  </svg>
+                </button>
+                <button class="pearl-more-btn">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pearl 4 -->
+          <div class="pearl-card">
+            <p class="pearl-text">The goal isn't to feel good during meditation. It's to feel everything more clearly after.</p>
+            <div class="pearl-footer">
+              <div class="pearl-meta">
+                <span class="pearl-milestone">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  100+ hours
+                </span>
+              </div>
+              <div class="pearl-actions">
+                <button class="pearl-action-btn">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                  </svg>
+                  7
+                </button>
+                <button class="pearl-action-btn">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                  </svg>
+                </button>
+                <button class="pearl-more-btn">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTRIBUTOR VIEW (50+ hours) -->
+    <div class="screen" id="state-contributor" style="display: none;">
+      <!-- Header -->
+      <div class="header">
+        <a href="stats.html" class="header-btn" title="Back">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+        </a>
+        <span class="header-title">Wisdom</span>
+        <div class="header-btn"></div>
+      </div>
+
+      <!-- Tab Navigation -->
+      <div class="wisdom-tabs">
+        <button class="wisdom-tab">Saved</button>
+        <button class="wisdom-tab active">All</button>
+        <button class="wisdom-tab">New</button>
+      </div>
+
+      <div class="screen-content">
+        <!-- Contributor banner -->
+        <div class="contributor-header">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+          </svg>
+          <span class="contributor-text">You can now share your wisdom</span>
+        </div>
+
+        <!-- Pearl Cards (same as reader) -->
+        <div class="pearl-list">
+          <div class="pearl-card">
+            <p class="pearl-text">The practice isn't about reaching stillness. It's about noticing you left and coming back. That return is the practice itself.</p>
+            <div class="pearl-footer">
+              <div class="pearl-meta">
+                <span class="pearl-milestone">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  500+ hours
+                </span>
+              </div>
+              <div class="pearl-actions">
+                <button class="pearl-action-btn liked">
+                  <svg fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+                  24
+                </button>
+                <button class="pearl-action-btn">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                  </svg>
+                </button>
+                <button class="pearl-more-btn">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="pearl-card">
+            <p class="pearl-text">At some point, you stop measuring progress by how quiet your mind gets. You measure it by how gently you treat yourself when it isn't.</p>
+            <div class="pearl-footer">
+              <div class="pearl-meta">
+                <span class="pearl-milestone">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  1000+ hours
+                </span>
+              </div>
+              <div class="pearl-actions">
+                <button class="pearl-action-btn">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                  </svg>
+                  18
+                </button>
+                <button class="pearl-action-btn saved">
+                  <svg fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                  </svg>
+                </button>
+                <button class="pearl-more-btn">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Share wisdom FAB -->
+      <a href="pearl-share.html" class="share-wisdom-cta" title="Share wisdom">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/>
+        </svg>
+      </a>
+    </div>
+
+    <!-- SAVED EMPTY STATE -->
+    <div class="screen" id="state-saved-empty" style="display: none;">
+      <!-- Header -->
+      <div class="header">
+        <a href="stats.html" class="header-btn" title="Back">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+        </a>
+        <span class="header-title">Wisdom</span>
+        <div class="header-btn"></div>
+      </div>
+
+      <!-- Tab Navigation -->
+      <div class="wisdom-tabs">
+        <button class="wisdom-tab active">Saved</button>
+        <button class="wisdom-tab">All</button>
+        <button class="wisdom-tab">New</button>
+      </div>
+
+      <div class="empty-saved">
+        <svg class="empty-saved-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+        </svg>
+        <h2 class="empty-saved-title">No saved wisdom</h2>
+        <p class="empty-saved-text">Tap the bookmark icon on any pearl to save it for later.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showState(state) {
+      document.getElementById('state-reader').style.display = 'none';
+      document.getElementById('state-contributor').style.display = 'none';
+      document.getElementById('state-saved-empty').style.display = 'none';
+
+      document.getElementById('state-' + state).style.display = 'flex';
+
+      document.querySelectorAll('.state-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>

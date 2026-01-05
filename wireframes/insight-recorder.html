@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Insight Recorder - 10,000 Hours Wireframe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Insight Recorder Modal Styles */
+
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(45, 52, 54, 0.3);
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-container {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--cream);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      padding: var(--space-xl);
+      padding-bottom: calc(var(--space-xl) + 34px);
+      animation: slideUp 400ms var(--ease-organic);
+      max-height: 85%;
+      overflow-y: auto;
+    }
+
+    .modal-handle {
+      width: 36px;
+      height: 4px;
+      background: var(--ink-light);
+      border-radius: var(--radius-full);
+      margin: 0 auto var(--space-xl);
+    }
+
+    /* Prompt State */
+    .prompt-content {
+      text-align: center;
+      padding: var(--space-xl) 0;
+    }
+
+    .prompt-icon {
+      width: 64px;
+      height: 64px;
+      color: var(--ink-muted);
+      margin-bottom: var(--space-lg);
+    }
+
+    .prompt-title {
+      font-family: var(--font-display);
+      font-size: 28px;
+      color: var(--ink);
+      margin-bottom: var(--space-sm);
+    }
+
+    .prompt-text {
+      font-size: 15px;
+      color: var(--ink-muted);
+      margin-bottom: var(--space-2xl);
+      line-height: 1.5;
+    }
+
+    .prompt-actions {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    .skip-btn {
+      font-size: 14px;
+      color: var(--ink-muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: var(--space-md);
+    }
+
+    .skip-btn:hover {
+      color: var(--ink);
+    }
+
+    /* Recording State */
+    .recording-content {
+      text-align: center;
+      padding: var(--space-xl) 0;
+    }
+
+    .recording-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: var(--moss-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--space-xl);
+      position: relative;
+      animation: recording-pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes recording-pulse {
+      0%, 100% {
+        box-shadow: 0 0 0 0 rgba(124, 154, 110, 0.4);
+      }
+      50% {
+        box-shadow: 0 0 0 20px rgba(124, 154, 110, 0);
+      }
+    }
+
+    .recording-icon {
+      width: 32px;
+      height: 32px;
+      color: var(--moss);
+    }
+
+    .recording-time {
+      font-family: var(--font-display);
+      font-size: 48px;
+      font-weight: 300;
+      color: var(--ink);
+      margin-bottom: var(--space-sm);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .recording-label {
+      font-size: 14px;
+      color: var(--moss);
+      margin-bottom: var(--space-2xl);
+    }
+
+    /* Waveform visualization */
+    .waveform {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      height: 40px;
+      margin-bottom: var(--space-xl);
+    }
+
+    .waveform-bar {
+      width: 4px;
+      background: var(--moss);
+      border-radius: 2px;
+      animation: waveform-animate 0.8s ease-in-out infinite;
+    }
+
+    .waveform-bar:nth-child(1) { height: 20px; animation-delay: 0s; }
+    .waveform-bar:nth-child(2) { height: 35px; animation-delay: 0.1s; }
+    .waveform-bar:nth-child(3) { height: 25px; animation-delay: 0.2s; }
+    .waveform-bar:nth-child(4) { height: 40px; animation-delay: 0.3s; }
+    .waveform-bar:nth-child(5) { height: 20px; animation-delay: 0.4s; }
+    .waveform-bar:nth-child(6) { height: 30px; animation-delay: 0.5s; }
+    .waveform-bar:nth-child(7) { height: 15px; animation-delay: 0.6s; }
+    .waveform-bar:nth-child(8) { height: 25px; animation-delay: 0.7s; }
+    .waveform-bar:nth-child(9) { height: 35px; animation-delay: 0.8s; }
+    .waveform-bar:nth-child(10) { height: 20px; animation-delay: 0.9s; }
+
+    @keyframes waveform-animate {
+      0%, 100% { transform: scaleY(0.5); opacity: 0.6; }
+      50% { transform: scaleY(1); opacity: 1; }
+    }
+
+    .stop-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--ink);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      cursor: pointer;
+      transition: all 300ms var(--ease-organic);
+    }
+
+    .stop-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .stop-btn svg {
+      width: 24px;
+      height: 24px;
+      color: var(--cream);
+    }
+
+    /* Preview State */
+    .preview-content {
+      padding: var(--space-md) 0;
+    }
+
+    .preview-header {
+      text-align: center;
+      margin-bottom: var(--space-xl);
+    }
+
+    .preview-title {
+      font-family: var(--font-display);
+      font-size: 24px;
+      color: var(--ink);
+      margin-bottom: var(--space-xs);
+    }
+
+    .preview-duration {
+      font-size: 14px;
+      color: var(--ink-muted);
+    }
+
+    .transcript-card {
+      background: white;
+      border-radius: var(--radius-xl);
+      padding: var(--space-lg);
+      margin-bottom: var(--space-lg);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .transcript-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ink-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: var(--space-sm);
+    }
+
+    .transcript-text {
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--ink);
+    }
+
+    .playback-controls {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      padding: var(--space-md);
+      background: var(--cream-warm);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-xl);
+    }
+
+    .playback-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--ink);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .playback-btn svg {
+      width: 18px;
+      height: 18px;
+      color: var(--cream);
+    }
+
+    .playback-progress {
+      flex: 1;
+    }
+
+    .playback-bar {
+      height: 4px;
+      background: var(--cream-deep);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+
+    .playback-fill {
+      height: 100%;
+      width: 35%;
+      background: var(--ink);
+      border-radius: 2px;
+    }
+
+    .playback-time {
+      font-size: 11px;
+      color: var(--ink-muted);
+    }
+
+    .preview-actions {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    .action-row {
+      display: flex;
+      gap: var(--space-md);
+    }
+
+    .action-row .btn {
+      flex: 1;
+    }
+
+    /* Share as Pearl option */
+    .pearl-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-md);
+      background: var(--gold-light);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-md);
+    }
+
+    .pearl-option-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .pearl-icon {
+      width: 20px;
+      height: 20px;
+      color: var(--gold);
+    }
+
+    .pearl-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--bark);
+    }
+
+    .pearl-sublabel {
+      font-size: 11px;
+      color: var(--ink-muted);
+    }
+
+    /* Saved State */
+    .saved-content {
+      text-align: center;
+      padding: var(--space-2xl) 0;
+    }
+
+    .saved-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--moss-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--space-xl);
+    }
+
+    .saved-icon svg {
+      width: 40px;
+      height: 40px;
+      color: var(--moss);
+    }
+
+    .saved-title {
+      font-family: var(--font-display);
+      font-size: 28px;
+      color: var(--ink);
+      margin-bottom: var(--space-sm);
+    }
+
+    .saved-text {
+      font-size: 15px;
+      color: var(--ink-muted);
+      margin-bottom: var(--space-2xl);
+    }
+
+    /* State tabs */
+    .state-tabs {
+      position: fixed;
+      top: var(--space-md);
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: var(--space-xs);
+      background: white;
+      padding: var(--space-xs);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      z-index: 1000;
+    }
+
+    .state-tab {
+      padding: var(--space-sm) var(--space-md);
+      font-size: 12px;
+      font-weight: 600;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      color: var(--ink-muted);
+      transition: all 300ms var(--ease-organic);
+    }
+
+    .state-tab:hover,
+    .state-tab.active {
+      background: var(--cream-deep);
+      color: var(--ink);
+    }
+
+    /* Timer screen behind modal */
+    .timer-behind {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: var(--space-2xl);
+    }
+
+    .timer-behind-hours {
+      font-family: var(--font-display);
+      font-size: 64px;
+      font-weight: 300;
+      color: var(--ink);
+      opacity: 0.3;
+    }
+
+    .timer-behind-added {
+      font-size: 15px;
+      color: var(--moss);
+      opacity: 0.5;
+      margin-top: var(--space-md);
+    }
+  </style>
+</head>
+<body>
+  <!-- State selector tabs -->
+  <div class="state-tabs">
+    <button class="state-tab active" onclick="showState('prompt')">Prompt</button>
+    <button class="state-tab" onclick="showState('recording')">Recording</button>
+    <button class="state-tab" onclick="showState('preview')">Preview</button>
+    <button class="state-tab" onclick="showState('saved')">Saved</button>
+  </div>
+
+  <div class="device-frame">
+    <div class="screen">
+      <!-- Timer completion behind modal -->
+      <div class="timer-behind">
+        <span class="timer-behind-hours">42.7</span>
+        <span class="timer-behind-added">+15 minutes</span>
+      </div>
+
+      <!-- PROMPT STATE -->
+      <div id="state-prompt" class="modal-backdrop">
+        <div class="modal-container">
+          <div class="modal-handle"></div>
+          <div class="prompt-content">
+            <svg class="prompt-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+            </svg>
+            <h2 class="prompt-title">Capture an insight?</h2>
+            <p class="prompt-text">Record a brief reflection while your session is fresh. These become searchable and reveal patterns over time.</p>
+            <div class="prompt-actions">
+              <button class="btn btn-primary btn-block btn-lg" onclick="showState('recording')">
+                Start Recording
+              </button>
+              <button class="skip-btn">Skip for now</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RECORDING STATE -->
+      <div id="state-recording" class="modal-backdrop" style="display: none;">
+        <div class="modal-container">
+          <div class="modal-handle"></div>
+          <div class="recording-content">
+            <div class="recording-circle">
+              <svg class="recording-icon" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+              </svg>
+            </div>
+
+            <div class="recording-time">0:47</div>
+            <div class="recording-label">Recording...</div>
+
+            <div class="waveform">
+              <div class="waveform-bar"></div>
+              <div class="waveform-bar"></div>
+              <div class="waveform-bar"></div>
+              <div class="waveform-bar"></div>
+              <div class="waveform-bar"></div>
+              <div class="waveform-bar"></div>
+              <div class="waveform-bar"></div>
+              <div class="waveform-bar"></div>
+              <div class="waveform-bar"></div>
+              <div class="waveform-bar"></div>
+            </div>
+
+            <button class="stop-btn" onclick="showState('preview')">
+              <svg fill="currentColor" viewBox="0 0 24 24">
+                <rect x="6" y="6" width="12" height="12" rx="2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PREVIEW STATE -->
+      <div id="state-preview" class="modal-backdrop" style="display: none;">
+        <div class="modal-container">
+          <div class="modal-handle"></div>
+          <div class="preview-content">
+            <div class="preview-header">
+              <h2 class="preview-title">Review your insight</h2>
+              <span class="preview-duration">0:47</span>
+            </div>
+
+            <div class="transcript-card">
+              <div class="transcript-label">Transcript</div>
+              <p class="transcript-text">
+                This morning I noticed how the stillness between thoughts feels different than the stillness at the start. There's a quality of presence that emerges, like the mind settling into its natural state.
+              </p>
+            </div>
+
+            <div class="playback-controls">
+              <button class="playback-btn">
+                <svg fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              </button>
+              <div class="playback-progress">
+                <div class="playback-bar">
+                  <div class="playback-fill"></div>
+                </div>
+                <span class="playback-time">0:16 / 0:47</span>
+              </div>
+            </div>
+
+            <!-- Pearl option for 50+ hour users -->
+            <div class="pearl-option">
+              <div class="pearl-option-left">
+                <svg class="pearl-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                </svg>
+                <div>
+                  <div class="pearl-label">Share as Pearl</div>
+                  <div class="pearl-sublabel">Share wisdom anonymously</div>
+                </div>
+              </div>
+              <div class="toggle" onclick="this.classList.toggle('toggle-on')"></div>
+            </div>
+
+            <div class="preview-actions">
+              <button class="btn btn-primary btn-block btn-lg" onclick="showState('saved')">
+                Save Insight
+              </button>
+              <div class="action-row">
+                <button class="btn btn-secondary" onclick="showState('recording')">Re-record</button>
+                <button class="btn btn-ghost">Discard</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SAVED STATE -->
+      <div id="state-saved" class="modal-backdrop" style="display: none;">
+        <div class="modal-container">
+          <div class="modal-handle"></div>
+          <div class="saved-content">
+            <div class="saved-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <h2 class="saved-title">Insight saved</h2>
+            <p class="saved-text">Your reflection has been added to your insight journal.</p>
+            <button class="btn btn-primary btn-block btn-lg">Done</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showState(state) {
+      document.getElementById('state-prompt').style.display = 'none';
+      document.getElementById('state-recording').style.display = 'none';
+      document.getElementById('state-preview').style.display = 'none';
+      document.getElementById('state-saved').style.display = 'none';
+
+      document.getElementById('state-' + state).style.display = 'block';
+
+      document.querySelectorAll('.state-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>
