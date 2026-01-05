@@ -26,11 +26,40 @@
       animation: breathe 6s ease-in-out infinite;
     }
 
+    .stats-hours-hidden {
+      color: var(--ink-light);
+      font-size: 48px;
+    }
+
     .stats-subtitle {
       font-size: 14px;
       color: var(--ink-muted);
       margin-top: var(--space-sm);
       letter-spacing: 0.5px;
+    }
+
+    /* Rolling window reminder banner */
+    .rolling-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
+      background: var(--gold-light);
+      margin: 0 var(--space-md) var(--space-md);
+      border-radius: var(--radius-lg);
+      font-size: 13px;
+      color: var(--bark);
+    }
+
+    .rolling-banner a {
+      color: var(--gold);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .rolling-banner a:hover {
+      text-decoration: underline;
     }
 
     /* Week view - animated dots */
@@ -231,6 +260,15 @@
       color: var(--cream);
     }
 
+    .time-tab-locked {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .time-tab-locked:hover {
+      background: transparent;
+    }
+
     /* Navigation to calendar */
     .nav-to-calendar {
       text-align: center;
@@ -261,9 +299,48 @@
       width: 16px;
       height: 16px;
     }
+
+    /* State tabs for demo */
+    .state-tabs {
+      position: fixed;
+      top: var(--space-md);
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: var(--space-xs);
+      background: white;
+      padding: var(--space-xs);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      z-index: 1000;
+    }
+
+    .state-tab {
+      padding: var(--space-sm) var(--space-md);
+      font-size: 12px;
+      font-weight: 600;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      color: var(--ink-muted);
+      transition: all 300ms var(--ease-organic);
+    }
+
+    .state-tab:hover,
+    .state-tab.active {
+      background: var(--cream-deep);
+      color: var(--ink);
+    }
   </style>
 </head>
 <body>
+  <!-- State selector tabs -->
+  <div class="state-tabs">
+    <button class="state-tab active" onclick="showState('premium')">Premium User</button>
+    <button class="state-tab" onclick="showState('free')">Free User</button>
+  </div>
+
   <div class="device-frame">
     <div class="screen">
       <!-- Header - minimal -->
@@ -283,19 +360,41 @@
       </div>
 
       <div class="screen-content">
-        <!-- Hero: Total hours with breathing animation -->
-        <div class="stats-hero">
+        <!-- PREMIUM: Hero with total hours visible -->
+        <div class="stats-hero" id="hero-premium">
           <div class="stats-hours">42.5</div>
           <div class="stats-subtitle">toward 10,000 hours</div>
         </div>
 
-        <!-- Time window tabs -->
-        <div class="time-tabs">
+        <!-- FREE: Hero with total hours hidden -->
+        <div class="stats-hero" id="hero-free" style="display: none;">
+          <div class="stats-hours stats-hours-hidden">???</div>
+          <div class="stats-subtitle">
+            <a href="paywall.html" style="color: var(--ink-muted); text-decoration: none;">Unlock total hours</a>
+          </div>
+        </div>
+
+        <!-- FREE: Rolling window banner -->
+        <div class="rolling-banner" id="rolling-banner" style="display: none;">
+          30 days visible &bull; <a href="paywall.html">Unlock full history</a>
+        </div>
+
+        <!-- PREMIUM: Time window tabs (all available) -->
+        <div class="time-tabs" id="tabs-premium">
           <button class="time-tab time-tab-active">7 days</button>
           <button class="time-tab">30 days</button>
           <button class="time-tab">90 days</button>
           <button class="time-tab">Year</button>
           <button class="time-tab">All</button>
+        </div>
+
+        <!-- FREE: Time window tabs (limited) -->
+        <div class="time-tabs" id="tabs-free" style="display: none;">
+          <button class="time-tab time-tab-active">7 days</button>
+          <button class="time-tab">30 days</button>
+          <button class="time-tab time-tab-locked" title="Premium">90 days</button>
+          <button class="time-tab time-tab-locked" title="Premium">Year</button>
+          <button class="time-tab time-tab-locked" title="Premium">All</button>
         </div>
 
         <!-- Week view with animated dots -->
@@ -333,7 +432,7 @@
           </div>
         </div>
 
-        <!-- Quick stats (free tier) -->
+        <!-- Quick stats (available to all) -->
         <div class="stats-section">
           <div class="quick-stats">
             <div class="quick-stat">
@@ -347,11 +446,11 @@
           </div>
         </div>
 
-        <!-- Next milestone (free tier - shows only next) -->
-        <div class="stats-section">
-          <div class="section-label">Next milestone</div>
+        <!-- PREMIUM: Full milestones section -->
+        <div class="stats-section" id="milestones-premium">
+          <div class="section-label">Milestones</div>
           <div class="milestone-card">
-            <div class="milestone-label">50 hours</div>
+            <div class="milestone-label">Next: 50 hours</div>
             <div class="milestone-value">85% there</div>
             <div class="progress-bar">
               <div class="progress-fill" style="width: 85%;"></div>
@@ -359,9 +458,9 @@
           </div>
         </div>
 
-        <!-- Locked: Full milestones (matches roadmap wireframe) -->
-        <div class="stats-section">
-          <div class="section-label">All milestones</div>
+        <!-- FREE: Locked milestones section -->
+        <div class="stats-section" id="milestones-free" style="display: none;">
+          <div class="section-label">Milestones</div>
           <div class="locked-card">
             <div class="locked-badge">
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -377,14 +476,23 @@
                 <div style="height: 8px; background: var(--cream-deep); border-radius: 4px;"></div>
               </div>
             </div>
-            <a href="paywall.html" class="btn btn-gold btn-block unlock-btn">Unlock Full Stats</a>
+            <a href="paywall.html" class="btn btn-gold btn-block unlock-btn">See Full Journey - $4.99/yr</a>
           </div>
         </div>
 
-        <!-- Locked: Projections (matches roadmap) -->
-        <div class="stats-section">
+        <!-- PREMIUM: Projections section -->
+        <div class="stats-section" id="projections-premium">
           <div class="section-label">Projections</div>
-          <div class="locked-card" style="min-height: 100px;">
+          <div class="milestone-card">
+            <div class="milestone-label">At current pace</div>
+            <div class="milestone-value" style="font-size: 24px;">100 hours in 4 months</div>
+          </div>
+        </div>
+
+        <!-- FREE: Locked projections -->
+        <div class="stats-section" id="projections-free" style="display: none;">
+          <div class="section-label">Projections</div>
+          <div class="locked-card" style="min-height: 80px;">
             <div class="locked-badge">
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
@@ -393,8 +501,7 @@
             </div>
             <div class="locked-content">
               <div style="text-align: center; padding-top: 8px;">
-                <div style="height: 28px; background: var(--cream-deep); border-radius: 6px; width: 60%; margin: 0 auto 8px;"></div>
-                <div style="height: 14px; background: var(--cream-deep); border-radius: 4px; width: 80%; margin: 0 auto;"></div>
+                <div style="height: 24px; background: var(--cream-deep); border-radius: 6px; width: 60%; margin: 0 auto;"></div>
               </div>
             </div>
           </div>
@@ -412,5 +519,34 @@
       </div>
     </div>
   </div>
+
+  <script>
+    function showState(state) {
+      const tabs = document.querySelectorAll('.state-tab');
+      tabs.forEach(tab => tab.classList.remove('active'));
+      event.target.classList.add('active');
+
+      const isPremium = state === 'premium';
+
+      // Hero section
+      document.getElementById('hero-premium').style.display = isPremium ? 'block' : 'none';
+      document.getElementById('hero-free').style.display = isPremium ? 'none' : 'block';
+
+      // Rolling banner (free only)
+      document.getElementById('rolling-banner').style.display = isPremium ? 'none' : 'flex';
+
+      // Time tabs
+      document.getElementById('tabs-premium').style.display = isPremium ? 'flex' : 'none';
+      document.getElementById('tabs-free').style.display = isPremium ? 'none' : 'flex';
+
+      // Milestones
+      document.getElementById('milestones-premium').style.display = isPremium ? 'block' : 'none';
+      document.getElementById('milestones-free').style.display = isPremium ? 'none' : 'block';
+
+      // Projections
+      document.getElementById('projections-premium').style.display = isPremium ? 'block' : 'none';
+      document.getElementById('projections-free').style.display = isPremium ? 'none' : 'block';
+    }
+  </script>
 </body>
 </html>

@@ -44,12 +44,26 @@
       animation: breathe 6s ease-in-out infinite;
     }
 
+    .timer-hours-hidden {
+      color: var(--ink-light);
+      font-size: 64px;
+    }
+
     .timer-subtitle {
       font-family: var(--font-body);
       font-size: 14px;
       color: var(--ink-muted);
       margin-top: var(--space-md);
       letter-spacing: 0.5px;
+    }
+
+    .timer-subtitle a {
+      color: var(--ink-muted);
+      text-decoration: none;
+    }
+
+    .timer-subtitle a:hover {
+      text-decoration: underline;
     }
 
     .timer-elapsed {
@@ -146,7 +160,7 @@
       height: 20px;
     }
 
-    /* Mode & State tabs for demo */
+    /* Demo controls - 3 rows now */
     .demo-controls {
       position: fixed;
       top: var(--space-md);
@@ -158,7 +172,7 @@
       z-index: 1000;
     }
 
-    .mode-tabs, .state-tabs {
+    .user-tabs, .mode-tabs, .state-tabs {
       display: flex;
       gap: var(--space-xs);
       background: white;
@@ -167,7 +181,7 @@
       box-shadow: var(--shadow-md);
     }
 
-    .mode-tab, .state-tab {
+    .user-tab, .mode-tab, .state-tab {
       padding: var(--space-sm) var(--space-md);
       font-size: 12px;
       font-weight: 600;
@@ -179,8 +193,8 @@
       transition: all 300ms var(--ease-organic);
     }
 
-    .mode-tab:hover, .state-tab:hover,
-    .mode-tab.active, .state-tab.active {
+    .user-tab:hover, .mode-tab:hover, .state-tab:hover,
+    .user-tab.active, .mode-tab.active, .state-tab.active {
       background: var(--cream-deep);
       color: var(--ink);
     }
@@ -261,6 +275,10 @@
 <body>
   <!-- Demo controls -->
   <div class="demo-controls">
+    <div class="user-tabs">
+      <button class="user-tab active" onclick="setUserTier('premium')">Premium User</button>
+      <button class="user-tab" onclick="setUserTier('free')">Free User</button>
+    </div>
     <div class="mode-tabs">
       <button class="mode-tab active" onclick="setMode('standard')">Standard</button>
       <button class="mode-tab" onclick="setMode('hidden')">Hidden</button>
@@ -282,10 +300,10 @@
         </svg>
       </a>
 
-      <!-- ==================== STANDARD MODE ==================== -->
+      <!-- ==================== STANDARD MODE - PREMIUM ==================== -->
 
-      <!-- STANDARD: IDLE STATE -->
-      <div id="standard-idle" class="timer-screen">
+      <!-- STANDARD PREMIUM: IDLE STATE -->
+      <div id="standard-premium-idle" class="timer-screen">
         <div class="timer-display">
           <span class="timer-hours">42.5</span>
           <span class="timer-subtitle">toward 10,000 hours</span>
@@ -300,16 +318,16 @@
         </a>
       </div>
 
-      <!-- STANDARD: RUNNING STATE -->
-      <div id="standard-running" class="timer-screen timer-screen-running" style="display: none;">
+      <!-- STANDARD PREMIUM: RUNNING STATE -->
+      <div id="standard-premium-running" class="timer-screen timer-screen-running" style="display: none;">
         <div class="timer-display">
           <span class="timer-elapsed">12:34</span>
         </div>
         <span class="tap-hint">tap to end</span>
       </div>
 
-      <!-- STANDARD: COMPLETE STATE -->
-      <div id="standard-complete" class="timer-screen" style="display: none;">
+      <!-- STANDARD PREMIUM: COMPLETE STATE -->
+      <div id="standard-premium-complete" class="timer-screen" style="display: none;">
         <div class="timer-display animate-fade-in-up">
           <span class="timer-hours">42.7</span>
           <span class="timer-added">+12 minutes</span>
@@ -323,10 +341,51 @@
         </a>
       </div>
 
-      <!-- ==================== HIDDEN MODE ==================== -->
+      <!-- ==================== STANDARD MODE - FREE ==================== -->
 
-      <!-- HIDDEN: IDLE STATE -->
-      <div id="hidden-idle" class="timer-screen" style="display: none;">
+      <!-- STANDARD FREE: IDLE STATE (hours hidden) -->
+      <div id="standard-free-idle" class="timer-screen" style="display: none;">
+        <div class="timer-display">
+          <span class="timer-hours timer-hours-hidden">???</span>
+          <span class="timer-subtitle"><a href="paywall.html">Unlock total hours</a></span>
+        </div>
+
+        <!-- Nav hint to stats -->
+        <a href="stats.html" class="stats-hint">
+          <span class="stats-hint-text">stats</span>
+          <svg class="stats-hint-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 15l7-7 7 7"/>
+          </svg>
+        </a>
+      </div>
+
+      <!-- STANDARD FREE: RUNNING STATE (same as premium - timer is free) -->
+      <div id="standard-free-running" class="timer-screen timer-screen-running" style="display: none;">
+        <div class="timer-display">
+          <span class="timer-elapsed">12:34</span>
+        </div>
+        <span class="tap-hint">tap to end</span>
+      </div>
+
+      <!-- STANDARD FREE: COMPLETE STATE (hours hidden) -->
+      <div id="standard-free-complete" class="timer-screen" style="display: none;">
+        <div class="timer-display animate-fade-in-up">
+          <span class="timer-hours timer-hours-hidden">???</span>
+          <span class="timer-added">+12 minutes</span>
+        </div>
+
+        <a href="stats.html" class="stats-hint">
+          <span class="stats-hint-text">stats</span>
+          <svg class="stats-hint-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 15l7-7 7 7"/>
+          </svg>
+        </a>
+      </div>
+
+      <!-- ==================== HIDDEN MODE - PREMIUM ==================== -->
+
+      <!-- HIDDEN PREMIUM: IDLE STATE -->
+      <div id="hidden-premium-idle" class="timer-screen" style="display: none;">
         <div class="hidden-circle"></div>
         <span class="hidden-text-small" style="margin-top: var(--space-2xl);">Just start meditating</span>
 
@@ -338,14 +397,55 @@
         </a>
       </div>
 
-      <!-- HIDDEN: RUNNING STATE -->
-      <div id="hidden-running" class="timer-screen timer-screen-running" style="display: none;">
+      <!-- HIDDEN PREMIUM: RUNNING STATE -->
+      <div id="hidden-premium-running" class="timer-screen timer-screen-running" style="display: none;">
         <div class="hidden-circle hidden-circle-running"></div>
         <span class="tap-hint">tap to end</span>
       </div>
 
-      <!-- HIDDEN: COMPLETE STATE -->
-      <div id="hidden-complete" class="timer-screen" style="display: none;">
+      <!-- HIDDEN PREMIUM: COMPLETE STATE -->
+      <div id="hidden-premium-complete" class="timer-screen" style="display: none;">
+        <div class="timer-display animate-fade-in-up">
+          <div class="hidden-circle hidden-circle-complete">
+            <svg class="hidden-complete-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <span class="hidden-text" style="margin-top: var(--space-xl);">Meditation complete</span>
+        </div>
+
+        <a href="stats.html" class="stats-hint">
+          <span class="stats-hint-text">stats</span>
+          <svg class="stats-hint-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 15l7-7 7 7"/>
+          </svg>
+        </a>
+      </div>
+
+      <!-- ==================== HIDDEN MODE - FREE ==================== -->
+      <!-- Hidden mode is identical for free users (no numbers shown anyway) -->
+
+      <!-- HIDDEN FREE: IDLE STATE -->
+      <div id="hidden-free-idle" class="timer-screen" style="display: none;">
+        <div class="hidden-circle"></div>
+        <span class="hidden-text-small" style="margin-top: var(--space-2xl);">Just start meditating</span>
+
+        <a href="stats.html" class="stats-hint">
+          <span class="stats-hint-text">stats</span>
+          <svg class="stats-hint-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 15l7-7 7 7"/>
+          </svg>
+        </a>
+      </div>
+
+      <!-- HIDDEN FREE: RUNNING STATE -->
+      <div id="hidden-free-running" class="timer-screen timer-screen-running" style="display: none;">
+        <div class="hidden-circle hidden-circle-running"></div>
+        <span class="tap-hint">tap to end</span>
+      </div>
+
+      <!-- HIDDEN FREE: COMPLETE STATE -->
+      <div id="hidden-free-complete" class="timer-screen" style="display: none;">
         <div class="timer-display animate-fade-in-up">
           <div class="hidden-circle hidden-circle-complete">
             <svg class="hidden-complete-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -366,8 +466,21 @@
   </div>
 
   <script>
+    let currentUserTier = 'premium';
     let currentMode = 'standard';
     let currentState = 'idle';
+
+    function setUserTier(tier) {
+      currentUserTier = tier;
+
+      // Update user tab styles
+      document.querySelectorAll('.user-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      updateDisplay();
+    }
 
     function setMode(mode) {
       currentMode = mode;
@@ -396,16 +509,18 @@
     function updateDisplay() {
       // Hide all states
       const allStates = [
-        'standard-idle', 'standard-running', 'standard-complete',
-        'hidden-idle', 'hidden-running', 'hidden-complete'
+        'standard-premium-idle', 'standard-premium-running', 'standard-premium-complete',
+        'standard-free-idle', 'standard-free-running', 'standard-free-complete',
+        'hidden-premium-idle', 'hidden-premium-running', 'hidden-premium-complete',
+        'hidden-free-idle', 'hidden-free-running', 'hidden-free-complete'
       ];
 
       allStates.forEach(id => {
         document.getElementById(id).style.display = 'none';
       });
 
-      // Show current mode + state
-      const activeId = currentMode + '-' + currentState;
+      // Show current mode + tier + state
+      const activeId = currentMode + '-' + currentUserTier + '-' + currentState;
       document.getElementById(activeId).style.display = 'flex';
     }
   </script>
