@@ -25,9 +25,9 @@ export default {
         }
       },
       fontFamily: {
-        // Ghibli typography
-        serif: ['Cormorant Garamond', 'Georgia', 'serif'],
-        sans: ['Nunito', 'system-ui', 'sans-serif'],
+        // Pair 1: Palatino + Raleway (from font-pairs.html)
+        serif: ['Palatino Linotype', 'Book Antiqua', 'Palatino', 'Georgia', 'serif'],
+        sans: ['Raleway', 'system-ui', 'sans-serif'],
       },
       fontSize: {
         'display': ['4.5rem', { lineHeight: '1', letterSpacing: '-0.02em' }],

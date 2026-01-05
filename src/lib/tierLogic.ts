@@ -148,19 +148,28 @@ export function isSessionVisible(
 }
 
 /**
- * Calculates rolling 7-day hours from sessions
+ * Calculates rolling 7-day seconds from sessions
  * Used for FREE tier after Day 31
  *
  * @param sessions - All user sessions
- * @returns Hours in the last 7 days
+ * @returns Seconds in the last 7 days (use formatTotalHours to display)
  */
-export function getWeeklyRollingHours(sessions: Session[]): number {
+export function getWeeklyRollingSeconds(sessions: Session[]): number {
   const sevenDaysAgo = Date.now() - 7 * MS_PER_DAY
 
   const weekSessions = sessions.filter(s => s.startTime >= sevenDaysAgo)
   const totalSeconds = weekSessions.reduce((sum, s) => sum + s.durationSeconds, 0)
 
-  return Math.round((totalSeconds / 3600) * 10) / 10 // Round to 1 decimal
+  return totalSeconds
+}
+
+/**
+ * @deprecated Use getWeeklyRollingSeconds with formatTotalHours instead
+ * Kept for backward compatibility with tests
+ */
+export function getWeeklyRollingHours(sessions: Session[]): number {
+  const totalSeconds = getWeeklyRollingSeconds(sessions)
+  return Math.round((totalSeconds / 3600) * 10) / 10
 }
 
 /**

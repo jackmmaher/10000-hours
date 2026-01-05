@@ -5,7 +5,7 @@ import { useSettingsStore } from '../stores/useSettingsStore'
 import { useTimer, useWakeLock } from '../hooks/useTimer'
 import { useSwipe } from '../hooks/useSwipe'
 import { formatTimer, formatTotalHours, formatSessionAdded } from '../lib/format'
-import { getWeeklyRollingHours } from '../lib/tierLogic'
+import { getWeeklyRollingSeconds } from '../lib/tierLogic'
 import { ZenMessage } from './ZenMessage'
 
 export function Timer() {
@@ -29,9 +29,9 @@ export function Timer() {
 
   const { elapsed, isRunning } = useTimer()
 
-  // Calculate weekly rolling hours for FREE tier display
-  const weeklyHours = useMemo(
-    () => getWeeklyRollingHours(sessions),
+  // Calculate weekly rolling seconds for FREE tier display
+  const weeklySeconds = useMemo(
+    () => getWeeklyRollingSeconds(sessions),
     [sessions]
   )
 
@@ -125,7 +125,7 @@ export function Timer() {
                 // Normal mode - show added time
                 <>
                   <p className="font-serif text-display text-indigo-deep tabular-nums">
-                    {isPremiumOrTrial ? formatTotalHours(totalSeconds) : `${weeklyHours}h`}
+                    {isPremiumOrTrial ? formatTotalHours(totalSeconds) : formatTotalHours(weeklySeconds)}
                   </p>
                   <p className="text-sm text-indigo-deep/50 mt-2 text-center">
                     {formatSessionAdded(lastSessionDuration)}
@@ -136,8 +136,18 @@ export function Timer() {
           ) : isRunning ? (
             // Running
             shouldHideTime ? (
-              // Hide time mode - show breathing circle
-              <div className="w-20 h-20 rounded-full bg-indigo-deep/10 animate-breathe" />
+              // Hide time mode - show alive breathing orb with glow
+              <div className="relative">
+                <div
+                  className="w-24 h-24 rounded-full bg-indigo-deep/15 animate-breathe-slow"
+                  style={{
+                    boxShadow: '0 0 40px rgba(45, 52, 54, 0.15), 0 0 80px rgba(45, 52, 54, 0.08)'
+                  }}
+                />
+                <div
+                  className="absolute inset-0 w-24 h-24 rounded-full bg-indigo-deep/5 animate-pulse-soft"
+                />
+              </div>
             ) : (
               // Normal mode - show elapsed timer with breathing animation
               <p className="font-serif text-display text-indigo-deep tabular-nums animate-breathe">
@@ -147,15 +157,20 @@ export function Timer() {
           ) : (
             // Idle
             shouldHideTime ? (
-              // Hide time mode - simple prompt
-              <p className="font-serif text-2xl text-indigo-deep">
-                Just start meditating
-              </p>
+              // Hide time mode - simple prompt with hint
+              <div className="flex flex-col items-center">
+                <p className="font-serif text-2xl text-indigo-deep">
+                  Just start meditating
+                </p>
+                <p className="text-xs text-indigo-deep/30 mt-4">
+                  tap to begin
+                </p>
+              </div>
             ) : (
               // Normal mode - show total or weekly hours based on tier
               <>
                 <p className="font-serif text-display text-indigo-deep tabular-nums">
-                  {isPremiumOrTrial ? formatTotalHours(totalSeconds) : `${weeklyHours}h`}
+                  {isPremiumOrTrial ? formatTotalHours(totalSeconds) : formatTotalHours(weeklySeconds)}
                 </p>
                 <p className="text-sm text-indigo-deep/40 mt-2">
                   {isPremiumOrTrial ? 'toward 10,000 hours' : 'this week'}
