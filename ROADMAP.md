@@ -1,49 +1,127 @@
 # 10,000 Hours - iOS Commercialization Roadmap
 
-**Status:** REVISED (Insight Journal + Wisdom Stream + Hide Time) | **Date:** January 2026
+**Status:** v2 SCOPE (Rolling Window + Premium Gating) | **Date:** January 2026
 
 ---
 
 ## Vision
 
-Transform the minimalist meditation timer PWA into a commercially viable iOS app while preserving its zen philosophy. The app's restraint IS the product - we enhance without bloating.
+Transform the minimalist meditation timer PWA into a commercially viable iOS app while preserving its zen philosophy. The app's restraint IS the product — we enhance without bloating.
 
-**Core focus:** Tracking progression toward 10,000 hours and capturing meditation insights for long-term reflection.
+**Core focus:** Tracking progression toward 10,000 hours with a monetization model that lets users experience full value before asking them to pay.
 
-**Pricing Model:** 30-Day Rolling Window + $4.99/year Premium
+**Pricing Model:** 30-Day Trial → $4.99/year Premium
 
-The app is **free forever** with a 30-day rolling window of history. Premium ($4.99/year) unlocks your full journey. This model is proven by Slack (30-40% conversion) and aligns with habit formation psychology (paywall triggers at peak emotional investment).
+The app is **free forever** with degraded features after Day 31. Premium ($4.99/year) unlocks your full journey. This model is proven by Slack (30-40% conversion) and leverages loss aversion psychology (users experience premium, then lose it).
 
-**Core additions:**
-- 30-day rolling window (FREE) → Full history (Premium $4.99/year)
-- Insight Journal: Voice notes, on-device transcription, searchable archive (Premium)
-- Wisdom Stream: Anonymous crowd-sourced insights from the community (read FREE, share Premium)
-- Word cloud visualization: See your vocabulary of understanding evolve (Premium)
-- Hide Time Display: Optional setting for number-free meditation experience (Premium)
-- Full history & calendar: Unlimited session history and heatmap (Premium)
-- Ghibli-inspired design language: warm colors, organic animation, generous Ma (empty space)
-- Supabase backend for Wisdom Stream (anonymous, no auth required)
-- Local storage (Dexie/IndexedDB) for personal data - **data is never deleted, just hidden in UI for free users**
+**v2 Core Features:**
+- 30-day implicit trial (full Premium experience)
+- Day 31 downgrade trigger (revert to rolling window)
+- Rolling 7-day stats for FREE tier
+- Calendar with 90-day lookback + logarithmic fade
+- Frozen milestone achievements (cumulative hidden)
+- $4.99/year Premium to restore full experience
+- Hide Time Display (Premium only)
+- Ghibli-inspired design language
 
-**What was removed from original scope:**
-- ~~Apple Sign-In~~ -> Anonymous device hash for Wisdom Stream
-- ~~Interval bells~~ -> Silent meditation focus
-- ~~Year Summary animation~~ -> Insight archive IS the summary
-- ~~Spirit companion~~ -> v2 consideration
-- ~~Garden visualization~~ -> Replaced by Insight Journal (more authentic value)
-- ~~Full social features~~ -> Wisdom Stream is read-only, Like + Save only
+**Deferred to v3:**
+- Insight Journal (voice recording, transcription, archive)
+- Wisdom Stream (community features, Supabase)
+- Word Cloud visualization
+- See [v3 Addendum](#v3-addendum-deferred-features) at end of document
 
 ---
 
-## The Problem We're Solving
+## The Trial → Downgrade Model
 
-Meditators have insights during practice -> Want to capture them immediately -> Currently scattered across notes apps, AI chats -> Insights get lost over time -> Valuable realizations forgotten.
+This is the core monetization strategy. Users experience FULL value, then LOSE it.
 
-**The Solution:** A meditation timer + hour tracker + insight journal that:
-- Captures voice notes immediately post-session
-- Transcribes for searchability (on-device, private)
-- Archives with timestamps tied to practice milestones
-- Visualizes themes via word cloud over time
+### Days 1-30: Implicit Premium Trial
+
+New users get the complete premium experience without knowing it's a trial:
+
+| Feature | Days 1-30 Experience |
+|---------|---------------------|
+| **Timer** | Full cumulative hours: "42.5 toward 10,000 hours" |
+| **Stats** | All time windows (7d, 30d, 90d, Year, All) |
+| **Milestones** | Full adaptive progression: "Next: 50 hours (85%)" |
+| **Projections** | "At current pace: ~2035" |
+| **Calendar** | Full history, all months |
+
+**The user thinks: "This is the app."**
+
+### Day 31: The Trigger Moment
+
+When the user starts their first session on Day 31:
+
+```
+┌─────────────────────────────────────────────────────┐
+│                                                     │
+│  🧘 Your first 30 days are complete                │
+│                                                     │
+│  You've built a real practice. Your history is     │
+│  still here — it's just starting to fade.          │
+│                                                     │
+│  Keep your full journey visible for $4.99/year.    │
+│                                                     │
+│  ┌───────────────────┐    ┌───────────────────┐    │
+│  │ Keep practicing   │    │ See full journey  │    │
+│  │                   │    │    $4.99/year     │    │
+│  └───────────────────┘    └───────────────────┘    │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+```
+
+**Trigger:** First session where `daysSinceFirstSession >= 31`
+
+**If user dismisses:** App immediately reverts to downgraded FREE tier.
+
+### Day 31+: Downgraded FREE Experience
+
+The app continues to work, but the experience is fundamentally inferior:
+
+| Feature | Downgraded FREE Experience |
+|---------|---------------------------|
+| **Timer** | Rolling weekly hours: "2.3 hours this week" |
+| **Stats** | 7d and 30d windows only, others grayed |
+| **Milestones** | Frozen: "✓ 10 hours achieved" (can't see next) |
+| **Goals** | Weekly goal: "2.3 of 5 hours" (rolling, fluctuates) |
+| **Projections** | Hidden: "Unlock to see your path..." |
+| **Calendar** | 90-day lookback with logarithmic fade |
+
+### The Psychological Engine
+
+| Psychology | Effect |
+|------------|--------|
+| **Loss aversion** | They HAD cumulative tracking, now it's gone |
+| **Sunk cost** | "I have 42.5 hours tracked, I want to see it again" |
+| **Fluctuation anxiety** | Rolling window goes UP and DOWN (unlike cumulative) |
+| **Frozen progress** | Milestone achieved but can't see journey forward |
+
+**Key insight:** The downgrade isn't just "less data" — it's a fundamentally different emotional relationship with the app.
+
+### Cumulative vs Rolling: The Core Difference
+
+**Premium (Cumulative):**
+```
+Session complete: +32 minutes
+"42.5 hours → 43.0 hours toward 10,000"
+
+Bar grows. Number grows. Dopamine.
+Every session = permanent progress.
+```
+
+**FREE Downgrade (Rolling 7-day):**
+```
+Session complete: +32 minutes
+But yesterday's 45-minute session just rolled off...
+"2.3 hours → 2.1 hours (last 7 days)"
+
+Bar SHRINKS. Number went DOWN.
+"Wait, I meditated and my number decreased?"
+```
+
+**That moment is the conversion trigger.**
 
 ---
 
@@ -56,325 +134,127 @@ Meditators have insights during practice -> Want to capture them immediately -> 
                            |
 +------------------------------------------------------------------+
 |                                                                  |
-|   TIMER  ->  STATS  ->  WISDOM  ->  CALENDAR  ->  INSIGHTS       |
-|   (home)    (gear->Settings)  (community)         (voice journal)|
+|   TIMER  ←→  STATS  ←→  CALENDAR                                |
+|   (home)    (analytics)  (history)                              |
+|                ↓                                                  |
+|            SETTINGS                                              |
 |                                                                  |
-|   Overlay: Paywall (when accessing premium features)             |
+|   Overlay: Paywall (Day 31 trigger or limit hit)                |
 |                                                                  |
 +------------------------------------------------------------------+
 ```
 
 ### Screen Flow
 
-| Screen | Purpose | FREE (30-day window) | PREMIUM ($4.99/year) |
-|--------|---------|----------------------|----------------------|
-| **Timer** | Meditation (home) | Full access | Full access |
-| **Stats** | Analytics | This week + month only | Full trends (all time) |
-| **Wisdom** | Community insights stream | Read only | Read + Share (50+ hrs) |
-| **Calendar** | History, heatmap | Current month only | Full history (all years) |
-| **Insights** | Voice journal, archive, word cloud | Locked preview | Full access |
-| **Settings** | Preferences | Basic | Full (hide time, export) |
-| **Onboarding** | First-time intro | Yes | Yes |
-| **Paywall** | Purchase prompt | Day 31 (or limit hit) | N/A |
+| Screen | Purpose | Days 1-30 (Trial) | Day 31+ FREE | PREMIUM |
+|--------|---------|-------------------|--------------|---------|
+| **Timer** | Meditation | Full cumulative | Rolling weekly | Full cumulative |
+| **Stats** | Analytics | All windows | 7d/30d only | All windows |
+| **Calendar** | History | Full history | 90-day + fade | Full history |
+| **Settings** | Preferences | Full access | "Unlock" banner | Full access |
+| **Paywall** | Purchase | Not shown | Available | N/A |
 
 ---
 
-## Feature Breakdown: FREE vs PREMIUM
+## Feature Breakdown: Trial vs FREE vs PREMIUM
 
-### 30-Day Rolling Window Model
+### The Rolling Window Model
 
-**Critical design:** All data is ALWAYS stored locally. FREE tier gates the UI visibility, not the data itself.
+**Critical design:** All data is ALWAYS stored locally. The UI visibility changes, not the data.
 
-| Feature | FREE (30-day window) | PREMIUM ($4.99/year) |
-|---------|----------------------|----------------------|
-| **Timer** | Unlimited sessions | Unlimited sessions |
-| **Total Hours Counter** | Hidden (Premium unlocks) | ✓ Full visibility |
-| **Session History** | Rolling 30 days only | Full history (all time) |
-| **Calendar Heatmap** | Current month only | All months (all years) |
-| **Stats & Trends** | This week + this month | Detailed trends (all time) |
-| **Hide Time Display** | ✗ | ✓ |
-| **Milestone Badges** | Visible but grayed after 30 days | ✓ Fully visible |
-| **Data Export (JSON/CSV)** | ✗ | ✓ |
-| **Wisdom Stream (read)** | ✓ | ✓ |
-| **Wisdom Stream (share)** | ✗ | ✓ (50+ hours) |
-| **Voice Recording** | ✗ | ✓ |
-| **On-device Transcription** | ✗ | ✓ |
-| **Insight Archive** | ✗ | ✓ |
-| **Word Cloud** | ✗ | ✓ |
-| **Full-text Search** | ✗ | ✓ |
+| Feature | Days 1-30 (Trial) | Day 31+ FREE | PREMIUM |
+|---------|-------------------|--------------|---------|
+| **Timer (active)** | Unlimited | Unlimited | Unlimited |
+| **Timer display** | Cumulative total | Rolling weekly | Cumulative total |
+| **Total Hours** | Visible | Hidden | Visible |
+| **Session History** | Full | Rolling 90 days | Full |
+| **Calendar** | All months | 90-day + fade | All months |
+| **Stats Windows** | All (7d→All) | 7d, 30d only | All |
+| **Milestones** | Full progression | Frozen + weekly goal | Full progression |
+| **Projections** | Visible | Hidden (teaser) | Visible |
+| **Hide Time Display** | Available | Locked | Available |
+| **Data Export** | Available | Locked | Available |
 
-### Tier Philosophy
+### Calendar Logarithmic Fade (Day 31+ FREE)
 
-**The meditation is always free. Your full journey costs less than a coffee per year.**
+Past data fades progressively, creating FOMO:
 
-| Tier | Who It's For | Value Proposition |
-|------|--------------|-------------------|
-| **FREE** | Everyone starting meditation | Full timer forever, 30 days of progress visible |
-| **PREMIUM** | Anyone who wants to see their full journey | $0.41/month - trivial to unlock everything |
+| Age | Opacity | Effect |
+|-----|---------|--------|
+| 0-30 days | 100% | Full visibility |
+| 31-60 days | 60% | Noticeably faded |
+| 61-90 days | 30% | Hard to read |
+| 90+ days | 10% + blur | Shapes visible, detail hidden |
 
-### Why $4.99/year Annual Subscription
+**Key:** At 90+ days, we still SHOW the numbers ("52 sessions • 23.4 hours") but BLUR the detail. User knows WHAT they're losing.
 
-**Research validation (Slack model):**
-- Slack uses 90-day rolling history for free → achieved **30-40% conversion** (vs 2-5% industry average)
-- **$27.7B acquisition** proves the model works at scale
+### Milestone Handling (Day 31+ FREE)
 
-**Why annual, not one-time:**
-- **Recurring revenue compounds** - Year 5 revenue is 3x Year 1 with same downloads
-- **Low price = high retention** - Cheap annual plans retain 36% vs 6.7% for expensive monthly
-- **Natural upgrade trigger** - Day 31 is psychologically optimal (mid-habit formation)
-- **Trivial amount** - $4.99/year = $0.41/month, impulse purchase
+**During Trial (Days 1-30):**
+```
+MILESTONES
+┌─────────────────────────────────────┐
+│ Next: 50 hours                      │
+│ ████████████████░░░ 85%             │
+│ 42.5 hours tracked                  │
+└─────────────────────────────────────┘
+```
 
-**Why not subscription fatigue?**
-- $4.99/year is NOT the same as $9.99/month subscription
-- Annual renewal is forgettable (auto-renews)
-- Price is so low users don't think about it
+**After Downgrade (Day 31+ FREE):**
+```
+THIS WEEK (Rolling 7-day)
+┌─────────────────────────────────────┐
+│ ████████░░░░░░░░░░░ 46%             │
+│ 2.3 of 5 hours                      │  ← Fluctuates!
+└─────────────────────────────────────┘
 
-**Habit formation psychology:**
-- At Day 31, user has invested enough to feel loss
-- But habit isn't fully automatic yet (takes ~66 days average)
-- They NEED the app to continue → paywall hits at maximum emotional investment
+MILESTONES
+┌─────────────────────────────────────┐
+│ ✓ 10 hours achieved        (faded) │  ← Frozen
+│ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄     │
+│ Your journey continues...           │
+└─────────────────────────────────────┘
+```
+
+**Why weekly goal fluctuates:** It's a rolling 7-day window. Each day, the oldest day's sessions roll off. New sessions add. The number goes UP and DOWN — unlike cumulative which only grows. This is inherently less satisfying.
 
 ---
 
-## The Insight Journal (Core Premium Feature)
-
-A dedicated screen for capturing, transcribing, and reviewing meditation insights.
-
-### Philosophy
-- **Capture immediately** - Voice notes right after session, before insights fade
-- **Searchable memory** - Find that insight from 6 months ago
-- **See patterns** - Word cloud reveals your evolving understanding
-- **Private reflection** - On-device transcription, nothing leaves your phone
-
-### Voice Recording
-
-**Post-session flow:**
-1. Session ends -> "Capture an insight?" prompt appears
-2. Tap to record voice note (30 seconds to 5 minutes)
-3. On-device transcription runs automatically
-4. Insight saved with timestamp and hour milestone
-
-**Why voice, not text:**
-- Immediate capture without typing friction
-- Preserves emotional tone and nuance
-- Can listen back to original recording
-- More authentic than composed written notes
-
-### On-Device Transcription
-
-**Technology:** iOS Speech Recognition Framework
-- Free (no API costs)
-- Private (audio never leaves device)
-- Works offline
-- Quality sufficient for personal reflection
-
-**Why not Whisper API:**
-- Ongoing cost (~$0.006/min) makes lifetime pricing unsustainable
-- Privacy concerns with cloud transcription
-- Requires internet connection
-- Complexity of API key management
-
-### Insight Archive
-
-**List view showing:**
-- Transcript preview (first 2 lines)
-- Date and time recorded
-- Hour milestone ("After 42.5 hours")
-- Duration of recording
-- Play button for audio
-
-**Filtering options:**
-- By date range
-- By hour milestone ("First 100 hours", "500-1000 hours")
-- Full-text search across all transcripts
-
-### Word Cloud Visualization
-
-**How it works:**
-- Extracts words from all transcripts
-- Filters stopwords (the, and, is, etc.)
-- Weights by frequency
-- Interactive: tap word to see insights containing it
-
-**What it reveals:**
-- Your vocabulary of understanding evolving over time
-- Recurring themes in your practice
-- Shifts in what you notice/articulate
-
-### Insights Preview (Free Users)
-
-When free users navigate to Insights, they see an **enticing preview**:
-
-```
-+-------------------------------------+
-|                                     |
-|     [BLURRED WORD CLOUD]            |
-|     Showing what theirs could       |
-|     look like at their hour count   |
-|                                     |
-|     +-------------------------+     |
-|     |  Your insights await    |     |
-|     |                         |     |
-|     |  Capture voice notes    |     |
-|     |  See your journey       |     |
-|     +-------------------------+     |
-|                                     |
-|     +-------------------------+     |
-|     |   Unlock Insights       |     |
-|     +-------------------------+     |
-|                                     |
-+-------------------------------------+
-```
-
----
-
-## The Wisdom Stream (Community Feature)
-
-Anonymous, crowd-sourced meditation insights - like Kindle's "most highlighted passages" but for meditation wisdom.
-
-### Philosophy
-- **Collective wisdom** - See what resonates across the community
-- **Anonymous by design** - No profiles, no followers, just insights
-- **Trust through practice** - 50+ hours required to share (filters trolls)
-- **Read freely, share premium** - Everyone benefits from community wisdom
-
-### How It Works
-
-**For Readers (FREE):**
-1. Navigate to Wisdom screen (between Stats and Calendar)
-2. Browse anonymous pearls of wisdom
-3. See hour milestone of each contributor
-4. Like pearls that resonate
-5. Save favorites to personal collection
-
-**For Contributors (INSIGHT tier, 50+ hours):**
-1. Record voice note after meditation
-2. After saving insight, see "Share this wisdom?" prompt
-3. AI or manual extraction creates 1-2 sentence pearl
-4. Review and edit before sharing
-5. Pearl appears in community stream (anonymous)
-
-### Wisdom Stream Screen
-
-```
-+-------------------------------------+
-|        Pearls of Wisdom             |
-+-------------------------------------+
-|                                     |
-|  "The space between thoughts is     |
-|   where I live now."                |
-|   ─── 847 hours · 23 likes          |
-|                          [♡] [⊕]    |
-|                                     |
-|  ───────────────────────────────    |
-|                                     |
-|  "Resistance is just another        |
-|   sensation to observe."            |
-|   ─── 2,341 hours · 89 likes        |
-|                          [♡] [⊕]    |
-|                                     |
-+-------------------------------------+
-|     [Saved] [All] [New]             |
-+-------------------------------------+
-```
-
-- `[♡]` = Like (influences ranking)
-- `[⊕]` = Save to personal collection
-- Hour milestone shown (establishes credibility)
-- Tabs: Saved | All | New
-
-### Ranking Algorithm
-
-```
-score = (likes × 1.0) + (saves × 2.0) + recency_decay
-
-recency_decay = 1.0 / (1 + days_since_posted × 0.1)
-```
-
-Saves weighted higher than likes (indicates deeper resonance).
-
-### Moderation
-
-1. **Hour-gate**: 50+ hours required to share (no drive-by trolling)
-2. **AI filter**: Basic profanity/harassment detection
-3. **Report button**: Community can flag inappropriate content
-4. **No pre-review**: Trust earned through practice, community self-polices
-
-### Why This Matters
-
-From Reddit research (12,503 comments):
-- Highest engagement posts are people sharing insights
-- Users value seeing others' journeys
-- No existing tool captures and shares meditation wisdom
-
-This feature creates value for everyone:
-- Free users get community wisdom
-- Premium users get recognition for sharing
-- App gets differentiation and retention
-
----
-
-## Hide Time Display (User Setting)
+## Hide Time Display (Premium Feature)
 
 Optional setting for practitioners who prefer number-free meditation.
 
 ### Research Validation
-> *"One feature that would make it simply perfect — an option to NOT show the numbers while it's running."* (App Store review, echoed in Reddit research)
-
-### Philosophy
-- **Presence over measurement** - Some practitioners find numbers distracting
-- **Advanced feature** - For those who've moved beyond tracking
-- **Reveal in Stats** - Still track hours, just don't show during meditation
+> *"One feature that would make it simply perfect — an option to NOT show the numbers while it's running."* (App Store review)
 
 ### User Flow (Hide Time Enabled)
 
 ```
 IDLE STATE:
-+-------------------------------------+
-|                                     |
-|                                     |
-|       Just start meditating         |
-|                                     |
-|            [ Begin ]                |
-|                                     |
-+-------------------------------------+
+┌─────────────────────────────────────┐
+│                                     │
+│       Just start meditating         │
+│                                     │
+│            [ Begin ]                │
+└─────────────────────────────────────┘
 
 RUNNING STATE:
-+-------------------------------------+
-|                                     |
-|                                     |
-|          ◯                          |  <- Breathing/pulsing animation
-|       (pulsing)                     |     Acknowledges timer is running
-|                                     |     NO time displayed
-|                                     |
-|         Tap to end                  |
-|                                     |
-+-------------------------------------+
+┌─────────────────────────────────────┐
+│                                     │
+│          ◯                          │  ← Breathing circle
+│       (pulsing)                     │     NO time displayed
+│                                     │
+│         Tap to end                  │
+└─────────────────────────────────────┘
 
 COMPLETE STATE:
-+-------------------------------------+
-|                                     |
-|                                     |
-|      Meditation complete            |
-|                                     |
-|        [ View Stats ]               |  <- See time in Stats
-|                                     |
-+-------------------------------------+
+┌─────────────────────────────────────┐
+│                                     │
+│      Meditation complete            │
+│                                     │
+│        [ View Stats ]               │
+└─────────────────────────────────────┘
 ```
-
-### Implementation
-
-- Setting toggle in Settings screen
-- Persists in Dexie database
-- Timer.tsx conditionally renders based on setting
-- Default: OFF (show time normally)
-
-### Design Considerations
-
-- Breathing animation is crucial - user needs acknowledgment timer is running
-- "Tap to end" instruction prevents confusion
-- Stats screen becomes the reveal moment
-- Aligns with zen philosophy: presence over measurement
 
 ---
 
@@ -382,107 +262,64 @@ COMPLETE STATE:
 
 ### Pricing Model: $4.99/year Premium Subscription
 
-| Product | Price | Net (after Apple 15%*) | Type | What's Unlocked |
-|---------|-------|------------------------|------|-----------------|
-| **FREE** | $0 | - | - | Timer + 30-day rolling window |
-| **PREMIUM** | $4.99/year | $4.24/year | Auto-renewing subscription | Full history + voice + everything |
-
-*Apple Small Business Program: 15% commission for developers earning under $1M/year (30% Year 1, 15% after)
+| Product | Price | Net (after Apple 15%) | What's Unlocked |
+|---------|-------|----------------------|-----------------|
+| **Days 1-30** | $0 | - | Full Premium experience (implicit trial) |
+| **Day 31+ FREE** | $0 | - | Degraded: rolling weekly, 90-day calendar, frozen milestones |
+| **PREMIUM** | $4.99/year | $4.24/year | Restore full experience + Hide Time |
 
 ### Why This Pricing?
 
 **$4.99/year Premium:**
-- **Trivial amount** - $0.41/month, less than a coffee
-- **High retention** - Cheap annual plans retain 36% of users (vs 6.7% for expensive monthly)
+- **Trivial amount** - $0.41/month, impulse purchase
+- **High retention** - Cheap annual plans retain 36% of users
 - **Proven model** - Slack achieved 30-40% conversion with rolling history gate
-- **Recurring compounds** - Revenue grows even with same download rate
+- **Loss aversion** - They've EXPERIENCED premium, now losing it
 
-**Why annual subscription (not one-time):**
-- **5-year math**: At 200K downloads/year, one-time = $84K total. Annual = $489K over 5 years.
-- **Retention incentive** - You're motivated to keep users engaged
-- **Price flexibility** - Can raise price later for new users (grandfather existing)
-- **No perceived "subscription fatigue"** - $4.99/YEAR doesn't feel like a subscription
+### Paywall Triggers
 
-### Single Paywall: Premium Unlock
+| Trigger | When | Message |
+|---------|------|---------|
+| **Day 31** | First session on Day 31+ | "Your first 30 days are complete..." |
+| **Stats tap** | Tap grayed 90d/Year/All tabs | "Unlock full history" |
+| **Calendar nav** | Navigate beyond 90 days | "Your [month] is fading..." |
+| **Milestone tap** | Tap frozen milestone | "Continue your journey..." |
+| **Hide Time tap** | Tap locked toggle | "Premium feature" |
 
+### Post-Downgrade Soft Reminders
+
+No nagging popups. The degraded experience IS the reminder.
+
+**Settings screen (Day 31+ FREE):**
 ```
-┌─────────────────────────────────────────┐
-│                                         │
-│  🧘 Your Journey Continues              │
-│                                         │
-│  You've been meditating for 31 days.    │
-│                                         │
-│  Your earlier sessions are still here,  │
-│  just hidden. Unlock your full journey  │
-│  for $4.99/year.                        │
-│                                         │
-│  ┌─────────────────────────────────┐    │
-│  │   See My Full Journey - $4.99   │    │
-│  └─────────────────────────────────┘    │
-│                                         │
-│           Maybe Later                   │
-│                                         │
-│  Restore Purchase                       │
-│                                         │
-└─────────────────────────────────────────┘
+┌─────────────────────────────────────┐
+│  YOUR JOURNEY                       │
+│  ┌─────────────────────────────┐    │
+│  │ 47 days meditating          │    │
+│  │ 30-day window active        │    │
+│  │                             │    │
+│  │ [Unlock full journey $4.99] │    │  ← Persistent, not nagging
+│  └─────────────────────────────┘    │
+└─────────────────────────────────────┘
 ```
 
-**Triggered when:**
-- Day 31 (first session 31+ days after first ever session)
-- User tries to view history beyond 30-day window
-- User tries to view calendar beyond current month
-- User taps on grayed-out milestone badges
-- User taps "Capture insight" post-session
-- User navigates to Insights tab
+### Revenue Projections
 
-### If User Chooses "Maybe Later"
+**Conservative: 8% conversion (loss aversion boost), 80% retention**
 
-- App continues to work normally
-- Rolling 30-day window visible
-- Calendar shows current month only
-- Stats show "This Week" and "This Month" only
-- Subtle reminder in UI: "30 days visible • Unlock full history"
-- **NO nagging popups** - Soft touch, zen philosophy
+| Year | Downloads | Conversions | Retained | Total Paid | Revenue |
+|------|-----------|-------------|----------|------------|---------|
+| 1 | 200,000 | 16,000 | — | 16,000 | $67,840 |
+| 2 | 200,000 | 16,000 | 12,800 | 28,800 | $122,112 |
+| 3 | 200,000 | 16,000 | 23,040 | 39,040 | $165,530 |
 
-### Purchase Flow
-
-1. User hits 30-day limit or Day 31 trigger
-2. Paywall slides up with personalized message
-3. Apple Pay → immediate unlock
-4. Full history, voice, insights all enabled
-5. Subscription auto-renews annually
-
-### Revenue Projections (Recurring)
-
-**Conservative: 5% conversion, 80% annual retention**
-
-| Year | Downloads | New Paid | Retained | Total Paid | Revenue |
-|------|-----------|----------|----------|------------|---------|
-| 1 | 200,000 | 10,000 | — | 10,000 | $42,400 |
-| 2 | 200,000 | 10,000 | 8,000 | 18,000 | $76,320 |
-| 3 | 200,000 | 10,000 | 14,400 | 24,400 | $103,456 |
-| 4 | 200,000 | 10,000 | 19,520 | 29,520 | $125,165 |
-| 5 | 200,000 | 10,000 | 23,616 | 33,616 | $142,532 |
-
-**5-year total: $489,873** (vs $84,800 one-time)
-
-**Optimistic: 8% conversion, 85% retention**
-
-| Year | Downloads | New Paid | Retained | Total Paid | Revenue |
-|------|-----------|----------|----------|------------|---------|
-| 1 | 500,000 | 40,000 | — | 40,000 | $169,600 |
-| 2 | 500,000 | 40,000 | 34,000 | 74,000 | $313,760 |
-| 3 | 500,000 | 40,000 | 62,900 | 102,900 | $436,296 |
-
-**3-year total: $919,656**
-
-**Break-even:** ~24 sales (covers $99 Apple Developer fee)
+**3-year total: $355,482**
 
 ---
 
 ## Technical Architecture
 
-### Stack
+### Stack (v2 - Simplified)
 
 | Layer | Technology |
 |-------|------------|
@@ -494,12 +331,13 @@ COMPLETE STATE:
 | Styling | Tailwind CSS |
 | Crash Reporting | Sentry |
 | Testing | Vitest |
-| Speech Recognition | iOS SFSpeechRecognizer (via Capacitor plugin) |
-| Audio Recording | Web MediaRecorder API / Capacitor plugin |
 
-### Database Schema
+**Not needed for v2:**
+- ~~Supabase~~ (deferred to v3 Wisdom Stream)
+- ~~Speech Recognition~~ (deferred to v3 Voice Notes)
+- ~~Audio Recording~~ (deferred to v3)
 
-#### Dexie (Local Storage)
+### Database Schema (v2)
 
 ```typescript
 // src/lib/db.ts
@@ -507,61 +345,44 @@ import Dexie, { Table } from 'dexie';
 
 interface Session {
   id?: number;
-  uuid: string;           // Client-generated UUID
-  startTime: Date;
-  endTime: Date;
+  uuid: string;
+  startTime: number;        // timestamp ms
+  endTime: number;          // timestamp ms
   durationSeconds: number;
 }
 
-interface Insight {
-  id?: number;
-  uuid: string;           // Client-generated UUID
-  sessionUuid?: string;   // Optional link to session
-  recordedAt: Date;
-  audioBlob: Blob;        // Original audio recording
-  transcript: string;     // Transcribed text
-  durationSeconds: number;
-  totalHoursAtRecording: number; // Hour milestone when recorded
-  sharedAt?: Date;        // When shared to Wisdom Stream
-  sharedPearlUuid?: string; // Link to Supabase pearl
-}
-
-interface SavedPearl {
-  id?: number;
-  pearlUuid: string;      // Supabase pearl ID
-  savedAt: Date;
-  content: string;        // Cached locally
-  hoursAtCreation: number;
+interface AppState {
+  id: 'main';
+  hasReachedEnlightenment: boolean;
+  enlightenmentReachedAt?: number;
 }
 
 interface UserProfile {
-  id: 1;                  // Single row
-  tier: 'free' | 'premium';           // Current tier
-  premiumExpiryDate?: Date;           // When subscription expires
-  originalPurchaseDate?: Date;        // First subscription date (for tenure tracking)
-  firstSessionDate?: Date;            // When user started meditating (for Day 31 trigger)
+  id: 1;
+  tier: 'free' | 'premium';
+  premiumExpiryDate?: number;
+  originalPurchaseDate?: number;
+  firstSessionDate?: number;    // For Day 31 trigger
+  trialExpired: boolean;        // Has seen Day 31 banner
 }
 
 interface UserSettings {
-  id: 1;                  // Single row
-  hideTimeDisplay: boolean; // Hide time during meditation
+  id: 1;
+  hideTimeDisplay: boolean;
 }
 
 class AppDatabase extends Dexie {
   sessions!: Table<Session>;
-  insights!: Table<Insight>;
-  savedPearls!: Table<SavedPearl>;
+  appState!: Table<AppState>;
   profile!: Table<UserProfile>;
   settings!: Table<UserSettings>;
 
   constructor() {
     super('TenThousandHours');
 
-    // Schema versioning for future migrations
-    this.version(1).stores({
+    this.version(2).stores({
       sessions: '++id, uuid, startTime',
-      insights: '++id, uuid, sessionUuid, recordedAt, transcript',
-      savedPearls: '++id, pearlUuid, savedAt',
+      appState: 'id',
       profile: 'id',
       settings: 'id'
     });
@@ -571,75 +392,7 @@ class AppDatabase extends Dexie {
 export const db = new AppDatabase();
 ```
 
-**Note:** Full-text search on transcripts via Dexie's `where('transcript').startsWithIgnoreCase()` or simple `.filter()` for contains queries.
-
-#### Supabase (Cloud - Wisdom Stream)
-
-```sql
--- Wisdom pearls table
-CREATE TABLE wisdoms (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  content TEXT NOT NULL,
-  hours_at_creation INTEGER NOT NULL,
-  device_hash TEXT NOT NULL,  -- Anonymous device identifier (hashed)
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  likes_count INTEGER DEFAULT 0,
-  saves_count INTEGER DEFAULT 0,
-  reported BOOLEAN DEFAULT FALSE,
-  hidden BOOLEAN DEFAULT FALSE
-);
-
--- Interactions (likes/saves per device)
-CREATE TABLE wisdom_interactions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  wisdom_id UUID REFERENCES wisdoms(id) ON DELETE CASCADE,
-  device_hash TEXT NOT NULL,
-  interaction_type TEXT NOT NULL, -- 'like' or 'save'
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(wisdom_id, device_hash, interaction_type)
-);
-
--- Reports for moderation
-CREATE TABLE wisdom_reports (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  wisdom_id UUID REFERENCES wisdoms(id) ON DELETE CASCADE,
-  device_hash TEXT NOT NULL,
-  reason TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(wisdom_id, device_hash)
-);
-
--- Indexes for performance
-CREATE INDEX idx_wisdoms_created_at ON wisdoms(created_at DESC);
-CREATE INDEX idx_wisdoms_likes ON wisdoms(likes_count DESC);
-CREATE INDEX idx_wisdom_interactions_wisdom ON wisdom_interactions(wisdom_id);
-
--- Row Level Security (RLS)
-ALTER TABLE wisdoms ENABLE ROW LEVEL SECURITY;
-ALTER TABLE wisdom_interactions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE wisdom_reports ENABLE ROW LEVEL SECURITY;
-
--- Policies: Anyone can read non-hidden wisdoms
-CREATE POLICY "Public can read wisdoms" ON wisdoms
-  FOR SELECT USING (hidden = FALSE);
-
--- Only device owner can insert their own wisdoms
-CREATE POLICY "Devices can insert wisdoms" ON wisdoms
-  FOR INSERT WITH CHECK (TRUE);
-
--- Interactions: Anyone can insert one per wisdom per type
-CREATE POLICY "Devices can interact" ON wisdom_interactions
-  FOR INSERT WITH CHECK (TRUE);
-
-CREATE POLICY "Public can read interactions" ON wisdom_interactions
-  FOR SELECT USING (TRUE);
-
--- Reports: Anyone can report once per wisdom
-CREATE POLICY "Devices can report" ON wisdom_reports
-  FOR INSERT WITH CHECK (TRUE);
-```
-
-**Anonymous Identity:** Uses device hash (generated once, stored locally) instead of user accounts. No authentication required.
+**Migration note:** v2 schema adds `profile` and `settings` tables. Existing v1 users need `firstSessionDate` backfilled from `MIN(sessions.startTime)`.
 
 ---
 
@@ -647,68 +400,45 @@ CREATE POLICY "Devices can report" ON wisdom_reports
 
 | File | Changes |
 |------|---------|
-| `src/lib/db.ts` | Add insights, savedPearls, settings tables |
-| `src/stores/useSessionStore.ts` | Add post-session insight prompt, wisdom view |
-| `src/App.tsx` | Add Insights + Wisdom routes, premium gating |
-| `src/components/Timer.tsx` | Post-session prompt, hide time display mode |
-| `src/components/Stats.tsx` | Settings gear icon, swipe to Wisdom |
-| `src/components/Calendar.tsx` | Swipe targets for Wisdom screen |
-| `src/hooks/useSwipe.ts` | Update for 5-screen navigation |
-| `src/lib/constants.ts` | Word cloud stopwords |
-| `package.json` | New dependencies (Supabase, RevenueCat, etc.) |
+| `src/lib/db.ts` | Add profile, settings tables; migration for existing users |
+| `src/lib/calculations.ts` | Add `getWeeklyRollingStats()`, `getSessionVisibility()` |
+| `src/stores/useSessionStore.ts` | Add tier checking, Day 31 trigger logic |
+| `src/App.tsx` | Add Settings route, tier-based rendering |
+| `src/components/Timer.tsx` | Conditional display (cumulative vs weekly), hide time mode |
+| `src/components/Stats.tsx` | Tier-based windows, frozen milestones, weekly goal |
+| `src/components/Calendar.tsx` | 90-day limit, logarithmic fade, locked overlay |
+| `src/index.css` | Fade classes, blur utilities |
 
 ## New Files to Create
 
 ```
 src/
   lib/
-    supabase.ts           # Supabase client initialization
     purchases.ts          # RevenueCat integration
-    transcription.ts      # iOS Speech Recognition wrapper
-    wordcloud.ts          # Word extraction and frequency analysis
-    contentFilter.ts      # Basic profanity/harassment filter
-    deviceHash.ts         # Anonymous device identifier generation
+    tierLogic.ts          # Day 31 trigger, visibility rules, fade calculations
 
   stores/
-    usePremiumStore.ts    # Subscription status tracking (free/premium + expiry)
-    useInsightsStore.ts   # Personal insights state, recording
-    useWisdomStore.ts     # Community wisdoms, likes, saves
-    useSettingsStore.ts   # User settings (hide time, etc.)
+    usePremiumStore.ts    # Subscription status (free/premium + expiry)
+    useSettingsStore.ts   # User settings (hide time)
 
   components/
-    Insights.tsx          # Personal insights archive screen
-    InsightRecorder.tsx   # Voice recording modal
-    InsightCard.tsx       # Individual insight in list
-    Wisdom.tsx            # Community wisdom stream screen
-    PearlCard.tsx         # Individual pearl in wisdom stream
-    ShareFlow.tsx         # Pearl extraction + approval flow
-    WordCloud.tsx         # Word cloud visualization
-    LockedOverlay.tsx     # Reusable blur + unlock CTA overlay
     Onboarding.tsx        # Intro flow (3 screens)
-    PaywallPremium.tsx    # Premium subscription screen ($4.99/year)
-    Settings.tsx          # Settings screen (subscription status, hide time)
-
-.github/
-  workflows/
-    ci.yml                # GitHub Actions CI/CD
-
-.env.local                # Supabase credentials (gitignored)
-capacitor.config.ts
-ios/                      # Generated by Capacitor
-ROADMAP.md               # This document (north star)
+    Settings.tsx          # Settings screen with upgrade banner
+    PaywallPremium.tsx    # Day 31 paywall + upgrade prompts
+    LockedOverlay.tsx     # Reusable blur + unlock CTA
+    WeeklyGoal.tsx        # Rolling 7-day goal display
+    FrozenMilestone.tsx   # Achieved milestone (frozen state)
 ```
 
-**New dependencies:**
+**Dependencies to add:**
 ```json
 {
-  "@supabase/supabase-js": "^2.x.x",
+  "@revenuecat/purchases-capacitor": "^7.x.x",
   "@sentry/capacitor": "^0.x.x",
   "@sentry/react": "^7.x.x",
-  "@revenuecat/purchases-capacitor": "^7.x.x",
   "vitest": "^1.x.x",
   "@testing-library/react": "^14.x.x",
-  "@capacitor-community/keep-awake": "^3.x.x",
-  "@capacitor-community/speech-recognition": "^5.x.x"
+  "@capacitor-community/keep-awake": "^3.x.x"
 }
 ```
 
@@ -720,719 +450,332 @@ ROADMAP.md               # This document (north star)
 **Do FIRST, before any code. Some steps take days to process.**
 
 - [ ] **Apple Developer Program enrollment ($99/year)**
-  - Go to developer.apple.com/programs/enroll
+  - developer.apple.com/programs/enroll
   - VERIFY: Can log into developer.apple.com/account
-  - NOTE: Approval can take 24-48 hours for individuals
+  - NOTE: Approval can take 24-48 hours
 
 - [ ] **Create App ID in Apple Developer Portal**
-  - Certificates, Identifiers & Profiles -> Identifiers -> App IDs -> (+)
   - Bundle ID: `com.yourname.tenthousandhours`
   - VERIFY: App ID appears in list
 
 - [ ] **App Store Connect setup**
-  - Go to appstoreconnect.apple.com
-  - My Apps -> (+) New App
-  - Platform: iOS, Name: "10,000 Hours", Bundle ID: (select your App ID)
+  - My Apps → (+) New App
   - VERIFY: App appears in "My Apps"
 
-- [ ] **App Store Connect: Agreements, Tax, Banking**
-  - Users and Access -> Agreements, Tax, and Banking
+- [ ] **Agreements, Tax, Banking**
   - Accept Paid Apps agreement
   - Enter banking and tax information
-  - VERIFY: Status shows "Active" (can take 1-3 business days)
-  - NOTE: Cannot test purchases until this is complete
+  - VERIFY: Status shows "Active" (1-3 business days)
 
 - [ ] **Create RevenueCat account**
-  - Go to app.revenuecat.com -> Sign up
-  - Create new project: "10000 Hours"
-  - Platform: Apple App Store
-  - Enter App Store Connect shared secret
-  - VERIFY: RevenueCat shows your app with green checkmark
+  - app.revenuecat.com
+  - Create project: "10000 Hours"
+  - VERIFY: Green checkmark for your app
 
-- [ ] **Create IAP products in App Store Connect**
-  - My Apps -> Your App -> Subscriptions
-  - Create Subscription Group: "Premium"
-  - Auto-renewing subscription: "Premium Annual", Product ID `premium_annual`, $4.99/year
-  - Submit for review (can take 24-48 hours)
-  - VERIFY: Product shows "Ready to Submit" or "Approved"
+- [ ] **Create IAP product in App Store Connect**
+  - Subscription Group: "Premium"
+  - Product: `premium_annual`, $4.99/year
+  - VERIFY: Product shows "Ready to Submit"
 
-- [ ] **Configure products in RevenueCat**
-  - Products -> Add Products
-  - Match Product ID exactly: `premium_annual`
-  - Create Entitlement: "premium" (grants all premium features)
-  - Create Offering: "default" with premium_annual product
-  - VERIFY: Product shows in RevenueCat dashboard with green checkmark
-
-- [ ] **Create Supabase project (for Wisdom Stream)**
-  - Go to supabase.com -> New project
-  - Project name: "10000-hours"
-  - Region: Choose closest to target users
-  - VERIFY: Project dashboard accessible
-
-- [ ] **Create Supabase database schema**
-  - Create `wisdoms` table (see Database Schema section)
-  - Create `wisdom_interactions` table
-  - Configure Row Level Security (RLS)
-  - VERIFY: Tables created, RLS policies active
-
-- [ ] **Get Supabase credentials**
-  - Settings -> API -> Project URL + anon key
-  - Store securely for environment variables
-  - VERIFY: Credentials copied to secure location
+- [ ] **Configure RevenueCat**
+  - Products → Add `premium_annual`
+  - Entitlement: "premium"
+  - Offering: "default"
+  - VERIFY: Green checkmark
 
 #### Phase 0 - TEST CHECKLIST
-Before moving to Phase 1:
 - [ ] Can log into Apple Developer account
 - [ ] App ID exists
-- [ ] App appears in App Store Connect
-- [ ] Banking/tax shows "Active" status
-- [ ] RevenueCat shows green checkmark for `premium_annual` product
-- [ ] Subscription approved in App Store Connect
-- [ ] Supabase project created and accessible
-- [ ] Supabase tables created with RLS configured
+- [ ] App in App Store Connect
+- [ ] Banking/tax "Active"
+- [ ] RevenueCat shows green checkmark
+- [ ] Subscription approved
 
 ---
 
 ### Phase 1: Infrastructure
-**REQUIRES: Phase 0 complete (Apple Developer account)**
+**REQUIRES: Phase 0 complete**
 
-- [ ] **Install and configure Sentry (crash reporting)**
+- [ ] **Install Sentry**
   - `npm install @sentry/capacitor @sentry/react`
-  - Initialize in App.tsx before any other code
-  - Test: trigger intentional crash, verify in Sentry dashboard
-  - VERIFY: Crashes reported with stack traces
-  - NOTE: No visibility into production crashes = flying blind. Non-negotiable.
+  - Initialize before any other code
+  - VERIFY: Test crash appears in dashboard
 
-- [ ] **Set up Vitest for unit testing**
+- [ ] **Set up Vitest**
   - `npm install -D vitest @testing-library/react`
-  - Create first test: timer duration calculation
-  - Add `npm run test` script to package.json
-  - VERIFY: Tests pass locally
+  - First test: tier logic calculations
+  - VERIFY: `npm run test` passes
 
-- [ ] **Add Dexie schema with insights table**
-  - Add `insights` table per schema above
-  - Include `schemaVersion` field in database design
-  - Document migration framework
-  - VERIFY: Schema upgrade path documented
+- [ ] **Update Dexie schema**
+  - Add `profile`, `settings` tables
+  - Migration: backfill `firstSessionDate` from existing sessions
+  - VERIFY: Schema upgrade works for existing users
 
 - [ ] **Create usePremiumStore.ts**
-  - Track: tier ('free' | 'premium'), premiumExpiryDate
-  - Helper function: isPremium() - checks tier AND expiry date
-  - Actions: checkSubscriptionStatus, setTier, checkDaysSinceFirstSession
-  - Handle subscription expiry gracefully (reverts to free tier)
-  - Track firstSessionDate for Day 31 trigger logic
-  - VERIFY: Store compiles, tier defaults to 'free'
+  - Track: tier, premiumExpiryDate, trialExpired
+  - Helper: `isPremium()`, `isTrialActive()`, `getDaysSinceFirstSession()`
+  - VERIFY: Store compiles, defaults correctly
 
-- [ ] **Install Supabase client**
-  - `npm install @supabase/supabase-js`
-  - VERIFY: Package installed without errors
-
-- [ ] **Create src/lib/supabase.ts**
-  - Initialize Supabase client with env vars
-  - Export typed client for wisdoms table
-  - VERIFY: File compiles, client initializes
-
-- [ ] **Add environment variables**
-  - Create `.env.local` with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
-  - Add `.env.local` to `.gitignore`
-  - VERIFY: Env vars load correctly in dev
-
-- [ ] **Test Supabase connection**
-  - Create simple test query to wisdoms table
-  - VERIFY: Connection works, can read from database
+- [ ] **Create tierLogic.ts**
+  - `getSessionVisibility(session, tier, daysSinceFirst)`
+  - `shouldTriggerPaywall(daysSinceFirst, trialExpired)`
+  - `getCalendarFadeOpacity(monthAge)`
+  - VERIFY: Logic matches spec
 
 #### Phase 1 - TEST CHECKLIST
-Before moving to Phase 2:
-- [ ] `npm run build` succeeds with no errors
+- [ ] `npm run build` succeeds
 - [ ] `npm run test` passes
-- [ ] Timer still works (start/stop meditation)
-- [ ] Existing sessions still appear in Stats
-- [ ] **Sentry:** Test crash appears in Sentry dashboard
-- [ ] **Schema:** Dexie versioning documented for future migrations
-- [ ] usePremiumStore tracks premium status correctly
-- [ ] **Supabase:** Connection test succeeds
-- [ ] **Supabase:** Can read wisdoms table (empty is fine)
+- [ ] Sentry receives test crash
+- [ ] Schema migration works
+- [ ] Tier logic calculations correct
 
 ---
 
-### Phase 2: Core UI + Premium
-**REQUIRES: Phase 0 complete (RevenueCat configured), Phase 1 complete**
+### Phase 2: Core UI + Premium Gating
+**REQUIRES: Phase 1 complete**
 
-#### UI Screens
+#### Trial → Downgrade UI
 
-- [ ] **Create Onboarding.tsx (3 screens)**
-  - Screen 1: "Your meditation companion" - app intro
-  - Screen 2: "Track your journey" - what the app does
-  - Screen 3: "Capture your insights" - premium feature preview
-  - Store `hasSeenOnboarding` in localStorage
-  - VERIFY: Onboarding appears on first launch only
+- [ ] **Update Timer.tsx**
+  - Trial/Premium: Show cumulative "42.5 toward 10,000 hours"
+  - Day 31+ FREE: Show rolling "2.3 hours this week"
+  - Link to paywall from weekly display
+  - VERIFY: Display changes based on tier
 
-- [ ] **Create Settings.tsx**
-  - Tier status display (FREE / PLUS / INSIGHT)
-  - **Hide Time Display toggle** (requires PLUS, see Hide Time Display section)
-  - Links: Privacy Policy, Terms of Service
-  - Restore Purchases button
-  - Version number at bottom
-  - VERIFY: Settings accessible from Stats screen
+- [ ] **Update Stats.tsx**
+  - Trial/Premium: All time windows available
+  - Day 31+ FREE: 7d/30d only, others grayed (not locked icon)
+  - Add WeeklyGoal component (rolling 7-day)
+  - Add FrozenMilestone component
+  - VERIFY: Gating works correctly
 
-- [ ] **Implement Hide Time Display setting**
-  - Add `hideTimeDisplay` to user settings in Dexie
-  - Create useSettingsStore.ts for settings state
-  - VERIFY: Setting persists across app restarts
+- [ ] **Update Calendar.tsx**
+  - Trial/Premium: Full history
+  - Day 31+ FREE: 90-day lookback
+  - Implement logarithmic fade (100% → 60% → 30% → 10%+blur)
+  - Show session counts on blurred months
+  - VERIFY: Fade renders correctly
 
-- [ ] **Update Timer.tsx for hidden mode**
-  - Idle: Show "Just start meditating" instead of hours
-  - Running: Show breathing circle + "Tap to end" instead of HH:MM:SS
-  - Complete: Show "Meditation complete" instead of "+32m"
-  - VERIFY: Timer works correctly in both modes
+- [ ] **Create LockedOverlay.tsx**
+  - Reusable blur + CTA component
+  - Soft messaging, no lock icons
+  - VERIFY: Component renders in isolation
 
-- [ ] **Add navigation to new screens**
-  - Settings: gear icon on Stats screen -> Settings
-  - Wisdom: third position after Stats (before Calendar)
-  - Insights: fifth position after Calendar
-  - Onboarding: shows before Timer on first launch
-  - VERIFY: All navigation paths work (Timer -> Stats -> Wisdom -> Calendar -> Insights)
-
-- [ ] **Add LockedOverlay.tsx component**
-  - Reusable component for locked features
-  - Blurred background
-  - Message + "Unlock" CTA button
-  - VERIFY: Component renders correctly in isolation
-
-#### Paywall + Monetization
+#### Paywall + Purchase
 
 - [ ] **Install RevenueCat SDK**
   - `npm install @revenuecat/purchases-capacitor`
-  - VERIFY: Package installed, no dependency errors
+  - VERIFY: No dependency errors
 
-- [ ] **Create src/lib/purchases.ts**
-  - Initialize RevenueCat with API key
-  - Functions: getOfferings, purchasePackage, restorePurchases
-  - Handle Premium subscription (auto-renewing)
-  - Check entitlement: isPremium
-  - Handle subscription status changes (expiry, renewal)
-  - VERIFY: File compiles without errors
+- [ ] **Create purchases.ts**
+  - Initialize RevenueCat
+  - `getOfferings()`, `purchasePackage()`, `restorePurchases()`
+  - VERIFY: Compiles without errors
 
 - [ ] **Create PaywallPremium.tsx**
-  - Triggered when:
-    - Day 31 (first session 31+ days after first ever session)
-    - User hits 30-day history limit
-    - User tries to view calendar beyond current month
-    - User taps on grayed-out milestone badges
-    - User taps "Capture insight" or navigates to Insights tab
-  - Personalized headline: "Your Journey Continues"
-  - Subhead: "You've been meditating for X days"
-  - Lists: Full history, voice notes, transcription, word cloud
-  - Price: "$4.99/year"
-  - CTA: "See My Full Journey"
-  - Skip: "Maybe Later" (small, non-guilt)
-  - "Restore Purchase" link at bottom
-  - VERIFY: Paywall renders correctly
+  - Day 31 trigger message
+  - "Your first 30 days are complete..."
+  - Price: $4.99/year
+  - "Keep practicing" (dismiss) + "See full journey" (purchase)
+  - VERIFY: Paywall renders
 
-- [ ] **Handle subscription completion**
-  - On Premium purchase: setTier('premium'), set premiumExpiryDate, dismiss paywall
-  - Store tier + expiry in Dexie UserProfile
-  - Handle subscription expiry gracefully (RevenueCat handles this)
-  - VERIFY: Purchase flow completes (use sandbox account)
+- [ ] **Handle Day 31 trigger**
+  - Check on session start
+  - Show paywall once, set `trialExpired: true`
+  - Immediate UI reversion on dismiss
+  - VERIFY: Trigger fires correctly
+
+#### Settings + Hide Time
+
+- [ ] **Create Settings.tsx**
+  - Tier status display
+  - "Unlock full journey" banner (Day 31+ FREE)
+  - Hide Time Display toggle (Premium only)
+  - Privacy Policy, Terms, Restore Purchase
+  - VERIFY: Settings accessible
+
+- [ ] **Implement Hide Time Display**
+  - Timer idle: "Just start meditating"
+  - Timer running: Breathing circle, no numbers
+  - Timer complete: "Meditation complete"
+  - VERIFY: Works in all states
+
+- [ ] **Create Onboarding.tsx**
+  - 3 screens: intro, tracking, insights preview
+  - Store `hasSeenOnboarding`
+  - VERIFY: Shows on first launch only
 
 #### Phase 2 - TEST CHECKLIST
-Before moving to Phase 3:
 - [ ] `npm run build` succeeds
 - [ ] `npm run test` passes
-- [ ] Timer still works
-- [ ] Onboarding shows on first launch
-- [ ] Can navigate: Timer -> Stats -> Wisdom -> Calendar -> Insights
-- [ ] Can navigate to Settings
-- [ ] LockedOverlay renders with blur and CTA
-- [ ] **30-Day Rolling Window gating works:**
-  - [ ] FREE: Only rolling 30 days of history visible
-  - [ ] FREE: Only current month calendar visible
-  - [ ] FREE: Stats show "This Week" and "This Month" only
-  - [ ] FREE: Total hours counter hidden
-  - [ ] PaywallPremium appears on Day 31 or when hitting limits
-- [ ] **Paywall:**
-  - [ ] PaywallPremium shows $4.99/year
-  - [ ] Shows personalized "X days meditating" message
-  - [ ] "Maybe Later" option available (non-guilt)
-  - [ ] "Restore Purchase" button present
-- [ ] **Hide Time Display (requires PREMIUM):**
-  - [ ] Setting toggle disabled for FREE tier
-  - [ ] Setting toggle works for PREMIUM tier
-  - [ ] Timer shows "Just start meditating" when hidden
-  - [ ] Timer shows breathing circle during session when hidden
-  - [ ] Timer shows "Meditation complete" at end when hidden
-  - [ ] Setting persists after app restart
-- [ ] **Sandbox testing:**
-  - [ ] Can complete Premium subscription ($4.99/year)
-  - [ ] After subscription: full history unlocks, voice enabled
-  - [ ] Restore Purchase works after reinstall
-  - [ ] Subscription status reflects correctly in Settings
+- [ ] **Days 1-30 (Trial):**
+  - [ ] Timer shows cumulative hours
+  - [ ] All stats windows available
+  - [ ] Full calendar history
+  - [ ] Full milestones visible
+- [ ] **Day 31 trigger:**
+  - [ ] Paywall appears on first Day 31 session
+  - [ ] "Keep practicing" dismisses and reverts UI
+- [ ] **Day 31+ FREE:**
+  - [ ] Timer shows "X hours this week" (rolling)
+  - [ ] Stats: 7d/30d only, others grayed
+  - [ ] Weekly goal fluctuates correctly
+  - [ ] Milestone frozen, shows achievement
+  - [ ] Calendar: 90-day limit with fade
+  - [ ] Blurred months show session counts
+- [ ] **Premium purchase:**
+  - [ ] Sandbox purchase completes
+  - [ ] UI immediately restores to full
+  - [ ] Restore Purchase works
+- [ ] **Hide Time Display:**
+  - [ ] Locked for FREE tier
+  - [ ] Works correctly for Premium
+- [ ] Settings shows correct tier status
 
 ---
 
 ### Phase 3: Design System (Ghibli)
-**REQUIRES: Phase 2 complete (UI screens to style)**
+**REQUIRES: Phase 2 complete**
 
-- [ ] **Update color palette in Tailwind config**
+- [ ] **Update color palette**
   ```js
-  // tailwind.config.js
-  cream: '#FAF8F3',        // Warmer paper tone
-  'cream-warm': '#F5F1E8', // Working surfaces
-  'cream-deep': '#EDE8DC', // Cards
-  ink: '#2D3436',          // Softer than black
-  'ink-soft': '#4A5568',   // Secondary text
-  moss: '#7C9A6E',         // Growth, positive
-  bark: '#8B7355',         // Earth tones
+  cream: '#FAF8F3',
+  'cream-warm': '#F5F1E8',
+  'cream-deep': '#EDE8DC',
+  ink: '#2D3436',
+  'ink-soft': '#4A5568',
+  moss: '#7C9A6E',
+  bark: '#8B7355',
   ```
-  - VERIFY: New colors applied, app builds
 
-- [ ] **Add typography (Google Fonts)**
-  - Display: Palatino Linotype (Spirited Away authentic)
-  - Body: Raleway (humanist-geometric hybrid)
-  - Import in index.html or CSS
-  - VERIFY: Fonts load and display correctly
+- [ ] **Add typography**
+  - Display: Cormorant Garamond
+  - Body: Nunito
+  - VERIFY: Fonts load correctly
 
 - [ ] **Implement breathing animations**
-  ```css
-  @keyframes subtle-breathe {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.92; transform: scale(0.997); }
-  }
-  /* 6 second cycle */
-  ```
-  - Apply to key statistics
-  - VERIFY: Numbers have subtle breathing effect
+  - 6-second cycle on key numbers
+  - VERIFY: Subtle, not distracting
 
-- [ ] **Update Stats screen (Scroll Garden style)**
-  - Remove ALL borders
-  - Increase vertical spacing between sections (2-3x)
+- [ ] **Update Stats screen styling**
+  - Remove all borders
+  - Increase vertical spacing
   - Content floats in space
-  - VERIFY: Stats feels spacious, zen
+  - VERIFY: Feels spacious, zen
 
-- [ ] **Add organic easing to transitions**
-  - `transition: all 400ms cubic-bezier(0.34, 1.56, 0.64, 1);`
-  - Apply to buttons, modals, navigation
-  - VERIFY: Transitions feel natural, not mechanical
+- [ ] **Organic easing**
+  - `cubic-bezier(0.34, 1.56, 0.64, 1)`
+  - Apply to all transitions
+  - VERIFY: Natural, not mechanical
 
 #### Phase 3 - TEST CHECKLIST
-Before moving to Phase 4:
-- [ ] `npm run build` succeeds
-- [ ] `npm run test` passes
-- [ ] Timer still works
-- [ ] Color palette is warm (cream backgrounds, softer text)
-- [ ] Typography loads (Palatino for display, Raleway for body)
-- [ ] Stats screen has generous spacing, no harsh borders
-- [ ] Key numbers have subtle breathing animation
-- [ ] Transitions feel organic, not abrupt
-- [ ] Overall app feels "Ghibli-like" - warm, alive, breathing
+- [ ] Warm color palette applied
+- [ ] Typography loads correctly
+- [ ] Stats screen feels spacious
+- [ ] Animations are subtle, alive
+- [ ] Overall app feels "Ghibli-like"
 
 ---
 
-### Phase 4: Insight Journal (Premium Feature)
-**REQUIRES: Phase 2 complete (tier gating), Phase 3 complete (Ghibli styling)**
-
-> **CRITICAL: The Insight Journal is a key premium feature. If recording/playback feels broken, users won't pay. Build and validate before polishing.**
-
-> **TIER NOTE:** All Phase 4 features require Premium subscription. Users on FREE tier see the locked Insights tab and PaywallPremium when they try to access.
-
-#### 4a: Voice Recording (Premium)
-
-- [ ] **Install speech recognition plugin**
-  - `npm install @capacitor-community/speech-recognition`
-  - Configure iOS permissions in Info.plist
-  - VERIFY: Plugin installs without errors
-
-- [ ] **Create src/lib/transcription.ts**
-  - Initialize speech recognition
-  - `startRecording(): Promise<void>`
-  - `stopRecording(): Promise<{ audioBlob: Blob, transcript: string }>`
-  - Handle permissions gracefully
-  - VERIFY: File compiles, permissions prompt appears
-
-- [ ] **Create InsightRecorder.tsx component**
-  - Record button (large, prominent)
-  - Recording indicator (pulsing circle)
-  - Stop button
-  - Preview transcript before saving
-  - Save/discard options
-  - VERIFY: Can record and see transcript
-
-- [ ] **Add post-session prompt to Timer.tsx**
-  - After session ends: "Capture an insight?" appears
-  - Tap opens InsightRecorder modal
-  - Skip option (small, unobtrusive)
-  - VERIFY: Prompt appears after ending session
-
-#### 4b: Insight Archive (Premium)
-
-- [ ] **Create useInsightsStore.ts**
-  - Load insights from Dexie on init
-  - Actions: addInsight, deleteInsight, searchInsights
-  - Computed: insightsByDate, wordFrequencies
-  - VERIFY: Store loads/saves correctly
-
-- [ ] **Create InsightCard.tsx component**
-  - Transcript preview (2 lines, truncated)
-  - Date and hour milestone
-  - Duration badge
-  - Play button for audio
-  - VERIFY: Card renders correctly
-
-- [ ] **Create Insights.tsx screen**
-  - List of InsightCards
-  - Search bar at top
-  - Filter buttons (date range, hour milestone)
-  - Empty state for no insights
-  - VERIFY: Screen displays insights list
-
-- [ ] **Implement audio playback**
-  - Play/pause button on each insight
-  - Progress indicator
-  - Handle audio focus/interruptions
-  - VERIFY: Can play back recorded audio
-
-- [ ] **Implement search/filter**
-  - Full-text search across transcripts
-  - Date range picker
-  - Hour milestone filter ("0-100h", "100-500h", etc.)
-  - VERIFY: Search returns relevant results
-
-#### 4c: Wisdom Stream (FREE read, PREMIUM share)
-
-> **REQUIRES: Supabase configured in Phase 0/1**
-> **TIER NOTE:** Reading is FREE for all. Sharing requires PREMIUM + 50 hours.
-
-- [ ] **Create useWisdomStore.ts**
-  - Load community wisdoms from Supabase
-  - Track liked/saved pearls locally
-  - Actions: fetchWisdoms, likePearl, savePearl, reportPearl
-  - VERIFY: Store fetches and displays wisdoms
-
-- [ ] **Create Wisdom.tsx screen**
-  - Scrollable list of PearlCards
-  - Tabs: Saved | All | New
-  - Pull-to-refresh
-  - Empty state for no wisdoms
-  - VERIFY: Screen displays community wisdoms
-
-- [ ] **Create PearlCard.tsx component**
-  - Pearl content (1-2 sentences)
-  - Hour milestone badge
-  - Like count + Like button
-  - Save button
-  - VERIFY: Card renders correctly with interactions
-
-- [ ] **Implement pearl extraction flow**
-  - After saving insight, prompt: "Share this wisdom?"
-  - AI or manual extraction to 1-2 sentence pearl
-  - User approves/edits before sharing
-  - Only show for users with 50+ hours
-  - VERIFY: Extraction flow works for eligible users
-
-- [ ] **Create ShareFlow.tsx component**
-  - Preview extracted pearl
-  - Edit capability
-  - Confirm/Cancel buttons
-  - Upload to Supabase on confirm
-  - VERIFY: Pearl appears in Wisdom Stream after sharing
-
-- [ ] **Implement ranking algorithm**
-  - `score = (likes × 1.0) + (saves × 2.0) + recency_decay`
-  - Supabase function or client-side sorting
-  - VERIFY: Higher-ranked pearls appear first
-
-- [ ] **Add content moderation**
-  - Basic profanity/harassment filter
-  - Report button on each pearl
-  - Hour-gate: 50+ hours required to share
-  - VERIFY: Inappropriate content filtered, reports logged
-
-- [ ] **Gate sharing behind PREMIUM tier**
-  - Reading Wisdom Stream: FREE for all users
-  - Sharing to Wisdom Stream: PREMIUM + 50 hours
-  - Show milestone progress: "15 more hours until you can share wisdom"
-  - VERIFY: FREE users can read, PREMIUM users (50+ hours) can share
-
-#### 4d: Word Cloud (Premium)
-
-- [ ] **Create src/lib/wordcloud.ts**
-  - `extractWords(transcripts: string[]): Map<string, number>`
-  - Filter stopwords (configurable list)
-  - Calculate frequency weights
-  - VERIFY: Word extraction works correctly
-
-- [ ] **Create WordCloud.tsx component**
-  - Render words sized by frequency
-  - Interactive: tap word to filter insights
-  - Smooth animation when data changes
-  - VERIFY: Word cloud renders and is interactive
-
-- [ ] **Add word cloud to Insights screen**
-  - Collapsible section at top
-  - Tap to expand/collapse
-  - Tapping word filters list below
-  - VERIFY: Word cloud integrated with filtering
-
-#### 4e: Tier Gating
-
-- [ ] **Implement locked overlay for Insights tab**
-  - Use LockedOverlay component
-  - Show blurred preview of what their insights could look like
-  - "Unlock Insights" CTA → triggers PaywallPremium
-  - VERIFY: FREE users see blur + unlock prompt
-
-- [ ] **Gate recording behind PREMIUM tier**
-  - Post-session prompt only for PREMIUM users
-  - FREE users see "Upgrade to capture insights"
-  - Tapping shows PaywallPremium
-  - VERIFY: Only PREMIUM users can record
-
-- [ ] **Gate Wisdom sharing behind PREMIUM tier**
-  - Share flow only appears for PREMIUM users with 50+ hours
-  - FREE users can read all wisdoms, like, save
-  - VERIFY: PREMIUM users (50+ hours) can share, others cannot
-
-#### Phase 4 - TEST CHECKLIST
-Before moving to Phase 5:
-- [ ] `npm run build` succeeds
-- [ ] `npm run test` passes
-- [ ] Timer still works
-- [ ] **Recording (PREMIUM only):**
-  - [ ] Permission prompt appears on first use
-  - [ ] Can record voice note
-  - [ ] Transcription appears after recording
-  - [ ] Can preview and save/discard
-- [ ] **Archive (PREMIUM only):**
-  - [ ] Insights appear in list
-  - [ ] Can play back audio
-  - [ ] Search finds relevant insights
-  - [ ] Filters work correctly
-- [ ] **Wisdom Stream:**
-  - [ ] Wisdoms load from Supabase
-  - [ ] All tiers can like and save pearls
-  - [ ] Saved pearls appear in Saved tab
-  - [ ] PREMIUM users can share (with 50+ hours)
-  - [ ] FREE users can read but not share
-  - [ ] Report button works
-- [ ] **Word Cloud (PREMIUM only):**
-  - [ ] Words sized by frequency
-  - [ ] Tapping word filters list
-- [ ] **Tier gating:**
-  - [ ] FREE users see blurred preview on Insights tab
-  - [ ] FREE users cannot record (see PaywallPremium)
-  - [ ] All tiers can read Wisdom Stream
-  - [ ] PREMIUM users have full access to all features
-
----
-
-### Phase 5: Capacitor & iOS
-**REQUIRES: Phase 4 complete (Insight Journal done)**
+### Phase 4: Capacitor & iOS
+**REQUIRES: Phase 3 complete**
 
 - [ ] **Install Capacitor**
   - `npm install @capacitor/core @capacitor/ios`
-  - `npx cap init "10000 Hours" com.yourname.tenthousandhours`
+  - `npx cap init`
   - VERIFY: capacitor.config.ts created
 
-- [ ] **Add required plugins**
-  - `@capacitor/app` - lifecycle events
-  - `@capacitor/haptics` - vibration feedback
-  - `@capacitor/status-bar` - iOS status bar styling
-  - VERIFY: Plugins install without errors
+- [ ] **Add plugins**
+  - `@capacitor/app`, `@capacitor/haptics`, `@capacitor/status-bar`
+  - `@capacitor-community/keep-awake`
+  - VERIFY: Plugins install
 
-- [ ] **Install keep-awake plugin (CRITICAL)**
-  - `npm install @capacitor-community/keep-awake`
+- [ ] **Implement keep-awake (CRITICAL)**
   - Enable on session start
   - Disable on session end
   - VERIFY: Screen stays on during meditation
 
-- [ ] **Implement app lifecycle handling (CRITICAL)**
-  - Save session state on background (use absolute timestamp)
-  - Recover state on foreground
-  - Handle termination: detect incomplete session on next launch
-  - VERIFY: Timer survives backgrounding and returns accurate
+- [ ] **Implement lifecycle handling (CRITICAL)**
+  - Save state on background (absolute timestamp)
+  - Recover on foreground
+  - Handle termination gracefully
+  - VERIFY: Timer survives backgrounding
 
 - [ ] **Generate iOS project**
   - `npm run build && npx cap add ios`
   - VERIFY: `ios/` folder created
 
-- [ ] **Configure iOS capabilities**
-  - Open in Xcode: `npx cap open ios`
-  - Configure bundle ID to match Apple Developer
-  - Add microphone usage description (for voice recording)
-  - Add speech recognition usage description
+- [ ] **Configure Xcode**
+  - Bundle ID matches Apple Developer
+  - Signing configured
   - VERIFY: App builds in Xcode
 
-- [ ] **Create app icons and splash screens**
-  - Icon: 1024x1024 (App Store) + all required sizes
-  - Splash: centered logo on cream background
-  - VERIFY: Icons display correctly
+- [ ] **Create app assets**
+  - Icon: 1024x1024 + all sizes
+  - Splash: centered logo on cream
+  - VERIFY: Assets display correctly
 
 - [ ] **Test on physical device**
-  - Connect iPhone, trust computer
   - Build and run from Xcode
-  - Test all flows on device
-  - VERIFY: App runs correctly on device
+  - Test all flows
+  - VERIFY: App runs correctly
 
 - [ ] **Add haptic feedback**
   - Session start: subtle tap
   - Session end: success pattern
-  - Recording start/stop: feedback
-  - VERIFY: Haptics feel appropriate
+  - VERIFY: Haptics appropriate
 
-- [ ] **Add CI/CD with GitHub Actions**
-  - On PR: `npm run build`, `npm run test`
-  - On merge to main: Build + upload to TestFlight
-  - VERIFY: CI runs on every PR
-
-#### Phase 5 - TEST CHECKLIST
-Before moving to Phase 6:
-- [ ] App builds and runs on iOS simulator
-- [ ] App builds and runs on physical iPhone
-- [ ] App icon displays correctly
-- [ ] Splash screen shows on launch
-- [ ] In-App Purchase works on device (sandbox)
-- [ ] Timer works correctly
-- [ ] **Voice recording works on device**
-- [ ] **Transcription works on device**
-- [ ] Haptic feedback fires appropriately
+#### Phase 4 - TEST CHECKLIST
+- [ ] App builds on simulator
+- [ ] App builds on physical device
+- [ ] Icons and splash correct
+- [ ] IAP works in sandbox
+- [ ] Keep-awake works
+- [ ] Timer survives backgrounding
 - [ ] No crashes in 30 minutes of use
-- [ ] **Keep-awake:** Screen stays on during meditation
-- [ ] **Lifecycle:** Timer survives backgrounding
 
 ---
 
-### Phase 6: Launch & Post-Launch
-**REQUIRES: Phase 5 complete (app runs on device)**
+### Phase 5: Launch
+**REQUIRES: Phase 4 complete**
 
-#### Launch Preparation
+#### Preparation
 
-- [ ] **Write Privacy Policy**
-  - What data is collected (local storage only)
-  - Voice data stays on device
-  - No selling of data
-  - VERIFY: URL accessible, content accurate
-
-- [ ] **Write Terms of Service**
-  - Usage terms
-  - Subscription terms ($4.99/year auto-renewing)
-  - Cancellation and refund policies (Apple handles)
-  - Auto-renewal disclosure (required by Apple)
-  - VERIFY: URL accessible, content accurate
-
-- [ ] **Create App Store listing**
-  - App name: "10,000 Hours - Meditation Timer"
-  - Subtitle: "Track hours, capture insights"
-  - Description: focus on zen philosophy + insight capture
-  - Keywords for ASO
-  - VERIFY: All text fields complete
-
-- [ ] **Create screenshots**
-  - Show: Timer, Stats, Calendar, Insights, Word Cloud
-  - Clean, minimal design
-  - VERIFY: Screenshots uploaded to App Store Connect
+- [ ] **Privacy Policy** - Local storage only, no data selling
+- [ ] **Terms of Service** - Subscription terms, auto-renewal
+- [ ] **App Store listing** - Name, description, keywords
+- [ ] **Screenshots** - Timer, Stats, Calendar, Settings
 
 - [ ] **TestFlight beta**
-  - Upload build to App Store Connect
-  - Invite 5-10 beta testers
-  - Collect feedback for 1-2 weeks
-  - **Beta focus:** Timer reliability, recording quality, transcription accuracy
-  - VERIFY: Beta testers can install and use app
+  - 5-10 testers for 1-2 weeks
+  - Focus: Timer reliability, purchase flow
+  - VERIFY: Beta testers can use app
 
-- [ ] **Submit for App Store review**
-  - Complete all metadata
+- [ ] **Submit for review**
+  - Complete metadata
   - Answer review questions
-  - Submit and wait
-  - VERIFY: Status changes to "In Review"
+  - VERIFY: Status "In Review"
 
 #### Launch Checklist
-Before launch:
 - [ ] Privacy Policy URL works
-- [ ] Terms of Service URL works
-- [ ] App Store listing complete
+- [ ] Terms URL works
 - [ ] All screenshots uploaded
-- [ ] TestFlight build works
-- [ ] All critical bugs addressed
+- [ ] TestFlight tested
+- [ ] Critical bugs fixed
 - [ ] App APPROVED
 
 #### Post-Launch
 
-- [ ] **Monitor first-week metrics**
-  - RevenueCat: conversion rate, MRR, churn
-  - Sentry: crash reports
-  - App Store: downloads, ratings
-  - VERIFY: Dashboard access, data flowing
+- [ ] **Monitor metrics**
+  - RevenueCat: conversion, MRR
+  - Sentry: crashes
+  - App Store: ratings
 
-- [ ] **Plan v1.1 features**
-  - **High-priority:** Apple Health integration
-  - **High-priority:** Dark mode support
-  - **Medium-priority:** Data export (JSON/CSV)
-  - **Medium-priority:** Widget support
-  - **Low-priority:** Cloud sync for multi-device
-  - VERIFY: Prioritized list based on user feedback
-
----
-
-## Settings Screen Structure
-
-```
-+-------------------------------------+
-|  <-                       Settings  |
-+-------------------------------------+
-|                                     |
-|  YOUR SUBSCRIPTION                  |
-|  +-----------------------------+    |
-|  | Status: PREMIUM             |    |
-|  | Renews: Jan 15, 2027        |    |  <- Shows next renewal date
-|  | (or: FREE)                  |    |
-|  +-----------------------------+    |
-|                                     |
-|  YOUR JOURNEY                       |
-|  +-----------------------------+    |
-|  | Days meditating: 47         |    |
-|  | 30 days visible (unlock all)|    |  <- Only for FREE tier
-|  +-----------------------------+    |
-|                                     |
-|  MEDITATION                         |
-|  +-----------------------------+    |
-|  | Hide Time Display      [ON] |    |  <- Requires PREMIUM
-|  +-----------------------------+    |
-|                                     |
-|  ABOUT                              |
-|  +-----------------------------+    |
-|  | Privacy Policy           -> |    |
-|  | Terms of Service         -> |    |
-|  | Manage Subscription      -> |    |  <- Links to Apple subscriptions
-|  | Version 1.0.0               |    |
-|  +-----------------------------+    |
-|                                     |
-|  Restore Purchase                   |
-+-------------------------------------+
-```
-
----
-
-## Business Management
-
-No custom admin needed - use existing dashboards:
-
-| Dashboard | What You Get |
-|-----------|--------------|
-| **RevenueCat** | Subscribers, MRR, churn, LTV, tax exports |
-| **App Store Connect** | Downloads, ratings, revenue |
-| **Sentry** | Crash reports, error tracking |
-
----
-
-## Complexity & Risk Assessment
-
-| Component | Difficulty | Risk | Mitigation |
-|-----------|------------|------|------------|
-| RevenueCat | Medium | Medium | Sandbox test, check product IDs |
-| Voice Recording | Medium | Low | Use native plugin, test on device early |
-| On-Device Transcription | Medium | Medium | Test accuracy, handle failures gracefully |
-| Word Cloud | Low | Low | Simple canvas/SVG, existing libraries available |
-| iOS Platform | Medium | Low | Keep-awake + lifecycle handling patterns |
-| Capacitor | Low-Medium | Low | Standard config, +CI/CD |
+- [ ] **Plan v2.1**
+  - Apple Health integration
+  - Dark mode
+  - Data export
+  - Widgets
 
 ---
 
@@ -1442,73 +785,106 @@ No custom admin needed - use existing dashboards:
 2. **No dark patterns** - No manipulation, no guilt, no anxiety
 3. **Meditation, not metrics** - Stats serve practice, not vice versa
 4. **The horizon, not the point** - 10,000 hours is direction, not destination
-5. **Capture without friction** - Voice is faster than typing
-6. **Breathe** - Everything should feel slow, intentional, alive
-7. **The timer is sacred** - Never limit session length or count. The meditation itself is always free.
+5. **Breathe** - Everything should feel slow, intentional, alive
+6. **The timer is sacred** - Never limit session length or count. The meditation is always free.
+7. **Experience before paywall** - Let users feel the value, then ask them to keep it
 
 ---
 
 ## Design Language: Ghibli-Inspired
 
-The app's visual language draws from Studio Ghibli's design philosophy—not as imitation, but as principled inspiration.
-
-### Core Ghibli Principles Applied
-
-| Ghibli Principle | Application in 10,000 Hours |
-|------------------|----------------------------|
-| **Ma** — meaningful emptiness | Generous whitespace, content floats in space |
-| **Nature as presence** | Organic typography, warm natural colors |
-| **Watercolor philosophy** | Soft gradients, warm tones, no harsh contrasts |
-| **Always breathing** | Subtle animation on key elements |
-| **Earned emotion through restraint** | Quiet confidence, observational language |
-
 ### Color Palette
 
 ```css
-/* Warm paper tones */
 --cream: #FAF8F3;
 --cream-warm: #F5F1E8;
 --cream-deep: #EDE8DC;
-
-/* Organic inks */
 --ink: #2D3436;
 --ink-soft: #4A5568;
---ink-mist: #718096;
-
-/* Nature accents (used sparingly) */
 --moss: #7C9A6E;
 --bark: #8B7355;
 ```
 
 ### Typography
 
-| Use | Font | Reasoning |
-|-----|------|-----------|
-| **Display** | Palatino Linotype | Spirited Away authentic |
-| **Body** | Raleway | Humanist, clean, readable |
+| Use | Font |
+|-----|------|
+| Display | Cormorant Garamond |
+| Body | Nunito |
+
+### Core Principles
+
+| Principle | Application |
+|-----------|-------------|
+| **Ma** | Generous whitespace, content floats |
+| **Breathing** | Subtle animation on key elements |
+| **Warmth** | Cream tones, no harsh contrasts |
+| **Restraint** | Earned emotion through simplicity |
 
 ---
 
-## Git Workflow & Safety
+## Success Metrics (v2)
 
-**Branch strategy:**
-```
-main (protected, always deployable)
-  +-- feature/phase-0-setup
-  +-- feature/phase-1-infrastructure
-  +-- feature/phase-2-ui
-  +-- feature/phase-3-design
-  +-- feature/phase-4-insights
-  +-- feature/phase-5-ios
-  +-- feature/phase-6-launch
-```
+**Launch (first 30 days):**
+- [ ] 100+ downloads
+- [ ] 5+ ratings (4+ average)
+- [ ] 8%+ Day 31 conversion rate
+- [ ] Zero critical crashes
 
-**Workflow per phase:**
-1. Create branch: `git checkout -b feature/phase-X-name`
-2. Build and test the feature
-3. Run phase test checklist
-4. Merge to main only when stable
-5. Tag milestones: `git tag -a v1.X.0 -m "Phase X complete"`
+**6-month:**
+- [ ] 10,000+ downloads
+- [ ] 800+ Premium subscribers
+- [ ] 4.5+ star rating
+- [ ] 80%+ annual retention
+
+---
+
+## v3 Addendum: Deferred Features
+
+The following features are scoped for v3 (post-launch, user-validated):
+
+### Insight Journal
+
+**Voice recording + on-device transcription + searchable archive**
+
+- Post-session prompt: "Capture an insight?"
+- iOS Speech Recognition for transcription
+- Archive with date/milestone filtering
+- Full-text search across transcripts
+
+**Why deferred:**
+- iOS Speech Recognition requires native plugin + device testing
+- Audio blob storage has IndexedDB limits
+- Complex permissions flow
+- Validate v2 monetization model first
+
+### Wisdom Stream
+
+**Anonymous community insights with Supabase backend**
+
+- Read-only for FREE, share with 50+ hours
+- Like + Save interactions
+- Hour-gate prevents trolling
+- AI moderation filter
+
+**Why deferred:**
+- Requires Supabase infrastructure
+- Community moderation is ongoing ops burden
+- Pearl extraction UX is complex
+- Focus v2 on single-player experience
+
+### Word Cloud
+
+**Vocabulary visualization from transcripts**
+
+- Word frequency analysis
+- Interactive filtering
+- Tap word → see related insights
+
+**Why deferred:**
+- Depends on Insight Journal
+- Pure polish feature
+- Low conversion impact
 
 ---
 
@@ -1516,38 +892,19 @@ main (protected, always deployable)
 
 **Debug checklist:**
 1. Does `npm run build` succeed?
-2. What does the browser console show?
-3. What does the RevenueCat dashboard show?
-4. Can you isolate the problem to one file/function?
+2. What does browser console show?
+3. What does RevenueCat dashboard show?
+4. Can you isolate to one file/function?
 
 **Common issues:**
 
 | Problem | Check |
 |---------|-------|
-| "Invalid Product ID" | Product IDs case-sensitive match? Apple approved? |
-| Transcription not working | iOS permissions granted? Microphone access? |
-| Audio won't play | Audio session interruption? Correct blob format? |
+| "Invalid Product ID" | Case-sensitive match? Apple approved? |
 | Capacitor build fails | Xcode signing? Correct bundle ID? |
+| Timer inaccurate | Using absolute timestamps? Handling background? |
+| Fade not rendering | CSS opacity classes applied? |
 
 ---
 
-## Success Metrics
-
-**Launch success (first 30 days):**
-- [ ] 100+ downloads
-- [ ] 5+ ratings (4+ star average)
-- [ ] 5+ Premium subscriptions
-- [ ] Zero critical crashes
-- [ ] At least one user records 10+ insights
-
-**6-month success:**
-- [ ] 10,000+ total downloads
-- [ ] 500+ active Premium subscribers
-- [ ] 4.5+ star rating
-- [ ] At least one user reaches 100 hours with 50+ insights
-
-**1-year success:**
-- [ ] 50,000+ total downloads
-- [ ] 2,500+ active Premium subscribers (~$10K ARR)
-- [ ] 80%+ Year 1 renewal rate
-- [ ] 4.5+ star rating maintained
+*This roadmap is the north star for v2. Refer to it constantly. When in doubt, ship simpler.*

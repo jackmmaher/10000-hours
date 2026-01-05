@@ -1,42 +1,119 @@
-# FREE Tier UX Design: Rolling Window + Logarithmic Fade
+# FREE Tier UX Design: Trial → Downgrade Model
 
-**Status:** DRAFT | **Date:** January 2026 | **Version:** v2 Scope
+**Status:** FINAL | **Date:** January 2026 | **Version:** v2 Scope
 
 ---
 
 ## Design Philosophy
 
-**Inspired by Slack's Model:**
-- Slack shows rolling 90 days of messages, older messages fade/lock
-- Achieved 30-40% conversion rate (vs 2-5% industry average)
-- Key insight: Users experience the VALUE before hitting the wall
+**The Slack Model, Enhanced with Loss Aversion:**
 
-**Our Adaptation:**
-- 30-day rolling window (meditation habits form faster than workplace dependency)
-- Logarithmic fade (not binary cutoff) for historical data
-- Weekly focus reframes FREE tier as "present-focused practice"
-- Cumulative teasing creates desire without anxiety
+Slack's 90-day rolling window achieved 30-40% conversion. We take this further by:
+1. Giving users the FULL premium experience for 30 days
+2. Creating a clear "downgrade moment" on Day 31
+3. Making the downgrade experience fundamentally inferior (not just "less data")
 
 **Core Principle:**
-> "Your practice is always free. Your history is the premium."
+> "Experience the value. Then lose it."
 
 ---
 
-## Rolling Window Parameters
+## The Trial → Downgrade Model
 
-| Data Type | FREE Access | PREMIUM Access |
-|-----------|-------------|----------------|
-| Timer (active session) | Full | Full |
-| Sessions (last 30 days) | Full visibility | Full visibility |
-| Sessions (31-60 days) | 60% opacity | Full visibility |
-| Sessions (61-90 days) | 30% opacity | Full visibility |
-| Sessions (90+ days) | 10% opacity + blur | Full visibility |
-| Total hours (cumulative) | Hidden → "This week: X.X hrs" | Full visibility |
-| Calendar (current month) | Full | Full |
-| Calendar (previous months) | Logarithmic fade | Full |
-| Milestones | Current band only | Full history |
-| Projections | Hidden | Full |
-| Hide Time Display | Locked | Available |
+### Days 1-30: Implicit Premium Trial
+
+New users get the complete premium experience. They don't know it's a trial.
+
+| Feature | Trial Experience |
+|---------|-----------------|
+| **Timer** | "42.5 toward 10,000 hours" (cumulative) |
+| **Stats** | All time windows (7d, 30d, 90d, Year, All) |
+| **Milestones** | "Next: 50 hours (85%)" with progress bar |
+| **Projections** | "At current pace: ~2035" |
+| **Calendar** | Full history, all months |
+| **Hide Time** | Available |
+
+**The user thinks: "This is the app."**
+
+### Day 31: The Trigger
+
+When user taps to start a session on Day 31+:
+
+```
+┌─────────────────────────────────────────────────────┐
+│                                                     │
+│  🧘 Your first 30 days are complete                │
+│                                                     │
+│  You've built a real practice. Your history is     │
+│  still here — it's just starting to fade.          │
+│                                                     │
+│  Keep your full journey visible for $4.99/year.    │
+│                                                     │
+│  ┌───────────────────┐    ┌───────────────────┐    │
+│  │ Keep practicing   │    │ See full journey  │    │
+│  │                   │    │    $4.99/year     │    │
+│  └───────────────────┘    └───────────────────┘    │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+```
+
+**Key Details:**
+- Triggered on session START, not calendar view
+- Shows ONCE (flag `trialExpired: true`)
+- If dismissed: immediate UI reversion
+- Timer session still starts after dismissal
+
+### Day 31+: Downgraded FREE Experience
+
+The app continues to work, but everything feels worse:
+
+| Feature | Downgraded Experience |
+|---------|----------------------|
+| **Timer** | "2.3 hours this week" (rolling 7-day) |
+| **Stats** | 7d/30d windows only |
+| **Milestones** | Frozen: "✓ 10 hours" (can't see next) |
+| **Goals** | Weekly: "2.3 of 5 hours" (fluctuates!) |
+| **Projections** | Hidden: teaser text |
+| **Calendar** | 90-day lookback + logarithmic fade |
+| **Hide Time** | Locked |
+
+---
+
+## The Psychological Engine
+
+### Why This Works
+
+| Psychology | Effect |
+|------------|--------|
+| **Loss aversion** | 2x stronger than gain-seeking |
+| **Sunk cost** | "My 42.5 hours are trapped" |
+| **Fluctuation** | Rolling window goes DOWN — unsatisfying |
+| **Frozen progress** | Can see achievement, can't see forward |
+| **Fading history** | Watch your practice literally disappear |
+
+### Cumulative vs Rolling: The Core Difference
+
+**Premium (Cumulative) — Only Goes UP:**
+```
+Session complete: +32 minutes
+"42.5 hours → 43.0 hours toward 10,000"
+
+Bar grows. Number grows.
+Every session = permanent progress.
+Dopamine.
+```
+
+**FREE (Rolling 7-day) — Goes UP and DOWN:**
+```
+Session complete: +32 minutes
+But yesterday's 45-minute session rolled off...
+"2.3 hours → 2.1 hours (last 7 days)"
+
+Bar SHRINKS. Number went DOWN.
+"Wait, I meditated and my number decreased?"
+```
+
+**That confusion is the conversion trigger.**
 
 ---
 
@@ -46,17 +123,13 @@
 
 ### 1. TIMER SCREEN
 
-The timer is sacred — meditation is always free. But we reframe what FREE users see.
-
-#### PREMIUM User (unchanged)
+#### Days 1-30 (Trial) & Premium
 ```
 ┌─────────────────────────────────────┐
 │                                     │
 │                                     │
-│                                     │
-│              42.5                   │  ← Total cumulative hours
+│              42.5                   │  ← Cumulative total
 │       toward 10,000 hours           │
-│                                     │
 │                                     │
 │                                     │
 │              stats                  │
@@ -64,17 +137,16 @@ The timer is sacred — meditation is always free. But we reframe what FREE user
 └─────────────────────────────────────┘
 ```
 
-#### FREE User (reframed)
+#### Day 31+ FREE (Downgraded)
 ```
 ┌─────────────────────────────────────┐
 │                                     │
 │                                     │
-│                                     │
-│              2.3                    │  ← This WEEK's hours (not cumulative)
+│              2.3                    │  ← Rolling 7-day total
 │          hours this week            │
 │                                     │
 │      ┌─────────────────────┐        │
-│      │ ✨ See full journey │        │  ← Subtle inline prompt
+│      │ See full journey →  │        │  ← Soft inline link
 │      └─────────────────────┘        │
 │                                     │
 │              stats                  │
@@ -83,19 +155,16 @@ The timer is sacred — meditation is always free. But we reframe what FREE user
 ```
 
 **Key Changes:**
-- Shows WEEKLY hours, not cumulative (still valuable, not punitive)
-- Subtitle changes from "toward 10,000 hours" to "hours this week"
-- Soft inline prompt: "✨ See full journey" (not a lock, an invitation)
-- Tap on prompt → smooth scroll to paywall info
+- Hero number switches from cumulative to weekly
+- Subtitle changes: "toward 10,000" → "hours this week"
+- Soft inline prompt to paywall (not blocking)
 
-#### FREE User: Running State (identical to Premium)
+#### Running State (All Tiers — Identical)
 ```
 ┌─────────────────────────────────────┐
 │                                     │
 │                                     │
-│                                     │
-│            12:34                    │  ← Timer always shows elapsed
-│                                     │
+│            12:34                    │  ← Timer always works
 │                                     │
 │                                     │
 │          tap to end                 │
@@ -103,191 +172,110 @@ The timer is sacred — meditation is always free. But we reframe what FREE user
 └─────────────────────────────────────┘
 ```
 
-**The timer itself is NEVER gated.** This is the sacred principle.
-
-#### FREE User: Complete State
-```
-┌─────────────────────────────────────┐
-│                                     │
-│                                     │
-│                                     │
-│              2.5                    │  ← Updated weekly total
-│          hours this week            │
-│            +12 minutes              │  ← Session just added
-│                                     │
-│                                     │
-│              stats                  │
-│               ︿                     │
-└─────────────────────────────────────┘
-```
+**The timer is SACRED. Never limit it.**
 
 ---
 
 ### 2. STATS SCREEN
 
-This is where the value proposition lives. FREE users see a "present-focused" view.
-
-#### PREMIUM User
+#### Days 1-30 (Trial) & Premium
 ```
 ┌─────────────────────────────────────┐
 │  ←                            ⚙️    │
 ├─────────────────────────────────────┤
-│                                     │
-│              42.5                   │  ← Total hours (large, proud)
+│              42.5                   │  ← Cumulative
 │       toward 10,000 hours           │
-│                                     │
 ├─────────────────────────────────────┤
-│  7 days  30 days  90 days  Year All │  ← All windows available
+│  7d  30d  90d  Year  All           │  ← All available
 ├─────────────────────────────────────┤
 │          This week                  │
 │    M  T  W  T  F  S  S              │
 │    ●  ●  ○  ●  ◉  ○  ○              │
 ├─────────────────────────────────────┤
-│  ┌─────────┐  ┌─────────┐           │
-│  │  2.3    │  │   12    │           │
-│  │  hours  │  │sessions │           │
-│  └─────────┘  └─────────┘           │
-├─────────────────────────────────────┤
 │  MILESTONES                         │
 │  ┌─────────────────────────────┐    │
 │  │ Next: 50 hours              │    │
-│  │ ████████████░░░░░ 85%       │    │
+│  │ ████████████████░░░ 85%     │    │
+│  │ 42.5 hours tracked          │    │
 │  └─────────────────────────────┘    │
 ├─────────────────────────────────────┤
 │  PROJECTIONS                        │
-│  ┌─────────────────────────────┐    │
-│  │ At current pace:            │    │
-│  │ 100 hours in 4 months       │    │
-│  └─────────────────────────────┘    │
-│                                     │
-│        [ View Calendar ]            │
+│  At current pace: ~2035             │
 └─────────────────────────────────────┘
 ```
 
-#### FREE User (Weekly Focus)
+#### Day 31+ FREE (Downgraded)
 ```
 ┌─────────────────────────────────────┐
 │  ←                            ⚙️    │
 ├─────────────────────────────────────┤
-│                                     │
-│              2.3                    │  ← This WEEK's hours
+│              2.3                    │  ← Rolling weekly
 │          hours this week            │
-│                                     │
-│   ┌─────────────────────────────┐   │
-│   │ 30 days visible             │   │  ← Soft banner (not blocking)
-│   │ See full journey → $4.99/yr │   │
-│   └─────────────────────────────┘   │
 ├─────────────────────────────────────┤
-│  7 days  30 days  ░░░░░  ░░░░ ░░░  │  ← 90d/Year/All grayed (not locked icon)
+│  7d  30d  ░░░  ░░░░  ░░░           │  ← Others grayed (no 🔒)
 ├─────────────────────────────────────┤
 │          This week                  │
 │    M  T  W  T  F  S  S              │
-│    ●  ●  ○  ●  ◉  ○  ○              │  ← Weekly dots (same as Premium)
+│    ●  ●  ○  ●  ◉  ○  ○              │  ← Weekly dots same
 ├─────────────────────────────────────┤
-│  ┌─────────┐  ┌─────────┐           │
-│  │  2.3    │  │   12    │           │  ← This week's stats
-│  │  hours  │  │sessions │           │
-│  │this week│  │this week│           │
-│  └─────────┘  └─────────┘           │
+│  THIS WEEK (Rolling)                │
+│  ┌─────────────────────────────┐    │
+│  │ ████████░░░░░░░░░ 46%       │    │  ← Fluctuates!
+│  │ 2.3 of 5 hours              │    │
+│  └─────────────────────────────┘    │
 ├─────────────────────────────────────┤
 │  MILESTONES                         │
 │  ┌─────────────────────────────┐    │
-│  │ This week's progress        │    │  ← Reframed as weekly
-│  │ ████░░░░░░░░░░░░░ 23%       │    │  ← % of weekly goal (7 hrs?)
-│  │                             │    │
-│  │ Your full milestone journey │    │
-│  │ awaits...                   │    │  ← Teaser text
+│  │ ✓ 10 hours         (faded) │    │  ← Frozen achievement
+│  │ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄   │    │
+│  │ Your journey continues...   │    │
 │  └─────────────────────────────┘    │
 ├─────────────────────────────────────┤
 │  PROJECTIONS                        │
 │  ┌─────────────────────────────┐    │
-│  │ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄  │    │  ← Placeholder lines (teaser)
-│  │ See where your practice     │    │
-│  │ is taking you...            │    │
-│  │                             │    │
-│  │ Unlock projections →        │    │  ← Soft CTA
+│  │ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄   │    │  ← Placeholder
+│  │ Unlock to see your path...  │    │
 │  └─────────────────────────────┘    │
-│                                     │
-│        [ View Calendar ]            │
 └─────────────────────────────────────┘
 ```
 
 **Key Design Decisions:**
-
-1. **Weekly reframe** — FREE users see "hours this week" as the hero number
-2. **No lock icons** — Locked tabs are just grayed out, not 🔒
-3. **Soft banner** — "30 days visible" is informational, not blocking
-4. **Milestones reframed** — Show weekly goal progress instead of cumulative
-5. **Projections teased** — Placeholder lines hint at what's there, not hard lock
+1. **No lock icons** — grayed tabs, not 🔒
+2. **Weekly goal fluctuates** — rolling 7-day, goes up AND down
+3. **Milestone frozen** — shows achievement but not next target
+4. **Projections teased** — placeholder lines, not hard block
 
 ---
 
 ### 3. CALENDAR SCREEN
 
-This is where logarithmic fade becomes visual.
+#### Days 1-30 (Trial) & Premium
+Full history, all months navigable, no restrictions.
 
-#### PREMIUM User
+#### Day 31+ FREE: Current Month (Full View)
 ```
 ┌─────────────────────────────────────┐
-│  ←                            🎤    │
-├─────────────────────────────────────┤
-│      [ Month ]  [ Year ]            │
-├─────────────────────────────────────┤
 │    ◀    January 2026    ▶          │
 ├─────────────────────────────────────┤
 │  Mo Tu We Th Fr Sa Su               │
 │      1  2  3  4  5                  │
-│   6  7  8  9 10 11 12               │
-│  13 14 15 16 17 18 19               │  ← Full color, all months navigable
+│   6  7  8  9 10 11 12               │  ← 100% opacity
+│  13 14 15 16 17 18 19               │     (full view)
 │  20 21 22 23 24 25 26               │
 │  27 28 29 30 31                     │
 ├─────────────────────────────────────┤
-│       ○ None  ● Light  ● Deep       │
-├─────────────────────────────────────┤
-│  ┌─────────────────────────────┐    │
-│  │ January 2026                │    │
-│  │  8.2 hrs │ 18 sess │ 27 avg │    │
-│  └─────────────────────────────┘    │
+│  8.2 hrs │ 18 sessions │ 27 avg    │
 └─────────────────────────────────────┘
 ```
 
-#### FREE User: Current Month (Full Access)
+#### Day 31+ FREE: Previous Month (31-60 days = 60% opacity)
 ```
 ┌─────────────────────────────────────┐
-│  ←                            🎤    │
-├─────────────────────────────────────┤
-│      [ Month ]  [ Year ]            │
-├─────────────────────────────────────┤
-│    ◀    January 2026    ▶          │
-├─────────────────────────────────────┤
-│  Mo Tu We Th Fr Sa Su               │
-│      1  2  3  4  5                  │
-│   6  7  8  9 10 11 12               │
-│  13 14 15 16 17 18 19               │  ← Full visibility (current month)
-│  20 21 22 23 24 25 26               │
-│  27 28 29 30 31                     │
-├─────────────────────────────────────┤
-│       ○ None  ● Light  ● Deep       │
-├─────────────────────────────────────┤
-│  ┌─────────────────────────────┐    │
-│  │ January 2026                │    │
-│  │  8.2 hrs │ 18 sess │ 27 avg │    │
-│  └─────────────────────────────┘    │
-└─────────────────────────────────────┘
-```
-
-#### FREE User: Previous Month (31-60 days = 60% opacity)
-```
-┌─────────────────────────────────────┐
-│  ←                            🎤    │
-├─────────────────────────────────────┤
-│      [ Month ]  [ Year ]            │
-├─────────────────────────────────────┤
 │    ◀   December 2025    ▶          │
 ├─────────────────────────────────────┤
 │  Mo Tu We Th Fr Sa Su               │
 │   1  2  3  4  5  6  7               │  ← 60% opacity
-│   8  9 10 11 12 13 14               │     (visible but faded)
+│   8  9 10 11 12 13 14               │     (visibly faded)
 │  15 16 17 18 19 20 21               │
 │  22 23 24 25 26 27 28               │
 │  29 30 31                           │
@@ -296,202 +284,164 @@ This is where logarithmic fade becomes visual.
 │   │ Your December is fading   │     │  ← Contextual message
 │   │ Keep it visible → $0.41/mo│     │
 │   └───────────────────────────┘     │
-├─────────────────────────────────────┤
-│  ┌─────────────────────────────┐    │
-│  │ December 2025     (faded)   │    │  ← Stats at 60% opacity
-│  │  ?.? hrs │ ?? sess │ ?? avg │    │
-│  └─────────────────────────────┘    │
 └─────────────────────────────────────┘
 ```
 
-#### FREE User: Older Month (61-90 days = 30% opacity)
+#### Day 31+ FREE: Old Month (61-90 days = 30% opacity)
 ```
 ┌─────────────────────────────────────┐
-│  ←                            🎤    │
-├─────────────────────────────────────┤
-│      [ Month ]  [ Year ]            │
-├─────────────────────────────────────┤
 │    ◀   November 2025    ▶          │
 ├─────────────────────────────────────┤
 │  Mo Tu We Th Fr Sa Su               │
 │                    1  2             │  ← 30% opacity
-│   3  4  5  6  7  8  9               │     (barely visible shapes)
+│   3  4  5  6  7  8  9               │     (hard to read)
 │  10 11 12 13 14 15 16               │
 │  17 18 19 20 21 22 23               │
 │  24 25 26 27 28 29 30               │
 ├─────────────────────────────────────┤
 │   ┌───────────────────────────┐     │
-│   │ 47 sessions from November │     │  ← Shows COUNT (teaser)
+│   │ 47 sessions from November │     │  ← Shows COUNT
 │   │ are fading away...        │     │
-│   │                           │     │
-│   │ [ Keep my history ]       │     │
 │   └───────────────────────────┘     │
 └─────────────────────────────────────┘
 ```
 
-#### FREE User: Very Old Month (90+ days = 10% + blur)
+#### Day 31+ FREE: Very Old Month (90+ days = 10% + blur)
 ```
 ┌─────────────────────────────────────┐
-│  ←                            🎤    │
-├─────────────────────────────────────┤
-│      [ Month ]  [ Year ]            │
-├─────────────────────────────────────┤
 │    ◀   October 2025     ▶          │
 ├─────────────────────────────────────┤
 │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░    │
-│  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░    │  ← 10% opacity + blur
-│  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░    │     (shapes barely visible)
+│  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░    │  ← 10% + blur
+│  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░    │     (shapes only)
 │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░    │
 │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░    │
 ├─────────────────────────────────────┤
 │                                     │
-│         Your October practice       │
-│          is still here.             │
+│      52 sessions • 23.4 hours       │  ← SHOW the numbers!
+│                                     │
+│      Your October is still here.    │
 │                                     │
 │      ┌─────────────────────┐        │
 │      │  Unlock History     │        │
 │      │     $4.99/year      │        │
 │      └─────────────────────┘        │
-│                                     │
-│      52 sessions • 23.4 hours       │  ← Teaser numbers!
-│                                     │
 └─────────────────────────────────────┘
 ```
 
-**The Key Insight:**
-At 90+ days, we show the NUMBERS but blur the DETAIL. User knows:
-- "I had 52 sessions in October"
-- "That was 23.4 hours"
-- "I can't see the pattern anymore"
-
-This is **FOMO done right** — you know what you're losing.
+**Critical Insight:** At 90+ days, we SHOW "52 sessions • 23.4 hours" but BLUR the detail. User knows WHAT they're losing — maximum FOMO.
 
 ---
 
-### 4. YEAR VIEW (Calendar)
+### 4. SETTINGS SCREEN
 
-#### PREMIUM User
+#### Days 1-30 (Trial) & Premium
 ```
 ┌─────────────────────────────────────┐
-│  ←                            🎤    │
+│  ←                        Settings  │
 ├─────────────────────────────────────┤
-│      [ Month ]  [ Year ]            │
-├─────────────────────────────────────┤
-│              2025                   │
-├─────────────────────────────────────┤
-│  Jan ████████░░░░  Jul ████████████ │
-│  Feb ██████░░░░░░  Aug ██████████░░ │
-│  Mar ████████████  Sep ████████░░░░ │
-│  Apr ██████████░░  Oct ██████░░░░░░ │  ← Full color heatmap
-│  May ████░░░░░░░░  Nov ████████░░░░ │
-│  Jun ██████████░░  Dec ██████████░░ │
-├─────────────────────────────────────┤
-│  Total 2025: 127.4 hours            │
-│  Average: 10.6 hours/month          │
+│                                     │
+│  YOUR JOURNEY                       │
+│  ┌─────────────────────────────┐    │
+│  │ Status: Premium             │    │
+│  │ Renews: Jan 15, 2027        │    │
+│  └─────────────────────────────┘    │
+│                                     │
+│  MEDITATION                         │
+│  ┌─────────────────────────────┐    │
+│  │ Hide Time Display     [ON] │    │  ← Available
+│  └─────────────────────────────┘    │
+│                                     │
+│  ...                                │
 └─────────────────────────────────────┘
 ```
 
-#### FREE User (Logarithmic Fade)
+#### Day 31+ FREE (Downgraded)
 ```
 ┌─────────────────────────────────────┐
-│  ←                            🎤    │
-├─────────────────────────────────────┤
-│      [ Month ]  [ Year ]            │
-├─────────────────────────────────────┤
-│              2025                   │
-├─────────────────────────────────────┤
-│  Jan ░░░░░░░░░░░░  Jul ░░░░░░░░░░░░ │  ← 10% (very old)
-│  Feb ░░░░░░░░░░░░  Aug ░░░░░░░░░░░░ │  ← 10%
-│  Mar ░░░░░░░░░░░░  Sep ░░░░░░░░░░░░ │  ← 10%
-│  Apr ░░░░░░░░░░░░  Oct ░░░░░░░░░░░░ │  ← 10%
-│  May ░░░░░░░░░░░░  Nov ▓▓▓▓▓▓▓▓░░░░ │  ← 30% (61-90 days)
-│  Jun ░░░░░░░░░░░░  Dec ████████░░░░ │  ← 60% (31-60 days)
+│  ←                        Settings  │
 ├─────────────────────────────────────┤
 │                                     │
-│    Your year is fading away...      │
+│  YOUR JOURNEY                       │
+│  ┌─────────────────────────────┐    │
+│  │ 47 days meditating          │    │
+│  │ 30-day window active        │    │
+│  │                             │    │
+│  │ ┌─────────────────────────┐ │    │  ← Persistent banner
+│  │ │ Unlock full journey     │ │    │     (not nagging)
+│  │ │      $4.99/year         │ │    │
+│  │ └─────────────────────────┘ │    │
+│  └─────────────────────────────┘    │
 │                                     │
-│   ┌─────────────────────────┐       │
-│   │ 127.4 hours in 2025     │       │  ← We SHOW the total!
-│   │ Keep it visible →       │       │
-│   └─────────────────────────┘       │
+│  MEDITATION                         │
+│  ┌─────────────────────────────┐    │
+│  │ Hide Time Display   [🔒]   │    │  ← Locked
+│  └─────────────────────────────┘    │
 │                                     │
+│  ...                                │
 └─────────────────────────────────────┘
 ```
 
-**Critical Design Choice:** We SHOW "127.4 hours in 2025" even to FREE users. They know their cumulative total, they just can't see the detail. This is more honest and creates stronger FOMO than hiding the number entirely.
+**The Settings banner is the only persistent reminder.** No popups, no nagging. The degraded experience itself is the reminder.
 
 ---
 
-## Conversion Touchpoints
+## Rolling 7-Day Window: Implementation
 
-### Soft Prompts (Inline, Non-Blocking)
-
-| Location | Trigger | Message | CTA |
-|----------|---------|---------|-----|
-| Timer (idle) | Always for FREE | "✨ See full journey" | Inline text link |
-| Stats (top banner) | Always for FREE | "30 days visible • See full journey" | Banner with CTA |
-| Stats (time tabs) | Tap on 90d/Year/All | Tabs are grayed, tap → tooltip | "Unlock with Premium" |
-| Stats (milestones) | Always for FREE | "Your full milestone journey awaits..." | Text teaser |
-| Stats (projections) | Always for FREE | Placeholder lines + "Unlock projections →" | Text link |
-| Calendar (prev month) | Navigate to 31-60 day month | "Your [Month] is fading..." | Inline card |
-| Calendar (old month) | Navigate to 60+ day month | "[X] sessions are fading away" | Inline card |
-| Calendar (very old) | Navigate to 90+ day month | Full stats shown, detail blurred | CTA card |
-| Calendar (year view) | Always for FREE | "Your year is fading... [X] hours in [year]" | Inline card |
-
-### Day 31 Moment (Special)
-
-Instead of a blocking modal, show a **celebratory banner**:
+The weekly goal is a **rolling window**, not calendar week:
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                                                     │
-│  🧘 31 days of practice!                           │
-│                                                     │
-│  You've built a real habit. Your earlier sessions   │
-│  are still here — just starting to fade.           │
-│                                                     │
-│  ┌───────────────────┐    ┌───────────────────┐    │
-│  │ Keep practicing   │    │ See full journey  │    │
-│  │    (dismiss)      │    │    $4.99/year     │    │
-│  └───────────────────┘    └───────────────────┘    │
-│                                                     │
-└─────────────────────────────────────────────────────┘
+Today is Friday, Jan 10
+
+Rolling window = Jan 4 - Jan 10 (last 7 days)
+
+Sat   Sun   Mon   Tue   Wed   Thu   Fri
+Jan4  Jan5  Jan6  Jan7  Jan8  Jan9  Jan10
+30m   45m   0m    20m   35m   0m    [today]
+
+Rolling total: 2.2 hours (last 7 days)
 ```
 
-This appears ONCE on Day 31, then becomes the soft banner approach.
+**Tomorrow (Saturday, Jan 11):**
+- Jan 4 (30m) rolls OFF
+- Jan 11 becomes the new day
+- Window shifts: Jan 5 - Jan 11
+
+**Key behaviors:**
+- Always T-7 to T-0 (today)
+- Sessions "roll off" daily
+- Number can go DOWN after a meditation
+- No Monday reset — continuous flow
+
+**Weekly Goal:** 5 hours (fixed target for v2)
 
 ---
 
-## Visual Fade CSS
+## Logarithmic Fade: CSS Implementation
 
 ```css
-/* Logarithmic fade for historical data */
-.session-age-current { opacity: 1; }           /* 0-30 days */
-.session-age-fading { opacity: 0.6; }          /* 31-60 days */
-.session-age-old { opacity: 0.3; }             /* 61-90 days */
-.session-age-ancient {
-  opacity: 0.1;
-  filter: blur(4px);                           /* 90+ days */
+/* Calendar cell fade by age */
+.calendar-cell-current {
+  opacity: 1;
 }
 
-/* Calendar cell variants */
-.calendar-cell-fading {
+.calendar-cell-fading {      /* 31-60 days */
   opacity: 0.6;
-  transition: opacity 400ms var(--ease-organic);
+  transition: opacity 400ms ease;
 }
 
-.calendar-cell-old {
+.calendar-cell-old {         /* 61-90 days */
   opacity: 0.3;
-  transition: opacity 400ms var(--ease-organic);
+  transition: opacity 400ms ease;
 }
 
-.calendar-cell-ancient {
+.calendar-cell-ancient {     /* 90+ days */
   opacity: 0.1;
-  filter: blur(3px);
-  transition: all 400ms var(--ease-organic);
+  filter: blur(4px);
+  transition: all 400ms ease;
 }
 
-/* Hover reveals slightly more (teaser) */
+/* Hover slightly reveals (teaser) */
 .calendar-cell-fading:hover { opacity: 0.75; }
 .calendar-cell-old:hover { opacity: 0.45; }
 .calendar-cell-ancient:hover {
@@ -502,90 +452,153 @@ This appears ONCE on Day 31, then becomes the soft banner approach.
 
 ---
 
+## Conversion Touchpoints
+
+### Soft Prompts (Never Blocking)
+
+| Location | Trigger | Message | CTA |
+|----------|---------|---------|-----|
+| Timer | Always (Day 31+ FREE) | "See full journey →" | Inline link |
+| Stats tabs | Tap grayed 90d/Year/All | Tooltip: "Unlock full history" | Link |
+| Stats milestones | Frozen card | "Your journey continues..." | Teaser text |
+| Stats projections | Placeholder | "Unlock to see your path..." | Link |
+| Calendar 31-60d | Navigate to month | "Your [Month] is fading" | Inline card |
+| Calendar 61-90d | Navigate to month | "[X] sessions fading away" | Inline card |
+| Calendar 90d+ | Navigate to month | Stats shown + blur | CTA button |
+| Settings | Always (Day 31+ FREE) | "Unlock full journey" | Persistent banner |
+
+### Day 31 Banner (One-Time Only)
+
+Appears on first session start when `daysSinceFirstSession >= 31`:
+
+```
+┌─────────────────────────────────────────────────────┐
+│                                                     │
+│  🧘 Your first 30 days are complete                │
+│                                                     │
+│  You've built a real practice. Your history is     │
+│  still here — it's just starting to fade.          │
+│                                                     │
+│  Keep your full journey visible for $4.99/year.    │
+│                                                     │
+│  ┌───────────────────┐    ┌───────────────────┐    │
+│  │ Keep practicing   │    │ See full journey  │    │
+│  │                   │    │    $4.99/year     │    │
+│  └───────────────────┘    └───────────────────┘    │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+```
+
+**After dismissal:**
+- Set `trialExpired: true`
+- Banner never shows again
+- UI immediately reverts to downgraded FREE
+- Settings banner becomes the only persistent reminder
+
+---
+
+## Milestone Handling: Frozen Achievement
+
+### During Trial (Days 1-30)
+
+User sees cumulative progress:
+```
+MILESTONES
+┌─────────────────────────────────────┐
+│ Next: 50 hours                      │
+│ ████████████████░░░ 85%             │
+│ 42.5 hours tracked                  │
+└─────────────────────────────────────┘
+```
+
+### After Downgrade (Day 31+ FREE)
+
+Milestone is FROZEN at last achieved:
+```
+MILESTONES
+┌─────────────────────────────────────┐
+│ ✓ 10 hours achieved        (faded) │  ← They got this
+│ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄     │
+│ Your journey continues...           │  ← Can't see next
+└─────────────────────────────────────┘
+```
+
+**Why this works:**
+- They can SEE they achieved something
+- They CAN'T see what's next or how close they are
+- The achievement is frozen in time
+- Creates desire to "unfreeze" their progress
+
+---
+
 ## Data Architecture
 
 ### What We Store vs What We Show
 
 ```typescript
 // ALL sessions stored forever (locally in Dexie)
-// UI visibility determined by tier + age
+// UI visibility determined by tier + trial status
 
 interface SessionVisibility {
   session: Session;
   ageInDays: number;
-  tier: 'free' | 'premium';
+  isTrialActive: boolean;  // daysSinceFirst < 31
+  isPremium: boolean;
 
-  // Computed
-  opacity: number;        // 1.0, 0.6, 0.3, or 0.1
-  isBlurred: boolean;     // true if 90+ days and FREE
-  showDetail: boolean;    // true if <90 days or PREMIUM
-  showCount: boolean;     // always true (we show "52 sessions")
-  showTotal: boolean;     // always true (we show "23.4 hours")
+  // Computed for display
+  opacity: number;         // 1.0, 0.6, 0.3, or 0.1
+  isBlurred: boolean;      // true if 90+ days and downgraded FREE
+  showInStats: boolean;    // false if beyond window and FREE
 }
 
-function getSessionVisibility(session: Session, tier: Tier): SessionVisibility {
+function getSessionVisibility(
+  session: Session,
+  isPremium: boolean,
+  isTrialActive: boolean
+): SessionVisibility {
   const ageInDays = daysSince(session.startTime);
 
-  if (tier === 'premium') {
-    return { opacity: 1, isBlurred: false, showDetail: true, ... };
+  // Premium or Trial: full visibility
+  if (isPremium || isTrialActive) {
+    return { opacity: 1, isBlurred: false, showInStats: true };
   }
 
-  // FREE tier
+  // Downgraded FREE: apply fade rules
   if (ageInDays <= 30) {
-    return { opacity: 1, isBlurred: false, showDetail: true, ... };
+    return { opacity: 1, isBlurred: false, showInStats: true };
   } else if (ageInDays <= 60) {
-    return { opacity: 0.6, isBlurred: false, showDetail: true, ... };
+    return { opacity: 0.6, isBlurred: false, showInStats: true };
   } else if (ageInDays <= 90) {
-    return { opacity: 0.3, isBlurred: false, showDetail: true, ... };
+    return { opacity: 0.3, isBlurred: false, showInStats: true };
   } else {
-    return { opacity: 0.1, isBlurred: true, showDetail: false, ... };
+    return { opacity: 0.1, isBlurred: true, showInStats: false };
   }
 }
 ```
 
 ---
 
-## Summary: FREE vs PREMIUM
+## Summary: Trial vs FREE vs Premium
 
-| Feature | FREE | PREMIUM |
-|---------|------|---------|
-| **Timer** | Weekly hours shown | Total cumulative hours |
-| **Active session** | Full timer | Full timer |
-| **Stats hero** | "X hours this week" | "X total hours" |
-| **Time windows** | 7d, 30d only | All windows |
-| **Weekly dots** | Full | Full |
-| **Milestones** | Weekly goal progress | Cumulative milestone band |
-| **Projections** | Teased (placeholder) | Full |
-| **Calendar current** | Full | Full |
-| **Calendar 31-60d** | 60% opacity | Full |
-| **Calendar 61-90d** | 30% opacity | Full |
-| **Calendar 90d+** | 10% + blur (counts shown) | Full |
-| **Year view** | Faded months, total shown | Full heatmap |
-| **Hide Time Display** | Locked | Available |
-
----
-
-## Implementation Priority
-
-1. **Timer reframe** (weekly hours for FREE) — Core change
-2. **Stats weekly focus** (hero number, time tabs) — Core change
-3. **Calendar fade logic** (opacity + blur) — Visual polish
-4. **Soft prompts** (inline CTAs, no blocking modals) — Conversion
-5. **Day 31 banner** (one-time celebratory prompt) — Conversion
+| Feature | Days 1-30 (Trial) | Day 31+ FREE | Premium |
+|---------|-------------------|--------------|---------|
+| **Timer display** | Cumulative total | Rolling weekly | Cumulative total |
+| **Stats windows** | All | 7d, 30d only | All |
+| **Milestones** | Full progression | Frozen + weekly goal | Full progression |
+| **Projections** | Visible | Hidden (teaser) | Visible |
+| **Calendar** | Full history | 90-day + fade | Full history |
+| **Hide Time** | Available | Locked | Available |
+| **Experience** | Premium | Degraded | Premium |
 
 ---
 
 ## Success Metrics
 
-- **Day 31 conversion rate** — Target: 8-12% (Slack achieved 30-40% with enterprise)
-- **Time to first purchase** — Track median days from install
-- **Free tier retention** — % of FREE users active at Day 60, Day 90
+- **Day 31 conversion rate** — Target: 8-12%
+- **Time to purchase** — Track median days from Day 31
+- **Retention at Day 60** — % still using app
 - **Fade-triggered conversions** — % who convert after viewing faded month
 
 ---
 
-## Open Questions
-
-1. Should we show "Total all-time: XX hours" anywhere for FREE users? (Currently proposed: only on very old months)
-2. Should the Day 31 banner be skippable permanently or return weekly?
-3. Should year view be available to FREE users at all, or completely premium?
+*This design creates genuine loss aversion without dark patterns. Users experience real value, then feel the absence of it. The downgrade is honest — the data is still there, just harder to see.*
