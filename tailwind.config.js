@@ -41,6 +41,8 @@ export default {
         'breathe-slow': 'breatheSlow 8s ease-in-out infinite',
         'word-fade': 'wordFade 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
         'pulse-soft': 'pulseSoft 3s ease-in-out infinite',
+        'orb-breathe': 'orbBreathe 4s ease-in-out infinite',
+        'orb-glow': 'orbGlow 4s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -66,6 +68,16 @@ export default {
         pulseSoft: {
           '0%, 100%': { opacity: '0.4' },
           '50%': { opacity: '0.6' },
+        },
+        // Dramatic orb breathing - very visible scale change
+        orbBreathe: {
+          '0%, 100%': { transform: 'scale(1)', opacity: '1' },
+          '50%': { transform: 'scale(0.82)', opacity: '0.6' },
+        },
+        // Outer glow pulse - offset timing for layered effect
+        orbGlow: {
+          '0%, 100%': { transform: 'scale(1.3)', opacity: '0.3' },
+          '50%': { transform: 'scale(1)', opacity: '0.1' },
         },
       },
       transitionDuration: {

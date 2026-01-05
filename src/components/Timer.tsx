@@ -101,7 +101,8 @@ export function Timer() {
         />
       )}
 
-      {/* Main timer screen */}
+      {/* Main timer screen - hidden during zen message phases */}
+      {timerPhase !== 'preparing' && !(timerPhase === 'enlightenment' && justReachedEnlightenment) && (
       <div
         className={`
           flex flex-col items-center justify-center h-full px-8
@@ -136,16 +137,18 @@ export function Timer() {
           ) : isRunning ? (
             // Running
             shouldHideTime ? (
-              // Hide time mode - show alive breathing orb with glow
-              <div className="relative">
+              // Hide time mode - dramatic breathing orb
+              <div className="relative flex items-center justify-center">
+                {/* Outer glow ring - expands and contracts */}
                 <div
-                  className="w-24 h-24 rounded-full bg-indigo-deep/15 animate-breathe-slow"
-                  style={{
-                    boxShadow: '0 0 40px rgba(45, 52, 54, 0.15), 0 0 80px rgba(45, 52, 54, 0.08)'
-                  }}
+                  className="absolute w-32 h-32 rounded-full bg-indigo-deep/10 animate-orb-glow"
                 />
+                {/* Main orb - breathes visibly */}
                 <div
-                  className="absolute inset-0 w-24 h-24 rounded-full bg-indigo-deep/5 animate-pulse-soft"
+                  className="w-20 h-20 rounded-full bg-indigo-deep/25 animate-orb-breathe"
+                  style={{
+                    boxShadow: '0 0 30px rgba(45, 52, 54, 0.2), inset 0 0 20px rgba(45, 52, 54, 0.1)'
+                  }}
                 />
               </div>
             ) : (
@@ -223,6 +226,7 @@ export function Timer() {
           </p>
         )}
       </div>
+      )}
     </>
   )
 }
