@@ -10,15 +10,20 @@ Transform the minimalist meditation timer PWA into a commercially viable iOS app
 
 **Core focus:** Tracking progression toward 10,000 hours and capturing meditation insights for long-term reflection.
 
+**Pricing Model:** 30-Day Rolling Window + $4.99/year Premium
+
+The app is **free forever** with a 30-day rolling window of history. Premium ($4.99/year) unlocks your full journey. This model is proven by Slack (30-40% conversion) and aligns with habit formation psychology (paywall triggers at peak emotional investment).
+
 **Core additions:**
-- Freemium model: $3.99/month or $29.99 lifetime
-- Insight Journal: Voice notes, on-device transcription, searchable archive (PREMIUM)
-- Wisdom Stream: Anonymous crowd-sourced insights from the community (read FREE, share PREMIUM)
-- Word cloud visualization: See your vocabulary of understanding evolve
-- Hide Time Display: Optional setting for number-free meditation experience
+- 30-day rolling window (FREE) → Full history (Premium $4.99/year)
+- Insight Journal: Voice notes, on-device transcription, searchable archive (Premium)
+- Wisdom Stream: Anonymous crowd-sourced insights from the community (read FREE, share Premium)
+- Word cloud visualization: See your vocabulary of understanding evolve (Premium)
+- Hide Time Display: Optional setting for number-free meditation experience (Premium)
+- Full history & calendar: Unlimited session history and heatmap (Premium)
 - Ghibli-inspired design language: warm colors, organic animation, generous Ma (empty space)
 - Supabase backend for Wisdom Stream (anonymous, no auth required)
-- Local storage (Dexie/IndexedDB) for personal data
+- Local storage (Dexie/IndexedDB) for personal data - **data is never deleted, just hidden in UI for free users**
 
 **What was removed from original scope:**
 - ~~Apple Sign-In~~ -> Anonymous device hash for Wisdom Stream
@@ -61,54 +66,73 @@ Meditators have insights during practice -> Want to capture them immediately -> 
 
 ### Screen Flow
 
-| Screen | Purpose | Free | Premium |
-|--------|---------|------|---------|
+| Screen | Purpose | FREE (30-day window) | PREMIUM ($4.99/year) |
+|--------|---------|----------------------|----------------------|
 | **Timer** | Meditation (home) | Full access | Full access |
-| **Stats** | Analytics | Full access | Full access |
-| **Wisdom** | Community insights stream | Read only | Read + Share |
-| **Calendar** | History, heatmap | Full access | Full access |
-| **Insights** | Voice journal, archive, word cloud | Blurred preview | Full access |
-| **Settings** | Preferences | Full access | Full access |
+| **Stats** | Analytics | This week + month only | Full trends (all time) |
+| **Wisdom** | Community insights stream | Read only | Read + Share (50+ hrs) |
+| **Calendar** | History, heatmap | Current month only | Full history (all years) |
+| **Insights** | Voice journal, archive, word cloud | Locked preview | Full access |
+| **Settings** | Preferences | Basic | Full (hide time, export) |
 | **Onboarding** | First-time intro | Yes | Yes |
-| **Paywall** | Purchase prompt | On premium tap | N/A |
+| **Paywall** | Purchase prompt | Day 31 (or limit hit) | N/A |
 
 ---
 
-## Free vs Premium
+## Feature Breakdown: FREE vs PREMIUM
 
-### Feature Breakdown
+### 30-Day Rolling Window Model
 
-| Feature | Free | Premium ($3.99/mo or $29.99 lifetime) |
-|---------|------|---------------------------------------|
+**Critical design:** All data is ALWAYS stored locally. FREE tier gates the UI visibility, not the data itself.
+
+| Feature | FREE (30-day window) | PREMIUM ($4.99/year) |
+|---------|----------------------|----------------------|
 | **Timer** | Unlimited sessions | Unlimited sessions |
-| **Stats** | Full access | Full access |
-| **Calendar** | Full heatmap | Full heatmap |
-| **Session History** | Full access | Full access |
-| **Wisdom Stream (read)** | Full access | Full access |
-| **Wisdom Stream (share)** | N/A | Share insights (requires 50+ hours) |
-| **Insights** | Blurred preview | Voice recording, transcription, archive |
-| **Word Cloud** | N/A | See vocabulary evolve over time |
-| **Search** | N/A | Full-text search across insights |
-| **Hide Time Display** | Full access | Full access |
-| **Data** | Local + community read | Local + community read + share |
+| **Total Hours Counter** | Hidden (Premium unlocks) | ✓ Full visibility |
+| **Session History** | Rolling 30 days only | Full history (all time) |
+| **Calendar Heatmap** | Current month only | All months (all years) |
+| **Stats & Trends** | This week + this month | Detailed trends (all time) |
+| **Hide Time Display** | ✗ | ✓ |
+| **Milestone Badges** | Visible but grayed after 30 days | ✓ Fully visible |
+| **Data Export (JSON/CSV)** | ✗ | ✓ |
+| **Wisdom Stream (read)** | ✓ | ✓ |
+| **Wisdom Stream (share)** | ✗ | ✓ (50+ hours) |
+| **Voice Recording** | ✗ | ✓ |
+| **On-device Transcription** | ✗ | ✓ |
+| **Insight Archive** | ✗ | ✓ |
+| **Word Cloud** | ✗ | ✓ |
+| **Full-text Search** | ✗ | ✓ |
 
-### Monetization Philosophy
+### Tier Philosophy
 
-**The meditation is always free. You pay for the insight journal.**
+**The meditation is always free. Your full journey costs less than a coffee per year.**
 
-| What's Free | What's Premium |
-|-------------|----------------|
-| Complete timer with customizable bells | Voice note recording post-session |
-| Hour accumulation toward any goal | On-device transcription |
-| Full statistics and calendar | Searchable insight archive |
-| Session history | Filter by date, milestone, keyword |
-| Basic app forever | Word cloud visualization |
+| Tier | Who It's For | Value Proposition |
+|------|--------------|-------------------|
+| **FREE** | Everyone starting meditation | Full timer forever, 30 days of progress visible |
+| **PREMIUM** | Anyone who wants to see their full journey | $0.41/month - trivial to unlock everything |
 
-**Why freemium (not trial):**
-- The timer functionality has no marginal cost - let everyone use it freely
-- Premium is for users who want to capture and revisit insights
-- No artificial time limits creating pressure
-- Aligns with meditation philosophy: the practice itself is always accessible
+### Why $4.99/year Annual Subscription
+
+**Research validation (Slack model):**
+- Slack uses 90-day rolling history for free → achieved **30-40% conversion** (vs 2-5% industry average)
+- **$27.7B acquisition** proves the model works at scale
+
+**Why annual, not one-time:**
+- **Recurring revenue compounds** - Year 5 revenue is 3x Year 1 with same downloads
+- **Low price = high retention** - Cheap annual plans retain 36% vs 6.7% for expensive monthly
+- **Natural upgrade trigger** - Day 31 is psychologically optimal (mid-habit formation)
+- **Trivial amount** - $4.99/year = $0.41/month, impulse purchase
+
+**Why not subscription fatigue?**
+- $4.99/year is NOT the same as $9.99/month subscription
+- Annual renewal is forgettable (auto-renews)
+- Price is so low users don't think about it
+
+**Habit formation psychology:**
+- At Day 31, user has invested enough to feel loss
+- But habit isn't fully automatic yet (takes ~66 days average)
+- They NEED the app to continue → paywall hits at maximum emotional investment
 
 ---
 
@@ -223,7 +247,7 @@ Anonymous, crowd-sourced meditation insights - like Kindle's "most highlighted p
 4. Like pearls that resonate
 5. Save favorites to personal collection
 
-**For Contributors (PREMIUM, 50+ hours):**
+**For Contributors (INSIGHT tier, 50+ hours):**
 1. Record voice note after meditation
 2. After saving insight, see "Share this wisdom?" prompt
 3. AI or manual extraction creates 1-2 sentence pearl
@@ -356,91 +380,103 @@ COMPLETE STATE:
 
 ## Monetization
 
-### Pricing Model: Subscription + Lifetime
+### Pricing Model: $4.99/year Premium Subscription
 
-| Product | Price | Net (after Apple 15%*) | Type |
-|---------|-------|------------------------|------|
-| **Free** | $0 | - | Timer, stats, calendar forever |
-| **Premium Monthly** | $3.99/mo | $3.39/mo | Auto-renewing subscription |
-| **Premium Lifetime** | $29.99 | $25.49 | Non-consumable IAP |
+| Product | Price | Net (after Apple 15%*) | Type | What's Unlocked |
+|---------|-------|------------------------|------|-----------------|
+| **FREE** | $0 | - | - | Timer + 30-day rolling window |
+| **PREMIUM** | $4.99/year | $4.24/year | Auto-renewing subscription | Full history + voice + everything |
 
-*Apple Small Business Program: 15% commission for developers earning under $1M/year
+*Apple Small Business Program: 15% commission for developers earning under $1M/year (30% Year 1, 15% after)
 
 ### Why This Pricing?
 
-**$3.99/month:**
-- Lower barrier than $4.99, competitive with meditation apps
-- ~$48/year for committed users
-- Provides recurring revenue
+**$4.99/year Premium:**
+- **Trivial amount** - $0.41/month, less than a coffee
+- **High retention** - Cheap annual plans retain 36% of users (vs 6.7% for expensive monthly)
+- **Proven model** - Slack achieved 30-40% conversion with rolling history gate
+- **Recurring compounds** - Revenue grows even with same download rate
 
-**$29.99 lifetime:**
-- Pays for itself in ~8 months vs. subscription
-- Appeals to users who hate subscriptions
-- Sustainable because on-device transcription has no ongoing cost
-- Clear value: "one payment, insights forever"
+**Why annual subscription (not one-time):**
+- **5-year math**: At 200K downloads/year, one-time = $84K total. Annual = $489K over 5 years.
+- **Retention incentive** - You're motivated to keep users engaged
+- **Price flexibility** - Can raise price later for new users (grandfather existing)
+- **No perceived "subscription fatigue"** - $4.99/YEAR doesn't feel like a subscription
 
-**Why both options:**
-- Users self-select based on commitment level
-- Subscription: try it, cancel if not using
-- Lifetime: confident meditators who know they'll use it
-
-### Paywall Screen Design
+### Single Paywall: Premium Unlock
 
 ```
-+-------------------------------------+
-|                                     |
-|        Unlock Your Insights         |
-|                                     |
-|     Capture meditation insights     |
-|     Search your journey             |
-|     See your vocabulary grow        |
-|                                     |
-|  +-----------------------------+    |
-|  |                             |    |
-|  |    $3.99 / month            |    |
-|  |    Cancel anytime           |    |
-|  |                             |    |
-|  |   [  Start Free Trial  ]    |    |  <- 7-day trial
-|  |                             |    |
-|  +-----------------------------+    |
-|                                     |
-|  +-----------------------------+    |
-|  |                             |    |
-|  |    $29.99 lifetime          |    |
-|  |    One payment, forever     |    |
-|  |                             |    |
-|  |   [  Unlock Forever  ]      |    |
-|  |                             |    |
-|  +-----------------------------+    |
-|                                     |
-|         Restore Purchases           |
-|                                     |
-+-------------------------------------+
+┌─────────────────────────────────────────┐
+│                                         │
+│  🧘 Your Journey Continues              │
+│                                         │
+│  You've been meditating for 31 days.    │
+│                                         │
+│  Your earlier sessions are still here,  │
+│  just hidden. Unlock your full journey  │
+│  for $4.99/year.                        │
+│                                         │
+│  ┌─────────────────────────────────┐    │
+│  │   See My Full Journey - $4.99   │    │
+│  └─────────────────────────────────┘    │
+│                                         │
+│           Maybe Later                   │
+│                                         │
+│  Restore Purchase                       │
+│                                         │
+└─────────────────────────────────────────┘
 ```
+
+**Triggered when:**
+- Day 31 (first session 31+ days after first ever session)
+- User tries to view history beyond 30-day window
+- User tries to view calendar beyond current month
+- User taps on grayed-out milestone badges
+- User taps "Capture insight" post-session
+- User navigates to Insights tab
+
+### If User Chooses "Maybe Later"
+
+- App continues to work normally
+- Rolling 30-day window visible
+- Calendar shows current month only
+- Stats show "This Week" and "This Month" only
+- Subtle reminder in UI: "30 days visible • Unlock full history"
+- **NO nagging popups** - Soft touch, zen philosophy
 
 ### Purchase Flow
 
-1. User taps "Unlock Insights" on preview
-2. Paywall slides up with both options
-3. **Monthly:** 7-day free trial -> Apple Pay -> subscription
-4. **Lifetime:** Apple Pay -> immediate unlock
-5. On success: Insights screen unlocks, recording enabled
-6. All data stored locally - no account needed
+1. User hits 30-day limit or Day 31 trigger
+2. Paywall slides up with personalized message
+3. Apple Pay → immediate unlock
+4. Full history, voice, insights all enabled
+5. Subscription auto-renews annually
 
-### Revenue Projections
+### Revenue Projections (Recurring)
 
-Assumptions:
-- 5% conversion to any paid tier
-- 60% choose monthly, 40% choose lifetime
-- Monthly churn: 10%/month (90% retention)
+**Conservative: 5% conversion, 80% annual retention**
 
-| Downloads/Year | Paid (5%) | Monthly | Lifetime | Year 1 Revenue |
-|----------------|-----------|---------|----------|----------------|
-| 10,000 | 500 | 300 | 200 | ~$8,500 |
-| 50,000 | 2,500 | 1,500 | 1,000 | ~$42,500 |
-| 100,000 | 5,000 | 3,000 | 2,000 | ~$85,000 |
+| Year | Downloads | New Paid | Retained | Total Paid | Revenue |
+|------|-----------|----------|----------|------------|---------|
+| 1 | 200,000 | 10,000 | — | 10,000 | $42,400 |
+| 2 | 200,000 | 10,000 | 8,000 | 18,000 | $76,320 |
+| 3 | 200,000 | 10,000 | 14,400 | 24,400 | $103,456 |
+| 4 | 200,000 | 10,000 | 19,520 | 29,520 | $125,165 |
+| 5 | 200,000 | 10,000 | 23,616 | 33,616 | $142,532 |
 
-**Break-even:** ~30 sales (covers $99 Apple Developer fee)
+**5-year total: $489,873** (vs $84,800 one-time)
+
+**Optimistic: 8% conversion, 85% retention**
+
+| Year | Downloads | New Paid | Retained | Total Paid | Revenue |
+|------|-----------|----------|----------|------------|---------|
+| 1 | 500,000 | 40,000 | — | 40,000 | $169,600 |
+| 2 | 500,000 | 40,000 | 34,000 | 74,000 | $313,760 |
+| 3 | 500,000 | 40,000 | 62,900 | 102,900 | $436,296 |
+
+**3-year total: $919,656**
+
+**Break-even:** ~24 sales (covers $99 Apple Developer fee)
 
 ---
 
@@ -500,10 +536,10 @@ interface SavedPearl {
 
 interface UserProfile {
   id: 1;                  // Single row
-  isPremium: boolean;
-  subscriptionType?: 'monthly' | 'lifetime';
-  purchaseDate?: Date;
-  expirationDate?: Date;  // For monthly subscriptions
+  tier: 'free' | 'premium';           // Current tier
+  premiumExpiryDate?: Date;           // When subscription expires
+  originalPurchaseDate?: Date;        // First subscription date (for tenure tracking)
+  firstSessionDate?: Date;            // When user started meditating (for Day 31 trigger)
 }
 
 interface UserSettings {
@@ -634,7 +670,7 @@ src/
     deviceHash.ts         # Anonymous device identifier generation
 
   stores/
-    usePremiumStore.ts    # Premium status, subscription tracking
+    usePremiumStore.ts    # Subscription status tracking (free/premium + expiry)
     useInsightsStore.ts   # Personal insights state, recording
     useWisdomStore.ts     # Community wisdoms, likes, saves
     useSettingsStore.ts   # User settings (hide time, etc.)
@@ -649,8 +685,8 @@ src/
     WordCloud.tsx         # Word cloud visualization
     LockedOverlay.tsx     # Reusable blur + unlock CTA overlay
     Onboarding.tsx        # Intro flow (3 screens)
-    Paywall.tsx           # Purchase screen (monthly + lifetime)
-    Settings.tsx          # Settings screen (with hide time toggle)
+    PaywallPremium.tsx    # Premium subscription screen ($4.99/year)
+    Settings.tsx          # Settings screen (subscription status, hide time)
 
 .github/
   workflows/
@@ -714,18 +750,18 @@ ROADMAP.md               # This document (north star)
   - VERIFY: RevenueCat shows your app with green checkmark
 
 - [ ] **Create IAP products in App Store Connect**
-  - My Apps -> Your App -> In-App Purchases
-  - Auto-renewable subscription: "Premium Monthly", Product ID `premium_monthly`, $3.99/month
-  - Non-consumable: "Premium Lifetime", Product ID `premium_lifetime`, $29.99
+  - My Apps -> Your App -> Subscriptions
+  - Create Subscription Group: "Premium"
+  - Auto-renewing subscription: "Premium Annual", Product ID `premium_annual`, $4.99/year
   - Submit for review (can take 24-48 hours)
-  - VERIFY: Products show "Ready to Submit" or "Approved"
+  - VERIFY: Product shows "Ready to Submit" or "Approved"
 
 - [ ] **Configure products in RevenueCat**
   - Products -> Add Products
-  - Match Product IDs exactly (case-sensitive)
-  - Create Entitlement: "premium"
-  - Create Offering: "default" with both products
-  - VERIFY: Products show in RevenueCat dashboard with checkmarks
+  - Match Product ID exactly: `premium_annual`
+  - Create Entitlement: "premium" (grants all premium features)
+  - Create Offering: "default" with premium_annual product
+  - VERIFY: Product shows in RevenueCat dashboard with green checkmark
 
 - [ ] **Create Supabase project (for Wisdom Stream)**
   - Go to supabase.com -> New project
@@ -750,8 +786,8 @@ Before moving to Phase 1:
 - [ ] App ID exists
 - [ ] App appears in App Store Connect
 - [ ] Banking/tax shows "Active" status
-- [ ] RevenueCat shows green checkmarks for both products
-- [ ] IAP products approved in App Store Connect
+- [ ] RevenueCat shows green checkmark for `premium_annual` product
+- [ ] Subscription approved in App Store Connect
 - [ ] Supabase project created and accessible
 - [ ] Supabase tables created with RLS configured
 
@@ -780,10 +816,12 @@ Before moving to Phase 1:
   - VERIFY: Schema upgrade path documented
 
 - [ ] **Create usePremiumStore.ts**
-  - Track: isPremium, subscriptionType, expirationDate
-  - Actions: checkPremiumStatus, setPremiumStatus
-  - Handle subscription expiration checks
-  - VERIFY: Store compiles, isPremium defaults to false
+  - Track: tier ('free' | 'premium'), premiumExpiryDate
+  - Helper function: isPremium() - checks tier AND expiry date
+  - Actions: checkSubscriptionStatus, setTier, checkDaysSinceFirstSession
+  - Handle subscription expiry gracefully (reverts to free tier)
+  - Track firstSessionDate for Day 31 trigger logic
+  - VERIFY: Store compiles, tier defaults to 'free'
 
 - [ ] **Install Supabase client**
   - `npm install @supabase/supabase-js`
@@ -830,8 +868,8 @@ Before moving to Phase 2:
   - VERIFY: Onboarding appears on first launch only
 
 - [ ] **Create Settings.tsx**
-  - Premium status display
-  - **Hide Time Display toggle** (see Hide Time Display section)
+  - Tier status display (FREE / PLUS / INSIGHT)
+  - **Hide Time Display toggle** (requires PLUS, see Hide Time Display section)
   - Links: Privacy Policy, Terms of Service
   - Restore Purchases button
   - Version number at bottom
@@ -870,20 +908,31 @@ Before moving to Phase 2:
 - [ ] **Create src/lib/purchases.ts**
   - Initialize RevenueCat with API key
   - Functions: getOfferings, purchasePackage, restorePurchases
-  - Handle both monthly and lifetime purchases
+  - Handle Premium subscription (auto-renewing)
+  - Check entitlement: isPremium
+  - Handle subscription status changes (expiry, renewal)
   - VERIFY: File compiles without errors
 
-- [ ] **Create Paywall.tsx**
-  - Two options: $3.99/month + $29.99 lifetime
-  - 7-day free trial for monthly
-  - Purchase buttons trigger RevenueCat
-  - "Restore Purchases" link at bottom
+- [ ] **Create PaywallPremium.tsx**
+  - Triggered when:
+    - Day 31 (first session 31+ days after first ever session)
+    - User hits 30-day history limit
+    - User tries to view calendar beyond current month
+    - User taps on grayed-out milestone badges
+    - User taps "Capture insight" or navigates to Insights tab
+  - Personalized headline: "Your Journey Continues"
+  - Subhead: "You've been meditating for X days"
+  - Lists: Full history, voice notes, transcription, word cloud
+  - Price: "$4.99/year"
+  - CTA: "See My Full Journey"
+  - Skip: "Maybe Later" (small, non-guilt)
+  - "Restore Purchase" link at bottom
   - VERIFY: Paywall renders correctly
 
-- [ ] **Handle purchase completion**
-  - On successful purchase: update usePremiumStore
-  - Store premium status locally
-  - Dismiss Paywall, unlock Insights
+- [ ] **Handle subscription completion**
+  - On Premium purchase: setTier('premium'), set premiumExpiryDate, dismiss paywall
+  - Store tier + expiry in Dexie UserProfile
+  - Handle subscription expiry gracefully (RevenueCat handles this)
   - VERIFY: Purchase flow completes (use sandbox account)
 
 #### Phase 2 - TEST CHECKLIST
@@ -895,19 +944,29 @@ Before moving to Phase 3:
 - [ ] Can navigate: Timer -> Stats -> Wisdom -> Calendar -> Insights
 - [ ] Can navigate to Settings
 - [ ] LockedOverlay renders with blur and CTA
-- [ ] Paywall shows both pricing options
-- [ ] "Restore Purchases" button is present
-- [ ] **Hide Time Display:**
-  - [ ] Setting toggle works in Settings
+- [ ] **30-Day Rolling Window gating works:**
+  - [ ] FREE: Only rolling 30 days of history visible
+  - [ ] FREE: Only current month calendar visible
+  - [ ] FREE: Stats show "This Week" and "This Month" only
+  - [ ] FREE: Total hours counter hidden
+  - [ ] PaywallPremium appears on Day 31 or when hitting limits
+- [ ] **Paywall:**
+  - [ ] PaywallPremium shows $4.99/year
+  - [ ] Shows personalized "X days meditating" message
+  - [ ] "Maybe Later" option available (non-guilt)
+  - [ ] "Restore Purchase" button present
+- [ ] **Hide Time Display (requires PREMIUM):**
+  - [ ] Setting toggle disabled for FREE tier
+  - [ ] Setting toggle works for PREMIUM tier
   - [ ] Timer shows "Just start meditating" when hidden
   - [ ] Timer shows breathing circle during session when hidden
   - [ ] Timer shows "Meditation complete" at end when hidden
   - [ ] Setting persists after app restart
 - [ ] **Sandbox testing:**
-  - [ ] Can complete test subscription
-  - [ ] Can complete lifetime purchase
-  - [ ] After purchase, Insights unlocks
-  - [ ] Restore Purchases works after reinstall
+  - [ ] Can complete Premium subscription ($4.99/year)
+  - [ ] After subscription: full history unlocks, voice enabled
+  - [ ] Restore Purchase works after reinstall
+  - [ ] Subscription status reflects correctly in Settings
 
 ---
 
@@ -969,12 +1028,14 @@ Before moving to Phase 4:
 
 ---
 
-### Phase 4: Insight Journal
-**REQUIRES: Phase 2 complete (premium gating), Phase 3 complete (Ghibli styling)**
+### Phase 4: Insight Journal (Premium Feature)
+**REQUIRES: Phase 2 complete (tier gating), Phase 3 complete (Ghibli styling)**
 
-> **CRITICAL: The Insight Journal is the premium feature driving conversion. If recording/playback feels broken, users won't pay. Build and validate before polishing.**
+> **CRITICAL: The Insight Journal is a key premium feature. If recording/playback feels broken, users won't pay. Build and validate before polishing.**
 
-#### 4a: Voice Recording
+> **TIER NOTE:** All Phase 4 features require Premium subscription. Users on FREE tier see the locked Insights tab and PaywallPremium when they try to access.
+
+#### 4a: Voice Recording (Premium)
 
 - [ ] **Install speech recognition plugin**
   - `npm install @capacitor-community/speech-recognition`
@@ -1002,7 +1063,7 @@ Before moving to Phase 4:
   - Skip option (small, unobtrusive)
   - VERIFY: Prompt appears after ending session
 
-#### 4b: Insight Archive
+#### 4b: Insight Archive (Premium)
 
 - [ ] **Create useInsightsStore.ts**
   - Load insights from Dexie on init
@@ -1036,9 +1097,10 @@ Before moving to Phase 4:
   - Hour milestone filter ("0-100h", "100-500h", etc.)
   - VERIFY: Search returns relevant results
 
-#### 4c: Wisdom Stream (Community)
+#### 4c: Wisdom Stream (FREE read, PREMIUM share)
 
 > **REQUIRES: Supabase configured in Phase 0/1**
+> **TIER NOTE:** Reading is FREE for all. Sharing requires PREMIUM + 50 hours.
 
 - [ ] **Create useWisdomStore.ts**
   - Load community wisdoms from Supabase
@@ -1085,12 +1147,13 @@ Before moving to Phase 4:
   - Hour-gate: 50+ hours required to share
   - VERIFY: Inappropriate content filtered, reports logged
 
-- [ ] **Gate sharing behind premium**
+- [ ] **Gate sharing behind PREMIUM tier**
   - Reading Wisdom Stream: FREE for all users
-  - Sharing to Wisdom Stream: PREMIUM only
-  - VERIFY: Free users can read, premium can share
+  - Sharing to Wisdom Stream: PREMIUM + 50 hours
+  - Show milestone progress: "15 more hours until you can share wisdom"
+  - VERIFY: FREE users can read, PREMIUM users (50+ hours) can share
 
-#### 4d: Word Cloud
+#### 4d: Word Cloud (Premium)
 
 - [ ] **Create src/lib/wordcloud.ts**
   - `extractWords(transcripts: string[]): Map<string, number>`
@@ -1110,54 +1173,55 @@ Before moving to Phase 4:
   - Tapping word filters list below
   - VERIFY: Word cloud integrated with filtering
 
-#### 4e: Premium Gating
+#### 4e: Tier Gating
 
-- [ ] **Implement locked overlay for free users**
+- [ ] **Implement locked overlay for Insights tab**
   - Use LockedOverlay component
   - Show blurred preview of what their insights could look like
-  - "Unlock Insights" CTA
-  - VERIFY: Free users see blur + unlock prompt
+  - "Unlock Insights" CTA → triggers PaywallPremium
+  - VERIFY: FREE users see blur + unlock prompt
 
-- [ ] **Gate recording behind premium**
-  - Post-session prompt only for premium users
-  - Free users see "Upgrade to capture insights"
-  - VERIFY: Free users cannot record
+- [ ] **Gate recording behind PREMIUM tier**
+  - Post-session prompt only for PREMIUM users
+  - FREE users see "Upgrade to capture insights"
+  - Tapping shows PaywallPremium
+  - VERIFY: Only PREMIUM users can record
 
-- [ ] **Gate Wisdom sharing behind premium**
-  - Share flow only appears for premium users
-  - Free users can read all wisdoms
-  - VERIFY: Premium users can share, free users cannot
+- [ ] **Gate Wisdom sharing behind PREMIUM tier**
+  - Share flow only appears for PREMIUM users with 50+ hours
+  - FREE users can read all wisdoms, like, save
+  - VERIFY: PREMIUM users (50+ hours) can share, others cannot
 
 #### Phase 4 - TEST CHECKLIST
 Before moving to Phase 5:
 - [ ] `npm run build` succeeds
 - [ ] `npm run test` passes
 - [ ] Timer still works
-- [ ] **Recording:**
+- [ ] **Recording (PREMIUM only):**
   - [ ] Permission prompt appears on first use
   - [ ] Can record voice note
   - [ ] Transcription appears after recording
   - [ ] Can preview and save/discard
-- [ ] **Archive:**
+- [ ] **Archive (PREMIUM only):**
   - [ ] Insights appear in list
   - [ ] Can play back audio
   - [ ] Search finds relevant insights
   - [ ] Filters work correctly
 - [ ] **Wisdom Stream:**
   - [ ] Wisdoms load from Supabase
-  - [ ] Can like and save pearls
+  - [ ] All tiers can like and save pearls
   - [ ] Saved pearls appear in Saved tab
-  - [ ] Premium users can share (with 50+ hours)
-  - [ ] Free users can read but not share
+  - [ ] PREMIUM users can share (with 50+ hours)
+  - [ ] FREE users can read but not share
   - [ ] Report button works
-- [ ] **Word Cloud:**
+- [ ] **Word Cloud (PREMIUM only):**
   - [ ] Words sized by frequency
   - [ ] Tapping word filters list
-- [ ] **Premium gating:**
-  - [ ] Free users see blurred preview on Insights
-  - [ ] Free users cannot record
-  - [ ] Free users can read Wisdom Stream
-  - [ ] Premium users have full access
+- [ ] **Tier gating:**
+  - [ ] FREE users see blurred preview on Insights tab
+  - [ ] FREE users cannot record (see PaywallPremium)
+  - [ ] All tiers can read Wisdom Stream
+  - [ ] PREMIUM users have full access to all features
 
 ---
 
@@ -1250,8 +1314,9 @@ Before moving to Phase 6:
 
 - [ ] **Write Terms of Service**
   - Usage terms
-  - Subscription terms ($3.99/month)
-  - Lifetime purchase terms ($29.99)
+  - Subscription terms ($4.99/year auto-renewing)
+  - Cancellation and refund policies (Apple handles)
+  - Auto-renewal disclosure (required by Apple)
   - VERIFY: URL accessible, content accurate
 
 - [ ] **Create App Store listing**
@@ -1314,21 +1379,33 @@ Before launch:
 |  <-                       Settings  |
 +-------------------------------------+
 |                                     |
-|  PREMIUM                            |
+|  YOUR SUBSCRIPTION                  |
 |  +-----------------------------+    |
-|  | Status: Premium (Lifetime)  |    |
-|  | (or: Premium Monthly)       |    |
-|  | (or: Free)                  |    |
+|  | Status: PREMIUM             |    |
+|  | Renews: Jan 15, 2027        |    |  <- Shows next renewal date
+|  | (or: FREE)                  |    |
+|  +-----------------------------+    |
+|                                     |
+|  YOUR JOURNEY                       |
+|  +-----------------------------+    |
+|  | Days meditating: 47         |    |
+|  | 30 days visible (unlock all)|    |  <- Only for FREE tier
+|  +-----------------------------+    |
+|                                     |
+|  MEDITATION                         |
+|  +-----------------------------+    |
+|  | Hide Time Display      [ON] |    |  <- Requires PREMIUM
 |  +-----------------------------+    |
 |                                     |
 |  ABOUT                              |
 |  +-----------------------------+    |
 |  | Privacy Policy           -> |    |
 |  | Terms of Service         -> |    |
+|  | Manage Subscription      -> |    |  <- Links to Apple subscriptions
 |  | Version 1.0.0               |    |
 |  +-----------------------------+    |
 |                                     |
-|  Restore Purchases                  |
+|  Restore Purchase                   |
 +-------------------------------------+
 ```
 
@@ -1459,12 +1536,18 @@ main (protected, always deployable)
 **Launch success (first 30 days):**
 - [ ] 100+ downloads
 - [ ] 5+ ratings (4+ star average)
-- [ ] 5+ paid conversions (monthly or lifetime)
+- [ ] 5+ Premium subscriptions
 - [ ] Zero critical crashes
 - [ ] At least one user records 10+ insights
 
 **6-month success:**
 - [ ] 10,000+ total downloads
-- [ ] $1,000+ MRR
+- [ ] 500+ active Premium subscribers
 - [ ] 4.5+ star rating
 - [ ] At least one user reaches 100 hours with 50+ insights
+
+**1-year success:**
+- [ ] 50,000+ total downloads
+- [ ] 2,500+ active Premium subscribers (~$10K ARR)
+- [ ] 80%+ Year 1 renewal rate
+- [ ] 4.5+ star rating maintained
