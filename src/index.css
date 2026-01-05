@@ -68,3 +68,39 @@ body {
   background: rgba(26, 26, 46, 0.2);
   border-radius: 1px;
 }
+
+/* Living orb animations */
+@keyframes orbPulseRing {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.2;
+  }
+}
+
+@keyframes orbInnerGlow {
+  0%, 100% {
+    transform: scale(1) translate(0, 0);
+    opacity: 0.8;
+  }
+  33% {
+    transform: scale(1.1) translate(2px, -2px);
+    opacity: 1;
+  }
+  66% {
+    transform: scale(0.95) translate(-1px, 1px);
+    opacity: 0.6;
+  }
+}
+
+@keyframes orbShimmer {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
