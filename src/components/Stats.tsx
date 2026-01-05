@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
+import { usePremiumStore } from '../stores/usePremiumStore'
 import { useSwipe } from '../hooks/useSwipe'
 import {
   getStatsForWindow,
@@ -8,12 +9,16 @@ import {
   getWeeklyConsistency,
   DayStatus
 } from '../lib/calculations'
+import { getAvailableStatWindows, getWeeklyRollingHours } from '../lib/tierLogic'
 import { TIME_WINDOWS } from '../lib/constants'
 import {
   formatTotalHours,
   formatDuration,
   formatShortMonthYear
 } from '../lib/format'
+import { WeeklyGoal } from './WeeklyGoal'
+import { FrozenMilestone } from './FrozenMilestone'
+import { LockedOverlay } from './LockedOverlay'
 
 const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
@@ -40,9 +45,39 @@ function WeekDot({ status }: { status: DayStatus }) {
 
 export function Stats() {
   const { sessions, totalSeconds, setView } = useSessionStore()
+  const { isPremiumOrTrial, tier, trialExpired } = usePremiumStore()
   const [windowIndex, setWindowIndex] = useState(1) // Default to 30 days
+  // Paywall state - will be used when PaywallPremium component is created
+  const [_showPaywall, setShowPaywall] = useState(false)
 
   const currentWindow = TIME_WINDOWS[windowIndex]
+
+  // Get available stat windows based on tier
+  const availableWindows = useMemo(
+    () => getAvailableStatWindows(tier, trialExpired),
+    [tier, trialExpired]
+  )
+
+  // Check if current window is available
+  const isCurrentWindowAvailable = useMemo(() => {
+    const windowKey = windowIndex === 0 ? '7d' :
+                      windowIndex === 1 ? '30d' :
+                      windowIndex === 2 ? '90d' :
+                      windowIndex === 3 || windowIndex === 4 ? 'year' : 'all'
+    return availableWindows.find(w => w.window === windowKey)?.available ?? true
+  }, [windowIndex, availableWindows])
+
+  // Weekly rolling hours for FREE tier
+  const weeklyHours = useMemo(
+    () => getWeeklyRollingHours(sessions),
+    [sessions]
+  )
+
+  // Handler for tapping locked features
+  const handleLockedTap = () => {
+    setShowPaywall(true)
+    // TODO: Track analytics event
+  }
 
   // Compute adaptive milestone
   const milestone = useMemo(
@@ -115,28 +150,40 @@ export function Stats() {
           timer
         </button>
 
-        {/* Total hours - simple, clean */}
+        {/* Total hours - shows cumulative OR weekly based on tier */}
         <div className="mb-8">
           <p className="font-serif text-display-sm text-indigo-deep tabular-nums">
-            {formatTotalHours(totalSeconds)}
+            {isPremiumOrTrial ? formatTotalHours(totalSeconds) : `${weeklyHours}h`}
           </p>
+          {!isPremiumOrTrial && (
+            <p className="text-sm text-indigo-deep/40 mt-1">this week</p>
+          )}
         </div>
 
-        {/* Adaptive milestone progress */}
-        <div className="mb-8 pb-8 border-b border-indigo-deep/10">
-          <p className="text-xs text-indigo-deep/50 uppercase tracking-wider mb-2">
-            Next milestone: {milestone.milestoneName}
-          </p>
-          <div className="h-2 bg-indigo-deep/10 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-indigo-deep transition-all duration-500 rounded-full"
-              style={{ width: `${milestone.progressPercent}%` }}
-            />
+        {/* Tier-based milestone/goal section */}
+        {isPremiumOrTrial ? (
+          // Premium/Trial: Show adaptive milestone progress
+          <div className="mb-8 pb-8 border-b border-indigo-deep/10">
+            <p className="text-xs text-indigo-deep/50 uppercase tracking-wider mb-2">
+              Next milestone: {milestone.milestoneName}
+            </p>
+            <div className="h-2 bg-indigo-deep/10 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-indigo-deep transition-all duration-500 rounded-full"
+                style={{ width: `${milestone.progressPercent}%` }}
+              />
+            </div>
+            <p className="text-xs text-indigo-deep/40 mt-2">
+              {milestone.currentFormatted} / {milestone.targetFormatted}
+            </p>
           </div>
-          <p className="text-xs text-indigo-deep/40 mt-2">
-            {milestone.currentFormatted} / {milestone.targetFormatted}
-          </p>
-        </div>
+        ) : (
+          // FREE after trial: Show weekly goal + frozen milestone
+          <>
+            <WeeklyGoal />
+            <FrozenMilestone onTap={handleLockedTap} />
+          </>
+        )}
 
         {/* Weekly consistency */}
         <div className="mb-8 pb-8 border-b border-indigo-deep/10">
@@ -181,9 +228,15 @@ export function Stats() {
               </svg>
             </button>
 
-            <p className="text-sm text-indigo-deep font-medium">
+            <button
+              onClick={() => !isCurrentWindowAvailable && handleLockedTap()}
+              className={`text-sm font-medium ${isCurrentWindowAvailable ? 'text-indigo-deep' : 'text-indigo-deep/30'}`}
+            >
               {currentWindow.label}
-            </p>
+              {!isCurrentWindowAvailable && (
+                <span className="ml-1 text-xs text-indigo-deep/20">(locked)</span>
+              )}
+            </button>
 
             <button
               onClick={() => windowIndex < TIME_WINDOWS.length - 1 && setWindowIndex(windowIndex + 1)}
@@ -196,48 +249,85 @@ export function Stats() {
             </button>
           </div>
 
-          {/* Window stats */}
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-sm text-indigo-deep/60">Total</span>
-              <span className="text-sm text-indigo-deep tabular-nums">
-                {formatDuration(windowStats.totalSeconds)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-indigo-deep/60">Sessions</span>
-              <span className="text-sm text-indigo-deep tabular-nums">
-                {windowStats.sessionCount}
-              </span>
-            </div>
-            {windowStats.sessionCount > 0 && (
+          {/* Window stats - shown normally if available, blurred if locked */}
+          {isCurrentWindowAvailable ? (
+            <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-sm text-indigo-deep/60">Avg session</span>
+                <span className="text-sm text-indigo-deep/60">Total</span>
                 <span className="text-sm text-indigo-deep tabular-nums">
-                  {formatDuration(windowStats.avgSessionMinutes * 60)}
+                  {formatDuration(windowStats.totalSeconds)}
                 </span>
               </div>
-            )}
-          </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-indigo-deep/60">Sessions</span>
+                <span className="text-sm text-indigo-deep tabular-nums">
+                  {windowStats.sessionCount}
+                </span>
+              </div>
+              {windowStats.sessionCount > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-sm text-indigo-deep/60">Avg session</span>
+                  <span className="text-sm text-indigo-deep tabular-nums">
+                    {formatDuration(windowStats.avgSessionMinutes * 60)}
+                  </span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <LockedOverlay
+              message="Unlock to see full history"
+              onTap={handleLockedTap}
+            >
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-sm text-indigo-deep/60">Total</span>
+                  <span className="text-sm text-indigo-deep tabular-nums">--</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-indigo-deep/60">Sessions</span>
+                  <span className="text-sm text-indigo-deep tabular-nums">--</span>
+                </div>
+              </div>
+            </LockedOverlay>
+          )}
         </div>
 
-        {/* The long view - projection */}
-        <div className="mb-8 pb-8 border-b border-indigo-deep/10">
-          <p className="text-xs text-indigo-deep/50 uppercase tracking-wider mb-2">
-            The long view
-          </p>
-          <p className="font-serif text-xl text-indigo-deep">
-            {projection.projectionMessage}
-          </p>
-          {projection.maturityLevel === 'established' && projection.currentPace.dailyMinutes > 0 && (
-            <p className="text-sm text-indigo-deep/50 mt-2">
-              Averaging {projection.currentPace.description}
+        {/* The long view - projection (Premium/Trial only) */}
+        {isPremiumOrTrial ? (
+          <div className="mb-8 pb-8 border-b border-indigo-deep/10">
+            <p className="text-xs text-indigo-deep/50 uppercase tracking-wider mb-2">
+              The long view
             </p>
-          )}
-          <p className="text-xs text-indigo-deep/30 mt-3 italic">
-            10,000 hours is the horizon, not the point.
-          </p>
-        </div>
+            <p className="font-serif text-xl text-indigo-deep">
+              {projection.projectionMessage}
+            </p>
+            {projection.maturityLevel === 'established' && projection.currentPace.dailyMinutes > 0 && (
+              <p className="text-sm text-indigo-deep/50 mt-2">
+                Averaging {projection.currentPace.description}
+              </p>
+            )}
+            <p className="text-xs text-indigo-deep/30 mt-3 italic">
+              10,000 hours is the horizon, not the point.
+            </p>
+          </div>
+        ) : (
+          <div className="mb-8 pb-8 border-b border-indigo-deep/10">
+            <p className="text-xs text-indigo-deep/50 uppercase tracking-wider mb-2">
+              The long view
+            </p>
+            <button
+              onClick={handleLockedTap}
+              className="w-full text-left"
+            >
+              <p className="font-serif text-xl text-indigo-deep/30 italic">
+                Unlock to see your path...
+              </p>
+              <p className="text-xs text-indigo-deep/20 mt-2">
+                $4.99/year
+              </p>
+            </button>
+          </div>
+        )}
 
         {/* All time summary */}
         <div className="mb-8">

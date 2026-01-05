@@ -1,8 +1,10 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useMemo } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
+import { usePremiumStore } from '../stores/usePremiumStore'
 import { useTimer, useWakeLock } from '../hooks/useTimer'
 import { useSwipe } from '../hooks/useSwipe'
 import { formatTimer, formatTotalHours, formatSessionAdded } from '../lib/format'
+import { getWeeklyRollingHours } from '../lib/tierLogic'
 import { ZenMessage } from './ZenMessage'
 
 export function Timer() {
@@ -21,7 +23,15 @@ export function Timer() {
     setView
   } = useSessionStore()
 
+  const { isPremiumOrTrial } = usePremiumStore()
+
   const { elapsed, isRunning } = useTimer()
+
+  // Calculate weekly rolling hours for FREE tier display
+  const weeklyHours = useMemo(
+    () => getWeeklyRollingHours(sessions),
+    [sessions]
+  )
 
   // Keep screen awake during session
   useWakeLock(isRunning)
@@ -102,7 +112,7 @@ export function Timer() {
             // Just completed - show added time
             <div className="animate-fade-in">
               <p className="font-serif text-display text-indigo-deep tabular-nums">
-                {formatTotalHours(totalSeconds)}
+                {isPremiumOrTrial ? formatTotalHours(totalSeconds) : `${weeklyHours}h`}
               </p>
               <p className="text-sm text-indigo-deep/50 mt-2 text-center">
                 {formatSessionAdded(lastSessionDuration)}
@@ -114,13 +124,13 @@ export function Timer() {
               {formatTimer(elapsed)}
             </p>
           ) : (
-            // Idle - show total hours
+            // Idle - show total or weekly hours based on tier
             <>
               <p className="font-serif text-display text-indigo-deep tabular-nums">
-                {formatTotalHours(totalSeconds)}
+                {isPremiumOrTrial ? formatTotalHours(totalSeconds) : `${weeklyHours}h`}
               </p>
               <p className="text-sm text-indigo-deep/40 mt-2">
-                toward 10,000 hours
+                {isPremiumOrTrial ? 'toward 10,000 hours' : 'this week'}
               </p>
             </>
           )}

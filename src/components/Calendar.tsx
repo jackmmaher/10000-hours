@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
+import { usePremiumStore } from '../stores/usePremiumStore'
 import { useSwipe } from '../hooks/useSwipe'
 import {
   getMonthlyData,
@@ -7,6 +8,7 @@ import {
   getSessionsForDate,
   getTotalForDate
 } from '../lib/calculations'
+import { getCalendarFadeOpacity } from '../lib/tierLogic'
 import {
   formatMonthYear,
   formatFullDate,
@@ -22,6 +24,7 @@ type CalendarView = 'month' | 'year'
 
 export function Calendar() {
   const { sessions, setView } = useSessionStore()
+  const { isPremiumOrTrial } = usePremiumStore()
 
   const today = new Date()
   const [viewType, setViewType] = useState<CalendarView>('month')
@@ -29,6 +32,35 @@ export function Calendar() {
   const [currentYear, setCurrentYear] = useState(today.getFullYear())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [expandedSession, setExpandedSession] = useState(false)
+
+  // Calculate the oldest allowed month for FREE tier (90 days back)
+  const oldestAllowedDate = useMemo(() => {
+    if (isPremiumOrTrial) return null // No limit
+    const date = new Date()
+    date.setDate(date.getDate() - 90)
+    return date
+  }, [isPremiumOrTrial])
+
+  // Check if a month is within the allowed range
+  const isMonthAllowed = (year: number, month: number): boolean => {
+    if (isPremiumOrTrial) return true
+    if (!oldestAllowedDate) return true
+    const monthStart = new Date(year, month, 1)
+    return monthStart >= oldestAllowedDate
+  }
+
+  // Calculate day age for fade effect
+  const getDayAge = (day: number): number => {
+    const date = new Date(currentYear, currentMonth, day)
+    const diffMs = today.getTime() - date.getTime()
+    return Math.floor(diffMs / (24 * 60 * 60 * 1000))
+  }
+
+  // Get fade opacity for a specific day
+  const getDayFadeOpacity = (day: number): number => {
+    if (isPremiumOrTrial) return 1
+    return getCalendarFadeOpacity(getDayAge(day))
+  }
 
   // Monthly heat map data
   const monthlyData = useMemo(() => getMonthlyData(sessions), [sessions])
@@ -80,12 +112,21 @@ export function Calendar() {
 
   // Navigation
   const goToPrevMonth = () => {
-    if (currentMonth === 0) {
-      setCurrentMonth(11)
-      setCurrentYear(currentYear - 1)
-    } else {
-      setCurrentMonth(currentMonth - 1)
+    let newMonth = currentMonth - 1
+    let newYear = currentYear
+
+    if (newMonth < 0) {
+      newMonth = 11
+      newYear = currentYear - 1
     }
+
+    // Check if allowed (90-day limit for FREE tier)
+    if (!isMonthAllowed(newYear, newMonth)) {
+      return // Don't navigate beyond allowed range
+    }
+
+    setCurrentMonth(newMonth)
+    setCurrentYear(newYear)
     setSelectedDate(null)
   }
 
@@ -98,6 +139,17 @@ export function Calendar() {
     }
     setSelectedDate(null)
   }
+
+  // Check if can go to previous month
+  const canGoPrev = useMemo(() => {
+    let prevMonth = currentMonth - 1
+    let prevYear = currentYear
+    if (prevMonth < 0) {
+      prevMonth = 11
+      prevYear = currentYear - 1
+    }
+    return isMonthAllowed(prevYear, prevMonth)
+  }, [currentMonth, currentYear, isMonthAllowed])
 
   const goToToday = () => {
     setCurrentMonth(today.getMonth())
@@ -231,7 +283,8 @@ export function Calendar() {
             >
               <button
                 onClick={goToPrevMonth}
-                className="p-2 text-indigo-deep/50 hover:text-indigo-deep/70 transition-colors"
+                disabled={!canGoPrev}
+                className={`p-2 transition-colors ${canGoPrev ? 'text-indigo-deep/50 hover:text-indigo-deep/70' : 'text-indigo-deep/20 cursor-not-allowed'}`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
@@ -269,36 +322,44 @@ export function Calendar() {
 
             {/* Calendar grid */}
             <div className="grid grid-cols-7 gap-1 mb-6">
-              {calendarDays.map((day, index) => (
-                <div key={index} className="aspect-square">
-                  {day && (
-                    <button
-                      onClick={() => setSelectedDate(new Date(currentYear, currentMonth, day))}
-                      className={`
-                        w-full h-full flex flex-col items-center justify-center rounded-sm
-                        transition-colors relative
-                        ${isSelected(day)
-                          ? 'bg-indigo-deep text-cream'
-                          : isToday(day)
-                            ? 'bg-indigo-deep/10 text-indigo-deep'
-                            : 'text-indigo-deep/70 hover:bg-indigo-deep/5'
-                        }
-                      `}
-                    >
-                      <span className="text-sm">{day}</span>
-                      {/* Session indicator dot */}
-                      {sessionDates.has(day) && (
-                        <span
-                          className={`
-                            absolute bottom-1 w-1 h-1 rounded-full
-                            ${isSelected(day) ? 'bg-cream' : 'bg-indigo-deep/50'}
-                          `}
-                        />
-                      )}
-                    </button>
-                  )}
-                </div>
-              ))}
+              {calendarDays.map((day, index) => {
+                const fadeOpacity = day ? getDayFadeOpacity(day) : 1
+                const dayAge = day ? getDayAge(day) : 0
+                const isOldAndBlurred = !isPremiumOrTrial && dayAge > 90
+
+                return (
+                  <div key={index} className="aspect-square">
+                    {day && (
+                      <button
+                        onClick={() => setSelectedDate(new Date(currentYear, currentMonth, day))}
+                        className={`
+                          w-full h-full flex flex-col items-center justify-center rounded-sm
+                          transition-all relative
+                          ${isSelected(day)
+                            ? 'bg-indigo-deep text-cream'
+                            : isToday(day)
+                              ? 'bg-indigo-deep/10 text-indigo-deep'
+                              : 'text-indigo-deep/70 hover:bg-indigo-deep/5'
+                          }
+                          ${isOldAndBlurred ? 'blur-[1px]' : ''}
+                        `}
+                        style={{ opacity: isSelected(day) ? 1 : fadeOpacity }}
+                      >
+                        <span className="text-sm">{day}</span>
+                        {/* Session indicator dot */}
+                        {sessionDates.has(day) && (
+                          <span
+                            className={`
+                              absolute bottom-1 w-1 h-1 rounded-full
+                              ${isSelected(day) ? 'bg-cream' : 'bg-indigo-deep/50'}
+                            `}
+                          />
+                        )}
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
             </div>
 
             {/* Selected date detail */}

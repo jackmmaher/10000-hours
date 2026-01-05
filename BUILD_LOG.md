@@ -78,14 +78,31 @@
 ---
 
 ## Phase 2a: Trial/Downgrade Logic
-**Status:** NOT STARTED
+**Status:** COMPLETE
 
-- [ ] Update Timer.tsx (cumulative vs rolling display)
-- [ ] Update Stats.tsx (tier-based windows, frozen milestones)
-- [ ] Create WeeklyGoal.tsx component
-- [ ] Update Calendar.tsx (90-day limit, logarithmic fade)
-- [ ] Create LockedOverlay.tsx
-- [ ] Create FrozenMilestone.tsx
+- [x] Update Timer.tsx (cumulative vs rolling display)
+- [x] Update Stats.tsx (tier-based windows, frozen milestones)
+- [x] Create WeeklyGoal.tsx component
+- [x] Create FrozenMilestone.tsx component
+- [x] Create LockedOverlay.tsx component
+- [x] Update Calendar.tsx (90-day limit, logarithmic fade)
+
+### Progress Log
+
+| Date | Task | Status | Notes |
+|------|------|--------|-------|
+| Jan 5, 2026 | Phase 2a complete | Complete | All tier gating UI implemented |
+
+### Files Created/Modified
+
+| File | Changes |
+|------|---------|
+| `src/components/Timer.tsx` | Added tier-based display (cumulative vs weekly) |
+| `src/components/Stats.tsx` | Tier-based windows, milestone/goal switching |
+| `src/components/Calendar.tsx` | 90-day lookback, logarithmic fade |
+| `src/components/WeeklyGoal.tsx` | NEW - Rolling 7-day goal display |
+| `src/components/FrozenMilestone.tsx` | NEW - Frozen milestone for FREE tier |
+| `src/components/LockedOverlay.tsx` | NEW - Reusable blur overlay |
 
 ---
 
