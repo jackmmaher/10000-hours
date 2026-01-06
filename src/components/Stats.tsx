@@ -8,16 +8,15 @@ import {
   getWeeklyConsistency,
   DayStatus
 } from '../lib/calculations'
-import { getAvailableStatWindows, getWeeklyRollingSeconds } from '../lib/tierLogic'
-import { TIME_WINDOWS } from '../lib/constants'
+import { getWeeklyRollingSeconds } from '../lib/tierLogic'
 import {
   formatTotalHours,
   formatDuration,
   formatShortMonthYear
 } from '../lib/format'
 import { WeeklyGoal } from './WeeklyGoal'
-import { LockedOverlay } from './LockedOverlay'
 import { AchievementGallery } from './AchievementGallery'
+import { TimeRangeSlider } from './TimeRangeSlider'
 
 const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
@@ -53,27 +52,18 @@ function WeekDot({ status }: { status: DayStatus }) {
 
 export function Stats() {
   const { sessions, totalSeconds, setView } = useSessionStore()
-  const { isPremiumOrTrial, tier, trialExpired } = usePremiumStore()
-  const [windowIndex, setWindowIndex] = useState(1) // Default to 30 days
+  const { isPremiumOrTrial } = usePremiumStore()
+  const [selectedDays, setSelectedDays] = useState<number | null>(30) // Default to 30 days
   // Paywall state - will be used when PaywallPremium component is created
   const [_showPaywall, setShowPaywall] = useState(false)
 
-  const currentWindow = TIME_WINDOWS[windowIndex]
-
-  // Get available stat windows based on tier
-  const availableWindows = useMemo(
-    () => getAvailableStatWindows(tier, trialExpired),
-    [tier, trialExpired]
-  )
-
-  // Check if current window is available
-  const isCurrentWindowAvailable = useMemo(() => {
-    const windowKey = windowIndex === 0 ? '7d' :
-                      windowIndex === 1 ? '30d' :
-                      windowIndex === 2 ? '90d' :
-                      windowIndex === 3 || windowIndex === 4 ? 'year' : 'all'
-    return availableWindows.find(w => w.window === windowKey)?.available ?? true
-  }, [windowIndex, availableWindows])
+  // Calculate max days based on first session
+  const maxDays = useMemo(() => {
+    if (sessions.length === 0) return 365
+    const firstSession = Math.min(...sessions.map(s => s.startTime))
+    const daysSince = Math.ceil((Date.now() - firstSession) / (24 * 60 * 60 * 1000))
+    return Math.max(7, daysSince)
+  }, [sessions])
 
   // Weekly rolling seconds for FREE tier
   const weeklySeconds = useMemo(
@@ -93,10 +83,10 @@ export function Stats() {
     [sessions]
   )
 
-  // Compute stats for current window
+  // Compute stats for selected range
   const windowStats = useMemo(
-    () => getStatsForWindow(sessions, currentWindow.days),
-    [sessions, currentWindow.days]
+    () => getStatsForWindow(sessions, selectedDays),
+    [sessions, selectedDays]
   )
 
   // Compute projection
@@ -114,20 +104,6 @@ export function Stats() {
   const firstSessionDate = sessions.length > 0
     ? new Date(Math.min(...sessions.map(s => s.startTime)))
     : null
-
-  // Swipe to change time window
-  const windowSwipeHandlers = useSwipe({
-    onSwipeLeft: () => {
-      if (windowIndex < TIME_WINDOWS.length - 1) {
-        setWindowIndex(windowIndex + 1)
-      }
-    },
-    onSwipeRight: () => {
-      if (windowIndex > 0) {
-        setWindowIndex(windowIndex - 1)
-      }
-    }
-  })
 
   // Swipe navigation between views
   const navSwipeHandlers = useSwipe({
@@ -212,83 +188,51 @@ export function Stats() {
           </p>
         </div>
 
-        {/* Time window stats */}
+        {/* Time range stats with slider */}
         <div className="mb-8 pb-8 border-b border-indigo-deep/10">
-          {/* Swipeable window selector */}
-          <div
-            className="flex items-center justify-between mb-4"
-            {...windowSwipeHandlers}
-          >
-            <button
-              onClick={() => windowIndex > 0 && setWindowIndex(windowIndex - 1)}
-              className={`p-1 ${windowIndex === 0 ? 'opacity-20' : 'opacity-50 hover:opacity-70'}`}
-              disabled={windowIndex === 0}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
+          <p className="text-xs text-indigo-deep/50 uppercase tracking-wider mb-4">
+            History
+          </p>
 
-            <button
-              onClick={() => !isCurrentWindowAvailable && handleLockedTap()}
-              className={`text-sm font-medium flex items-center gap-1.5 ${isCurrentWindowAvailable ? 'text-indigo-deep' : 'text-indigo-deep/40'}`}
-            >
-              {!isCurrentWindowAvailable && <LockIcon className="w-3.5 h-3.5" />}
-              {currentWindow.label}
-            </button>
+          {/* Time range slider */}
+          <TimeRangeSlider
+            value={selectedDays}
+            onChange={setSelectedDays}
+            maxDays={maxDays}
+            onLockedTap={handleLockedTap}
+          />
 
-            <button
-              onClick={() => windowIndex < TIME_WINDOWS.length - 1 && setWindowIndex(windowIndex + 1)}
-              className={`p-1 ${windowIndex === TIME_WINDOWS.length - 1 ? 'opacity-20' : 'opacity-50 hover:opacity-70'}`}
-              disabled={windowIndex === TIME_WINDOWS.length - 1}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Window stats - shown normally if available, blurred if locked */}
-          {isCurrentWindowAvailable ? (
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-sm text-indigo-deep/60">Total</span>
-                <span className="text-sm text-indigo-deep tabular-nums">
-                  {formatDuration(windowStats.totalSeconds)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-indigo-deep/60">Sessions</span>
-                <span className="text-sm text-indigo-deep tabular-nums">
-                  {windowStats.sessionCount}
-                </span>
-              </div>
-              {windowStats.sessionCount > 0 && (
+          {/* Stats for selected range */}
+          <div className="mt-6 space-y-3">
+            <div className="flex justify-between">
+              <span className="text-sm text-indigo-deep/60">Total</span>
+              <span className="text-sm text-indigo-deep tabular-nums">
+                {formatDuration(windowStats.totalSeconds)}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-indigo-deep/60">Sessions</span>
+              <span className="text-sm text-indigo-deep tabular-nums">
+                {windowStats.sessionCount}
+              </span>
+            </div>
+            {windowStats.sessionCount > 0 && (
+              <>
                 <div className="flex justify-between">
                   <span className="text-sm text-indigo-deep/60">Avg session</span>
                   <span className="text-sm text-indigo-deep tabular-nums">
                     {formatDuration(windowStats.avgSessionMinutes * 60)}
                   </span>
                 </div>
-              )}
-            </div>
-          ) : (
-            <LockedOverlay
-              message="Unlock to see full history"
-              onTap={handleLockedTap}
-            >
-              <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-sm text-indigo-deep/60">Total</span>
-                  <span className="text-sm text-indigo-deep tabular-nums">--</span>
+                  <span className="text-sm text-indigo-deep/60">Daily avg</span>
+                  <span className="text-sm text-indigo-deep tabular-nums">
+                    {formatDuration(windowStats.dailyAverageMinutes * 60)}
+                  </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-indigo-deep/60">Sessions</span>
-                  <span className="text-sm text-indigo-deep tabular-nums">--</span>
-                </div>
-              </div>
-            </LockedOverlay>
-          )}
+              </>
+            )}
+          </div>
         </div>
 
         {/* The long view - projection (Premium/Trial only) */}
