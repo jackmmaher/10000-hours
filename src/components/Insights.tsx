@@ -48,7 +48,6 @@ export function Insights() {
   const [myPearls, setMyPearls] = useState<Pearl[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedInsight, setSelectedInsight] = useState<Insight | null>(null)
-  const [sharingInsight, setSharingInsight] = useState<Insight | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   // Load data on mount and tab change
@@ -74,20 +73,20 @@ export function Insights() {
     load()
   }, [activeTab, isAuthenticated, user])
 
-  // Handle insight delete
-  const handleDeleteInsight = useCallback(async (id: string) => {
-    if (deletingId) return
-    setDeletingId(id)
+  // Handle insight delete (called from SharePearl)
+  const handleDeleteInsight = useCallback(async () => {
+    if (!selectedInsight || deletingId) return
+    setDeletingId(selectedInsight.id)
     try {
-      await deleteInsight(id)
-      setInsights(prev => prev.filter(i => i.id !== id))
+      await deleteInsight(selectedInsight.id)
+      setInsights(prev => prev.filter(i => i.id !== selectedInsight.id))
       setSelectedInsight(null)
     } catch (err) {
       console.error('Failed to delete insight:', err)
     } finally {
       setDeletingId(null)
     }
-  }, [deletingId])
+  }, [selectedInsight, deletingId])
 
   // Handle pearl delete
   const handleDeletePearl = useCallback(async (pearlId: string) => {
@@ -105,15 +104,14 @@ export function Insights() {
 
   // Handle successful share
   const handleShareSuccess = useCallback(async (pearlId: string) => {
-    if (sharingInsight) {
+    if (selectedInsight) {
       // Mark insight as shared
-      await markInsightAsShared(sharingInsight.id, pearlId)
+      await markInsightAsShared(selectedInsight.id, pearlId)
       // Update local state
       setInsights(prev => prev.map(i =>
-        i.id === sharingInsight.id ? { ...i, sharedPearlId: pearlId } : i
+        i.id === selectedInsight.id ? { ...i, sharedPearlId: pearlId } : i
       ))
     }
-    setSharingInsight(null)
     setSelectedInsight(null)
     // Switch to pearls tab to show the new pearl
     setActiveTab('pearls')
@@ -123,7 +121,7 @@ export function Insights() {
       setMyPearls(pearls)
       refreshProfile()
     }
-  }, [sharingInsight, user, refreshProfile])
+  }, [selectedInsight, user, refreshProfile])
 
   // Swipe navigation
   const swipeHandlers = useSwipe({
@@ -328,74 +326,15 @@ export function Insights() {
         </div>
       </div>
 
-      {/* Insight Detail Modal */}
-      {selectedInsight && !sharingInsight && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 backdrop-blur-sm"
-          onClick={() => setSelectedInsight(null)}
-        >
-          <div
-            className="bg-cream rounded-t-2xl p-6 w-full max-w-lg shadow-xl animate-slide-up max-h-[80vh] overflow-y-auto"
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-xs text-ink/40">
-                {formatInsightDate(new Date(selectedInsight.createdAt))}
-              </p>
-              <button
-                onClick={() => setSelectedInsight(null)}
-                className="p-2 text-ink/40 hover:text-ink/60 transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Full insight text */}
-            <p className="text-ink/80 leading-relaxed mb-6 text-lg">
-              {selectedInsight.formattedText || selectedInsight.rawText}
-            </p>
-
-            {/* Shared status */}
-            {selectedInsight.sharedPearlId && (
-              <div className="mb-6 p-3 bg-indigo-deep/5 rounded-lg">
-                <p className="text-sm text-indigo-deep/70">
-                  This insight has been shared as a pearl
-                </p>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="flex gap-3">
-              <button
-                onClick={() => handleDeleteInsight(selectedInsight.id)}
-                disabled={deletingId === selectedInsight.id}
-                className="flex-1 py-3 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors"
-              >
-                {deletingId === selectedInsight.id ? 'Deleting...' : 'Delete'}
-              </button>
-              {!selectedInsight.sharedPearlId && (
-                <button
-                  onClick={() => setSharingInsight(selectedInsight)}
-                  className="flex-1 py-3 bg-ink text-cream rounded-xl font-medium active:scale-[0.98] transition-transform"
-                >
-                  Share as Pearl
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Share Pearl modal */}
-      {sharingInsight && (
+      {/* Insight editor - full screen with highlight, type, delete, share */}
+      {selectedInsight && (
         <SharePearl
-          insightId={sharingInsight.id}
-          insightText={sharingInsight.formattedText || sharingInsight.rawText}
-          onClose={() => setSharingInsight(null)}
+          insightId={selectedInsight.id}
+          insightText={selectedInsight.formattedText || selectedInsight.rawText}
+          isAlreadyShared={!!selectedInsight.sharedPearlId}
+          onClose={() => setSelectedInsight(null)}
           onSuccess={handleShareSuccess}
+          onDelete={handleDeleteInsight}
         />
       )}
     </div>
