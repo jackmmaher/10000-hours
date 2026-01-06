@@ -55,13 +55,12 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
     try {
       const result = await stopCapture()
 
-      if (result && result.transcript.trim()) {
-        // Save to local database
-        await addInsight({
-          sessionId: sessionId || null,
-          rawText: result.transcript.trim()
-        })
-      }
+      // Save insight - use transcript or placeholder if empty
+      const textToSave = result?.transcript?.trim() || displayText?.trim() || '[Voice note captured]'
+      await addInsight({
+        sessionId: sessionId || null,
+        rawText: textToSave
+      })
 
       onComplete()
     } catch (err) {
@@ -70,7 +69,7 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
     } finally {
       setIsSaving(false)
     }
-  }, [isRecording, stopCapture, sessionId, onComplete])
+  }, [isRecording, stopCapture, sessionId, onComplete, displayText])
 
   // Handle skip
   const handleSkip = useCallback(() => {

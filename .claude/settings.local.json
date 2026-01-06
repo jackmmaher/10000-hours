@@ -16,7 +16,23 @@
       "WebFetch(domain:github.com)",
       "Bash(git remote:*)",
       "Bash(git branch:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(git rev-parse:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(gh --version:*)",
+      "Bash(tree:*)",
+      "Bash(npm run test:run:*)",
+      "Bash(git worktree:*)",
+      "Skill(design-principles)",
+      "Skill(design-ui-skills)",
+      "Skill(frontend-design)",
+      "Skill(frontend-design-checklist)",
+      "Skill(ui-ux-pro-max)",
+      "Skill(superpowers:brainstorming)",
+      "Skill(superpowers:writing-plans)",
+      "Bash(xargs:*)",
+      "Bash(mkdir:*)",
+      "Skill(superpowers:executing-plans)"
     ]
   }
 }

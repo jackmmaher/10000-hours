@@ -19,7 +19,6 @@ export function Timer() {
     startPreparing,
     startTimer,
     stopTimer,
-    clearLastSession,
     acknowledgeEnlightenment,
     startInsightCapture,
     skipInsightCapture,
@@ -42,10 +41,9 @@ export function Timer() {
       startPreparing()
     } else if (timerPhase === 'running') {
       stopTimer()
-    } else if (timerPhase === 'complete') {
-      clearLastSession()
     }
-  }, [timerPhase, startPreparing, stopTimer, clearLastSession])
+    // Don't handle tap during 'complete' - let it transition to capture
+  }, [timerPhase, startPreparing, stopTimer])
 
   // After session complete, transition to insight capture
   useEffect(() => {
@@ -134,24 +132,24 @@ export function Timer() {
             shouldHideTime ? (
               // Hide time mode - luminous, living meditation orb (Miyazaki spirit)
               <div className="relative flex items-center justify-center" style={{ width: '200px', height: '200px' }}>
-                {/* Layer 1: Ambient atmosphere - largest, most subtle */}
+                {/* Layer 1: Ambient atmosphere - largest, more visible */}
                 <div
                   className="absolute rounded-full"
                   style={{
                     width: '180px',
                     height: '180px',
-                    background: 'radial-gradient(circle, rgba(235, 230, 217, 0.5) 0%, rgba(250, 248, 243, 0) 70%)',
+                    background: 'radial-gradient(circle, rgba(135, 168, 120, 0.25) 0%, rgba(250, 248, 243, 0) 70%)',
                     animation: 'atmosphereBreathe 6s ease-in-out infinite',
                   }}
                 />
 
-                {/* Layer 2: Soft outer glow - moss-tinted light */}
+                {/* Layer 2: Soft outer glow - stronger moss-tinted light */}
                 <div
                   className="absolute rounded-full"
                   style={{
                     width: '140px',
                     height: '140px',
-                    background: 'radial-gradient(circle, rgba(135, 168, 120, 0.12) 0%, transparent 60%)',
+                    background: 'radial-gradient(circle, rgba(135, 168, 120, 0.3) 0%, transparent 60%)',
                     filter: 'blur(16px)',
                     animation: 'glowPulse 4s ease-in-out infinite',
                   }}
@@ -163,23 +161,23 @@ export function Timer() {
                   style={{
                     width: '110px',
                     height: '110px',
-                    background: 'radial-gradient(circle, transparent 40%, rgba(160, 128, 96, 0.08) 70%, transparent 85%)',
+                    background: 'radial-gradient(circle, transparent 40%, rgba(135, 168, 120, 0.2) 70%, transparent 85%)',
                     animation: 'orbPulseRing 4s ease-in-out infinite',
                   }}
                 />
 
-                {/* Layer 4: Core orb - luminous pearl with inner light */}
+                {/* Layer 4: Core orb - more visible with moss tint */}
                 <div
                   className="absolute rounded-full animate-orb-breathe"
                   style={{
                     width: '80px',
                     height: '80px',
-                    background: 'radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.95) 0%, rgba(247, 243, 234, 0.9) 25%, rgba(235, 230, 217, 0.85) 50%, rgba(200, 195, 180, 0.75) 100%)',
+                    background: 'radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 1) 0%, rgba(220, 235, 210, 0.95) 30%, rgba(180, 200, 170, 0.9) 60%, rgba(135, 168, 120, 0.8) 100%)',
                     boxShadow: `
-                      inset 0 0 30px rgba(255, 255, 255, 0.6),
-                      inset 0 -8px 20px rgba(160, 128, 96, 0.1),
-                      0 0 40px rgba(135, 168, 120, 0.15),
-                      0 8px 32px rgba(44, 62, 80, 0.1)
+                      inset 0 0 30px rgba(255, 255, 255, 0.8),
+                      inset 0 -8px 20px rgba(135, 168, 120, 0.3),
+                      0 0 60px rgba(135, 168, 120, 0.4),
+                      0 8px 32px rgba(44, 62, 80, 0.2)
                     `,
                   }}
                 />
