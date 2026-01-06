@@ -3,6 +3,7 @@
  *
  * All users see full achievement history with dates.
  * Design principle: "Gold star on copybook" - earned achievements are always visible
+ * Tap a milestone to see detailed stats and sessions that earned it.
  */
 
 import { useMemo, useEffect, useState } from 'react'
@@ -11,6 +12,7 @@ import { getAchievements, Achievement } from '../lib/db'
 import { MILESTONES } from '../lib/tierLogic'
 import { getAdaptiveMilestone } from '../lib/calculations'
 import { formatShortDate } from '../lib/format'
+import { MilestoneSummary } from './MilestoneSummary'
 
 // Format milestone label (e.g., "2h", "5h", "1k")
 function formatMilestoneLabel(hours: number): string {
@@ -24,6 +26,7 @@ export function AchievementGallery() {
   const { sessions, totalSeconds } = useSessionStore()
   const [achievements, setAchievements] = useState<Achievement[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null)
 
   // Load achievements from database
   useEffect(() => {
@@ -69,12 +72,13 @@ export function AchievementGallery() {
       {/* Achievement badges row */}
       <div className="flex items-end gap-4 overflow-x-auto pb-2">
         {displayMilestones.achieved.map((achievement) => (
-          <div
+          <button
             key={achievement.hours}
-            className="flex flex-col items-center min-w-[48px]"
+            onClick={() => setSelectedAchievement(achievement)}
+            className="flex flex-col items-center min-w-[48px] active:scale-95 transition-transform"
           >
             {/* Badge */}
-            <div className="w-10 h-10 rounded-full bg-indigo-deep flex items-center justify-center mb-1">
+            <div className="w-10 h-10 rounded-full bg-indigo-deep flex items-center justify-center mb-1 hover:bg-indigo-deep/90 transition-colors">
               <span className="text-xs font-medium text-cream">
                 {formatMilestoneLabel(achievement.hours)}
               </span>
@@ -84,7 +88,7 @@ export function AchievementGallery() {
             <span className="text-[10px] text-indigo-deep/50 whitespace-nowrap">
               {formatShortDate(new Date(achievement.achievedAt))}
             </span>
-          </div>
+          </button>
         ))}
 
         {/* Next milestone (in progress) */}
@@ -157,6 +161,20 @@ export function AchievementGallery() {
             />
           </div>
         </div>
+      )}
+
+      {/* Milestone detail modal */}
+      {selectedAchievement && (
+        <MilestoneSummary
+          achievement={selectedAchievement}
+          previousAchievement={
+            achievements.find((_, i) =>
+              achievements[i + 1]?.hours === selectedAchievement.hours
+            ) || null
+          }
+          sessions={sessions}
+          onClose={() => setSelectedAchievement(null)}
+        />
       )}
     </div>
   )

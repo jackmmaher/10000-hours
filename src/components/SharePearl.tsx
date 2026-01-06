@@ -28,6 +28,7 @@ export function SharePearl({ insightText, isAlreadyShared, onClose, onSuccess, o
   const [text, setText] = useState('') // Start empty - user extracts the pearl
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showAuthModal, setShowAuthModal] = useState(false)
 
@@ -35,8 +36,13 @@ export function SharePearl({ insightText, isAlreadyShared, onClose, onSuccess, o
   const isOverLimit = charCount > MAX_PEARL_LENGTH
   const isEmpty = text.trim().length === 0
 
-  const handleDelete = useCallback(async () => {
+  const handleDeleteClick = useCallback(() => {
+    setShowDeleteConfirm(true)
+  }, [])
+
+  const handleDeleteConfirm = useCallback(async () => {
     setIsDeleting(true)
+    setShowDeleteConfirm(false)
     try {
       await onDelete()
     } finally {
@@ -81,7 +87,7 @@ export function SharePearl({ insightText, isAlreadyShared, onClose, onSuccess, o
           Back
         </button>
         <button
-          onClick={handleDelete}
+          onClick={handleDeleteClick}
           disabled={isDeleting}
           className="text-sm text-rose-500 hover:text-rose-600 transition-colors"
         >
@@ -194,6 +200,32 @@ export function SharePearl({ insightText, isAlreadyShared, onClose, onSuccess, o
         title="Sign in to share"
         subtitle="Create an account to share pearls"
       />
+
+      {/* Delete confirmation modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-ink/40 backdrop-blur-sm">
+          <div className="bg-cream rounded-2xl p-6 mx-6 max-w-sm w-full shadow-xl">
+            <p className="font-serif text-lg text-ink mb-2">Delete this insight?</p>
+            <p className="text-sm text-ink/60 mb-6">
+              This cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 py-3 rounded-xl text-sm font-medium bg-cream-dark/50 text-ink/70 hover:bg-cream-dark transition-colors active:scale-[0.98]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                className="flex-1 py-3 rounded-xl text-sm font-medium bg-rose-500 text-white hover:bg-rose-600 transition-colors active:scale-[0.98]"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

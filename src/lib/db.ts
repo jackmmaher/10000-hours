@@ -48,12 +48,24 @@ export interface Insight {
   updatedAt: Date | null
 }
 
+export interface PlannedSession {
+  id?: number
+  date: number              // Date timestamp (start of day)
+  plannedTime?: string      // "07:30" format
+  pose?: string             // Seating position/pose
+  discipline?: string       // Meditation discipline (e.g., "Vipassana", "Zen")
+  notes?: string            // Guidance notes
+  createdAt: number
+  completed?: boolean       // Marked when session is done
+}
+
 class MeditationDB extends Dexie {
   sessions!: Table<Session>
   appState!: Table<AppState>
   profile!: Table<UserProfile>
   settings!: Table<UserSettings>
   insights!: Table<Insight>
+  plannedSessions!: Table<PlannedSession>
 
   constructor() {
     super('10000hours')
@@ -111,6 +123,16 @@ class MeditationDB extends Dexie {
       await tx.table('insights').toCollection().modify(insight => {
         insight.sharedPearlId = null
       })
+    })
+
+    // v5: Add plannedSessions table for meditation planning
+    this.version(5).stores({
+      sessions: '++id, uuid, startTime, endTime',
+      appState: 'id',
+      profile: 'id',
+      settings: 'id',
+      insights: 'id, sessionId, createdAt, sharedPearlId',
+      plannedSessions: '++id, date, createdAt'
     })
   }
 }
@@ -307,4 +329,42 @@ export async function getSharedInsights(): Promise<Insight[]> {
 
 export async function getInsightsBySessionId(sessionId: string): Promise<Insight[]> {
   return db.insights.where('sessionId').equals(sessionId).toArray()
+}
+
+// Planned session helpers
+export async function addPlannedSession(data: Omit<PlannedSession, 'id' | 'createdAt'>): Promise<PlannedSession> {
+  const planned: PlannedSession = {
+    ...data,
+    createdAt: Date.now()
+  }
+  const id = await db.plannedSessions.add(planned)
+  return { ...planned, id }
+}
+
+export async function getPlannedSession(date: number): Promise<PlannedSession | undefined> {
+  // Get planned session for a specific date (start of day)
+  return db.plannedSessions.where('date').equals(date).first()
+}
+
+export async function getPlannedSessionsForWeek(weekStartDate: number): Promise<PlannedSession[]> {
+  const weekEndDate = weekStartDate + 7 * 24 * 60 * 60 * 1000
+  return db.plannedSessions
+    .where('date')
+    .between(weekStartDate, weekEndDate, true, false)
+    .toArray()
+}
+
+export async function updatePlannedSession(
+  id: number,
+  updates: Partial<Omit<PlannedSession, 'id' | 'createdAt'>>
+): Promise<void> {
+  await db.plannedSessions.update(id, updates)
+}
+
+export async function deletePlannedSession(id: number): Promise<void> {
+  await db.plannedSessions.delete(id)
+}
+
+export async function getLatestInsight(): Promise<Insight | undefined> {
+  return db.insights.orderBy('createdAt').reverse().first()
 }

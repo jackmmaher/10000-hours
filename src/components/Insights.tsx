@@ -49,6 +49,8 @@ export function Insights() {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedInsight, setSelectedInsight] = useState<Insight | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
 
   // Load both insights and pearls on mount (so counts are always accurate)
   useEffect(() => {
@@ -90,19 +92,29 @@ export function Insights() {
     }
   }, [selectedInsight, deletingId])
 
-  // Handle pearl delete
-  const handleDeletePearl = useCallback(async (pearlId: string) => {
-    if (!user || deletingId) return
-    setDeletingId(pearlId)
+  // Handle pearl delete - show confirmation first
+  const handleDeletePearlClick = useCallback((pearlId: string) => {
+    setPendingDeleteId(pearlId)
+    setShowDeleteConfirm(true)
+  }, [])
+
+  // Confirm pearl deletion
+  const handleDeletePearlConfirm = useCallback(async () => {
+    if (!user || !pendingDeleteId || deletingId) return
+    setShowDeleteConfirm(false)
+    setDeletingId(pendingDeleteId)
     try {
-      await deletePearl(pearlId, user.id)
-      setMyPearls(prev => prev.filter(p => p.id !== pearlId))
+      await deletePearl(pendingDeleteId, user.id)
+      setMyPearls(prev => prev.filter(p => p.id !== pendingDeleteId))
+      // Refresh profile to update karma/saves counts
+      refreshProfile()
     } catch (err) {
       console.error('Failed to delete pearl:', err)
     } finally {
       setDeletingId(null)
+      setPendingDeleteId(null)
     }
-  }, [user, deletingId])
+  }, [user, pendingDeleteId, deletingId, refreshProfile])
 
   // Handle successful share
   const handleShareSuccess = useCallback(async (pearlId: string) => {
@@ -303,7 +315,7 @@ export function Insights() {
                         </span>
                       </div>
                       <button
-                        onClick={() => handleDeletePearl(pearl.id)}
+                        onClick={() => handleDeletePearlClick(pearl.id)}
                         disabled={deletingId === pearl.id}
                         className="text-xs text-ink/30 hover:text-rose-500 transition-colors"
                       >
@@ -356,6 +368,35 @@ export function Insights() {
           onSuccess={handleShareSuccess}
           onDelete={handleDeleteInsight}
         />
+      )}
+
+      {/* Pearl delete confirmation modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 backdrop-blur-sm">
+          <div className="bg-cream rounded-2xl p-6 mx-6 max-w-sm w-full shadow-xl">
+            <p className="font-serif text-lg text-ink mb-2">Delete this pearl?</p>
+            <p className="text-sm text-ink/60 mb-6">
+              Your karma and saves from this pearl will be lost. This cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false)
+                  setPendingDeleteId(null)
+                }}
+                className="flex-1 py-3 rounded-xl text-sm font-medium bg-cream-dark/50 text-ink/70 hover:bg-cream-dark transition-colors active:scale-[0.98]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeletePearlConfirm}
+                className="flex-1 py-3 rounded-xl text-sm font-medium bg-rose-500 text-white hover:bg-rose-600 transition-colors active:scale-[0.98]"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

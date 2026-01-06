@@ -152,6 +152,13 @@ export function SavedPearls() {
                 key={pearl.id}
                 className="group relative bg-cream-dark/30 rounded-xl p-5"
               >
+                {/* Preserved indicator */}
+                {pearl.isPreserved && (
+                  <div className="mb-2 text-xs text-ink/40 italic">
+                    Saved copy — original was removed
+                  </div>
+                )}
+
                 {/* Pearl text */}
                 <p className="font-serif text-ink leading-relaxed mb-3">
                   "{pearl.text}"
@@ -159,14 +166,18 @@ export function SavedPearls() {
 
                 {/* Meta */}
                 <div className="flex items-center justify-between text-xs text-ink/40">
-                  <span className="flex items-center gap-3">
-                    <span className="flex items-center gap-1">
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                      </svg>
-                      {pearl.upvotes}
+                  {pearl.isPreserved ? (
+                    <span>Preserved</span>
+                  ) : (
+                    <span className="flex items-center gap-3">
+                      <span className="flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                        {pearl.upvotes}
+                      </span>
                     </span>
-                  </span>
+                  )}
                   <span>{formatTimeAgo(pearl.createdAt)}</span>
                 </div>
 

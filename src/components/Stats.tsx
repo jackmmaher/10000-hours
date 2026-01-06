@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
+import { useAuthStore } from '../stores/useAuthStore'
 import { useSwipe } from '../hooks/useSwipe'
 import {
   getStatsForWindow,
@@ -14,6 +15,8 @@ import {
 } from '../lib/format'
 import { AchievementGallery } from './AchievementGallery'
 import { TimeRangeSlider } from './TimeRangeSlider'
+import { TrendChart } from './TrendChart'
+import { MeditationPlanner } from './MeditationPlanner'
 
 const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
@@ -44,7 +47,9 @@ function WeekStone({ status }: { status: DayStatus }) {
 
 export function Stats() {
   const { sessions, totalSeconds, setView } = useSessionStore()
+  const { isAuthenticated, profile } = useAuthStore()
   const [selectedDays, setSelectedDays] = useState<number | null>(30)
+  const [planningDate, setPlanningDate] = useState<Date | null>(null)
 
   // Calculate max days based on first session
   const maxDays = useMemo(() => {
@@ -121,16 +126,38 @@ export function Stats() {
             This Week
           </p>
 
-          {/* Week stones - like river stones */}
+          {/* Week stones - like river stones (clickable for planning) */}
           <div className="flex justify-between items-end mb-3 px-1">
-            {weekly.days.map((status, i) => (
-              <div key={i} className="flex flex-col items-center gap-2">
-                <WeekStone status={status} />
-                <span className="text-[10px] text-ink/30">
-                  {DAY_LABELS[i]}
-                </span>
-              </div>
-            ))}
+            {weekly.days.map((status, i) => {
+              // Calculate the date for this day (Monday-based week)
+              const today = new Date()
+              const dayOfWeek = today.getDay()
+              const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+              const monday = new Date(today)
+              monday.setDate(today.getDate() + mondayOffset)
+              monday.setHours(0, 0, 0, 0)
+              const dayDate = new Date(monday)
+              dayDate.setDate(monday.getDate() + i)
+
+              // Only future days and today are plannable
+              const isPlannable = status === 'today' || status === 'next' || status === 'future'
+
+              return (
+                <button
+                  key={i}
+                  onClick={() => isPlannable && setPlanningDate(dayDate)}
+                  disabled={!isPlannable}
+                  className={`flex flex-col items-center gap-2 ${
+                    isPlannable ? 'cursor-pointer active:scale-90 transition-transform' : 'cursor-default'
+                  }`}
+                >
+                  <WeekStone status={status} />
+                  <span className="text-[10px] text-ink/30">
+                    {DAY_LABELS[i]}
+                  </span>
+                </button>
+              )
+            })}
           </div>
 
           <p className="text-sm text-ink/50 mt-4">
@@ -153,6 +180,11 @@ export function Stats() {
             onChange={setSelectedDays}
             maxDays={maxDays}
           />
+
+          {/* Trend chart */}
+          <div className="mt-6 mb-4">
+            <TrendChart sessions={sessions} days={selectedDays} />
+          </div>
 
           {/* Stats for selected range */}
           <div className="mt-6 space-y-3">
@@ -255,6 +287,48 @@ export function Stats() {
           </div>
         </div>
 
+        {/* Community - Karma & Saves */}
+        {isAuthenticated && profile && (profile.totalKarma > 0 || profile.totalSaves > 0) && (
+          <div className="mb-12">
+            <p className="font-serif text-sm text-ink/50 tracking-wide mb-5">
+              Community
+            </p>
+
+            <button
+              onClick={() => setView('insights')}
+              className="w-full text-left group"
+            >
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-ink/50 flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 15l7-7 7 7" />
+                    </svg>
+                    Karma earned
+                  </span>
+                  <span className="text-sm text-ink tabular-nums group-hover:text-indigo-deep transition-colors">
+                    {profile.totalKarma}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-ink/50 flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                    </svg>
+                    Times saved
+                  </span>
+                  <span className="text-sm text-ink tabular-nums group-hover:text-indigo-deep transition-colors">
+                    {profile.totalSaves}
+                  </span>
+                </div>
+              </div>
+              <p className="text-xs text-ink/30 mt-3 group-hover:text-ink/50 transition-colors">
+                Tap to view your pearls →
+              </p>
+            </button>
+          </div>
+        )}
+
         {/* Navigation links */}
         <div className="flex justify-center gap-6 pt-4">
           <button
@@ -280,6 +354,17 @@ export function Stats() {
           </button>
         </div>
       </div>
+
+      {/* Meditation planner modal */}
+      {planningDate && (
+        <MeditationPlanner
+          date={planningDate}
+          onClose={() => setPlanningDate(null)}
+          onSave={() => {
+            // Could refresh weekly data here if needed
+          }}
+        />
+      )}
     </div>
   )
 }

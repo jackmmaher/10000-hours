@@ -16,6 +16,7 @@ export interface Pearl {
   createdAt: string
   hasVoted?: boolean
   hasSaved?: boolean
+  isPreserved?: boolean  // True if original pearl was deleted, this is a saved copy
 }
 
 export type PearlFilter = 'new' | 'rising' | 'top'
@@ -195,9 +196,22 @@ export async function unvotePearl(pearlId: string, userId: string): Promise<bool
 
 /**
  * Save a pearl to user's collection
+ * Copies the pearl text so it's preserved even if the original is deleted
  */
 export async function savePearl(pearlId: string, userId: string): Promise<boolean> {
   if (!isSupabaseConfigured() || !supabase) {
+    return false
+  }
+
+  // First, fetch the pearl text to preserve a copy
+  const { data: pearl, error: fetchError } = await supabase
+    .from('pearls')
+    .select('text')
+    .eq('id', pearlId)
+    .single()
+
+  if (fetchError || !pearl) {
+    console.error('Failed to fetch pearl for save:', fetchError)
     return false
   }
 
@@ -205,7 +219,8 @@ export async function savePearl(pearlId: string, userId: string): Promise<boolea
     .from('pearl_saves')
     .insert({
       pearl_id: pearlId,
-      user_id: userId
+      user_id: userId,
+      text: pearl.text  // Preserve copy of the text
     })
 
   if (error) {
@@ -243,6 +258,7 @@ export async function unsavePearl(pearlId: string, userId: string): Promise<bool
 
 /**
  * Get user's saved pearls
+ * Returns preserved text even if original pearl was deleted
  */
 export async function getSavedPearls(userId: string): Promise<Pearl[]> {
   if (!isSupabaseConfigured() || !supabase) {
@@ -253,6 +269,8 @@ export async function getSavedPearls(userId: string): Promise<Pearl[]> {
     .from('pearl_saves')
     .select(`
       pearl_id,
+      text,
+      saved_at,
       pearls (
         id,
         user_id,
@@ -263,7 +281,7 @@ export async function getSavedPearls(userId: string): Promise<Pearl[]> {
       )
     `)
     .eq('user_id', userId)
-    .order('created_at', { ascending: false })
+    .order('saved_at', { ascending: false })
 
   if (error) {
     console.error('Get saved pearls error:', error)
@@ -271,7 +289,7 @@ export async function getSavedPearls(userId: string): Promise<Pearl[]> {
   }
 
   return (data || [])
-    .filter(d => d.pearls)
+    .filter(d => d.pearls || d.text) // Keep if original exists OR we have saved text
     .map(d => {
       const p = d.pearls as unknown as {
         id: string
@@ -280,16 +298,33 @@ export async function getSavedPearls(userId: string): Promise<Pearl[]> {
         upvotes: number
         saves: number
         created_at: string
-      }
-      return {
-        id: p.id,
-        userId: p.user_id,
-        text: p.text,
-        upvotes: p.upvotes,
-        saves: p.saves,
-        createdAt: p.created_at,
-        hasVoted: false, // Would need additional query
-        hasSaved: true
+      } | null
+
+      // Use original pearl data if available, otherwise use preserved copy
+      if (p) {
+        return {
+          id: p.id,
+          userId: p.user_id,
+          text: p.text,
+          upvotes: p.upvotes,
+          saves: p.saves,
+          createdAt: p.created_at,
+          hasVoted: false,
+          hasSaved: true
+        }
+      } else {
+        // Original deleted - use preserved copy
+        return {
+          id: d.pearl_id,
+          userId: '', // Original author unknown
+          text: d.text || '[Pearl no longer available]',
+          upvotes: 0,
+          saves: 0,
+          createdAt: d.saved_at || new Date().toISOString(),
+          hasVoted: false,
+          hasSaved: true,
+          isPreserved: true // Flag to indicate this is a preserved copy
+        }
       }
     })
 }

@@ -32,7 +32,14 @@
       "Skill(superpowers:writing-plans)",
       "Bash(xargs:*)",
       "Bash(mkdir:*)",
-      "Skill(superpowers:executing-plans)"
+      "Skill(superpowers:executing-plans)",
+      "Bash(find:*)",
+      "Bash(cat:*)",
+      "Bash(dir \"C:\\\\Users\\\\jackm\\\\Projects\\\\10000-hours\\\\*.md\")",
+      "Bash(dir \"C:\\\\Users\\\\jackm\\\\Projects\\\\10000-hours\" /b)",
+      "Bash(findstr:*)",
+      "Bash(ls:*)",
+      "Bash(git -C \"C:\\\\Users\\\\jackm\\\\Projects\\\\10000-hours\" status)"
     ]
   }
 }

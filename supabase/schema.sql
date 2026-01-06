@@ -103,9 +103,15 @@ create policy "Users can delete own votes"
 create table public.pearl_saves (
   pearl_id uuid references public.pearls(id) on delete cascade,
   user_id uuid references public.profiles(id) on delete cascade,
+  text text,  -- Copy of pearl text, preserved if original deleted
+  saved_at timestamptz default now(),
   created_at timestamptz default now(),
   primary key (pearl_id, user_id)
 );
+
+-- Migration: Add text column to existing pearl_saves table
+-- ALTER TABLE public.pearl_saves ADD COLUMN IF NOT EXISTS text text;
+-- ALTER TABLE public.pearl_saves ADD COLUMN IF NOT EXISTS saved_at timestamptz default now();
 
 alter table public.pearl_saves enable row level security;
 
