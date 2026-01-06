@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useSessionStore } from './stores/useSessionStore'
 import { usePremiumStore } from './stores/usePremiumStore'
 import { useSettingsStore } from './stores/useSettingsStore'
@@ -8,11 +8,12 @@ import { Calendar } from './components/Calendar'
 import { Settings } from './components/Settings'
 import { Onboarding, hasSeenOnboarding, markOnboardingSeen } from './components/Onboarding'
 import { PaywallPremium } from './components/PaywallPremium'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { purchasePremium, restorePurchases } from './lib/purchases'
 
 type PaywallSource = 'day31' | 'settings' | 'stats' | 'calendar'
 
-function App() {
+function AppContent() {
   const { view, isLoading, hydrate } = useSessionStore()
   const premiumStore = usePremiumStore()
   const settingsStore = useSettingsStore()
@@ -20,9 +21,13 @@ function App() {
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showPaywall, setShowPaywall] = useState(false)
   const [paywallSource, setPaywallSource] = useState<PaywallSource>('settings')
+  const hasInitialized = useRef(false)
 
-  // Hydrate all stores on mount
+  // Hydrate all stores on mount (runs once)
   useEffect(() => {
+    if (hasInitialized.current) return
+    hasInitialized.current = true
+
     const init = async () => {
       await hydrate()
       await premiumStore.hydrate()
@@ -34,7 +39,7 @@ function App() {
       }
     }
     init()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [hydrate, premiumStore, settingsStore])
 
   // Check for Day 31 trigger
   useEffect(() => {
@@ -124,6 +129,14 @@ function App() {
         />
       )}
     </div>
+  )
+}
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <AppContent />
+    </ErrorBoundary>
   )
 }
 

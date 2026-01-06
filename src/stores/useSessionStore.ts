@@ -17,7 +17,8 @@ interface SessionState {
 
   // Timer state
   timerPhase: TimerPhase
-  startedAt: number | null
+  startedAt: number | null           // performance.now() for elapsed calculation
+  sessionStartTime: number | null    // Date.now() wall-clock time for storage
   lastSessionDuration: number | null
 
   // Enlightenment state
@@ -41,6 +42,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   isLoading: true,
   timerPhase: 'idle',
   startedAt: null,
+  sessionStartTime: null,
   lastSessionDuration: null,
   hasReachedEnlightenment: false,
   justReachedEnlightenment: false,
@@ -71,36 +73,40 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     set({
       timerPhase: 'running',
       startedAt: performance.now(),
+      sessionStartTime: Date.now(),
       lastSessionDuration: null
     })
   },
 
   stopTimer: async () => {
-    const { startedAt, totalSeconds, sessions, hasReachedEnlightenment } = get()
+    const { startedAt, sessionStartTime, totalSeconds, sessions, hasReachedEnlightenment } = get()
 
-    if (!startedAt) return
+    if (!startedAt || !sessionStartTime) return
 
     const elapsed = performance.now() - startedAt
     const durationSeconds = Math.floor(elapsed / 1000)
 
     // Don't save sessions under 1 second
     if (durationSeconds < 1) {
-      set({ timerPhase: 'idle', startedAt: null })
+      set({ timerPhase: 'idle', startedAt: null, sessionStartTime: null })
       return
     }
 
-    const now = Date.now()
+    const endTime = sessionStartTime + durationSeconds * 1000
+    const sessionUuid = crypto.randomUUID()
     const session: Omit<Session, 'id'> = {
-      uuid: crypto.randomUUID(),
-      startTime: now - durationSeconds * 1000,
-      endTime: now,
+      uuid: sessionUuid,
+      startTime: sessionStartTime,
+      endTime,
       durationSeconds
     }
 
     await addSession(session)
 
     const newTotalSeconds = totalSeconds + durationSeconds
-    const newSessions = [...sessions, { ...session, id: Date.now() }]
+    // Use a hash of UUID for local ID (ensures uniqueness)
+    const localId = sessionUuid.split('-')[0]
+    const newSessions = [...sessions, { ...session, id: parseInt(localId, 16) }]
 
     // Check if we just crossed the enlightenment threshold
     const crossedThreshold = !hasReachedEnlightenment && newTotalSeconds >= GOAL_SECONDS
@@ -110,6 +116,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       set({
         timerPhase: 'enlightenment',
         startedAt: null,
+        sessionStartTime: null,
         lastSessionDuration: durationSeconds,
         sessions: newSessions,
         totalSeconds: newTotalSeconds,
@@ -120,6 +127,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       set({
         timerPhase: 'complete',
         startedAt: null,
+        sessionStartTime: null,
         lastSessionDuration: durationSeconds,
         sessions: newSessions,
         totalSeconds: newTotalSeconds

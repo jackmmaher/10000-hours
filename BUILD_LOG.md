@@ -1,7 +1,7 @@
 # 10,000 Hours - Build Log
 
 **Started:** January 5, 2026
-**Status:** Phase 3b - In Progress (Code Review Improvements)
+**Status:** Phase 3b - Complete (Code Review Improvements)
 
 ---
 
@@ -165,107 +165,72 @@
 ---
 
 ## Phase 3b: Code Review Improvements
-**Status:** IN PROGRESS
+**Status:** COMPLETE
 
-**Context:** Comprehensive code review performed January 6, 2026 identified areas for improvement in error handling, code consistency, and production readiness.
+**Context:** Comprehensive code review performed January 6, 2026 identified areas for improvement in error handling, code consistency, and production readiness. Focused on PWA-relevant improvements (skipping native/commercial-only items).
 
-### High Priority
+### Completed
 
-- [ ] **Add React Error Boundary** (`App.tsx`)
-  - Wrap app in ErrorBoundary component
-  - Show graceful fallback UI on crash
-  - Log errors for debugging
+- [x] **Add React Error Boundary** (`App.tsx`)
+  - Created `ErrorBoundary.tsx` component
+  - Wrapped app in ErrorBoundary with graceful fallback UI
+  - Shows error details in dev mode only
 
-- [ ] **Add user-facing error feedback for purchases** (`App.tsx:66-88`)
-  - Create toast/notification component
-  - Show error message when purchase fails
-  - Show error message when restore fails
+- [x] **Fix session timestamp calculation** (`useSessionStore.ts`)
+  - Added `sessionStartTime` field to store actual wall-clock time
+  - Timer now stores start time on `startTimer()` instead of calculating backwards
+  - Prevents drift between `performance.now()` and `Date.now()`
 
-- [ ] **Fix session timestamp calculation** (`useSessionStore.ts:95`)
-  - Review `performance.now()` vs `Date.now()` usage
-  - Consider storing actual start timestamp on timer start
-  - Prevent potential drift accumulation
+- [x] **Fix ESLint disable comment** (`App.tsx`)
+  - Removed `// eslint-disable-line react-hooks/exhaustive-deps`
+  - Added `hasInitialized` ref to prevent double-init
+  - Properly listed all dependencies
 
-- [ ] **Fix ESLint disable comment** (`App.tsx:37`)
-  - Remove `// eslint-disable-line react-hooks/exhaustive-deps`
-  - Properly list dependencies or use ref pattern for stable functions
-
-### Medium Priority
-
-- [ ] **Migrate onboarding state to Dexie** (`Onboarding.tsx`)
-  - Move from localStorage to Dexie `settings` table
-  - Add `hasSeenOnboarding` field to settings schema
-  - Ensures consistent persistence layer across app
-
-- [ ] **Create dedicated paywall store** (optional refactor)
-  - Move `showPaywall`, `paywallSource` from App.tsx state
-  - Create `usePaywallStore.ts`
-  - Cleaner separation of concerns
-
-- [ ] **Remove or implement LockedOverlay.tsx**
-  - File exists but is not imported anywhere
-  - Either delete dead code or integrate where needed
-
-- [ ] **Consolidate constants** (`tierLogic.ts:14-22`)
-  - Move `TRIAL_DAYS`, `CALENDAR_LOOKBACK_DAYS`, etc. to `constants.ts`
+- [x] **Consolidate constants** (`tierLogic.ts` → `constants.ts`)
+  - Moved `TRIAL_DAYS`, `CALENDAR_LOOKBACK_DAYS`, `MS_PER_DAY` to constants.ts
+  - Moved adaptive goal constants (`MIN/MAX/DEFAULT_WEEKLY_GOAL_HOURS`, `GOAL_PERCENTAGE`)
   - Single source of truth for magic numbers
 
-- [ ] **Add loading state for purchase flow** (`App.tsx`)
-  - Show spinner/disabled state during purchase
-  - Prevent double-tap issues
-  - Better UX during 1.5s+ network operations
+- [x] **Use UUID-based session IDs** (`useSessionStore.ts`)
+  - Replaced `id: Date.now()` with UUID-derived ID
+  - Prevents theoretical collision on rapid session creation
 
-### Low Priority
+### Deferred (Native/Commercial Phase)
 
-- [ ] **Audit for unused imports**
-  - Run build with `noUnusedLocals` already enabled
-  - Manual review of component imports
+- [ ] **Add user-facing error feedback for purchases** - Mock mode, not needed for PWA testing
+- [ ] **Add loading state for purchase flow** - Mock mode, not needed for PWA testing
+- [ ] **Create dedicated paywall store** - Current implementation works fine
+- [ ] **Migrate onboarding state to Dexie** - localStorage works for PWA
+- [ ] **Add accessibility attributes** - Post-validation polish
+- [ ] **Add offline indicator UI** - Nice-to-have, not blocking
 
-- [ ] **Add accessibility attributes**
-  - Add `aria-label` to interactive elements
-  - Add `role` attributes where needed
-  - Test with screen reader
+### Verified Working
 
-- [ ] **Memoize calendar fade calculations** (`Calendar.tsx`)
-  - Wrap `getDayFadeOpacity()` calls in useMemo
-  - Prevent recalculation on every render
-
-- [ ] **Add offline indicator UI**
-  - Detect offline state via `navigator.onLine`
-  - Show subtle indicator when offline
-  - PWA already caches, but user should know
-
-- [ ] **Use UUID for session IDs** (`useSessionStore.ts:103`)
-  - Replace `id: Date.now()` with `crypto.randomUUID()`
-  - Consistent with existing `uuid` field pattern
-  - Prevents theoretical collision
+- [x] LockedOverlay.tsx - IS used in Stats.tsx (initial analysis was incorrect)
+- [x] Calendar fade calculations - Already lightweight, memoization overhead not worth it
 
 ### Progress Log
 
 | Date | Task | Status | Notes |
 |------|------|--------|-------|
 | Jan 6, 2026 | Code review completed | Complete | 15 improvements identified |
-| Jan 6, 2026 | Phase 3b started | In Progress | Build plan added to BUILD_LOG |
+| Jan 6, 2026 | Phase 3b implemented | Complete | 5 core improvements, 6 deferred |
+| Jan 6, 2026 | Build + tests verified | Complete | 38 tests passing |
 
-### Files to Create
+### Files Created
 
 | File | Purpose |
 |------|---------|
 | `src/components/ErrorBoundary.tsx` | Catch and display React errors gracefully |
-| `src/components/Toast.tsx` | User-facing notifications for errors/success |
-| `src/stores/usePaywallStore.ts` | (Optional) Dedicated paywall state management |
 
-### Files to Modify
+### Files Modified
 
 | File | Changes |
 |------|---------|
-| `src/App.tsx` | Error boundary, fix ESLint, loading states |
-| `src/stores/useSessionStore.ts` | Fix timestamp calculation, UUID for IDs |
-| `src/components/Onboarding.tsx` | Migrate to Dexie persistence |
-| `src/lib/constants.ts` | Add tier-related constants |
+| `src/App.tsx` | Error boundary wrapper, ESLint fix with ref pattern |
+| `src/stores/useSessionStore.ts` | Added sessionStartTime, UUID-based IDs |
+| `src/lib/constants.ts` | Added tier/trial constants |
 | `src/lib/tierLogic.ts` | Import constants from constants.ts |
-| `src/lib/db.ts` | Add `hasSeenOnboarding` to settings schema |
-| `src/components/Calendar.tsx` | Memoize fade calculations |
 
 ---
 

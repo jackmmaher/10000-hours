@@ -9,17 +9,15 @@
  */
 
 import { Session, TierType } from './db'
-
-// Constants
-const TRIAL_DAYS = 30
-const CALENDAR_LOOKBACK_DAYS = 90
-const MS_PER_DAY = 24 * 60 * 60 * 1000
-
-// Adaptive goal constraints
-const MIN_WEEKLY_GOAL_HOURS = 1
-const MAX_WEEKLY_GOAL_HOURS = 35 // 5h/day max
-const DEFAULT_WEEKLY_GOAL_HOURS = 5
-const GOAL_PERCENTAGE = 0.8 // 80% of trial average
+import {
+  TRIAL_DAYS,
+  CALENDAR_LOOKBACK_DAYS,
+  MS_PER_DAY,
+  MIN_WEEKLY_GOAL_HOURS,
+  MAX_WEEKLY_GOAL_HOURS,
+  DEFAULT_WEEKLY_GOAL_HOURS,
+  GOAL_PERCENTAGE
+} from './constants'
 
 /**
  * Determines if the Day 31 paywall should be triggered
