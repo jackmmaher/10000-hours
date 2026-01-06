@@ -10,7 +10,9 @@
  * Design: Soft messaging, no guilt, no lock icons
  */
 
+import { useEffect, useState } from 'react'
 import { usePremiumStore } from '../stores/usePremiumStore'
+import { getAchievements } from '../lib/db'
 import {
   trackDay31Trigger,
   trackPaywallDismissed,
@@ -33,11 +35,21 @@ export function PaywallPremium({
   onRestore
 }: PaywallPremiumProps) {
   const { daysSinceFirstSession } = usePremiumStore()
+  const [achievementCount, setAchievementCount] = useState(0)
+
+  // Load achievements count
+  useEffect(() => {
+    getAchievements().then(achievements => {
+      setAchievementCount(achievements.length)
+    })
+  }, [])
 
   // Track that paywall was shown
-  if (source === 'day31') {
-    trackDay31Trigger(daysSinceFirstSession)
-  }
+  useEffect(() => {
+    if (source === 'day31') {
+      trackDay31Trigger(daysSinceFirstSession)
+    }
+  }, [source, daysSinceFirstSession])
 
   const handleDismiss = () => {
     trackPaywallDismissed(source)
@@ -53,8 +65,8 @@ export function PaywallPremium({
     }
   }
 
-  // Different messaging based on source
-  const content = getContent(source, daysSinceFirstSession)
+  // Different messaging based on source and user journey
+  const content = getContent(source, daysSinceFirstSession, achievementCount)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-indigo-deep/20 backdrop-blur-sm">
@@ -134,36 +146,56 @@ function FeatureItem({ text }: { text: string }) {
   )
 }
 
-function getContent(source: PaywallSource, days: number) {
+function getContent(source: PaywallSource, days: number, achievements: number) {
+  // Generate contextual subtitle based on user's journey
+  const getContextualSubtitle = () => {
+    if (achievements >= 3) {
+      return `${achievements} milestones reached. Full history preserved.`
+    }
+    if (days > 60) {
+      return `${days} days of practice. Complete record available.`
+    }
+    if (days > 30) {
+      return `Your practice is taking shape. Keep it visible.`
+    }
+    return `Your journey, always accessible.`
+  }
+
   switch (source) {
     case 'day31':
       return {
-        title: 'Your first 30 days are complete',
-        subtitle: `You've built a real practice. Your history is still here — it's just starting to fade.`,
-        dismissText: 'Keep practicing',
+        title: '30 days of practice',
+        subtitle: achievements >= 1
+          ? `${achievements} milestone${achievements > 1 ? 's' : ''} achieved. Your history remains.`
+          : `You've built a real practice. Your history is still here.`,
+        dismissText: 'Continue with free',
       }
     case 'settings':
       return {
-        title: 'Unlock your full journey',
-        subtitle: `${days} days of meditation, always accessible.`,
+        title: 'Full journey access',
+        subtitle: getContextualSubtitle(),
         dismissText: 'Maybe later',
       }
     case 'stats':
       return {
-        title: 'See your complete history',
-        subtitle: 'All your stats, from day one to today.',
+        title: 'Complete history',
+        subtitle: achievements >= 2
+          ? `${achievements} milestones. All your progress, always visible.`
+          : 'All your stats, from day one to today.',
         dismissText: 'Maybe later',
       }
     case 'calendar':
       return {
-        title: 'Your history is fading',
-        subtitle: 'Keep your full calendar visible.',
+        title: 'Calendar history',
+        subtitle: days > 90
+          ? `${days} days recorded. Full visibility.`
+          : 'Your complete calendar, always clear.',
         dismissText: 'Maybe later',
       }
     default:
       return {
-        title: 'Unlock Premium',
-        subtitle: 'Get the complete experience.',
+        title: 'Full access',
+        subtitle: getContextualSubtitle(),
         dismissText: 'Maybe later',
       }
   }

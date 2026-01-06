@@ -8,6 +8,7 @@ import { Calendar } from './components/Calendar'
 import { Settings } from './components/Settings'
 import { Onboarding, hasSeenOnboarding, markOnboardingSeen } from './components/Onboarding'
 import { PaywallPremium } from './components/PaywallPremium'
+import { MilestoneCelebration } from './components/MilestoneCelebration'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { purchasePremium, restorePurchases } from './lib/purchases'
 
@@ -128,6 +129,9 @@ function AppContent() {
           onRestore={handleRestore}
         />
       )}
+
+      {/* Milestone celebration overlay */}
+      <MilestoneCelebration />
     </div>
   )
 }
