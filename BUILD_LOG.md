@@ -1,7 +1,7 @@
 # 10,000 Hours - Build Log
 
 **Started:** January 5, 2026
-**Status:** Phase 3b - Complete (Code Review Improvements)
+**Status:** UX Emotional Engagement Overhaul - Complete
 
 ---
 
@@ -234,6 +234,82 @@
 
 ---
 
+## UX Emotional Engagement Overhaul
+**Status:** COMPLETE
+**Date:** January 6, 2026
+
+> **NOTE:** This work was NOT part of the original roadmap. It was a separate user request to improve emotional engagement and conversion paths before proceeding with native deployment.
+
+### Context
+User identified that the app, while functional, lacked emotional engagement:
+- First milestone (10h) takes ~2 weeks - no early wins
+- Time windows feel jumpy and disconnected
+- No achievement memory - milestones achieved then forgotten
+- FREE/Premium differentiation lacks emotional quality
+
+### Design Principles Applied
+- **Zen Neutrality**: State facts, don't celebrate. Let user supply meaning.
+- **Endowed Progress Effect**: First win in ~1 week
+- **Loss Aversion**: Achievements fade, never removed
+- **AIDA Framework**: Attention (early win) → Interest (gallery) → Desire (fading) → Action (pay)
+
+### Phase 1: Early Milestones ✓
+- Changed first milestone from 10h to **2h** (~1 week with 4x30min sessions)
+- New progression: 2, 5, 10, 25, 50, 100, 250, 500, 750, 1000, 1500, 2000, 2500, 3500, 5000, 6500, 7500, 8500, 10000
+
+### Phase 2: Achievement Memory System ✓
+- Added `Achievement` interface to DB with timestamps
+- `recordMilestoneIfNew()` records achievements automatically on session end
+- Created `AchievementGallery` component showing achieved milestones with progress rings
+- **FREE tier after trial**: Achievements visible but dates faded/blurred ("gold star on copybook" effect)
+- Message: "These moments remain."
+
+### Phase 3: Time Range Slider ✓
+- Created `TimeRangeSlider` component with quick presets (7d, 30d, 90d, Year, All)
+- Log-scale slider for smooth custom range selection
+- **FREE tier**: Capped at 90 days with visual marker
+- Shows date range being viewed
+
+### Phase 4: Emotional Polish ✓
+- Created `MilestoneCelebration` overlay for zen-neutral acknowledgment
+  - Shows briefly when milestone achieved: "5 hours. The path continues."
+- Contextual paywall messaging based on user journey:
+  - Shows achievement count: "3 milestones reached. Full history preserved."
+  - Shows days of practice: "67 days of practice. Complete record available."
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `src/components/AchievementGallery.tsx` | Display achieved milestones with tier-based visibility |
+| `src/components/TimeRangeSlider.tsx` | Visual time range selector with presets |
+| `src/components/MilestoneCelebration.tsx` | Brief milestone acknowledgment overlay |
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `src/lib/db.ts` | Added Achievement interface, achievement helpers |
+| `src/lib/tierLogic.ts` | Added getAchievementVisibility(), MILESTONES constant |
+| `src/lib/calculations.ts` | Updated MILESTONE_HOURS to start at 2h |
+| `src/lib/format.ts` | Added formatShortDate() |
+| `src/stores/useSessionStore.ts` | Added justAchievedMilestone state, achievement recording |
+| `src/components/Stats.tsx` | Integrated AchievementGallery, TimeRangeSlider |
+| `src/components/PaywallPremium.tsx` | Contextual messaging based on achievements/days |
+| `src/App.tsx` | Added MilestoneCelebration overlay |
+| `src/index.css` | Added slider thumb styling |
+
+### Progress Log
+
+| Date | Task | Status | Notes |
+|------|------|--------|-------|
+| Jan 6, 2026 | Phase 1: Early milestones | Complete | First milestone now 2h |
+| Jan 6, 2026 | Phase 2: Achievement memory | Complete | Gallery + tier visibility |
+| Jan 6, 2026 | Phase 3: Time range slider | Complete | Presets + visual slider |
+| Jan 6, 2026 | Phase 4: Emotional polish | Complete | Celebration + contextual paywall |
+
+---
+
 ## Phase 4: Capacitor + iOS
 **Status:** NOT STARTED (requires Phase 0)
 
@@ -261,41 +337,45 @@
 
 ## Technical Notes
 
-### Current Codebase (as of Jan 5, 2026 - Phase 2b Complete)
+### Current Codebase (as of Jan 6, 2026 - UX Overhaul Complete)
 
 ```
 src/
   lib/
-    db.ts           # Dexie v2 (sessions, appState, profile, settings)
-    calculations.ts # Stats, milestones, projections
-    constants.ts    # GOAL_SECONDS, TIME_WINDOWS
-    format.ts       # Formatting utilities
-    tierLogic.ts    # Trial/downgrade logic, paywall triggers
+    db.ts           # Dexie v2 (sessions, appState, profile, settings, achievements)
+    calculations.ts # Stats, milestones (2h start), projections
+    constants.ts    # GOAL_SECONDS, TIME_WINDOWS, trial constants
+    format.ts       # Formatting utilities (incl. formatShortDate)
+    tierLogic.ts    # Trial/downgrade logic, achievement visibility, MILESTONES
     analytics.ts    # Event tracking (mock mode)
     purchases.ts    # RevenueCat integration (mock mode)
     __tests__/
-      tierLogic.test.ts  # 38 unit tests
+      tierLogic.test.ts  # 39 unit tests
   stores/
-    useSessionStore.ts  # Timer + session state
+    useSessionStore.ts  # Timer + session state + achievement recording
     usePremiumStore.ts  # Subscription/tier state
     useSettingsStore.ts # User preferences
   hooks/
     useSwipe.ts
     useTimer.ts
   components/
-    Timer.tsx           # Hide Time Display mode
-    Stats.tsx           # Tier-gated windows
-    Calendar.tsx        # 90-day limit, fade
+    Timer.tsx               # Hide Time Display mode
+    Stats.tsx               # AchievementGallery + TimeRangeSlider
+    Calendar.tsx            # 90-day limit, fade
     ZenMessage.tsx
-    WeeklyGoal.tsx      # Rolling 7-day goal
-    FrozenMilestone.tsx # FREE tier frozen state
-    LockedOverlay.tsx   # Blur overlay
-    Onboarding.tsx      # 3-screen intro
-    Settings.tsx        # User preferences
-    PaywallPremium.tsx  # Day 31 paywall
-  App.tsx               # Full flow wiring
+    WeeklyGoal.tsx          # Rolling 7-day goal
+    FrozenMilestone.tsx     # FREE tier frozen state (legacy)
+    LockedOverlay.tsx       # Blur overlay
+    Onboarding.tsx          # 3-screen intro
+    Settings.tsx            # User preferences
+    PaywallPremium.tsx      # Contextual paywall with achievement counts
+    AchievementGallery.tsx  # Milestone badges with tier visibility
+    TimeRangeSlider.tsx     # Visual time range selector
+    MilestoneCelebration.tsx # Zen-neutral milestone acknowledgment
+    ErrorBoundary.tsx       # React error boundary
+  App.tsx               # Full flow wiring + MilestoneCelebration
   main.tsx
-  index.css
+  index.css             # Slider styling
 ```
 
 ### Dependencies (package.json)
