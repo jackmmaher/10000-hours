@@ -137,59 +137,76 @@ export function Timer() {
           ) : isRunning ? (
             // Running
             shouldHideTime ? (
-              // Hide time mode - living, breathing meditation orb
-              <div className="relative flex items-center justify-center" style={{ width: '160px', height: '160px' }}>
-                {/* Ambient outer glow - soft diffuse light */}
+              // Hide time mode - luminous, living meditation orb (Miyazaki spirit)
+              <div className="relative flex items-center justify-center" style={{ width: '200px', height: '200px' }}>
+                {/* Layer 1: Ambient atmosphere - largest, most subtle */}
                 <div
-                  className="absolute rounded-full animate-orb-glow"
+                  className="absolute rounded-full"
+                  style={{
+                    width: '180px',
+                    height: '180px',
+                    background: 'radial-gradient(circle, rgba(235, 230, 217, 0.5) 0%, rgba(250, 248, 243, 0) 70%)',
+                    animation: 'atmosphereBreathe 6s ease-in-out infinite',
+                  }}
+                />
+
+                {/* Layer 2: Soft outer glow - moss-tinted light */}
+                <div
+                  className="absolute rounded-full"
                   style={{
                     width: '140px',
                     height: '140px',
-                    background: 'radial-gradient(circle, rgba(45,52,54,0.08) 0%, rgba(45,52,54,0.03) 50%, transparent 70%)',
-                    filter: 'blur(8px)',
+                    background: 'radial-gradient(circle, rgba(135, 168, 120, 0.12) 0%, transparent 60%)',
+                    filter: 'blur(16px)',
+                    animation: 'glowPulse 4s ease-in-out infinite',
                   }}
                 />
 
-                {/* Secondary pulse ring */}
+                {/* Layer 3: Secondary pulse ring - breathing halo */}
                 <div
                   className="absolute rounded-full"
                   style={{
-                    width: '100px',
-                    height: '100px',
-                    background: 'radial-gradient(circle, transparent 30%, rgba(45,52,54,0.06) 60%, transparent 70%)',
-                    animation: 'orbPulseRing 3s ease-in-out infinite',
+                    width: '110px',
+                    height: '110px',
+                    background: 'radial-gradient(circle, transparent 40%, rgba(160, 128, 96, 0.08) 70%, transparent 85%)',
+                    animation: 'orbPulseRing 4s ease-in-out infinite',
                   }}
                 />
 
-                {/* Main orb body with gradient depth */}
+                {/* Layer 4: Core orb - luminous pearl with inner light */}
                 <div
                   className="absolute rounded-full animate-orb-breathe"
                   style={{
-                    width: '72px',
-                    height: '72px',
-                    background: 'radial-gradient(circle at 35% 35%, rgba(120,130,140,0.4) 0%, rgba(45,52,54,0.25) 50%, rgba(30,35,40,0.35) 100%)',
-                    boxShadow: '0 4px 20px rgba(45,52,54,0.15), inset 0 -4px 12px rgba(0,0,0,0.1), inset 0 4px 12px rgba(255,255,255,0.05)',
+                    width: '80px',
+                    height: '80px',
+                    background: 'radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.95) 0%, rgba(247, 243, 234, 0.9) 25%, rgba(235, 230, 217, 0.85) 50%, rgba(200, 195, 180, 0.75) 100%)',
+                    boxShadow: `
+                      inset 0 0 30px rgba(255, 255, 255, 0.6),
+                      inset 0 -8px 20px rgba(160, 128, 96, 0.1),
+                      0 0 40px rgba(135, 168, 120, 0.15),
+                      0 8px 32px rgba(44, 62, 80, 0.1)
+                    `,
                   }}
                 />
 
-                {/* Inner light - creates depth */}
+                {/* Layer 5: Inner light bloom - creates depth perception */}
                 <div
                   className="absolute rounded-full"
                   style={{
-                    width: '48px',
-                    height: '48px',
-                    background: 'radial-gradient(circle at 40% 40%, rgba(255,255,255,0.12) 0%, transparent 60%)',
-                    animation: 'orbInnerGlow 4s ease-in-out infinite',
+                    width: '50px',
+                    height: '50px',
+                    background: 'radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.2) 40%, transparent 70%)',
+                    animation: 'orbInnerGlow 5s ease-in-out infinite',
                   }}
                 />
 
-                {/* Shimmer highlight - rotating shine */}
+                {/* Layer 6: Subtle shimmer - rotating ethereal shine */}
                 <div
                   className="absolute rounded-full overflow-hidden"
                   style={{
-                    width: '72px',
-                    height: '72px',
-                    animation: 'orbShimmer 6s linear infinite',
+                    width: '80px',
+                    height: '80px',
+                    animation: 'orbShimmer 20s linear infinite',
                   }}
                 >
                   <div
@@ -199,7 +216,7 @@ export function Timer() {
                       left: '-50%',
                       width: '200%',
                       height: '200%',
-                      background: 'conic-gradient(from 0deg, transparent 0deg, rgba(255,255,255,0.08) 10deg, transparent 20deg, transparent 360deg)',
+                      background: 'conic-gradient(from 0deg, transparent 0deg, rgba(255,255,255,0.15) 8deg, transparent 16deg, transparent 360deg)',
                     }}
                   />
                 </div>
@@ -241,22 +258,22 @@ export function Timer() {
           <div className="absolute bottom-24 flex flex-col items-center">
             {/* Single dot - the Jobs button */}
             {isFirstSession && (
-              <div className="w-1.5 h-1.5 rounded-full bg-indigo-deep/30 mb-6" />
+              <div className="w-1.5 h-1.5 rounded-full bg-ink/25 mb-6" />
             )}
 
-            {/* Stats hint - clickable on desktop, swipeable on mobile */}
+            {/* Stats hint - refined navigation */}
             <button
               onClick={(e) => {
                 e.stopPropagation()
                 setView('stats')
               }}
-              className="flex flex-col items-center hover:text-indigo-deep/50 transition-colors"
+              className="flex flex-col items-center hover:opacity-60 transition-opacity active:scale-[0.95]"
             >
-              <p className="text-xs text-indigo-deep/25 tracking-wide">
-                stats
+              <p className="text-xs text-ink/20 tracking-wide">
+                Stats
               </p>
               <svg
-                className="w-4 h-4 text-indigo-deep/20 mt-1"
+                className="w-4 h-4 text-ink/15 mt-1"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -274,7 +291,7 @@ export function Timer() {
 
         {/* Running state hint */}
         {isRunning && (
-          <p className="absolute bottom-24 text-xs text-indigo-deep/30">
+          <p className="absolute bottom-24 text-xs text-ink/25">
             tap to end
           </p>
         )}

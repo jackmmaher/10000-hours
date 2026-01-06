@@ -7,21 +7,21 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Ghibli-inspired warm palette
+        // Ghibli-inspired warm palette (refined for elegance)
         cream: '#FAF8F3',
-        'cream-warm': '#F5F1E8',
-        'cream-deep': '#EDE8DC',
+        'cream-warm': '#F7F3EA',    // Slightly warmer
+        'cream-deep': '#EBE6D9',    // Deeper for contrast
         // Legacy alias for backward compatibility
-        'cream-dark': '#F5F1E8',
-        // Ink tones (replacing indigo)
-        ink: '#2D3436',
-        'ink-soft': '#4A5568',
-        // Accent colors
-        moss: '#7C9A6E',
-        bark: '#8B7355',
+        'cream-dark': '#F7F3EA',
+        // Ink tones - refined with subtle blue undertone
+        ink: '#2C3E50',             // Slightly bluer, more elegant
+        'ink-soft': '#5D6D7E',      // Softer, less harsh
+        // Accent colors - more vibrant/warm
+        moss: '#87A878',            // Slightly more vibrant green
+        bark: '#A08060',            // Warmer, more golden brown
         // Legacy alias
         indigo: {
-          deep: '#2D3436',
+          deep: '#2C3E50',
         }
       },
       fontFamily: {
@@ -69,10 +69,10 @@ export default {
           '0%, 100%': { opacity: '0.4' },
           '50%': { opacity: '0.6' },
         },
-        // Dramatic orb breathing - very visible scale change
+        // Luminous orb breathing - gentle, organic pulse
         orbBreathe: {
           '0%, 100%': { transform: 'scale(1)', opacity: '1' },
-          '50%': { transform: 'scale(0.82)', opacity: '0.6' },
+          '50%': { transform: 'scale(0.92)', opacity: '0.85' },
         },
         // Outer glow pulse - offset timing for layered effect
         orbGlow: {

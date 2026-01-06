@@ -29,25 +29,32 @@ function LockIcon({ className = "w-3 h-3" }: { className?: string }) {
   )
 }
 
-function WeekDot({ status }: { status: DayStatus }) {
+// Week Stone - like smooth river stones, days with sessions have warmth
+function WeekStone({ status }: { status: DayStatus }) {
   if (status === 'completed') {
-    return <div className="w-3 h-3 rounded-full bg-indigo-deep" />
-  }
-  if (status === 'today' || status === 'next') {
-    // Glowing, breathing dot for today (incomplete) or tomorrow (after today is done)
+    // Held stone - has warmth and depth
     return (
       <div
-        className="w-3 h-3 rounded-full bg-indigo-deep/30 animate-breathe"
-        style={{ boxShadow: '0 0 8px rgba(26, 26, 46, 0.2)' }}
+        className="w-3 h-3 rounded-full shadow-sm"
+        style={{
+          background: 'radial-gradient(circle at 30% 30%, #5D6D7E, #2C3E50)'
+        }}
       />
     )
   }
-  if (status === 'missed') {
-    // Past day without session - subtle empty, no judgment
-    return <div className="w-3 h-3 rounded-full bg-indigo-deep/10" />
+  if (status === 'today' || status === 'next') {
+    // Today's stone - glowing, waiting
+    return (
+      <div
+        className="w-3.5 h-3.5 rounded-full animate-breathe ring-2 ring-ink/15 ring-offset-2 ring-offset-cream"
+        style={{
+          background: 'radial-gradient(circle at 30% 30%, #87A878, #5D6D7E)'
+        }}
+      />
+    )
   }
-  // Future
-  return <div className="w-3 h-3 rounded-full bg-indigo-deep/10" />
+  // Missed or future - empty river bed
+  return <div className="w-3 h-3 rounded-full bg-cream-deep" />
 }
 
 export function Stats() {
@@ -120,12 +127,12 @@ export function Stats() {
         {/* Back to timer */}
         <button
           onClick={() => setView('timer')}
-          className="flex items-center text-sm text-indigo-deep/50 mb-8 hover:text-indigo-deep/70 transition-colors"
+          className="flex items-center text-sm text-ink/40 mb-10 hover:text-ink/60 transition-colors active:scale-[0.98]"
         >
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
           </svg>
-          timer
+          Timer
         </button>
 
         {/* FREE tier upgrade nudge */}
@@ -162,35 +169,35 @@ export function Stats() {
         {/* FREE tier: Also show weekly goal */}
         {!isPremiumOrTrial && <WeeklyGoal />}
 
-        {/* Weekly consistency */}
-        <div className="mb-8 pb-8 border-b border-indigo-deep/10">
-          <p className="text-xs text-indigo-deep/50 uppercase tracking-wider mb-4">
-            This week
+        {/* Weekly consistency - stones on the path */}
+        <div className="mb-12">
+          <p className="font-serif text-sm text-ink/50 tracking-wide mb-5">
+            This Week
           </p>
 
-          {/* Day dots */}
-          <div className="flex justify-between mb-2">
+          {/* Week stones - like river stones */}
+          <div className="flex justify-between items-end mb-3 px-1">
             {weekly.days.map((status, i) => (
-              <div key={i} className="flex flex-col items-center">
-                <WeekDot status={status} />
-                <span className="text-[10px] text-indigo-deep/30 mt-1">
+              <div key={i} className="flex flex-col items-center gap-2">
+                <WeekStone status={status} />
+                <span className="text-[10px] text-ink/30">
                   {DAY_LABELS[i]}
                 </span>
               </div>
             ))}
           </div>
 
-          <p className="text-sm text-indigo-deep/60 mt-3">
+          <p className="text-sm text-ink/50 mt-4">
             {weekly.sessionsThisWeek} session{weekly.sessionsThisWeek !== 1 ? 's' : ''}
             {weekly.hoursThisWeek > 0 && (
-              <span> · {formatDuration(weekly.hoursThisWeek * 3600)}</span>
+              <span className="text-ink/40"> · {formatDuration(weekly.hoursThisWeek * 3600)}</span>
             )}
           </p>
         </div>
 
         {/* Time range stats with slider */}
-        <div className="mb-8 pb-8 border-b border-indigo-deep/10">
-          <p className="text-xs text-indigo-deep/50 uppercase tracking-wider mb-4">
+        <div className="mb-12">
+          <p className="font-serif text-sm text-ink/50 tracking-wide mb-5">
             History
           </p>
 
@@ -205,28 +212,28 @@ export function Stats() {
           {/* Stats for selected range */}
           <div className="mt-6 space-y-3">
             <div className="flex justify-between">
-              <span className="text-sm text-indigo-deep/60">Total</span>
-              <span className="text-sm text-indigo-deep tabular-nums">
+              <span className="text-sm text-ink/50">Total</span>
+              <span className="text-sm text-ink tabular-nums">
                 {formatDuration(windowStats.totalSeconds)}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-indigo-deep/60">Sessions</span>
-              <span className="text-sm text-indigo-deep tabular-nums">
+              <span className="text-sm text-ink/50">Sessions</span>
+              <span className="text-sm text-ink tabular-nums">
                 {windowStats.sessionCount}
               </span>
             </div>
             {windowStats.sessionCount > 0 && (
               <>
                 <div className="flex justify-between">
-                  <span className="text-sm text-indigo-deep/60">Avg session</span>
-                  <span className="text-sm text-indigo-deep tabular-nums">
+                  <span className="text-sm text-ink/50">Avg session</span>
+                  <span className="text-sm text-ink tabular-nums">
                     {formatDuration(windowStats.avgSessionMinutes * 60)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-indigo-deep/60">Daily avg</span>
-                  <span className="text-sm text-indigo-deep tabular-nums">
+                  <span className="text-sm text-ink/50">Daily avg</span>
+                  <span className="text-sm text-ink tabular-nums">
                     {formatDuration(windowStats.dailyAverageMinutes * 60)}
                   </span>
                 </div>
@@ -235,23 +242,33 @@ export function Stats() {
           </div>
         </div>
 
-        {/* The long view - projection (Premium/Trial only) */}
+        {/* The Long View - with subtle atmospheric background */}
         {isPremiumOrTrial ? (
-          <div className="mb-8 pb-8 border-b border-indigo-deep/10">
-            <p className="text-xs text-indigo-deep/50 uppercase tracking-wider mb-2">
-              The long view
-            </p>
-            <p className="font-serif text-xl text-indigo-deep">
-              {projection.projectionMessage}
-            </p>
-            {projection.maturityLevel === 'established' && projection.currentPace.dailyMinutes > 0 && (
-              <p className="text-sm text-indigo-deep/50 mt-2">
-                Averaging {projection.currentPace.description}
+          <div className="relative mb-12 py-6 px-1 -mx-1">
+            {/* Subtle atmosphere - like morning mist */}
+            <div
+              className="absolute inset-0 rounded-2xl pointer-events-none"
+              style={{
+                background: 'radial-gradient(ellipse at center, rgba(135, 168, 120, 0.06) 0%, transparent 70%)'
+              }}
+            />
+
+            <div className="relative">
+              <p className="font-serif text-sm text-ink/40 tracking-widest mb-3">
+                The Long View
               </p>
-            )}
-            <p className="text-xs text-indigo-deep/30 mt-3 italic">
-              10,000 hours is the horizon, not the point.
-            </p>
+              <p className="font-serif text-xl text-ink leading-relaxed">
+                {projection.projectionMessage}
+              </p>
+              {projection.maturityLevel === 'established' && projection.currentPace.dailyMinutes > 0 && (
+                <p className="text-sm text-ink/50 mt-3">
+                  Averaging {projection.currentPace.description}
+                </p>
+              )}
+              <p className="font-serif text-xs text-ink/30 mt-4 italic">
+                10,000 hours is the horizon, not the point.
+              </p>
+            </div>
           </div>
         ) : (
           <button
@@ -281,32 +298,32 @@ export function Stats() {
         )}
 
         {/* All time summary */}
-        <div className="mb-8">
-          <p className="text-xs text-indigo-deep/50 uppercase tracking-wider mb-4 flex items-center gap-2">
-            All time
-            {!isPremiumOrTrial && <LockIcon className="w-3 h-3 text-indigo-deep/30" />}
+        <div className="mb-12">
+          <p className="font-serif text-sm text-ink/50 tracking-wide mb-5 flex items-center gap-2">
+            All Time
+            {!isPremiumOrTrial && <LockIcon className="w-3 h-3 text-ink/25" />}
           </p>
 
           {isPremiumOrTrial ? (
             // Premium: Full stats
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-sm text-indigo-deep/60">Sessions</span>
-                <span className="text-sm text-indigo-deep tabular-nums">
+                <span className="text-sm text-ink/50">Sessions</span>
+                <span className="text-sm text-ink tabular-nums">
                   {allTimeStats.sessionCount}
                 </span>
               </div>
               {allTimeStats.sessionCount > 0 && (
                 <>
                   <div className="flex justify-between">
-                    <span className="text-sm text-indigo-deep/60">Avg session</span>
-                    <span className="text-sm text-indigo-deep tabular-nums">
+                    <span className="text-sm text-ink/50">Avg session</span>
+                    <span className="text-sm text-ink tabular-nums">
                       {formatDuration(allTimeStats.avgSessionMinutes * 60)}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-indigo-deep/60">Longest</span>
-                    <span className="text-sm text-indigo-deep tabular-nums">
+                    <span className="text-sm text-ink/50">Longest</span>
+                    <span className="text-sm text-ink tabular-nums">
                       {formatDuration(allTimeStats.longestSessionMinutes * 60)}
                     </span>
                   </div>
@@ -314,8 +331,8 @@ export function Stats() {
               )}
               {firstSessionDate && (
                 <div className="flex justify-between">
-                  <span className="text-sm text-indigo-deep/60">Since</span>
-                  <span className="text-sm text-indigo-deep">
+                  <span className="text-sm text-ink/50">Since</span>
+                  <span className="text-sm text-ink">
                     {formatShortMonthYear(firstSessionDate)}
                   </span>
                 </div>
@@ -326,37 +343,37 @@ export function Stats() {
             <button onClick={handleLockedTap} className="w-full text-left">
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-sm text-indigo-deep/60">Sessions</span>
-                  <span className="text-sm text-indigo-deep tabular-nums">
+                  <span className="text-sm text-ink/50">Sessions</span>
+                  <span className="text-sm text-ink tabular-nums">
                     {allTimeStats.sessionCount}
                   </span>
                 </div>
                 {firstSessionDate && (
                   <div className="flex justify-between">
-                    <span className="text-sm text-indigo-deep/60">Since</span>
-                    <span className="text-sm text-indigo-deep">
+                    <span className="text-sm text-ink/50">Since</span>
+                    <span className="text-sm text-ink">
                       {formatShortMonthYear(firstSessionDate)}
                     </span>
                   </div>
                 )}
                 {/* Locked stats teaser */}
-                <div className="pt-2 border-t border-dashed border-indigo-deep/10">
+                <div className="pt-3 mt-3 border-t border-dashed border-ink/8">
                   <div className="flex justify-between opacity-40">
-                    <span className="text-sm text-indigo-deep/60">Total hours</span>
-                    <span className="text-sm text-indigo-deep tabular-nums flex items-center gap-1">
+                    <span className="text-sm text-ink/50">Total hours</span>
+                    <span className="text-sm text-ink tabular-nums flex items-center gap-1">
                       <LockIcon className="w-3 h-3" />
                       {formatTotalHours(totalSeconds)}
                     </span>
                   </div>
                   <div className="flex justify-between opacity-40 mt-2">
-                    <span className="text-sm text-indigo-deep/60">Avg session</span>
-                    <span className="text-sm text-indigo-deep tabular-nums flex items-center gap-1">
+                    <span className="text-sm text-ink/50">Avg session</span>
+                    <span className="text-sm text-ink tabular-nums flex items-center gap-1">
                       <LockIcon className="w-3 h-3" />
                       --
                     </span>
                   </div>
                 </div>
-                <p className="text-xs text-indigo-deep/30 mt-2 italic">
+                <p className="text-xs text-ink/30 mt-3 italic">
                   Tap to see your complete history
                 </p>
               </div>
@@ -365,10 +382,10 @@ export function Stats() {
         </div>
 
         {/* Navigation links */}
-        <div className="flex justify-center gap-6">
+        <div className="flex justify-center gap-8 pt-4">
           <button
             onClick={() => setView('calendar')}
-            className="py-3 text-sm text-indigo-deep/70 hover:text-indigo-deep transition-colors flex items-center"
+            className="py-3 text-sm text-ink/60 hover:text-ink transition-colors flex items-center active:scale-[0.98]"
           >
             Calendar
             <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -377,7 +394,7 @@ export function Stats() {
           </button>
           <button
             onClick={() => setView('settings')}
-            className="py-3 text-sm text-indigo-deep/50 hover:text-indigo-deep/70 transition-colors"
+            className="py-3 text-sm text-ink/40 hover:text-ink/60 transition-colors active:scale-[0.98]"
           >
             Settings
           </button>

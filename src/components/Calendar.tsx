@@ -193,48 +193,49 @@ export function Calendar() {
     return data?.intensity ?? 0
   }
 
-  // Get intensity color class
-  const getIntensityClass = (intensity: number): string => {
-    if (intensity === 0) return 'bg-indigo-deep/5'
-    if (intensity < 0.25) return 'bg-indigo-deep/15'
-    if (intensity < 0.5) return 'bg-indigo-deep/30'
-    if (intensity < 0.75) return 'bg-indigo-deep/50'
-    return 'bg-indigo-deep/70'
+  // Get intensity color - warmer moss-based palette
+  const getIntensityStyle = (intensity: number): { bg: string; text: string } => {
+    if (intensity === 0) return { bg: 'bg-cream-deep', text: 'text-ink/30' }
+    if (intensity < 0.25) return { bg: 'bg-moss/15', text: 'text-ink/50' }
+    if (intensity < 0.5) return { bg: 'bg-moss/30', text: 'text-ink/70' }
+    if (intensity < 0.75) return { bg: 'bg-moss/50', text: 'text-cream' }
+    return { bg: 'bg-moss/70', text: 'text-cream' }
   }
 
   return (
     <div className="h-full bg-cream overflow-y-auto" {...navSwipeHandlers}>
       <div className="px-6 py-8 max-w-lg mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-8">
           <button
             onClick={() => setView('stats')}
-            className="flex items-center text-sm text-indigo-deep/50 hover:text-indigo-deep/70 transition-colors"
+            className="flex items-center text-sm text-ink/40 hover:text-ink/60 transition-colors active:scale-[0.98]"
           >
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
             </svg>
-            stats
+            Stats
           </button>
 
           {/* Toggle view type */}
           <button
             onClick={() => setViewType(viewType === 'month' ? 'year' : 'month')}
-            className="text-xs text-indigo-deep/50 hover:text-indigo-deep/70 transition-colors uppercase tracking-wider"
+            className="text-xs text-ink/40 hover:text-ink/60 transition-colors tracking-wide"
           >
-            {viewType === 'month' ? 'Year view' : 'Month view'}
+            {viewType === 'month' ? 'Year View' : 'Month View'}
           </button>
         </div>
 
         {viewType === 'year' ? (
-          // Year heat map view
-          <div className="space-y-6">
+          // Year heat map view - garden overview
+          <div className="space-y-8">
             {yearsWithData.map(year => (
               <div key={year}>
-                <p className="text-sm text-indigo-deep/70 mb-2">{year}</p>
-                <div className="grid grid-cols-12 gap-1">
+                <p className="font-serif text-sm text-ink/60 mb-3">{year}</p>
+                <div className="grid grid-cols-12 gap-1.5">
                   {MONTHS_SHORT.map((monthLabel, monthIndex) => {
                     const intensity = getMonthIntensity(year, monthIndex)
+                    const style = getIntensityStyle(intensity)
                     return (
                       <button
                         key={monthIndex}
@@ -244,11 +245,10 @@ export function Calendar() {
                           setViewType('month')
                         }}
                         className={`
-                          aspect-square rounded-sm flex items-center justify-center
-                          text-[10px] transition-colors
-                          ${getIntensityClass(intensity)}
-                          ${intensity > 0.5 ? 'text-cream' : 'text-indigo-deep/40'}
-                          hover:ring-1 hover:ring-indigo-deep/30
+                          aspect-square rounded-md flex items-center justify-center
+                          text-[10px] transition-all active:scale-[0.95]
+                          ${style.bg} ${style.text}
+                          hover:ring-1 hover:ring-ink/20
                         `}
                       >
                         {monthLabel}
@@ -260,17 +260,20 @@ export function Calendar() {
             ))}
 
             {/* Legend */}
-            <div className="flex items-center justify-center gap-2 pt-4">
-              <span className="text-xs text-indigo-deep/40">Less</span>
+            <div className="flex items-center justify-center gap-3 pt-4">
+              <span className="text-xs text-ink/30">Less</span>
               <div className="flex gap-1">
-                {[0, 0.15, 0.35, 0.6, 0.85].map((intensity, i) => (
-                  <div
-                    key={i}
-                    className={`w-3 h-3 rounded-sm ${getIntensityClass(intensity)}`}
-                  />
-                ))}
+                {[0, 0.15, 0.35, 0.6, 0.85].map((intensity, i) => {
+                  const style = getIntensityStyle(intensity)
+                  return (
+                    <div
+                      key={i}
+                      className={`w-3 h-3 rounded-sm ${style.bg}`}
+                    />
+                  )
+                })}
               </div>
-              <span className="text-xs text-indigo-deep/40">More</span>
+              <span className="text-xs text-ink/30">More</span>
             </div>
           </div>
         ) : (
@@ -278,13 +281,13 @@ export function Calendar() {
           <>
             {/* Month navigation */}
             <div
-              className="flex items-center justify-between mb-6"
+              className="flex items-center justify-between mb-8"
               {...monthSwipeHandlers}
             >
               <button
                 onClick={goToPrevMonth}
                 disabled={!canGoPrev}
-                className={`p-2 transition-colors ${canGoPrev ? 'text-indigo-deep/50 hover:text-indigo-deep/70' : 'text-indigo-deep/20 cursor-not-allowed'}`}
+                className={`p-2 transition-colors active:scale-[0.95] ${canGoPrev ? 'text-ink/40 hover:text-ink/60' : 'text-ink/15 cursor-not-allowed'}`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
@@ -293,14 +296,14 @@ export function Calendar() {
 
               <button
                 onClick={goToToday}
-                className="font-serif text-xl text-indigo-deep hover:text-indigo-deep/70 transition-colors"
+                className="font-serif text-xl text-ink hover:text-ink/70 transition-colors"
               >
                 {formatMonthYear(new Date(currentYear, currentMonth))}
               </button>
 
               <button
                 onClick={goToNextMonth}
-                className="p-2 text-indigo-deep/50 hover:text-indigo-deep/70 transition-colors"
+                className="p-2 text-ink/40 hover:text-ink/60 transition-colors active:scale-[0.95]"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
@@ -309,23 +312,24 @@ export function Calendar() {
             </div>
 
             {/* Day labels */}
-            <div className="grid grid-cols-7 gap-1 mb-2">
+            <div className="grid grid-cols-7 gap-1.5 mb-3">
               {DAYS.map(day => (
                 <div
                   key={day}
-                  className="text-center text-xs text-indigo-deep/40 py-1"
+                  className="text-center text-xs text-ink/30 py-1"
                 >
                   {day}
                 </div>
               ))}
             </div>
 
-            {/* Calendar grid */}
-            <div className="grid grid-cols-7 gap-1 mb-6">
+            {/* Calendar grid - garden of days */}
+            <div className="grid grid-cols-7 gap-1.5 mb-8">
               {calendarDays.map((day, index) => {
                 const fadeOpacity = day ? getDayFadeOpacity(day) : 1
                 const dayAge = day ? getDayAge(day) : 0
                 const isOldAndBlurred = !isPremiumOrTrial && dayAge > 90
+                const hasSession = day ? sessionDates.has(day) : false
 
                 return (
                   <div key={index} className="aspect-square">
@@ -333,27 +337,31 @@ export function Calendar() {
                       <button
                         onClick={() => setSelectedDate(new Date(currentYear, currentMonth, day))}
                         className={`
-                          w-full h-full flex flex-col items-center justify-center rounded-sm
-                          transition-all relative
+                          w-full h-full flex flex-col items-center justify-center rounded-lg
+                          transition-all relative active:scale-[0.95]
                           ${isSelected(day)
-                            ? 'bg-indigo-deep text-cream'
+                            ? 'bg-ink text-cream shadow-sm'
                             : isToday(day)
-                              ? 'bg-indigo-deep/10 text-indigo-deep'
-                              : 'text-indigo-deep/70 hover:bg-indigo-deep/5'
+                              ? 'ring-1 ring-ink/30 text-ink'
+                              : 'text-ink/60 hover:bg-cream-deep'
                           }
                           ${isOldAndBlurred ? 'blur-[1px]' : ''}
                         `}
-                        style={{ opacity: isSelected(day) ? 1 : fadeOpacity }}
+                        style={{
+                          opacity: isSelected(day) ? 1 : fadeOpacity,
+                          // Subtle moss warmth for days with sessions
+                          backgroundColor: hasSession && !isSelected(day) && !isToday(day)
+                            ? 'rgba(135, 168, 120, 0.08)'
+                            : undefined
+                        }}
                       >
                         <span className="text-sm">{day}</span>
-                        {/* Session indicator dot */}
-                        {sessionDates.has(day) && (
-                          <span
-                            className={`
-                              absolute bottom-1 w-1 h-1 rounded-full
-                              ${isSelected(day) ? 'bg-cream' : 'bg-indigo-deep/50'}
-                            `}
-                          />
+                        {/* Session indicator - organic dot */}
+                        {hasSession && !isSelected(day) && (
+                          <span className="absolute bottom-1.5 w-1 h-1 rounded-full bg-moss/60" />
+                        )}
+                        {hasSession && isSelected(day) && (
+                          <span className="absolute bottom-1.5 w-1 h-1 rounded-full bg-cream/80" />
                         )}
                       </button>
                     )}
@@ -362,10 +370,10 @@ export function Calendar() {
               })}
             </div>
 
-            {/* Selected date detail */}
+            {/* Selected date detail - no divider, breathing space */}
             {selectedDate && (
-              <div className="border-t border-indigo-deep/10 pt-6">
-                <p className="text-sm text-indigo-deep/70 mb-2">
+              <div className="pt-4">
+                <p className="text-sm text-ink/50 mb-2">
                   {formatFullDate(selectedDate)}
                 </p>
 
@@ -373,12 +381,12 @@ export function Calendar() {
                   <>
                     <button
                       onClick={() => setExpandedSession(!expandedSession)}
-                      className="flex items-center justify-between w-full text-left"
+                      className="flex items-center justify-between w-full text-left active:scale-[0.99]"
                     >
-                      <p className="font-serif text-xl text-indigo-deep">
+                      <p className="font-serif text-xl text-ink">
                         {formatDuration(selectedTotal)}
                       </p>
-                      <span className="text-sm text-indigo-deep/50">
+                      <span className="text-sm text-ink/40">
                         {selectedSessions.length} session{selectedSessions.length > 1 ? 's' : ''}
                         <svg
                           className={`inline w-4 h-4 ml-1 transition-transform ${expandedSession ? 'rotate-180' : ''}`}
@@ -397,7 +405,7 @@ export function Calendar() {
                         {selectedSessions.map((session, i) => (
                           <div
                             key={session.id || i}
-                            className="flex justify-between text-sm text-indigo-deep/60"
+                            className="flex justify-between text-sm text-ink/50"
                           >
                             <span>{formatTime(new Date(session.startTime))}</span>
                             <span className="tabular-nums">
@@ -409,8 +417,8 @@ export function Calendar() {
                     )}
 
                     {/* Cumulative since this date */}
-                    <div className="mt-4 pt-4 border-t border-indigo-deep/5">
-                      <p className="text-xs text-indigo-deep/40">
+                    <div className="mt-5">
+                      <p className="text-xs text-ink/30">
                         Since this date: {formatTotalHours(
                           sessions
                             .filter(s => s.startTime >= selectedDate.getTime())
@@ -420,7 +428,7 @@ export function Calendar() {
                     </div>
                   </>
                 ) : (
-                  <p className="text-sm text-indigo-deep/40">No sessions</p>
+                  <p className="text-sm text-ink/30 italic">No sessions</p>
                 )}
               </div>
             )}

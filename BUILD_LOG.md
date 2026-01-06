@@ -310,6 +310,142 @@ User identified that the app, while functional, lacked emotional engagement:
 
 ---
 
+## UI/UX Design Refinement: Ive Meets Miyazaki
+**Status:** COMPLETE
+**Date:** January 6, 2026
+
+> **Design Philosophy:** Jony Ive's obsessive precision meeting Hayao Miyazaki's soul. Every element earns its place through invisible craft in service of genuine feeling.
+
+### Context
+User requested comprehensive UI/UX review applying multiple design skill sets to transform "good design into unforgettable experience" while preserving the app's zen philosophy.
+
+### Design Principles Applied
+- **Ma (Japanese emptiness)**: Space as design element - removed dividers, increased breathing room
+- **Materiality**: Elements feel crafted, not generated - gradients, depth, organic motion
+- **Restraint**: Color only where it communicates meaning
+- **Aliveness**: Subtle acknowledgment of user's presence through organic animation
+
+### Phase 1: Soul Changes ✓
+
+**Color Palette Refinement:**
+| Token | Before | After | Rationale |
+|-------|--------|-------|-----------|
+| ink | #2D3436 | #2C3E50 | Slightly bluer, more elegant |
+| ink-soft | #4A5568 | #5D6D7E | Softer, less harsh |
+| moss | #7C9A6E | #87A878 | More vibrant green |
+| bark | #8B7355 | #A08060 | Warmer, more golden |
+| cream-warm | #F5F1E8 | #F7F3EA | Slightly warmer |
+| cream-deep | #EDE8DC | #EBE6D9 | Deeper for contrast |
+
+**Meditation Orb Redesign:**
+- Transformed from gray 4-layer orb to luminous 6-layer spirit
+- Layer 1: Ambient atmosphere (180px, breathing)
+- Layer 2: Moss-tinted outer glow (blur 16px)
+- Layer 3: Breathing halo ring
+- Layer 4: Pearl-like core with inner light gradient
+- Layer 5: Inner light bloom
+- Layer 6: Slow rotating shimmer
+- New animations: `atmosphereBreathe`, `glowPulse`
+
+**Progress River:**
+- Replaced mechanical progress bar with organic flowing river
+- Bark-to-moss gradient (journey metaphor)
+- Subtle shimmer animation for life
+- Rounded-full corners
+
+### Phase 2: Refinement ✓
+
+**Typography:**
+- Section headers: ALL CAPS → Title Case, serif font
+- Consistent hierarchy: `font-serif text-sm text-ink/50`
+- Labels: 500 weight for presence
+
+**Week Stones:**
+- Replaced flat dots with gradient depth
+- Completed days: `radial-gradient(circle at 30% 30%, #5D6D7E, #2C3E50)`
+- Today: moss-tinted with breathing ring
+- Empty days: `bg-cream-deep`
+
+**Calendar Warmth:**
+- Days with sessions get subtle moss tint: `rgba(135, 168, 120, 0.08)`
+- Year heat map uses moss-based palette instead of gray
+- Rounded-lg day cells with active:scale feedback
+
+**Divider Removal:**
+- Removed all `border-b` dividers in Stats
+- Increased spacing: `mb-12` between sections
+- Let emptiness speak
+
+### Phase 3: Craft ✓
+
+**The Long View Treatment:**
+- Added atmospheric background: moss-tinted radial gradient
+- Tracking-widest header for contemplative reading
+- Italic philosophy quote styling
+
+**Settings Soul:**
+- Custom organic toggle with pearl-like knob gradient
+- Moss background when enabled
+- Version as serif italic signature at footer
+- Removed borders, breathing space throughout
+
+**Navigation Refinement:**
+- "timer" → "Timer", "stats" → "Stats" (Title Case confidence)
+- Added `active:scale-[0.98]` micro-interaction to all buttons
+- Reduced opacity for subtler hints
+
+**Haptic Feedback Hook:**
+- Created `useTapFeedback.ts` for future haptic integration
+- Patterns: light (10ms), medium (25ms), success (15-50-15ms)
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `src/hooks/useTapFeedback.ts` | Haptic/visual feedback utility |
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `tailwind.config.js` | Refined color palette, gentler orb-breathe animation |
+| `src/index.css` | New orb animations (atmosphereBreathe, glowPulse, riverShimmer), text hierarchy variables |
+| `src/components/Timer.tsx` | 6-layer luminous orb, refined navigation hints |
+| `src/components/Stats.tsx` | Week Stones, typography refinement, divider removal, The Long View atmosphere |
+| `src/components/Calendar.tsx` | Moss warmth for session days, refined heat map palette, rounded day cells |
+| `src/components/Settings.tsx` | Custom organic toggle, signature footer, breathing space |
+| `src/components/AchievementGallery.tsx` | Progress River with gradient + shimmer, serif section header |
+
+### Visual Impact Summary
+
+| Element | Before | After |
+|---------|--------|-------|
+| Meditation orb | Flat gray breathing circle | Luminous pearl spirit with atmosphere |
+| Progress bar | Mechanical dark rectangle | Flowing bark-to-moss river with shimmer |
+| Week dots | Uniform flat circles | Gradient depth stones with today ring |
+| Calendar days | Clinical grid | Warm garden with moss tint growth |
+| Section headers | SHOUTY ALL CAPS | Quiet serif Title Case |
+| Dividers | Visible border lines | Empty space speaking |
+| Toggle | Generic iOS switch | Pearl-knob organic toggle |
+| Typography | Arbitrary opacity | Systematic hierarchy (100/70/50/30/15) |
+
+### Animation Philosophy
+- 6-second breathing cycle (matches meditation rhythm)
+- Organic easing: `cubic-bezier(0.34, 1.56, 0.64, 1)`
+- Entrance: rise from below (like plants growing)
+- Exit: fade without movement (like mist dissipating)
+- Loops: imperceptible restart point
+
+### Progress Log
+
+| Date | Task | Status | Notes |
+|------|------|--------|-------|
+| Jan 6, 2026 | Phase 1: Soul changes | Complete | Color, orb, progress river |
+| Jan 6, 2026 | Phase 2: Refinement | Complete | Typography, stones, calendar, dividers |
+| Jan 6, 2026 | Phase 3: Craft | Complete | Long View, Settings, navigation, haptics |
+
+---
+
 ## Phase 4: Capacitor + iOS
 **Status:** NOT STARTED (requires Phase 0)
 

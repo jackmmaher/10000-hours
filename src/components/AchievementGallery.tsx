@@ -76,8 +76,8 @@ export function AchievementGallery({ onLockedTap }: AchievementGalleryProps) {
   }
 
   return (
-    <div className="mb-8 pb-8 border-b border-indigo-deep/10">
-      <p className="text-xs text-indigo-deep/50 uppercase tracking-wider mb-4">
+    <div className="mb-10">
+      <p className="font-serif text-sm text-ink/50 tracking-wide mb-4">
         Milestones
       </p>
 
@@ -171,17 +171,30 @@ export function AchievementGallery({ onLockedTap }: AchievementGalleryProps) {
         </button>
       )}
 
-      {/* Progress bar for premium users */}
+      {/* Progress River - organic, flowing progress for premium users */}
       {isPremiumOrTrial && displayMilestones.nextMilestone && (
-        <div className="mt-4">
-          <div className="flex justify-between text-[10px] text-indigo-deep/40 mb-1">
-            <span>{milestone.currentFormatted}</span>
-            <span>{milestone.targetFormatted}</span>
+        <div className="mt-5">
+          <div className="flex justify-between text-[10px] text-ink/40 mb-2">
+            <span className="tabular-nums">{milestone.currentFormatted}</span>
+            <span className="tabular-nums">{milestone.targetFormatted}</span>
           </div>
-          <div className="h-1.5 bg-indigo-deep/10 rounded-full overflow-hidden">
+          {/* The River - organic rounded bar with gradient flow */}
+          <div className="relative h-2 w-full overflow-hidden rounded-full bg-cream-deep">
+            {/* Main progress fill with bark-to-moss gradient */}
             <div
-              className="h-full bg-indigo-deep transition-all duration-500 rounded-full"
-              style={{ width: `${milestone.progressPercent}%` }}
+              className="absolute inset-y-0 left-0 rounded-full transition-all duration-700 ease-out"
+              style={{
+                width: `${milestone.progressPercent}%`,
+                background: 'linear-gradient(90deg, #A08060 0%, #87A878 100%)'
+              }}
+            />
+            {/* Subtle shimmer overlay for life */}
+            <div
+              className="absolute inset-0 opacity-40 pointer-events-none"
+              style={{
+                background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.5) 50%, transparent 100%)',
+                animation: 'riverShimmer 3s ease-in-out infinite'
+              }}
             />
           </div>
         </div>
