@@ -2,17 +2,12 @@
  * InsightCapture - Post-meditation voice note capture
  *
  * Shown after meditation session completes.
- * Flow:
- * 1. Tap to start recording
- * 2. Speak your insight (real-time transcription shown)
- * 3. Tap to stop and save
- * 4. Option to skip
- *
- * Design: Minimal, no prompts, just capture
+ * Features audio level visualization for feedback.
  */
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useVoiceCapture } from '../hooks/useVoiceCapture'
+import { useAudioLevel } from '../hooks/useAudioLevel'
 import { addInsight } from '../lib/db'
 import { formatDuration } from '../lib/format'
 
@@ -20,6 +15,37 @@ interface InsightCaptureProps {
   sessionId?: string
   onComplete: () => void
   onSkip: () => void
+}
+
+// Audio level bars component
+function AudioLevelBars({ level }: { level: number }) {
+  const barCount = 5
+  const bars = []
+
+  for (let i = 0; i < barCount; i++) {
+    // Each bar activates at different thresholds
+    const threshold = (i + 1) / barCount
+    const isActive = level >= threshold * 0.7
+    const heightPercent = isActive ? 40 + (level * 60) : 20
+
+    bars.push(
+      <div
+        key={i}
+        className="w-1 rounded-full transition-all duration-75"
+        style={{
+          height: `${heightPercent}%`,
+          backgroundColor: isActive ? 'rgba(239, 68, 68, 0.8)' : 'rgba(0, 0, 0, 0.1)',
+          transform: isActive ? 'scaleY(1)' : 'scaleY(0.5)',
+        }}
+      />
+    )
+  }
+
+  return (
+    <div className="flex items-center justify-center gap-1 h-8">
+      {bars}
+    </div>
+  )
 }
 
 export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCaptureProps) {
@@ -35,22 +61,43 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
     cancelCapture
   } = useVoiceCapture()
 
+  const { audioLevel, startAnalyzing, stopAnalyzing } = useAudioLevel()
   const [isSaving, setIsSaving] = useState(false)
+  const streamRef = useRef<MediaStream | null>(null)
 
   // Auto-start recording on mount (after brief delay for UI to settle)
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
       if (isSupported && state === 'idle') {
+        // Get stream for audio level analysis
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+          streamRef.current = stream
+          startAnalyzing(stream)
+        } catch (err) {
+          console.error('Failed to get audio stream for visualization:', err)
+        }
         startCapture()
       }
     }, 500)
     return () => clearTimeout(timer)
-  }, [isSupported, state, startCapture])
+  }, [isSupported, state, startCapture, startAnalyzing])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopAnalyzing()
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop())
+      }
+    }
+  }, [stopAnalyzing])
 
   // Handle stop and save
   const handleStopAndSave = useCallback(async () => {
     if (!isRecording) return
 
+    stopAnalyzing()
     setIsSaving(true)
     try {
       const result = await stopCapture()
@@ -69,15 +116,16 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
     } finally {
       setIsSaving(false)
     }
-  }, [isRecording, stopCapture, sessionId, onComplete, displayText])
+  }, [isRecording, stopCapture, sessionId, onComplete, displayText, stopAnalyzing])
 
   // Handle skip
   const handleSkip = useCallback(() => {
+    stopAnalyzing()
     if (isRecording) {
       cancelCapture()
     }
     onSkip()
-  }, [isRecording, cancelCapture, onSkip])
+  }, [isRecording, cancelCapture, onSkip, stopAnalyzing])
 
   // Not supported fallback
   if (!isSupported) {
@@ -133,24 +181,37 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
 
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center px-8 pb-32">
-        {/* Recording indicator */}
-        <div className="mb-8">
+        {/* Recording indicator with audio visualization */}
+        <div className="mb-6">
           {isRecording ? (
-            <div className="relative">
-              {/* Pulsing ring */}
-              <div className="absolute inset-0 w-20 h-20 rounded-full bg-rose-400/20 animate-ping" />
-              {/* Center dot */}
-              <div className="relative w-20 h-20 rounded-full bg-rose-400 flex items-center justify-center">
-                <div className="w-3 h-3 rounded-full bg-cream" />
+            <div className="relative flex flex-col items-center">
+              {/* Main recording circle with dynamic glow */}
+              <div
+                className="relative w-24 h-24 rounded-full bg-rose-500 flex items-center justify-center transition-all duration-100"
+                style={{
+                  boxShadow: `0 0 ${20 + audioLevel * 40}px ${10 + audioLevel * 20}px rgba(239, 68, 68, ${0.2 + audioLevel * 0.3})`,
+                  transform: `scale(${1 + audioLevel * 0.1})`,
+                }}
+              >
+                {/* Inner microphone icon */}
+                <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                  <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                </svg>
+              </div>
+
+              {/* Audio level bars below */}
+              <div className="mt-4">
+                <AudioLevelBars level={audioLevel} />
               </div>
             </div>
           ) : state === 'requesting' ? (
-            <div className="w-20 h-20 rounded-full bg-ink/10 flex items-center justify-center">
-              <div className="w-6 h-6 border-2 border-ink/30 border-t-ink rounded-full animate-spin" />
+            <div className="w-24 h-24 rounded-full bg-ink/10 flex items-center justify-center">
+              <div className="w-8 h-8 border-2 border-ink/30 border-t-ink rounded-full animate-spin" />
             </div>
           ) : (
-            <div className="w-20 h-20 rounded-full bg-ink/5 flex items-center justify-center">
-              <svg className="w-8 h-8 text-ink/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-24 h-24 rounded-full bg-ink/5 flex items-center justify-center">
+              <svg className="w-10 h-10 text-ink/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
               </svg>
             </div>
@@ -159,36 +220,40 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
 
         {/* Duration */}
         {isRecording && (
-          <p className="text-sm text-ink/40 tabular-nums mb-6">
+          <p className="text-lg text-ink/60 tabular-nums mb-4 font-medium">
             {formatDuration(Math.floor(durationMs / 1000))}
           </p>
         )}
 
         {/* Prompt text */}
-        <p className="font-serif text-xl text-ink mb-8 text-center">
+        <p className="font-serif text-xl text-ink mb-6 text-center">
           {isRecording
-            ? 'Speak your insight...'
+            ? 'Recording...'
             : state === 'requesting'
               ? 'Requesting microphone...'
               : 'Capture a thought'}
         </p>
 
         {/* Transcription display */}
-        <div className="w-full max-w-md min-h-[120px] mb-8">
+        <div className="w-full max-w-md min-h-[100px] mb-6">
           {displayText ? (
             <p className="text-ink/70 leading-relaxed text-center">
               {displayText}
             </p>
           ) : isRecording ? (
-            <p className="text-ink/30 text-center italic">
-              Listening...
+            <p className="text-ink/30 text-center text-sm">
+              Speak now — your voice is being captured
+              <br />
+              <span className="text-ink/20 text-xs">
+                (Transcription may vary by device)
+              </span>
             </p>
           ) : null}
         </div>
       </div>
 
       {/* Bottom action */}
-      <div className="flex-none pb-12 px-8">
+      <div className="flex-none pb-12 px-8 safe-area-bottom">
         {isRecording && (
           <button
             onClick={handleStopAndSave}
