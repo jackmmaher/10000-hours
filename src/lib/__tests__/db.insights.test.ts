@@ -7,8 +7,7 @@ import {
   getInsightById,
   updateInsight,
   deleteInsight,
-  getInsightsBySessionId,
-  Insight
+  getInsightsBySessionId
 } from '../db'
 
 describe('Insights CRUD operations', () => {

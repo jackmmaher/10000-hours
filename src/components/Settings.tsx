@@ -3,8 +3,7 @@
  *
  * Features:
  * - Tier status display (FREE / PREMIUM)
- * - "Unlock full journey" banner (Day 31+ FREE)
- * - Hide Time Display toggle (Premium only)
+ * - Hide Time Display toggle
  * - Privacy Policy, Terms links
  * - Restore Purchase
  * - Version number
@@ -23,7 +22,7 @@ interface SettingsProps {
 
 export function Settings({ onShowPaywall, onRestorePurchase }: SettingsProps) {
   const { setView } = useSessionStore()
-  const { tier, isPremiumOrTrial, daysSinceFirstSession } = usePremiumStore()
+  const { tier, isPremium } = usePremiumStore()
   const { hideTimeDisplay, setHideTimeDisplay } = useSettingsStore()
 
   const swipeHandlers = useSwipe({
@@ -32,10 +31,6 @@ export function Settings({ onShowPaywall, onRestorePurchase }: SettingsProps) {
   })
 
   const handleHideTimeToggle = async () => {
-    if (!isPremiumOrTrial) {
-      onShowPaywall()
-      return
-    }
     const newValue = !hideTimeDisplay
     await setHideTimeDisplay(newValue)
     trackHideTimeToggle(newValue)
@@ -58,36 +53,36 @@ export function Settings({ onShowPaywall, onRestorePurchase }: SettingsProps) {
         <h1 className="font-serif text-2xl text-ink mb-10">Settings</h1>
 
         {/* Tier Status Banner */}
-        {!isPremiumOrTrial && (
+        {tier === 'free' && (
           <button
             onClick={onShowPaywall}
             className="w-full mb-10 p-5 bg-cream-warm rounded-xl text-left hover:bg-cream-deep transition-colors active:scale-[0.99]"
           >
             <p className="font-serif text-xs text-ink/40 tracking-wide mb-2">
-              Your Journey
+              Your Plan
             </p>
             <p className="text-lg text-ink font-medium">
-              {daysSinceFirstSession} days meditating
+              Free
             </p>
             <p className="text-sm text-ink/40 mt-1">
-              30-day window active
+              Full meditation tracking
             </p>
             <div className="mt-4 py-2.5 px-4 bg-ink text-cream text-sm rounded-lg text-center">
-              Unlock full journey — $4.99/year
+              Upgrade to Premium — $4.99/year
             </div>
           </button>
         )}
 
-        {tier === 'premium' && (
+        {isPremium && (
           <div className="mb-10 p-5 bg-cream-warm rounded-xl">
             <p className="font-serif text-xs text-ink/40 tracking-wide mb-2">
-              Your Journey
+              Your Plan
             </p>
             <p className="text-lg text-ink font-medium">
               Premium
             </p>
             <p className="text-sm text-ink/40 mt-1">
-              Full history unlocked
+              Enhanced features unlocked
             </p>
           </div>
         )}
@@ -105,30 +100,24 @@ export function Settings({ onShowPaywall, onRestorePurchase }: SettingsProps) {
                 Meditate without watching numbers
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              {!isPremiumOrTrial && (
-                <span className="text-xs text-ink/25">Premium</span>
-              )}
-              {/* Custom organic toggle */}
+            {/* Custom organic toggle */}
+            <div
+              className={`
+                relative w-12 h-7 rounded-full transition-colors duration-300
+                ${hideTimeDisplay ? 'bg-moss' : 'bg-cream-deep'}
+              `}
+            >
+              {/* Pearl-like knob with gradient */}
               <div
                 className={`
-                  relative w-12 h-7 rounded-full transition-colors duration-300
-                  ${hideTimeDisplay && isPremiumOrTrial ? 'bg-moss' : 'bg-cream-deep'}
-                  ${!isPremiumOrTrial ? 'opacity-40' : ''}
+                  absolute top-1 w-5 h-5 rounded-full shadow-sm
+                  transition-transform duration-300
+                  ${hideTimeDisplay ? 'translate-x-6' : 'translate-x-1'}
                 `}
-              >
-                {/* Pearl-like knob with gradient */}
-                <div
-                  className={`
-                    absolute top-1 w-5 h-5 rounded-full shadow-sm
-                    transition-transform duration-300
-                    ${hideTimeDisplay && isPremiumOrTrial ? 'translate-x-6' : 'translate-x-1'}
-                  `}
-                  style={{
-                    background: 'radial-gradient(circle at 30% 30%, #FFF, #F7F3EA)'
-                  }}
-                />
-              </div>
+                style={{
+                  background: 'radial-gradient(circle at 30% 30%, #FFF, #F7F3EA)'
+                }}
+              />
             </div>
           </button>
         </div>

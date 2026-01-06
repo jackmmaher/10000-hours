@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
-import { usePremiumStore } from '../stores/usePremiumStore'
 import { useSwipe } from '../hooks/useSwipe'
 import {
   getMonthlyData,
@@ -8,7 +7,6 @@ import {
   getSessionsForDate,
   getTotalForDate
 } from '../lib/calculations'
-import { getCalendarFadeOpacity } from '../lib/tierLogic'
 import {
   formatMonthYear,
   formatFullDate,
@@ -24,7 +22,6 @@ type CalendarView = 'month' | 'year'
 
 export function Calendar() {
   const { sessions, setView } = useSessionStore()
-  const { isPremiumOrTrial } = usePremiumStore()
 
   const today = new Date()
   const [viewType, setViewType] = useState<CalendarView>('month')
@@ -32,35 +29,6 @@ export function Calendar() {
   const [currentYear, setCurrentYear] = useState(today.getFullYear())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [expandedSession, setExpandedSession] = useState(false)
-
-  // Calculate the oldest allowed month for FREE tier (90 days back)
-  const oldestAllowedDate = useMemo(() => {
-    if (isPremiumOrTrial) return null // No limit
-    const date = new Date()
-    date.setDate(date.getDate() - 90)
-    return date
-  }, [isPremiumOrTrial])
-
-  // Check if a month is within the allowed range
-  const isMonthAllowed = (year: number, month: number): boolean => {
-    if (isPremiumOrTrial) return true
-    if (!oldestAllowedDate) return true
-    const monthStart = new Date(year, month, 1)
-    return monthStart >= oldestAllowedDate
-  }
-
-  // Calculate day age for fade effect
-  const getDayAge = (day: number): number => {
-    const date = new Date(currentYear, currentMonth, day)
-    const diffMs = today.getTime() - date.getTime()
-    return Math.floor(diffMs / (24 * 60 * 60 * 1000))
-  }
-
-  // Get fade opacity for a specific day
-  const getDayFadeOpacity = (day: number): number => {
-    if (isPremiumOrTrial) return 1
-    return getCalendarFadeOpacity(getDayAge(day))
-  }
 
   // Monthly heat map data
   const monthlyData = useMemo(() => getMonthlyData(sessions), [sessions])
@@ -120,11 +88,6 @@ export function Calendar() {
       newYear = currentYear - 1
     }
 
-    // Check if allowed (90-day limit for FREE tier)
-    if (!isMonthAllowed(newYear, newMonth)) {
-      return // Don't navigate beyond allowed range
-    }
-
     setCurrentMonth(newMonth)
     setCurrentYear(newYear)
     setSelectedDate(null)
@@ -139,17 +102,6 @@ export function Calendar() {
     }
     setSelectedDate(null)
   }
-
-  // Check if can go to previous month
-  const canGoPrev = useMemo(() => {
-    let prevMonth = currentMonth - 1
-    let prevYear = currentYear
-    if (prevMonth < 0) {
-      prevMonth = 11
-      prevYear = currentYear - 1
-    }
-    return isMonthAllowed(prevYear, prevMonth)
-  }, [currentMonth, currentYear, isMonthAllowed])
 
   const goToToday = () => {
     setCurrentMonth(today.getMonth())
@@ -286,8 +238,7 @@ export function Calendar() {
             >
               <button
                 onClick={goToPrevMonth}
-                disabled={!canGoPrev}
-                className={`p-2 transition-colors active:scale-[0.95] ${canGoPrev ? 'text-ink/40 hover:text-ink/60' : 'text-ink/15 cursor-not-allowed'}`}
+                className="p-2 text-ink/40 hover:text-ink/60 transition-colors active:scale-[0.95]"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
@@ -326,9 +277,6 @@ export function Calendar() {
             {/* Calendar grid - garden of days */}
             <div className="grid grid-cols-7 gap-1.5 mb-8">
               {calendarDays.map((day, index) => {
-                const fadeOpacity = day ? getDayFadeOpacity(day) : 1
-                const dayAge = day ? getDayAge(day) : 0
-                const isOldAndBlurred = !isPremiumOrTrial && dayAge > 90
                 const hasSession = day ? sessionDates.has(day) : false
 
                 return (
@@ -345,18 +293,14 @@ export function Calendar() {
                               ? 'ring-1 ring-ink/30 text-ink'
                               : 'text-ink/60 hover:bg-cream-deep'
                           }
-                          ${isOldAndBlurred ? 'blur-[1px]' : ''}
                         `}
                         style={{
-                          opacity: isSelected(day) ? 1 : fadeOpacity,
-                          // Subtle moss warmth for days with sessions
                           backgroundColor: hasSession && !isSelected(day) && !isToday(day)
                             ? 'rgba(135, 168, 120, 0.08)'
                             : undefined
                         }}
                       >
                         <span className="text-sm">{day}</span>
-                        {/* Session indicator - organic dot */}
                         {hasSession && !isSelected(day) && (
                           <span className="absolute bottom-1.5 w-1 h-1 rounded-full bg-moss/60" />
                         )}

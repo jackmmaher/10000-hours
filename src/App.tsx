@@ -12,7 +12,7 @@ import { MilestoneCelebration } from './components/MilestoneCelebration'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { purchasePremium, restorePurchases } from './lib/purchases'
 
-type PaywallSource = 'day31' | 'settings' | 'stats' | 'calendar'
+type PaywallSource = 'settings' | 'stats' | 'calendar'
 
 function AppContent() {
   const { view, isLoading, hydrate } = useSessionStore()
@@ -42,14 +42,6 @@ function AppContent() {
     init()
   }, [hydrate, premiumStore, settingsStore])
 
-  // Check for Day 31 trigger
-  useEffect(() => {
-    if (premiumStore.shouldShowPaywall && !showPaywall) {
-      setPaywallSource('day31')
-      setShowPaywall(true)
-    }
-  }, [premiumStore.shouldShowPaywall, showPaywall])
-
   // Handlers
   const handleOnboardingComplete = useCallback(() => {
     markOnboardingSeen()
@@ -61,13 +53,9 @@ function AppContent() {
     setShowPaywall(true)
   }, [])
 
-  const handlePaywallDismiss = useCallback(async () => {
+  const handlePaywallDismiss = useCallback(() => {
     setShowPaywall(false)
-    // If this was Day 31 trigger, mark trial as expired
-    if (paywallSource === 'day31') {
-      await premiumStore.markTrialExpired()
-    }
-  }, [paywallSource, premiumStore])
+  }, [])
 
   const handlePurchase = useCallback(async () => {
     const result = await purchasePremium()

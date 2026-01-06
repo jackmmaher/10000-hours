@@ -1,11 +1,9 @@
-import { useEffect, useCallback, useMemo } from 'react'
+import { useEffect, useCallback } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
-import { usePremiumStore } from '../stores/usePremiumStore'
 import { useSettingsStore } from '../stores/useSettingsStore'
 import { useTimer, useWakeLock } from '../hooks/useTimer'
 import { useSwipe } from '../hooks/useSwipe'
 import { formatTimer, formatTotalHours, formatSessionAdded } from '../lib/format'
-import { getWeeklyRollingSeconds } from '../lib/tierLogic'
 import { ZenMessage } from './ZenMessage'
 
 export function Timer() {
@@ -24,19 +22,12 @@ export function Timer() {
     setView
   } = useSessionStore()
 
-  const { isPremiumOrTrial } = usePremiumStore()
   const { hideTimeDisplay } = useSettingsStore()
 
   const { elapsed, isRunning } = useTimer()
 
-  // Calculate weekly rolling seconds for FREE tier display
-  const weeklySeconds = useMemo(
-    () => getWeeklyRollingSeconds(sessions),
-    [sessions]
-  )
-
-  // Only hide time if setting is on AND user has premium access
-  const shouldHideTime = hideTimeDisplay && isPremiumOrTrial
+  // Hide time if setting is enabled
+  const shouldHideTime = hideTimeDisplay
 
   // Keep screen awake during session
   useWakeLock(isRunning)
@@ -126,7 +117,7 @@ export function Timer() {
                 // Normal mode - show added time
                 <>
                   <p className="font-serif text-display text-indigo-deep tabular-nums">
-                    {isPremiumOrTrial ? formatTotalHours(totalSeconds) : formatTotalHours(weeklySeconds)}
+                    {formatTotalHours(totalSeconds)}
                   </p>
                   <p className="text-sm text-indigo-deep/50 mt-2 text-center">
                     {formatSessionAdded(lastSessionDuration)}
@@ -243,10 +234,10 @@ export function Timer() {
               // Normal mode - show total or weekly hours based on tier
               <>
                 <p className="font-serif text-display text-indigo-deep tabular-nums">
-                  {isPremiumOrTrial ? formatTotalHours(totalSeconds) : formatTotalHours(weeklySeconds)}
+                  {formatTotalHours(totalSeconds)}
                 </p>
                 <p className="text-sm text-indigo-deep/40 mt-2">
-                  {isPremiumOrTrial ? 'toward 10,000 hours' : 'this week'}
+                  toward 10,000 hours
                 </p>
               </>
             )

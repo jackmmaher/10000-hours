@@ -1,23 +1,16 @@
 /**
  * AchievementGallery - Displays all achieved milestones with memory
  *
- * Premium/Trial: Full visibility with dates
- * FREE after trial: Achievements visible but dates faded/blurred
- *
- * Design principle: "Gold star on copybook" - never removed, just less visible
+ * All users see full achievement history with dates.
+ * Design principle: "Gold star on copybook" - earned achievements are always visible
  */
 
 import { useMemo, useEffect, useState } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
-import { usePremiumStore } from '../stores/usePremiumStore'
 import { getAchievements, Achievement } from '../lib/db'
-import { getAchievementVisibility, MILESTONES } from '../lib/tierLogic'
+import { MILESTONES } from '../lib/tierLogic'
 import { getAdaptiveMilestone } from '../lib/calculations'
 import { formatShortDate } from '../lib/format'
-
-interface AchievementGalleryProps {
-  onLockedTap?: () => void
-}
 
 // Format milestone label (e.g., "2h", "5h", "1k")
 function formatMilestoneLabel(hours: number): string {
@@ -27,9 +20,8 @@ function formatMilestoneLabel(hours: number): string {
   return `${hours}h`
 }
 
-export function AchievementGallery({ onLockedTap }: AchievementGalleryProps) {
+export function AchievementGallery() {
   const { sessions, totalSeconds } = useSessionStore()
-  const { tier, trialExpired, isPremiumOrTrial } = usePremiumStore()
   const [achievements, setAchievements] = useState<Achievement[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -41,13 +33,7 @@ export function AchievementGallery({ onLockedTap }: AchievementGalleryProps) {
       setIsLoading(false)
     }
     loadAchievements()
-  }, [totalSeconds]) // Reload when total changes (new achievement might have been recorded)
-
-  // Get visibility settings based on tier
-  const visibility = useMemo(
-    () => getAchievementVisibility(tier, trialExpired),
-    [tier, trialExpired]
-  )
+  }, [totalSeconds])
 
   // Get current milestone progress
   const milestone = useMemo(
@@ -55,7 +41,6 @@ export function AchievementGallery({ onLockedTap }: AchievementGalleryProps) {
     [sessions]
   )
 
-  // Find next few milestones to show
   const currentHours = totalSeconds / 3600
 
   // Get milestones to display (achieved + next)
@@ -84,11 +69,9 @@ export function AchievementGallery({ onLockedTap }: AchievementGalleryProps) {
       {/* Achievement badges row */}
       <div className="flex items-end gap-4 overflow-x-auto pb-2">
         {displayMilestones.achieved.map((achievement) => (
-          <button
+          <div
             key={achievement.hours}
-            onClick={() => !isPremiumOrTrial && onLockedTap?.()}
-            className="flex flex-col items-center min-w-[48px] transition-opacity"
-            style={{ opacity: visibility.opacity }}
+            className="flex flex-col items-center min-w-[48px]"
           >
             {/* Badge */}
             <div className="w-10 h-10 rounded-full bg-indigo-deep flex items-center justify-center mb-1">
@@ -97,20 +80,11 @@ export function AchievementGallery({ onLockedTap }: AchievementGalleryProps) {
               </span>
             </div>
 
-            {/* Date - hidden or blurred for FREE tier */}
-            {visibility.showDate ? (
-              <span className="text-[10px] text-indigo-deep/50 whitespace-nowrap">
-                {formatShortDate(new Date(achievement.achievedAt))}
-              </span>
-            ) : (
-              <span
-                className="text-[10px] text-indigo-deep/30 whitespace-nowrap"
-                style={{ filter: visibility.blurred ? 'blur(3px)' : 'none' }}
-              >
-                {formatShortDate(new Date(achievement.achievedAt))}
-              </span>
-            )}
-          </button>
+            {/* Date */}
+            <span className="text-[10px] text-indigo-deep/50 whitespace-nowrap">
+              {formatShortDate(new Date(achievement.achievedAt))}
+            </span>
+          </div>
         ))}
 
         {/* Next milestone (in progress) */}
@@ -156,23 +130,8 @@ export function AchievementGallery({ onLockedTap }: AchievementGalleryProps) {
         )}
       </div>
 
-      {/* FREE tier message */}
-      {!isPremiumOrTrial && achievements.length > 0 && (
-        <button
-          onClick={onLockedTap}
-          className="mt-4 text-left w-full"
-        >
-          <p className="text-xs text-indigo-deep/40 italic">
-            These moments remain.
-          </p>
-          <p className="text-[10px] text-indigo-deep/30 mt-1">
-            Tap to see full history
-          </p>
-        </button>
-      )}
-
-      {/* Progress River - organic, flowing progress for premium users */}
-      {isPremiumOrTrial && displayMilestones.nextMilestone && (
+      {/* Progress River - organic, flowing progress */}
+      {displayMilestones.nextMilestone && (
         <div className="mt-5">
           <div className="flex justify-between text-[10px] text-ink/40 mb-2">
             <span className="tabular-nums">{milestone.currentFormatted}</span>
