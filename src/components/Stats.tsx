@@ -256,7 +256,7 @@ export function Stats() {
         </div>
 
         {/* Navigation links */}
-        <div className="flex justify-center gap-8 pt-4">
+        <div className="flex justify-center gap-6 pt-4">
           <button
             onClick={() => setView('calendar')}
             className="py-3 text-sm text-ink/60 hover:text-ink transition-colors flex items-center active:scale-[0.98]"
@@ -265,6 +265,12 @@ export function Stats() {
             <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
             </svg>
+          </button>
+          <button
+            onClick={() => setView('insights')}
+            className="py-3 text-sm text-ink/40 hover:text-ink/60 transition-colors active:scale-[0.98]"
+          >
+            Insights
           </button>
           <button
             onClick={() => setView('settings')}

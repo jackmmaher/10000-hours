@@ -5,6 +5,7 @@ import { useTimer, useWakeLock } from '../hooks/useTimer'
 import { useSwipe } from '../hooks/useSwipe'
 import { formatTimer, formatTotalHours, formatSessionAdded } from '../lib/format'
 import { ZenMessage } from './ZenMessage'
+import { InsightCapture } from './InsightCapture'
 
 export function Timer() {
   const {
@@ -14,11 +15,14 @@ export function Timer() {
     hasReachedEnlightenment,
     justReachedEnlightenment,
     sessions,
+    lastSessionUuid,
     startPreparing,
     startTimer,
     stopTimer,
     clearLastSession,
     acknowledgeEnlightenment,
+    startInsightCapture,
+    skipInsightCapture,
     setView
   } = useSessionStore()
 
@@ -43,13 +47,13 @@ export function Timer() {
     }
   }, [timerPhase, startPreparing, stopTimer, clearLastSession])
 
-  // Auto-clear complete state after a delay
+  // After session complete, transition to insight capture
   useEffect(() => {
     if (timerPhase === 'complete') {
-      const timer = setTimeout(clearLastSession, 3000)
+      const timer = setTimeout(startInsightCapture, 3000)
       return () => clearTimeout(timer)
     }
-  }, [timerPhase, clearLastSession])
+  }, [timerPhase, startInsightCapture])
 
   // Swipe handlers
   const swipeHandlers = useSwipe({
@@ -287,6 +291,15 @@ export function Timer() {
           </p>
         )}
       </div>
+      )}
+
+      {/* Insight capture after session */}
+      {timerPhase === 'capture' && (
+        <InsightCapture
+          sessionId={lastSessionUuid || undefined}
+          onComplete={skipInsightCapture}
+          onSkip={skipInsightCapture}
+        />
       )}
     </>
   )

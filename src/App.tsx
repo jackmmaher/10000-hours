@@ -6,6 +6,7 @@ import { Timer } from './components/Timer'
 import { Stats } from './components/Stats'
 import { Calendar } from './components/Calendar'
 import { Settings } from './components/Settings'
+import { Insights } from './components/Insights'
 import { Onboarding, hasSeenOnboarding, markOnboardingSeen } from './components/Onboarding'
 import { PaywallPremium } from './components/PaywallPremium'
 import { MilestoneCelebration } from './components/MilestoneCelebration'
@@ -101,6 +102,7 @@ function AppContent() {
       {view === 'timer' && <Timer />}
       {view === 'stats' && <Stats />}
       {view === 'calendar' && <Calendar />}
+      {view === 'insights' && <Insights />}
       {view === 'settings' && (
         <Settings
           onShowPaywall={() => handleShowPaywall('settings')}

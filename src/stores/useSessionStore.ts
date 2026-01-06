@@ -3,8 +3,8 @@ import { Session, Achievement, addSession, getAllSessions, initAppState, markEnl
 import { GOAL_SECONDS } from '../lib/constants'
 import { MILESTONES } from '../lib/tierLogic'
 
-type AppView = 'timer' | 'stats' | 'calendar' | 'settings'
-type TimerPhase = 'idle' | 'preparing' | 'running' | 'complete' | 'enlightenment'
+type AppView = 'timer' | 'stats' | 'calendar' | 'settings' | 'insights'
+type TimerPhase = 'idle' | 'preparing' | 'running' | 'complete' | 'capture' | 'enlightenment'
 
 interface SessionState {
   // App state
@@ -29,6 +29,9 @@ interface SessionState {
   // Milestone celebration state
   justAchievedMilestone: Achievement | null
 
+  // Last session ID for insight linking
+  lastSessionUuid: string | null
+
   // Actions
   hydrate: () => Promise<void>
   startPreparing: () => void
@@ -37,6 +40,8 @@ interface SessionState {
   clearLastSession: () => void
   acknowledgeEnlightenment: () => void
   clearMilestoneCelebration: () => void
+  startInsightCapture: () => void
+  skipInsightCapture: () => void
 }
 
 export const useSessionStore = create<SessionState>((set, get) => ({
@@ -52,6 +57,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   hasReachedEnlightenment: false,
   justReachedEnlightenment: false,
   justAchievedMilestone: null,
+  lastSessionUuid: null,
 
   setView: (view) => set({ view }),
 
@@ -128,6 +134,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         startedAt: null,
         sessionStartTime: null,
         lastSessionDuration: durationSeconds,
+        lastSessionUuid: sessionUuid,
         sessions: newSessions,
         totalSeconds: newTotalSeconds,
         hasReachedEnlightenment: true,
@@ -140,6 +147,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         startedAt: null,
         sessionStartTime: null,
         lastSessionDuration: durationSeconds,
+        lastSessionUuid: sessionUuid,
         sessions: newSessions,
         totalSeconds: newTotalSeconds,
         justAchievedMilestone: achievedMilestone
@@ -162,5 +170,18 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
   clearMilestoneCelebration: () => {
     set({ justAchievedMilestone: null })
+  },
+
+  startInsightCapture: () => {
+    set({ timerPhase: 'capture' })
+  },
+
+  skipInsightCapture: () => {
+    set({
+      timerPhase: 'idle',
+      lastSessionDuration: null,
+      lastSessionUuid: null,
+      justAchievedMilestone: null
+    })
   }
 }))
