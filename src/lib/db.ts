@@ -38,11 +38,21 @@ export interface UserSettings {
   hideTimeDisplay: boolean
 }
 
+export interface Insight {
+  id: string
+  sessionId: string | null
+  rawText: string
+  formattedText: string | null
+  createdAt: Date
+  updatedAt: Date | null
+}
+
 class MeditationDB extends Dexie {
   sessions!: Table<Session>
   appState!: Table<AppState>
   profile!: Table<UserProfile>
   settings!: Table<UserSettings>
+  insights!: Table<Insight>
 
   constructor() {
     super('10000hours')
@@ -77,6 +87,15 @@ class MeditationDB extends Dexie {
         id: 1,
         hideTimeDisplay: false
       })
+    })
+
+    // v3: Add insights table for voice note capture
+    this.version(3).stores({
+      sessions: '++id, uuid, startTime, endTime',
+      appState: 'id',
+      profile: 'id',
+      settings: 'id',
+      insights: 'id, sessionId, createdAt'
     })
   }
 }
@@ -207,4 +226,48 @@ export async function recordMilestoneIfNew(
   }
 
   return null
+}
+
+// Insight helpers
+export async function addInsight(data: {
+  sessionId?: string | null
+  rawText: string
+  formattedText?: string | null
+}): Promise<Insight> {
+  const insight: Insight = {
+    id: crypto.randomUUID(),
+    sessionId: data.sessionId ?? null,
+    rawText: data.rawText,
+    formattedText: data.formattedText ?? null,
+    createdAt: new Date(),
+    updatedAt: null
+  }
+  await db.insights.add(insight)
+  return insight
+}
+
+export async function getInsights(): Promise<Insight[]> {
+  return db.insights.orderBy('createdAt').reverse().toArray()
+}
+
+export async function getInsightById(id: string): Promise<Insight | undefined> {
+  return db.insights.get(id)
+}
+
+export async function updateInsight(
+  id: string,
+  updates: Partial<Pick<Insight, 'rawText' | 'formattedText'>>
+): Promise<void> {
+  await db.insights.update(id, {
+    ...updates,
+    updatedAt: new Date()
+  })
+}
+
+export async function deleteInsight(id: string): Promise<void> {
+  await db.insights.delete(id)
+}
+
+export async function getInsightsBySessionId(sessionId: string): Promise<Insight[]> {
+  return db.insights.where('sessionId').equals(sessionId).toArray()
 }
