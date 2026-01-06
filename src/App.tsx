@@ -9,6 +9,7 @@ import { Settings } from './components/Settings'
 import { Insights } from './components/Insights'
 import { PearlsFeed } from './components/PearlsFeed'
 import { SavedPearls } from './components/SavedPearls'
+import { Navigation } from './components/Navigation'
 import { useAuthStore } from './stores/useAuthStore'
 import { Onboarding, hasSeenOnboarding, markOnboardingSeen } from './components/Onboarding'
 import { PaywallPremium } from './components/PaywallPremium'
@@ -129,6 +130,9 @@ function AppContent() {
 
       {/* Milestone celebration overlay */}
       <MilestoneCelebration />
+
+      {/* Bottom navigation */}
+      <Navigation />
     </div>
   )
 }

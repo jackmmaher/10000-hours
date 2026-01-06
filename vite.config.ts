@@ -11,7 +11,7 @@ export default defineConfig({
       manifest: {
         name: '10,000 Hours',
         short_name: '10K Hours',
-        description: 'Meditation timer for the long path',
+        description: 'Meditation timer with insights and community wisdom',
         theme_color: '#1a1a2e',
         background_color: '#F7F5F2',
         display: 'standalone',

@@ -9,11 +9,14 @@
  * - Version number
  */
 
+import { useState } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
 import { usePremiumStore } from '../stores/usePremiumStore'
 import { useSettingsStore } from '../stores/useSettingsStore'
+import { useAuthStore } from '../stores/useAuthStore'
 import { useSwipe } from '../hooks/useSwipe'
 import { trackHideTimeToggle } from '../lib/analytics'
+import { AuthModal } from './AuthModal'
 
 interface SettingsProps {
   onShowPaywall: () => void
@@ -24,6 +27,8 @@ export function Settings({ onShowPaywall, onRestorePurchase }: SettingsProps) {
   const { setView } = useSessionStore()
   const { tier, isPremium } = usePremiumStore()
   const { hideTimeDisplay, setHideTimeDisplay } = useSettingsStore()
+  const { user, isAuthenticated, profile, signOut, isLoading: authLoading } = useAuthStore()
+  const [showAuthModal, setShowAuthModal] = useState(false)
 
   const swipeHandlers = useSwipe({
     onSwipeRight: () => setView('stats'),
@@ -87,6 +92,45 @@ export function Settings({ onShowPaywall, onRestorePurchase }: SettingsProps) {
           </div>
         )}
 
+        {/* Account Section */}
+        <div className="mb-10 p-5 bg-cream-warm rounded-xl">
+          <p className="font-serif text-xs text-ink/40 tracking-wide mb-3">
+            Account
+          </p>
+          {isAuthenticated && user ? (
+            <div>
+              <p className="text-sm text-ink font-medium">
+                {user.email}
+              </p>
+              {profile && (
+                <div className="flex gap-4 mt-2 text-xs text-ink/50">
+                  <span>{profile.totalKarma} karma</span>
+                  <span>{profile.totalSaves} saves received</span>
+                </div>
+              )}
+              <button
+                onClick={signOut}
+                disabled={authLoading}
+                className="mt-4 py-2 px-4 text-sm text-ink/50 hover:text-ink/70 transition-colors"
+              >
+                {authLoading ? 'Signing out...' : 'Sign out'}
+              </button>
+            </div>
+          ) : (
+            <div>
+              <p className="text-sm text-ink/60 mb-3">
+                Sign in to share pearls and save community wisdom
+              </p>
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="py-2.5 px-4 bg-ink text-cream text-sm rounded-lg hover:bg-ink/90 transition-colors"
+              >
+                Sign in
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* Settings Options */}
         <div className="mb-10">
           {/* Hide Time Display - with custom organic toggle */}
@@ -146,11 +190,19 @@ export function Settings({ onShowPaywall, onRestorePurchase }: SettingsProps) {
       </div>
 
       {/* Version as quiet signature */}
-      <footer className="pb-8 text-center">
+      <footer className="pb-20 text-center">
         <p className="font-serif text-xs text-ink/25 italic">
-          10,000 Hours · v1.0.0
+          10,000 Hours · v2.0.0
         </p>
       </footer>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        title="Sign in"
+        subtitle="Join the community to share and save pearls"
+      />
     </div>
   )
 }
