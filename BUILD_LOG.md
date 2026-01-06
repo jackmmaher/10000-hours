@@ -1,7 +1,7 @@
 # 10,000 Hours - Build Log
 
 **Started:** January 5, 2026
-**Status:** UX Emotional Engagement Overhaul - Complete
+**Status:** Stage 1 Social Features - Complete
 
 ---
 
@@ -446,6 +446,124 @@ User requested comprehensive UI/UX review applying multiple design skill sets to
 
 ---
 
+## Stage 1: Social Features (Insights & Pearls)
+**Status:** COMPLETE
+**Date:** January 6, 2026
+
+> **Feature:** Voice-to-text insight capture and community wisdom sharing. Post-meditation flow: capture thoughts via voice, share selected wisdom as "Pearls" with community.
+
+### Context
+After completing UX refinement, Stage 1 adds the social layer:
+- Voice capture for post-meditation insights
+- Local-first storage with Dexie
+- Supabase backend for Pearls community feature
+- OAuth authentication (Google, Apple)
+
+### Phase 1: Timer → InsightCapture → Insights Flow ✓
+
+**Voice Capture Implementation:**
+- Created `InsightCapture.tsx` - Full-screen voice recording UI
+- Created `useVoiceCapture.ts` - Web Audio API for recording
+- Created `useAudioLevel.ts` - Real-time audio level monitoring
+- Created `transcription.ts` - Web Speech API integration
+- Flow: Timer ends → "Capture Insight?" prompt → Voice recording → Save to library
+
+**Audio Visualization:**
+- Claude-style horizontal waveform (32 bars)
+- Bars respond to audio level with center-weighted sensitivity
+- Smooth 75ms transitions, 0.6-1.0 opacity range
+
+**Local Storage:**
+- Added `insights` table to Dexie (v3)
+- Interface: `id, sessionId, rawText, formattedText, sharedPearlId, createdAt, updatedAt`
+
+### Phase 2: Pearls Community Feature ✓
+
+**Supabase Backend:**
+- Database tables: `pearls`, `pearl_votes`, `pearl_saves`, `profiles`
+- Row Level Security (RLS) policies for user data isolation
+- Functions: `createPearl`, `votePearl`, `savePearl`, `getPearls`
+
+**Feed Implementation:**
+- Created `PearlsFeed.tsx` - Community wisdom feed
+- Filter tabs: New, Rising, Top
+- Vote (heart icon) and Save (bookmark icon) interactions
+- Optimistic updates with rollback on error
+- Auth modal for unauthenticated actions
+
+**Authentication:**
+- Supabase Auth with Google OAuth
+- `useAuthStore.ts` - Auth state management
+- `AuthModal.tsx` - Sign-in modal with provider buttons
+
+### Phase 3: Navigation & Polish ✓
+
+**View Navigation:**
+- Timer → Stats → Insights → Pearls → Saved Pearls → Settings
+- Swipe gestures with improved detection (100px threshold, scroll tolerance)
+- Navigation links at bottom of each view
+
+**Insights Redesign:**
+- Bifurcated tabs: Notes / My Pearls
+- Tap insight → Full-screen SharePearl editor
+- Delete button in editor
+- Karma/saves stats displayed per pearl
+- Pull-to-refresh via swipe down
+
+### Bug Fixes Applied ✓
+
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| Share Pearl hung on "Sharing..." | `createPearl()` returned null silently | Changed to throw error |
+| My Pearls count showed 0 | Only loaded active tab data | Load both on mount |
+| Swipe too sensitive | Low threshold (50px) | Increased to 100px + scroll tolerance |
+| Highlight feature broken | Mobile text selection unreliable | Removed, use textarea directly |
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `src/components/InsightCapture.tsx` | Voice recording UI with waveform |
+| `src/components/Insights.tsx` | Insight library with Notes/Pearls tabs |
+| `src/components/PearlsFeed.tsx` | Community pearls feed |
+| `src/components/SharePearl.tsx` | Pearl editor/share modal |
+| `src/components/SavedPearls.tsx` | User's saved pearls |
+| `src/components/AuthModal.tsx` | OAuth sign-in modal |
+| `src/hooks/useVoiceCapture.ts` | Voice recording hook |
+| `src/hooks/useAudioLevel.ts` | Audio level monitoring |
+| `src/services/transcription.ts` | Speech-to-text service |
+| `src/services/voiceRecording.ts` | Audio recording utilities |
+| `src/lib/pearls.ts` | Pearls API (Supabase) |
+| `src/lib/supabase.ts` | Supabase client config |
+| `src/stores/useAuthStore.ts` | Auth state management |
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `src/lib/db.ts` | Added insights table (v3), sharedPearlId field (v4) |
+| `src/hooks/useSwipe.ts` | Improved gesture detection |
+| `src/stores/useSessionStore.ts` | Added insight capture views |
+| `src/App.tsx` | Integrated new views |
+
+### Environment Variables
+
+```env
+VITE_SUPABASE_URL=<project-url>
+VITE_SUPABASE_ANON_KEY=<anon-key>
+```
+
+### Progress Log
+
+| Date | Task | Status | Notes |
+|------|------|--------|-------|
+| Jan 6, 2026 | Phase 1: Voice capture | Complete | Timer → Insight flow |
+| Jan 6, 2026 | Phase 2: Pearls backend | Complete | Supabase + Auth |
+| Jan 6, 2026 | Phase 3: Navigation | Complete | Full app flow |
+| Jan 6, 2026 | Bug fixes | Complete | Share, swipe, UX improvements |
+
+---
+
 ## Phase 4: Capacitor + iOS
 **Status:** NOT STARTED (requires Phase 0)
 
@@ -473,27 +591,37 @@ User requested comprehensive UI/UX review applying multiple design skill sets to
 
 ## Technical Notes
 
-### Current Codebase (as of Jan 6, 2026 - UX Overhaul Complete)
+### Current Codebase (as of Jan 6, 2026 - Stage 1 Complete)
 
 ```
 src/
   lib/
-    db.ts           # Dexie v2 (sessions, appState, profile, settings, achievements)
+    db.ts           # Dexie v4 (sessions, appState, profile, settings, achievements, insights)
     calculations.ts # Stats, milestones (2h start), projections
     constants.ts    # GOAL_SECONDS, TIME_WINDOWS, trial constants
     format.ts       # Formatting utilities (incl. formatShortDate)
     tierLogic.ts    # Trial/downgrade logic, achievement visibility, MILESTONES
     analytics.ts    # Event tracking (mock mode)
     purchases.ts    # RevenueCat integration (mock mode)
+    pearls.ts       # Pearls API (Supabase CRUD)
+    supabase.ts     # Supabase client configuration
     __tests__/
-      tierLogic.test.ts  # 39 unit tests
+      tierLogic.test.ts     # 39 unit tests
+      db.insights.test.ts   # Insights tests
   stores/
     useSessionStore.ts  # Timer + session state + achievement recording
     usePremiumStore.ts  # Subscription/tier state
     useSettingsStore.ts # User preferences
+    useAuthStore.ts     # Supabase auth state
   hooks/
-    useSwipe.ts
+    useSwipe.ts         # Touch gesture detection (100px threshold)
     useTimer.ts
+    useAudioLevel.ts    # Real-time audio level monitoring
+    useVoiceCapture.ts  # Voice recording hook
+    useTapFeedback.ts   # Haptic feedback utility
+  services/
+    transcription.ts    # Web Speech API integration
+    voiceRecording.ts   # Audio recording utilities
   components/
     Timer.tsx               # Hide Time Display mode
     Stats.tsx               # AchievementGallery + TimeRangeSlider
@@ -509,9 +637,15 @@ src/
     TimeRangeSlider.tsx     # Visual time range selector
     MilestoneCelebration.tsx # Zen-neutral milestone acknowledgment
     ErrorBoundary.tsx       # React error boundary
-  App.tsx               # Full flow wiring + MilestoneCelebration
+    InsightCapture.tsx      # Voice recording with waveform
+    Insights.tsx            # Notes/Pearls bifurcated tabs
+    PearlsFeed.tsx          # Community wisdom feed
+    SharePearl.tsx          # Pearl editor/share modal
+    SavedPearls.tsx         # User's saved pearls
+    AuthModal.tsx           # OAuth sign-in modal
+  App.tsx               # Full flow wiring + all views
   main.tsx
-  index.css             # Slider styling
+  index.css             # Slider + animation styling
 ```
 
 ### Dependencies (package.json)
@@ -519,6 +653,7 @@ src/
 ```json
 {
   "dependencies": {
+    "@supabase/supabase-js": "^2.x",
     "date-fns": "^3.6.0",
     "dexie": "^4.0.4",
     "dexie-react-hooks": "^1.1.7",
