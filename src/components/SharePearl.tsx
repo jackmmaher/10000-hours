@@ -35,20 +35,6 @@ export function SharePearl({ insightText, isAlreadyShared, onClose, onSuccess, o
   const isOverLimit = charCount > MAX_PEARL_LENGTH
   const isEmpty = text.trim().length === 0
 
-  // Handle text selection from original insight (Kindle-style)
-  const handleTextSelect = () => {
-    const selection = window.getSelection()
-    if (selection && selection.toString().trim()) {
-      const selected = selection.toString().trim()
-      // Append to existing text (allows building up the pearl)
-      setText(prev => {
-        const newText = prev ? `${prev} ${selected}` : selected
-        return newText.slice(0, MAX_PEARL_LENGTH)
-      })
-      selection.removeAllRanges() // Clear selection after extracting
-    }
-  }
-
   const handleDelete = useCallback(async () => {
     setIsDeleting(true)
     try {
@@ -105,14 +91,10 @@ export function SharePearl({ insightText, isAlreadyShared, onClose, onSuccess, o
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-6 pb-32">
-        {/* Full insight text - selectable for highlighting */}
+        {/* Original insight - read only */}
         <div className="mb-6">
-          <p className="text-xs text-ink/40 mb-3">Your insight (tap & hold to highlight):</p>
-          <div
-            className="p-4 bg-cream-dark/30 rounded-xl select-text cursor-text"
-            onMouseUp={handleTextSelect}
-            onTouchEnd={handleTextSelect}
-          >
+          <p className="text-xs text-ink/40 mb-3">Your original insight:</p>
+          <div className="p-4 bg-cream-dark/30 rounded-xl">
             <p className="text-ink/80 leading-relaxed">
               {insightText}
             </p>
@@ -128,49 +110,51 @@ export function SharePearl({ insightText, isAlreadyShared, onClose, onSuccess, o
           </div>
         )}
 
-        {/* Premium gate */}
-        {!isPremium && !isAlreadyShared && (
-          <div className="mb-6 p-4 bg-amber-50 rounded-xl">
-            <p className="text-sm text-amber-800">
-              Sharing pearls is a Premium feature.
-            </p>
-          </div>
-        )}
-
         {/* Pearl editor - only show if not already shared */}
         {!isAlreadyShared && (
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-ink/40">Extract your pearl:</p>
-              {text && (
-                <button
-                  onClick={() => setText('')}
-                  className="text-xs text-ink/30 hover:text-ink/50 transition-colors"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Highlight text above or type here..."
-              className={`
-                w-full h-32 p-4 bg-cream-dark/50 rounded-xl resize-none
-                text-ink placeholder:text-ink/30
-                focus:outline-none focus:ring-2 focus:ring-indigo-deep/20
-                ${isOverLimit ? 'ring-2 ring-rose-400' : ''}
-              `}
-              disabled={!isPremium}
-            />
+          <>
+            {/* Premium gate */}
+            {!isPremium && (
+              <div className="mb-6 p-4 bg-amber-50 rounded-xl">
+                <p className="text-sm text-amber-800">
+                  Sharing pearls is a Premium feature.
+                </p>
+              </div>
+            )}
 
-            {/* Character count */}
-            <div className="flex justify-end mt-2">
-              <span className={`text-xs tabular-nums ${isOverLimit ? 'text-rose-500' : 'text-ink/40'}`}>
-                {charCount}/{MAX_PEARL_LENGTH}
-              </span>
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs text-ink/40">Extract your pearl to share with the community:</p>
+                {text && (
+                  <button
+                    onClick={() => setText('')}
+                    className="text-xs text-ink/30 hover:text-ink/50 transition-colors"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Type or paste the wisdom you want to share..."
+                className={`
+                  w-full h-32 p-4 bg-cream-dark/50 rounded-xl resize-none
+                  text-ink placeholder:text-ink/30
+                  focus:outline-none focus:ring-2 focus:ring-indigo-deep/20
+                  ${isOverLimit ? 'ring-2 ring-rose-400' : ''}
+                `}
+                disabled={!isPremium}
+              />
+
+              {/* Character count */}
+              <div className="flex justify-end mt-2">
+                <span className={`text-xs tabular-nums ${isOverLimit ? 'text-rose-500' : 'text-ink/40'}`}>
+                  {charCount}/{MAX_PEARL_LENGTH}
+                </span>
+              </div>
             </div>
-          </div>
+          </>
         )}
 
         {/* Error */}

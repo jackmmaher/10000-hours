@@ -50,19 +50,21 @@ export function Insights() {
   const [selectedInsight, setSelectedInsight] = useState<Insight | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  // Load data on mount and tab change
+  // Load both insights and pearls on mount (so counts are always accurate)
   useEffect(() => {
-    async function load() {
+    async function loadAll() {
       setIsLoading(true)
       try {
-        if (activeTab === 'notes') {
-          const data = await getInsights()
-          setInsights(data.sort((a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          ))
-        } else if (activeTab === 'pearls' && isAuthenticated && user) {
-          const pearls = await getMyPearls(user.id)
-          setMyPearls(pearls)
+        // Always load insights
+        const insightsData = await getInsights()
+        setInsights(insightsData.sort((a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        ))
+
+        // Load pearls if authenticated
+        if (isAuthenticated && user) {
+          const pearlsData = await getMyPearls(user.id)
+          setMyPearls(pearlsData)
         }
       } catch (err) {
         console.error('Failed to load data:', err)
@@ -70,8 +72,8 @@ export function Insights() {
         setIsLoading(false)
       }
     }
-    load()
-  }, [activeTab, isAuthenticated, user])
+    loadAll()
+  }, [isAuthenticated, user])
 
   // Handle insight delete (called from SharePearl)
   const handleDeleteInsight = useCallback(async () => {
