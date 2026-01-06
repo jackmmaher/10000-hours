@@ -3,7 +3,7 @@ import { Session, Achievement, addSession, getAllSessions, initAppState, markEnl
 import { GOAL_SECONDS } from '../lib/constants'
 import { MILESTONES } from '../lib/tierLogic'
 
-type AppView = 'timer' | 'stats' | 'calendar' | 'settings' | 'insights'
+type AppView = 'timer' | 'stats' | 'calendar' | 'settings' | 'insights' | 'pearls' | 'saved-pearls'
 type TimerPhase = 'idle' | 'preparing' | 'running' | 'complete' | 'capture' | 'enlightenment'
 
 interface SessionState {

@@ -7,6 +7,9 @@ import { Stats } from './components/Stats'
 import { Calendar } from './components/Calendar'
 import { Settings } from './components/Settings'
 import { Insights } from './components/Insights'
+import { PearlsFeed } from './components/PearlsFeed'
+import { SavedPearls } from './components/SavedPearls'
+import { useAuthStore } from './stores/useAuthStore'
 import { Onboarding, hasSeenOnboarding, markOnboardingSeen } from './components/Onboarding'
 import { PaywallPremium } from './components/PaywallPremium'
 import { MilestoneCelebration } from './components/MilestoneCelebration'
@@ -19,6 +22,7 @@ function AppContent() {
   const { view, isLoading, hydrate } = useSessionStore()
   const premiumStore = usePremiumStore()
   const settingsStore = useSettingsStore()
+  const authStore = useAuthStore()
 
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showPaywall, setShowPaywall] = useState(false)
@@ -34,6 +38,7 @@ function AppContent() {
       await hydrate()
       await premiumStore.hydrate()
       await settingsStore.hydrate()
+      await authStore.initialize()
 
       // Check if should show onboarding
       if (!hasSeenOnboarding()) {
@@ -41,7 +46,7 @@ function AppContent() {
       }
     }
     init()
-  }, [hydrate, premiumStore, settingsStore])
+  }, [hydrate, premiumStore, settingsStore, authStore])
 
   // Handlers
   const handleOnboardingComplete = useCallback(() => {
@@ -103,6 +108,8 @@ function AppContent() {
       {view === 'stats' && <Stats />}
       {view === 'calendar' && <Calendar />}
       {view === 'insights' && <Insights />}
+      {view === 'pearls' && <PearlsFeed />}
+      {view === 'saved-pearls' && <SavedPearls />}
       {view === 'settings' && (
         <Settings
           onShowPaywall={() => handleShowPaywall('settings')}

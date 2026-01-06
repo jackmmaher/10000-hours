@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useSwipe } from '../hooks/useSwipe'
 import { getInsights, deleteInsight, Insight } from '../lib/db'
+import { SharePearl } from './SharePearl'
 
 function formatInsightDate(date: Date): string {
   const now = new Date()
@@ -35,6 +36,7 @@ export function Insights() {
   const [insights, setInsights] = useState<Insight[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [sharingInsight, setSharingInsight] = useState<Insight | null>(null)
 
   // Load insights on mount
   useEffect(() => {
@@ -134,9 +136,19 @@ export function Insights() {
                 </p>
 
                 {/* Content */}
-                <p className="text-ink/80 leading-relaxed">
+                <p className="text-ink/80 leading-relaxed mb-3">
                   {insight.formattedText || insight.rawText}
                 </p>
+
+                {/* Actions row */}
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => setSharingInsight(insight)}
+                    className="text-xs text-ink/40 hover:text-indigo-deep transition-colors"
+                  >
+                    Share as Pearl
+                  </button>
+                </div>
 
                 {/* Delete button - appears on hover */}
                 <button
@@ -159,7 +171,7 @@ export function Insights() {
         )}
 
         {/* Navigation */}
-        <div className="flex justify-center gap-8 pt-8 mt-8 border-t border-ink/5">
+        <div className="flex justify-center gap-6 pt-8 mt-8 border-t border-ink/5">
           <button
             onClick={() => setView('stats')}
             className="py-3 text-sm text-ink/40 hover:text-ink/60 transition-colors flex items-center active:scale-[0.98]"
@@ -170,6 +182,15 @@ export function Insights() {
             Stats
           </button>
           <button
+            onClick={() => setView('pearls')}
+            className="py-3 text-sm text-ink/60 hover:text-ink transition-colors flex items-center active:scale-[0.98]"
+          >
+            Community
+            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+          <button
             onClick={() => setView('settings')}
             className="py-3 text-sm text-ink/40 hover:text-ink/60 transition-colors active:scale-[0.98]"
           >
@@ -177,6 +198,18 @@ export function Insights() {
           </button>
         </div>
       </div>
+
+      {/* Share Pearl modal */}
+      {sharingInsight && (
+        <SharePearl
+          insightText={sharingInsight.formattedText || sharingInsight.rawText}
+          onClose={() => setSharingInsight(null)}
+          onSuccess={() => {
+            setSharingInsight(null)
+            setView('pearls')
+          }}
+        />
+      )}
     </div>
   )
 }
