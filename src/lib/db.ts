@@ -16,6 +16,12 @@ export interface AppState {
 
 export type TierType = 'free' | 'premium'
 
+export interface Achievement {
+  hours: number                     // Milestone value (2, 5, 10, 25, etc.)
+  achievedAt: number                // Timestamp when achieved
+  name: string                      // Display name ("2 hours", "5 hours", etc.)
+}
+
 export interface UserProfile {
   id: 1
   tier: TierType
@@ -24,6 +30,7 @@ export interface UserProfile {
   firstSessionDate?: number         // For Day 31 trigger calculation
   trialExpired: boolean             // Has seen Day 31 banner
   trialEndDate?: number             // When trial ended (for adaptive goal)
+  achievements?: Achievement[]      // Recorded milestone achievements
 }
 
 export interface UserSettings {
@@ -150,4 +157,54 @@ export async function getSettings(): Promise<UserSettings> {
 
 export async function updateSettings(updates: Partial<Omit<UserSettings, 'id'>>): Promise<void> {
   await db.settings.update(1, updates)
+}
+
+// Achievement helpers
+export async function getAchievements(): Promise<Achievement[]> {
+  const profile = await getProfile()
+  return profile.achievements ?? []
+}
+
+export async function addAchievement(achievement: Achievement): Promise<void> {
+  const profile = await getProfile()
+  const achievements = profile.achievements ?? []
+
+  // Don't add duplicates
+  if (achievements.some(a => a.hours === achievement.hours)) {
+    return
+  }
+
+  achievements.push(achievement)
+  achievements.sort((a, b) => a.hours - b.hours)
+
+  await updateProfile({ achievements })
+}
+
+export async function recordMilestoneIfNew(
+  totalHours: number,
+  milestones: number[]
+): Promise<Achievement | null> {
+  const profile = await getProfile()
+  const achievements = profile.achievements ?? []
+  const achievedHours = new Set(achievements.map(a => a.hours))
+
+  // Find milestones that should be achieved but aren't recorded
+  for (const milestone of milestones) {
+    if (totalHours >= milestone && !achievedHours.has(milestone)) {
+      const name = milestone >= 1000
+        ? `${(milestone / 1000).toFixed(milestone % 1000 === 0 ? 0 : 1)}k hours`
+        : `${milestone} hours`
+
+      const achievement: Achievement = {
+        hours: milestone,
+        achievedAt: Date.now(),
+        name
+      }
+
+      await addAchievement(achievement)
+      return achievement
+    }
+  }
+
+  return null
 }

@@ -272,3 +272,35 @@ export function getLastAchievedMilestone(
 
   return { achieved, name }
 }
+
+/**
+ * Determines visibility of an achievement based on tier
+ * FREE tier after Day 31: achievements visible but dates faded/blurred
+ * Premium/Trial: full visibility
+ *
+ * @param tier - Current tier
+ * @param trialExpired - Whether trial has ended
+ * @returns Visibility settings for achievement display
+ */
+export function getAchievementVisibility(
+  tier: TierType,
+  trialExpired: boolean
+): { opacity: number; blurred: boolean; showDate: boolean } {
+  // Premium users or trial users see everything
+  if (tier === 'premium' || !trialExpired) {
+    return { opacity: 1, blurred: false, showDate: true }
+  }
+
+  // FREE after trial: visible but dates hidden, slightly faded
+  // "Gold star on copybook" - never removed, just less visible
+  return {
+    opacity: 0.6,
+    blurred: true,
+    showDate: false
+  }
+}
+
+/**
+ * Get the milestone array (exported for use in achievement recording)
+ */
+export const MILESTONES = [2, 5, 10, 25, 50, 100, 250, 500, 750, 1000, 1500, 2000, 2500, 3500, 5000, 6500, 7500, 8500, 10000]

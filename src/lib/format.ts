@@ -92,6 +92,11 @@ export function formatProjectedDate(date: Date): string {
   return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
 }
 
+// Format as "Jan 3" for achievement dates
+export function formatShortDate(date: Date): string {
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
 // Format large numbers with commas
 export function formatNumber(n: number): string {
   return n.toLocaleString('en-US')

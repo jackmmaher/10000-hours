@@ -5,7 +5,6 @@ import { useSwipe } from '../hooks/useSwipe'
 import {
   getStatsForWindow,
   getProjection,
-  getAdaptiveMilestone,
   getWeeklyConsistency,
   DayStatus
 } from '../lib/calculations'
@@ -17,8 +16,8 @@ import {
   formatShortMonthYear
 } from '../lib/format'
 import { WeeklyGoal } from './WeeklyGoal'
-import { FrozenMilestone } from './FrozenMilestone'
 import { LockedOverlay } from './LockedOverlay'
+import { AchievementGallery } from './AchievementGallery'
 
 const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
@@ -87,12 +86,6 @@ export function Stats() {
     setShowPaywall(true)
     // TODO: Track analytics event
   }
-
-  // Compute adaptive milestone
-  const milestone = useMemo(
-    () => getAdaptiveMilestone(sessions),
-    [sessions]
-  )
 
   // Compute weekly consistency
   const weekly = useMemo(
@@ -187,30 +180,11 @@ export function Stats() {
           )}
         </div>
 
-        {/* Tier-based milestone/goal section */}
-        {isPremiumOrTrial ? (
-          // Premium/Trial: Show adaptive milestone progress
-          <div className="mb-8 pb-8 border-b border-indigo-deep/10">
-            <p className="text-xs text-indigo-deep/50 uppercase tracking-wider mb-2">
-              Next milestone: {milestone.milestoneName}
-            </p>
-            <div className="h-2 bg-indigo-deep/10 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-indigo-deep transition-all duration-500 rounded-full"
-                style={{ width: `${milestone.progressPercent}%` }}
-              />
-            </div>
-            <p className="text-xs text-indigo-deep/40 mt-2">
-              {milestone.currentFormatted} / {milestone.targetFormatted}
-            </p>
-          </div>
-        ) : (
-          // FREE after trial: Show weekly goal + frozen milestone
-          <>
-            <WeeklyGoal />
-            <FrozenMilestone onTap={handleLockedTap} />
-          </>
-        )}
+        {/* Achievement gallery - shows for all users with tier-based visibility */}
+        <AchievementGallery onLockedTap={handleLockedTap} />
+
+        {/* FREE tier: Also show weekly goal */}
+        {!isPremiumOrTrial && <WeeklyGoal />}
 
         {/* Weekly consistency */}
         <div className="mb-8 pb-8 border-b border-indigo-deep/10">

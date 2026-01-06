@@ -1,6 +1,7 @@
 import { create } from 'zustand'
-import { Session, addSession, getAllSessions, initAppState, markEnlightenmentReached } from '../lib/db'
+import { Session, Achievement, addSession, getAllSessions, initAppState, markEnlightenmentReached, recordMilestoneIfNew } from '../lib/db'
 import { GOAL_SECONDS } from '../lib/constants'
+import { MILESTONES } from '../lib/tierLogic'
 
 type AppView = 'timer' | 'stats' | 'calendar' | 'settings'
 type TimerPhase = 'idle' | 'preparing' | 'running' | 'complete' | 'enlightenment'
@@ -25,6 +26,9 @@ interface SessionState {
   hasReachedEnlightenment: boolean
   justReachedEnlightenment: boolean
 
+  // Milestone celebration state
+  justAchievedMilestone: Achievement | null
+
   // Actions
   hydrate: () => Promise<void>
   startPreparing: () => void
@@ -32,6 +36,7 @@ interface SessionState {
   stopTimer: () => Promise<void>
   clearLastSession: () => void
   acknowledgeEnlightenment: () => void
+  clearMilestoneCelebration: () => void
 }
 
 export const useSessionStore = create<SessionState>((set, get) => ({
@@ -46,6 +51,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   lastSessionDuration: null,
   hasReachedEnlightenment: false,
   justReachedEnlightenment: false,
+  justAchievedMilestone: null,
 
   setView: (view) => set({ view }),
 
@@ -108,6 +114,10 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     const localId = sessionUuid.split('-')[0]
     const newSessions = [...sessions, { ...session, id: parseInt(localId, 16) }]
 
+    // Check for milestone achievements
+    const newTotalHours = newTotalSeconds / 3600
+    const achievedMilestone = await recordMilestoneIfNew(newTotalHours, MILESTONES)
+
     // Check if we just crossed the enlightenment threshold
     const crossedThreshold = !hasReachedEnlightenment && newTotalSeconds >= GOAL_SECONDS
 
@@ -121,7 +131,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         sessions: newSessions,
         totalSeconds: newTotalSeconds,
         hasReachedEnlightenment: true,
-        justReachedEnlightenment: true
+        justReachedEnlightenment: true,
+        justAchievedMilestone: achievedMilestone
       })
     } else {
       set({
@@ -130,20 +141,26 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         sessionStartTime: null,
         lastSessionDuration: durationSeconds,
         sessions: newSessions,
-        totalSeconds: newTotalSeconds
+        totalSeconds: newTotalSeconds,
+        justAchievedMilestone: achievedMilestone
       })
     }
   },
 
   clearLastSession: () => {
-    set({ timerPhase: 'idle', lastSessionDuration: null })
+    set({ timerPhase: 'idle', lastSessionDuration: null, justAchievedMilestone: null })
   },
 
   acknowledgeEnlightenment: () => {
     set({
       timerPhase: 'idle',
       justReachedEnlightenment: false,
-      lastSessionDuration: null
+      lastSessionDuration: null,
+      justAchievedMilestone: null
     })
+  },
+
+  clearMilestoneCelebration: () => {
+    set({ justAchievedMilestone: null })
   }
 }))
