@@ -1,7 +1,7 @@
 # 10,000 Hours - Build Log
 
 **Started:** January 5, 2026
-**Status:** Phase 3 - Complete
+**Status:** Phase 3b - In Progress (Code Review Improvements)
 
 ---
 
@@ -161,6 +161,111 @@
 | `tailwind.config.js` | New color palette, typography, animations, easing |
 | `index.html` | Google Fonts (Cormorant Garamond + Nunito), theme-color |
 | `src/index.css` | CSS custom properties for new palette |
+
+---
+
+## Phase 3b: Code Review Improvements
+**Status:** IN PROGRESS
+
+**Context:** Comprehensive code review performed January 6, 2026 identified areas for improvement in error handling, code consistency, and production readiness.
+
+### High Priority
+
+- [ ] **Add React Error Boundary** (`App.tsx`)
+  - Wrap app in ErrorBoundary component
+  - Show graceful fallback UI on crash
+  - Log errors for debugging
+
+- [ ] **Add user-facing error feedback for purchases** (`App.tsx:66-88`)
+  - Create toast/notification component
+  - Show error message when purchase fails
+  - Show error message when restore fails
+
+- [ ] **Fix session timestamp calculation** (`useSessionStore.ts:95`)
+  - Review `performance.now()` vs `Date.now()` usage
+  - Consider storing actual start timestamp on timer start
+  - Prevent potential drift accumulation
+
+- [ ] **Fix ESLint disable comment** (`App.tsx:37`)
+  - Remove `// eslint-disable-line react-hooks/exhaustive-deps`
+  - Properly list dependencies or use ref pattern for stable functions
+
+### Medium Priority
+
+- [ ] **Migrate onboarding state to Dexie** (`Onboarding.tsx`)
+  - Move from localStorage to Dexie `settings` table
+  - Add `hasSeenOnboarding` field to settings schema
+  - Ensures consistent persistence layer across app
+
+- [ ] **Create dedicated paywall store** (optional refactor)
+  - Move `showPaywall`, `paywallSource` from App.tsx state
+  - Create `usePaywallStore.ts`
+  - Cleaner separation of concerns
+
+- [ ] **Remove or implement LockedOverlay.tsx**
+  - File exists but is not imported anywhere
+  - Either delete dead code or integrate where needed
+
+- [ ] **Consolidate constants** (`tierLogic.ts:14-22`)
+  - Move `TRIAL_DAYS`, `CALENDAR_LOOKBACK_DAYS`, etc. to `constants.ts`
+  - Single source of truth for magic numbers
+
+- [ ] **Add loading state for purchase flow** (`App.tsx`)
+  - Show spinner/disabled state during purchase
+  - Prevent double-tap issues
+  - Better UX during 1.5s+ network operations
+
+### Low Priority
+
+- [ ] **Audit for unused imports**
+  - Run build with `noUnusedLocals` already enabled
+  - Manual review of component imports
+
+- [ ] **Add accessibility attributes**
+  - Add `aria-label` to interactive elements
+  - Add `role` attributes where needed
+  - Test with screen reader
+
+- [ ] **Memoize calendar fade calculations** (`Calendar.tsx`)
+  - Wrap `getDayFadeOpacity()` calls in useMemo
+  - Prevent recalculation on every render
+
+- [ ] **Add offline indicator UI**
+  - Detect offline state via `navigator.onLine`
+  - Show subtle indicator when offline
+  - PWA already caches, but user should know
+
+- [ ] **Use UUID for session IDs** (`useSessionStore.ts:103`)
+  - Replace `id: Date.now()` with `crypto.randomUUID()`
+  - Consistent with existing `uuid` field pattern
+  - Prevents theoretical collision
+
+### Progress Log
+
+| Date | Task | Status | Notes |
+|------|------|--------|-------|
+| Jan 6, 2026 | Code review completed | Complete | 15 improvements identified |
+| Jan 6, 2026 | Phase 3b started | In Progress | Build plan added to BUILD_LOG |
+
+### Files to Create
+
+| File | Purpose |
+|------|---------|
+| `src/components/ErrorBoundary.tsx` | Catch and display React errors gracefully |
+| `src/components/Toast.tsx` | User-facing notifications for errors/success |
+| `src/stores/usePaywallStore.ts` | (Optional) Dedicated paywall state management |
+
+### Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/App.tsx` | Error boundary, fix ESLint, loading states |
+| `src/stores/useSessionStore.ts` | Fix timestamp calculation, UUID for IDs |
+| `src/components/Onboarding.tsx` | Migrate to Dexie persistence |
+| `src/lib/constants.ts` | Add tier-related constants |
+| `src/lib/tierLogic.ts` | Import constants from constants.ts |
+| `src/lib/db.ts` | Add `hasSeenOnboarding` to settings schema |
+| `src/components/Calendar.tsx` | Memoize fade calculations |
 
 ---
 
