@@ -17,33 +17,32 @@ interface InsightCaptureProps {
   onSkip: () => void
 }
 
-// Audio level bars component
-function AudioLevelBars({ level }: { level: number }) {
-  const barCount = 5
-  const bars = []
-
-  for (let i = 0; i < barCount; i++) {
-    // Each bar activates at different thresholds
-    const threshold = (i + 1) / barCount
-    const isActive = level >= threshold * 0.7
-    const heightPercent = isActive ? 40 + (level * 60) : 20
-
-    bars.push(
-      <div
-        key={i}
-        className="w-1 rounded-full transition-all duration-75"
-        style={{
-          height: `${heightPercent}%`,
-          backgroundColor: isActive ? 'rgba(239, 68, 68, 0.8)' : 'rgba(0, 0, 0, 0.1)',
-          transform: isActive ? 'scaleY(1)' : 'scaleY(0.5)',
-        }}
-      />
-    )
-  }
+// Claude-style horizontal waveform visualizer
+function AudioWaveform({ level }: { level: number }) {
+  const barCount = 32
 
   return (
-    <div className="flex items-center justify-center gap-1 h-8">
-      {bars}
+    <div className="flex items-center justify-center gap-0.5 h-12 w-64">
+      {Array.from({ length: barCount }).map((_, i) => {
+        // Create wave pattern - bars in middle respond more to audio
+        const centerDistance = Math.abs(i - barCount / 2) / (barCount / 2)
+        const sensitivity = 1 - centerDistance * 0.5
+        // Base height + audio-responsive height
+        const minHeight = 12
+        const maxHeight = 100
+        const height = minHeight + (level * sensitivity * (maxHeight - minHeight))
+
+        return (
+          <div
+            key={i}
+            className="w-1 bg-rose-500 rounded-full transition-all duration-75"
+            style={{
+              height: `${height}%`,
+              opacity: 0.6 + (level * sensitivity * 0.4),
+            }}
+          />
+        )
+      })}
     </div>
   )
 }
@@ -182,36 +181,22 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center px-8 pb-32">
         {/* Recording indicator with audio visualization */}
-        <div className="mb-6">
+        <div className="mb-8">
           {isRecording ? (
-            <div className="relative flex flex-col items-center">
-              {/* Main recording circle with dynamic glow */}
-              <div
-                className="relative w-24 h-24 rounded-full bg-rose-500 flex items-center justify-center transition-all duration-100"
-                style={{
-                  boxShadow: `0 0 ${20 + audioLevel * 40}px ${10 + audioLevel * 20}px rgba(239, 68, 68, ${0.2 + audioLevel * 0.3})`,
-                  transform: `scale(${1 + audioLevel * 0.1})`,
-                }}
-              >
-                {/* Inner microphone icon */}
-                <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-                  <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-                </svg>
-              </div>
+            <div className="flex flex-col items-center">
+              {/* Small recording dot */}
+              <div className="w-3 h-3 rounded-full bg-rose-500 mb-6 animate-pulse" />
 
-              {/* Audio level bars below */}
-              <div className="mt-4">
-                <AudioLevelBars level={audioLevel} />
-              </div>
+              {/* Claude-style waveform - the main visual */}
+              <AudioWaveform level={audioLevel} />
             </div>
           ) : state === 'requesting' ? (
-            <div className="w-24 h-24 rounded-full bg-ink/10 flex items-center justify-center">
+            <div className="flex flex-col items-center">
               <div className="w-8 h-8 border-2 border-ink/30 border-t-ink rounded-full animate-spin" />
             </div>
           ) : (
-            <div className="w-24 h-24 rounded-full bg-ink/5 flex items-center justify-center">
-              <svg className="w-10 h-10 text-ink/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex flex-col items-center">
+              <svg className="w-12 h-12 text-ink/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
               </svg>
             </div>

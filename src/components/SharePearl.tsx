@@ -22,7 +22,7 @@ const MAX_PEARL_LENGTH = 280
 export function SharePearl({ insightText, onClose, onSuccess }: SharePearlProps) {
   const { user, isAuthenticated } = useAuthStore()
   const { isPremium } = usePremiumStore()
-  const [text, setText] = useState(insightText.slice(0, MAX_PEARL_LENGTH))
+  const [text, setText] = useState('') // Start empty - user extracts the pearl
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -30,6 +30,20 @@ export function SharePearl({ insightText, onClose, onSuccess }: SharePearlProps)
   const charCount = text.length
   const isOverLimit = charCount > MAX_PEARL_LENGTH
   const isEmpty = text.trim().length === 0
+
+  // Handle text selection from original insight (Kindle-style)
+  const handleTextSelect = () => {
+    const selection = window.getSelection()
+    if (selection && selection.toString().trim()) {
+      const selected = selection.toString().trim()
+      // Append to existing text (allows building up the pearl)
+      setText(prev => {
+        const newText = prev ? `${prev} ${selected}` : selected
+        return newText.slice(0, MAX_PEARL_LENGTH)
+      })
+      selection.removeAllRanges() // Clear selection after extracting
+    }
+  }
 
   const handleSubmit = useCallback(async () => {
     if (!isAuthenticated || !user) {
@@ -88,14 +102,39 @@ export function SharePearl({ insightText, onClose, onSuccess }: SharePearlProps)
           </div>
         )}
 
-        {/* Text input */}
+        {/* Original insight - tap to highlight and extract */}
         <div className="mb-4">
+          <p className="text-xs text-ink/40 mb-2">Highlight to extract:</p>
+          <div
+            className="p-4 bg-cream-dark/30 rounded-xl select-text cursor-text max-h-32 overflow-y-auto"
+            onMouseUp={handleTextSelect}
+            onTouchEnd={handleTextSelect}
+          >
+            <p className="text-ink/70 leading-relaxed text-sm">
+              {insightText}
+            </p>
+          </div>
+        </div>
+
+        {/* Pearl text input */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs text-ink/40">Your pearl:</p>
+            {text && (
+              <button
+                onClick={() => setText('')}
+                className="text-xs text-ink/30 hover:text-ink/50 transition-colors"
+              >
+                Clear
+              </button>
+            )}
+          </div>
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Your pearl of wisdom..."
+            placeholder="Highlight above or type your pearl..."
             className={`
-              w-full h-32 p-4 bg-cream-dark/50 rounded-xl resize-none
+              w-full h-24 p-4 bg-cream-dark/50 rounded-xl resize-none
               text-ink placeholder:text-ink/30
               focus:outline-none focus:ring-2 focus:ring-indigo-deep/20
               ${isOverLimit ? 'ring-2 ring-rose-400' : ''}

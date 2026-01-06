@@ -23,10 +23,9 @@ export type PearlFilter = 'new' | 'rising' | 'top'
 /**
  * Create a new pearl from an insight
  */
-export async function createPearl(text: string, userId: string): Promise<Pearl | null> {
+export async function createPearl(text: string, userId: string): Promise<Pearl> {
   if (!isSupabaseConfigured() || !supabase) {
-    console.warn('Supabase not configured')
-    return null
+    throw new Error('Supabase not configured - check your environment variables')
   }
 
   // Validate text length (max 280 chars like a tweet)
