@@ -125,10 +125,28 @@ export function Insights() {
     }
   }, [selectedInsight, user, refreshProfile])
 
-  // Swipe navigation
+  // Reload data (for pull-to-refresh)
+  const reloadData = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const insightsData = await getInsights()
+      setInsights(insightsData.sort((a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      ))
+      if (isAuthenticated && user) {
+        const pearlsData = await getMyPearls(user.id)
+        setMyPearls(pearlsData)
+      }
+    } catch (err) {
+      console.error('Failed to reload:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [isAuthenticated, user])
+
+  // Swipe: down to refresh, right to go to stats
   const swipeHandlers = useSwipe({
-    onSwipeDown: () => setView('timer'),
-    onSwipeRight: () => setView('stats')
+    onSwipeDown: reloadData
   })
 
   return (

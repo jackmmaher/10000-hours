@@ -13,11 +13,13 @@ interface SwipeState {
   startTime: number
 }
 
-const SWIPE_THRESHOLD = 50
-const SWIPE_TIMEOUT = 300
+const SWIPE_THRESHOLD = 100  // Increased to prevent accidental triggers
+const SWIPE_TIMEOUT = 400
+const SCROLL_TOLERANCE = 30  // If scrolled more than this, ignore swipe
 
 export function useSwipe(handlers: SwipeHandlers) {
   const swipeRef = useRef<SwipeState | null>(null)
+  const scrollStartRef = useRef<number>(0)
 
   const onTouchStart = useCallback((e: TouchEvent) => {
     const touch = e.touches[0]
@@ -26,6 +28,9 @@ export function useSwipe(handlers: SwipeHandlers) {
       startY: touch.clientY,
       startTime: Date.now()
     }
+    // Track scroll position at start
+    const target = e.currentTarget as HTMLElement
+    scrollStartRef.current = target?.scrollTop || 0
   }, [])
 
   const onTouchEnd = useCallback((e: TouchEvent) => {
@@ -43,8 +48,18 @@ export function useSwipe(handlers: SwipeHandlers) {
     // Check if swipe was quick enough
     if (deltaTime > SWIPE_TIMEOUT) return
 
+    // Check if user was scrolling (scroll position changed significantly)
+    const target = e.currentTarget as HTMLElement
+    const scrollEnd = target?.scrollTop || 0
+    const scrollDelta = Math.abs(scrollEnd - scrollStartRef.current)
+    if (scrollDelta > SCROLL_TOLERANCE) return
+
     const absX = Math.abs(deltaX)
     const absY = Math.abs(deltaY)
+
+    // Require clear directional intent (one axis must dominate)
+    const directionRatio = Math.max(absX, absY) / (Math.min(absX, absY) + 1)
+    if (directionRatio < 2) return  // Not a clear swipe direction
 
     // Determine primary direction
     if (absX > absY && absX > SWIPE_THRESHOLD) {
