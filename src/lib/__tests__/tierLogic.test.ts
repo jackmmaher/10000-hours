@@ -319,7 +319,16 @@ describe('tierLogic', () => {
   // ===================
   describe('getLastAchievedMilestone', () => {
     it('should return null if no milestones achieved', () => {
-      expect(getLastAchievedMilestone(5)).toBe(null)
+      // First milestone is now 2 hours, so 1 hour should return null
+      expect(getLastAchievedMilestone(1)).toBe(null)
+    })
+
+    it('should return early milestones (2h, 5h)', () => {
+      // Test the new early milestones
+      expect(getLastAchievedMilestone(2)?.achieved).toBe(2)
+      expect(getLastAchievedMilestone(4)?.achieved).toBe(2)
+      expect(getLastAchievedMilestone(5)?.achieved).toBe(5)
+      expect(getLastAchievedMilestone(9)?.achieved).toBe(5)
     })
 
     it('should return correct milestone for small hours', () => {

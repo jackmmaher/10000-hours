@@ -259,7 +259,7 @@ export function getAvailableStatWindows(
 export function getLastAchievedMilestone(
   totalHours: number
 ): { achieved: number; name: string } | null {
-  const milestones = [10, 25, 50, 100, 250, 500, 750, 1000, 1500, 2000, 2500, 3500, 5000, 6500, 7500, 8500, 10000]
+  const milestones = [2, 5, 10, 25, 50, 100, 250, 500, 750, 1000, 1500, 2000, 2500, 3500, 5000, 6500, 7500, 8500, 10000]
 
   // Find highest achieved milestone
   const achieved = milestones.filter(m => totalHours >= m).pop()

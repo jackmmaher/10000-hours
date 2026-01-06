@@ -99,15 +99,15 @@ export function getStatsForWindow(
 }
 
 // Adaptive milestone system
-// Expanded from 11 to 17 milestones to prevent multi-year gaps at higher levels
-// Research: Zeigarnik Effect, Flow theory optimal challenge, graded tasks (PMC)
+// Early milestones (2h, 5h) added for quick wins - achievable in first 1-2 weeks
+// Research: Endowed Progress Effect, Variable reward schedules, Zeigarnik Effect
 const MILESTONE_HOURS = [
-  10, 25, 50, 100,           // Early: habit formation (0-100h)
-  250, 500, 750, 1000,       // Building: added 750 (100-1000h)
-  1500, 2000, 2500,          // Intermediate: added 1500, 2000 (1000-2500h)
-  3500, 5000,                // Advanced: added 3500 (2500-5000h)
-  6500, 7500,                // Near-end: added 6500 (5000-7500h)
-  8500, 10000                // Final: added 8500 (7500-10000h)
+  2, 5, 10, 25, 50, 100,     // Early: first win in ~1 week (2h = 4x30min sessions)
+  250, 500, 750, 1000,       // Building (100-1000h)
+  1500, 2000, 2500,          // Intermediate (1000-2500h)
+  3500, 5000,                // Advanced (2500-5000h)
+  6500, 7500,                // Near-end (5000-7500h)
+  8500, 10000                // Final (7500-10000h)
 ]
 
 // Helper to format hours as Xh Ym
