@@ -12,9 +12,10 @@ import { createPearl } from '../lib/pearls'
 import { AuthModal } from './AuthModal'
 
 interface SharePearlProps {
+  insightId?: string
   insightText: string
   onClose: () => void
-  onSuccess: () => void
+  onSuccess: (pearlId: string) => void
 }
 
 const MAX_PEARL_LENGTH = 280
@@ -62,8 +63,8 @@ export function SharePearl({ insightText, onClose, onSuccess }: SharePearlProps)
     setError(null)
 
     try {
-      await createPearl(text.trim(), user.id)
-      onSuccess()
+      const pearl = await createPearl(text.trim(), user.id)
+      onSuccess(pearl.id)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to share pearl')
     } finally {

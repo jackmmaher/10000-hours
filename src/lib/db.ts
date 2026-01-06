@@ -43,6 +43,7 @@ export interface Insight {
   sessionId: string | null
   rawText: string
   formattedText: string | null
+  sharedPearlId: string | null  // Links to Supabase pearl if shared
   createdAt: Date
   updatedAt: Date | null
 }
@@ -96,6 +97,20 @@ class MeditationDB extends Dexie {
       profile: 'id',
       settings: 'id',
       insights: 'id, sessionId, createdAt'
+    })
+
+    // v4: Add sharedPearlId to insights for tracking shared pearls
+    this.version(4).stores({
+      sessions: '++id, uuid, startTime, endTime',
+      appState: 'id',
+      profile: 'id',
+      settings: 'id',
+      insights: 'id, sessionId, createdAt, sharedPearlId'
+    }).upgrade(async tx => {
+      // Backfill existing insights with null sharedPearlId
+      await tx.table('insights').toCollection().modify(insight => {
+        insight.sharedPearlId = null
+      })
     })
   }
 }
@@ -239,6 +254,7 @@ export async function addInsight(data: {
     sessionId: data.sessionId ?? null,
     rawText: data.rawText,
     formattedText: data.formattedText ?? null,
+    sharedPearlId: null,
     createdAt: new Date(),
     updatedAt: null
   }
@@ -266,6 +282,27 @@ export async function updateInsight(
 
 export async function deleteInsight(id: string): Promise<void> {
   await db.insights.delete(id)
+}
+
+export async function markInsightAsShared(insightId: string, pearlId: string): Promise<void> {
+  await db.insights.update(insightId, {
+    sharedPearlId: pearlId,
+    updatedAt: new Date()
+  })
+}
+
+export async function getUnsharedInsights(): Promise<Insight[]> {
+  return db.insights
+    .filter(insight => insight.sharedPearlId === null)
+    .reverse()
+    .sortBy('createdAt')
+}
+
+export async function getSharedInsights(): Promise<Insight[]> {
+  return db.insights
+    .filter(insight => insight.sharedPearlId !== null)
+    .reverse()
+    .sortBy('createdAt')
 }
 
 export async function getInsightsBySessionId(sessionId: string): Promise<Insight[]> {

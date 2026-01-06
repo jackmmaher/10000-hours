@@ -295,6 +295,37 @@ export async function getSavedPearls(userId: string): Promise<Pearl[]> {
 }
 
 /**
+ * Get user's own shared pearls (pearls they created)
+ */
+export async function getMyPearls(userId: string): Promise<Pearl[]> {
+  if (!isSupabaseConfigured() || !supabase) {
+    return []
+  }
+
+  const { data, error } = await supabase
+    .from('pearls')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Get my pearls error:', error)
+    return []
+  }
+
+  return (data || []).map(p => ({
+    id: p.id,
+    userId: p.user_id,
+    text: p.text,
+    upvotes: p.upvotes,
+    saves: p.saves,
+    createdAt: p.created_at,
+    hasVoted: false,
+    hasSaved: false
+  }))
+}
+
+/**
  * Delete a pearl (user's own)
  */
 export async function deletePearl(pearlId: string, userId: string): Promise<boolean> {

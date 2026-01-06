@@ -165,7 +165,7 @@ function PearlCard({ pearl, onVote, onSave, onRequireAuth, isAuthenticated }: Pe
 
 export function PearlsFeed() {
   const { setView } = useSessionStore()
-  const { user, isAuthenticated } = useAuthStore()
+  const { user, isAuthenticated, refreshProfile } = useAuthStore()
   const [pearls, setPearls] = useState<Pearl[]>([])
   const [filter, setFilter] = useState<PearlFilter>('new')
   const [isLoading, setIsLoading] = useState(true)
@@ -197,6 +197,8 @@ export function PearlsFeed() {
     } else {
       await unvotePearl(pearlId, user.id)
     }
+    // Refresh profile to update karma stats
+    refreshProfile()
   }
 
   // Handle save
@@ -208,6 +210,8 @@ export function PearlsFeed() {
     } else {
       await unsavePearl(pearlId, user.id)
     }
+    // Refresh profile to update save stats
+    refreshProfile()
   }
 
   // Swipe navigation
