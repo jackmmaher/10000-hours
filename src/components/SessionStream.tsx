@@ -12,6 +12,10 @@ import { ORB_COLORS } from '../lib/animations'
 
 interface SessionStreamProps {
   sessions: Session[]
+  /** Called when user wants to add reflection to a session */
+  onAddReflection?: (session: Session) => void
+  /** Called when a session card is clicked (for Calendar sync) */
+  onSessionClick?: (session: Session) => void
 }
 
 interface SessionWithDetails extends Session {
@@ -55,7 +59,7 @@ function formatSessionTime(timestamp: number): string {
   })
 }
 
-export function SessionStream({ sessions }: SessionStreamProps) {
+export function SessionStream({ sessions, onAddReflection, onSessionClick }: SessionStreamProps) {
   const [sessionsWithDetails, setSessionsWithDetails] = useState<SessionWithDetails[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -155,7 +159,12 @@ export function SessionStream({ sessions }: SessionStreamProps) {
           {/* Sessions for this date */}
           <div className="space-y-3">
             {group.sessions.map((session) => (
-              <SessionCard key={session.uuid} session={session} />
+              <SessionCard
+                key={session.uuid}
+                session={session}
+                onAddReflection={onAddReflection}
+                onSessionClick={onSessionClick}
+              />
             ))}
           </div>
         </div>
@@ -164,13 +173,35 @@ export function SessionStream({ sessions }: SessionStreamProps) {
   )
 }
 
-// Individual session card
-function SessionCard({ session }: { session: SessionWithDetails }) {
+// Individual session card - now interactive
+function SessionCard({
+  session,
+  onAddReflection,
+  onSessionClick
+}: {
+  session: SessionWithDetails
+  onAddReflection?: (session: Session) => void
+  onSessionClick?: (session: Session) => void
+}) {
+  const [isExpanded, setIsExpanded] = useState(false)
   const hasInsight = !!session.insight
   const hasPlan = !!session.plan
 
+  const handleCardClick = () => {
+    setIsExpanded(!isExpanded)
+    onSessionClick?.(session)
+  }
+
+  const handleAddReflection = (e: React.MouseEvent) => {
+    e.stopPropagation() // Don't trigger card expand
+    onAddReflection?.(session)
+  }
+
   return (
-    <div className="bg-cream-deep rounded-xl p-4">
+    <button
+      onClick={handleCardClick}
+      className="w-full text-left bg-cream-deep rounded-xl p-4 transition-all hover:bg-cream-deep/80 active:scale-[0.99]"
+    >
       {/* Header row: time + duration */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
@@ -185,9 +216,20 @@ function SessionCard({ session }: { session: SessionWithDetails }) {
             {formatSessionTime(session.startTime)}
           </span>
         </div>
-        <span className="text-sm text-ink font-medium tabular-nums">
-          {formatDuration(session.durationSeconds)}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-ink font-medium tabular-nums">
+            {formatDuration(session.durationSeconds)}
+          </span>
+          {/* Expand indicator */}
+          <svg
+            className={`w-4 h-4 text-ink/30 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
       </div>
 
       {/* Plan details if linked */}
@@ -203,22 +245,67 @@ function SessionCard({ session }: { session: SessionWithDetails }) {
               {session.plan.pose}
             </span>
           )}
+          {session.plan.duration && (
+            <span className="bg-cream px-2 py-0.5 rounded-full">
+              {session.plan.duration} min planned
+            </span>
+          )}
         </div>
       )}
 
-      {/* Insight preview */}
+      {/* Insight preview (collapsed) or full (expanded) */}
       {hasInsight && session.insight && (
-        <p className="text-sm text-ink/70 leading-relaxed line-clamp-2">
+        <p className={`text-sm text-ink/70 leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
           "{session.insight.formattedText || session.insight.rawText}"
         </p>
       )}
 
-      {/* No insight - gentle invite */}
-      {!hasInsight && (
-        <button className="text-sm text-ink/40 hover:text-ink/60 transition-colors">
-          Add reflection →
-        </button>
+      {/* Expanded details */}
+      {isExpanded && (
+        <div className="mt-3 pt-3 border-t border-ink/5">
+          {/* Full date/time */}
+          <p className="text-xs text-ink/40 mb-2">
+            {new Date(session.startTime).toLocaleDateString('en-US', {
+              weekday: 'long',
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric'
+            })}
+          </p>
+
+          {/* Notes from plan if any */}
+          {hasPlan && session.plan?.notes && (
+            <div className="mb-3">
+              <p className="text-xs text-ink/40 mb-1">Intention:</p>
+              <p className="text-sm text-ink/60 italic">"{session.plan.notes}"</p>
+            </div>
+          )}
+
+          {/* Add/Edit reflection button */}
+          {!hasInsight ? (
+            <button
+              onClick={handleAddReflection}
+              className="text-sm text-indigo-deep hover:text-indigo-deep/80 transition-colors font-medium"
+            >
+              Add reflection →
+            </button>
+          ) : (
+            <button
+              onClick={handleAddReflection}
+              className="text-xs text-ink/40 hover:text-ink/60 transition-colors"
+            >
+              Edit reflection
+            </button>
+          )}
+        </div>
       )}
-    </div>
+
+      {/* No insight preview - show invite (collapsed only) */}
+      {!hasInsight && !isExpanded && (
+        <p className="text-sm text-ink/40">
+          Tap to add reflection
+        </p>
+      )}
+    </button>
   )
 }
