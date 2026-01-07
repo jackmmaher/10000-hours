@@ -16,12 +16,17 @@ export function useAudioLevel() {
   const animationRef = useRef<number | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
 
-  const startAnalyzing = useCallback((stream: MediaStream) => {
+  const startAnalyzing = useCallback(async (stream: MediaStream) => {
     try {
       // Create audio context
       const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
       const audioContext = new AudioContextClass()
       audioContextRef.current = audioContext
+
+      // Resume audio context - required for iOS Safari where context starts suspended
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume()
+      }
 
       // Create analyser
       const analyser = audioContext.createAnalyser()
