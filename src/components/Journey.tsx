@@ -22,7 +22,8 @@ import { SessionStream } from './SessionStream'
 import { Calendar } from './Calendar'
 import {
   getPlannedSessionsForWeek,
-  PlannedSession
+  PlannedSession,
+  Session
 } from '../lib/db'
 import { dateHasSession } from '../lib/calculations'
 
@@ -34,6 +35,8 @@ export function Journey() {
   const [weekPlans, setWeekPlans] = useState<PlannedSession[]>([])
   const [planningDate, setPlanningDate] = useState<Date | null>(null)
   const [calendarRefreshKey, setCalendarRefreshKey] = useState(0)
+  const [reflectionSession, setReflectionSession] = useState<Session | null>(null)
+  const [sessionStreamKey, setSessionStreamKey] = useState(0) // For refreshing after insight added
 
   // Swipe navigation
   const navSwipeHandlers = useSwipe({
@@ -184,7 +187,11 @@ export function Journey() {
 
         {/* Tab Content */}
         {subTab === 'sessions' && (
-          <SessionStream sessions={sessions} />
+          <SessionStream
+            key={sessionStreamKey}
+            sessions={sessions}
+            onAddReflection={(session) => setReflectionSession(session)}
+          />
         )}
         {subTab === 'saved' && (
           <SavedContent />
@@ -215,6 +222,19 @@ export function Journey() {
             // Also refresh calendar
             setCalendarRefreshKey(k => k + 1)
           }}
+        />
+      )}
+
+      {/* Insight capture modal for adding reflections */}
+      {reflectionSession && (
+        <InsightCaptureWrapper
+          sessionId={reflectionSession.uuid}
+          onComplete={() => {
+            setReflectionSession(null)
+            // Refresh session stream to show new insight
+            setSessionStreamKey(k => k + 1)
+          }}
+          onSkip={() => setReflectionSession(null)}
         />
       )}
     </div>
@@ -279,6 +299,45 @@ function MeditationPlannerWrapper({
   }
 
   return <MeditationPlanner date={date} onClose={onClose} onSave={onSave} />
+}
+
+// Wrapper for lazy loading InsightCapture
+function InsightCaptureWrapper({
+  sessionId,
+  onComplete,
+  onSkip
+}: {
+  sessionId: string
+  onComplete: () => void
+  onSkip: () => void
+}) {
+  const [InsightCapture, setInsightCapture] = useState<React.ComponentType<{
+    sessionId?: string
+    onComplete: () => void
+    onSkip: () => void
+  }> | null>(null)
+
+  useEffect(() => {
+    import('./InsightCapture').then(module => {
+      setInsightCapture(() => module.InsightCapture)
+    })
+  }, [])
+
+  if (!InsightCapture) {
+    return (
+      <div className="fixed inset-0 bg-ink/50 flex items-center justify-center z-50">
+        <div className="w-1 h-1 bg-cream rounded-full animate-pulse" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-ink/50 backdrop-blur-sm flex items-end justify-center">
+      <div className="bg-cream rounded-t-3xl w-full max-w-lg max-h-[80vh] overflow-y-auto shadow-xl animate-slide-up">
+        <InsightCapture sessionId={sessionId} onComplete={onComplete} onSkip={onSkip} />
+      </div>
+    </div>
+  )
 }
 
 // Placeholder for Saved content
