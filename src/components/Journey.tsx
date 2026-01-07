@@ -163,17 +163,21 @@ export function Journey() {
     if (daySessions.length > 0) {
       // Get the first session for this day (most recent if multiple)
       const session = daySessions[0]
-      setSelectedDaySession(session)
 
-      // Try to get the insight for this session
+      // Fetch insight FIRST, then set all state together to ensure batching
       const insights = await getInsightsBySessionId(session.uuid)
-      setSelectedDayInsight(insights.length > 0 ? insights[0] : null)
+      const insight = insights.length > 0 ? insights[0] : null
+
+      // Set all state in one synchronous block after await
+      setSelectedDaySession(session)
+      setSelectedDayInsight(insight)
+      setPlanningDate(date)
     } else {
+      // No session - set all state together
       setSelectedDaySession(null)
       setSelectedDayInsight(null)
+      setPlanningDate(date)
     }
-
-    setPlanningDate(date)
   }
 
   // Get next planned session (future only, not completed)
