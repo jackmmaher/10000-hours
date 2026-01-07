@@ -85,6 +85,8 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
   // Form state
   const [plannedTime, setPlannedTime] = useState('')
   const [duration, setDuration] = useState<number | null>(null)
+  const [showCustomDuration, setShowCustomDuration] = useState(false)
+  const [customDurationInput, setCustomDurationInput] = useState('')
   const [pose, setPose] = useState('')
   const [discipline, setDiscipline] = useState('')
   const [notes, setNotes] = useState('')
@@ -103,6 +105,11 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
         setExistingPlan(existing)
         setPlannedTime(existing.plannedTime || '')
         setDuration(existing.duration || null)
+        // If duration exists but not in presets, show custom mode
+        if (existing.duration && !DURATIONS.includes(existing.duration)) {
+          setShowCustomDuration(true)
+          setCustomDurationInput(existing.duration.toString())
+        }
         setPose(existing.pose || '')
         setDiscipline(existing.discipline || '')
         setNotes(existing.notes || '')
@@ -246,9 +253,13 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
                   {DURATIONS.map((d) => (
                     <button
                       key={d}
-                      onClick={() => setDuration(duration === d ? null : d)}
+                      onClick={() => {
+                        setDuration(duration === d ? null : d)
+                        setShowCustomDuration(false)
+                        setCustomDurationInput('')
+                      }}
                       className={`px-3 py-1.5 rounded-full text-xs transition-colors ${
-                        duration === d
+                        duration === d && !showCustomDuration
                           ? 'bg-indigo-deep text-cream'
                           : 'bg-cream-dark/50 text-ink/70 hover:bg-cream-dark'
                       }`}
@@ -256,16 +267,44 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
                       {d} min
                     </button>
                   ))}
-                  <input
-                    type="number"
-                    min="1"
-                    max="240"
-                    placeholder="Other"
-                    value={duration && !DURATIONS.includes(duration) ? duration : ''}
-                    onChange={(e) => setDuration(e.target.value ? parseInt(e.target.value) : null)}
-                    className="w-16 px-3 py-1.5 rounded-full text-xs bg-cream-dark/50 text-ink/70 placeholder:text-ink/40 focus:outline-none focus:ring-2 focus:ring-indigo-deep/20 text-center"
-                  />
+                  <button
+                    onClick={() => {
+                      setShowCustomDuration(!showCustomDuration)
+                      if (!showCustomDuration) {
+                        setDuration(null)
+                      }
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-xs transition-colors ${
+                      showCustomDuration
+                        ? 'bg-indigo-deep text-cream'
+                        : 'bg-cream-dark/50 text-ink/70 hover:bg-cream-dark'
+                    }`}
+                  >
+                    Other
+                  </button>
                 </div>
+
+                {/* Custom duration input - only shown when Other is selected */}
+                {showCustomDuration && (
+                  <div className="mt-3">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="1"
+                        max="480"
+                        placeholder="Enter minutes"
+                        value={customDurationInput}
+                        onChange={(e) => {
+                          setCustomDurationInput(e.target.value)
+                          setDuration(e.target.value ? parseInt(e.target.value) : null)
+                        }}
+                        className="flex-1 px-4 py-3 rounded-xl bg-cream-dark text-ink focus:outline-none focus:ring-2 focus:ring-indigo-deep/30"
+                        autoFocus
+                      />
+                      <span className="text-sm text-ink/50">min</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Pose */}
