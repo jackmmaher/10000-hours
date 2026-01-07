@@ -39,7 +39,8 @@
       "Bash(dir \"C:\\\\Users\\\\jackm\\\\Projects\\\\10000-hours\" /b)",
       "Bash(findstr:*)",
       "Bash(ls:*)",
-      "Bash(git -C \"C:\\\\Users\\\\jackm\\\\Projects\\\\10000-hours\" status)"
+      "Bash(git -C \"C:\\\\Users\\\\jackm\\\\Projects\\\\10000-hours\" status)",
+      "Bash(node -e:*)"
     ]
   }
 }

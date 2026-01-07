@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
+import { useTheme } from './hooks/useTheme'
 import { useSessionStore } from './stores/useSessionStore'
 import { usePremiumStore } from './stores/usePremiumStore'
 import { useSettingsStore } from './stores/useSettingsStore'
@@ -10,6 +11,9 @@ import { Insights } from './components/Insights'
 import { PearlsFeed } from './components/PearlsFeed'
 import { SavedPearls } from './components/SavedPearls'
 import { Navigation } from './components/Navigation'
+import { Journey } from './components/Journey'
+import { Explore } from './components/Explore'
+import { Progress } from './components/Progress'
 import { useAuthStore } from './stores/useAuthStore'
 import { Onboarding, hasSeenOnboarding, markOnboardingSeen } from './components/Onboarding'
 import { PaywallPremium } from './components/PaywallPremium'
@@ -24,6 +28,9 @@ function AppContent() {
   const premiumStore = usePremiumStore()
   const settingsStore = useSettingsStore()
   const authStore = useAuthStore()
+
+  // Apply dynamic theme based on time of day and season
+  useTheme()
 
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showPaywall, setShowPaywall] = useState(false)
@@ -106,10 +113,13 @@ function AppContent() {
   return (
     <div className="h-full">
       {view === 'timer' && <Timer />}
+      {view === 'journey' && <Journey />}
       {view === 'stats' && <Stats />}
+      {view === 'progress' && <Progress />}
       {view === 'calendar' && <Calendar />}
       {view === 'insights' && <Insights />}
       {view === 'pearls' && <PearlsFeed />}
+      {view === 'explore' && <Explore />}
       {view === 'saved-pearls' && <SavedPearls />}
       {view === 'settings' && (
         <Settings

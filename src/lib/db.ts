@@ -57,6 +57,26 @@ export interface PlannedSession {
   notes?: string            // Guidance notes
   createdAt: number
   completed?: boolean       // Marked when session is done
+  // v6 additions for session linking
+  linkedSessionUuid?: string      // Link to actual Session when completed
+  sourceTemplateId?: string       // If adopted from community template
+  courseId?: string               // If part of a course
+  coursePosition?: number         // Position in course (1 of 5)
+}
+
+export interface UserCourseProgress {
+  id: string                      // UUID
+  courseId: string                // References Supabase course
+  sessionsCompleted: number[]     // Array of completed session positions
+  startedAt: number               // Timestamp when course started
+  lastActivityAt: number          // Last activity timestamp
+  status: 'active' | 'paused' | 'completed'
+}
+
+export interface SavedTemplate {
+  id: string                      // UUID
+  templateId: string              // References Supabase session_template
+  savedAt: number                 // Timestamp when saved
 }
 
 class MeditationDB extends Dexie {
@@ -66,6 +86,8 @@ class MeditationDB extends Dexie {
   settings!: Table<UserSettings>
   insights!: Table<Insight>
   plannedSessions!: Table<PlannedSession>
+  courseProgress!: Table<UserCourseProgress>
+  savedTemplates!: Table<SavedTemplate>
 
   constructor() {
     super('10000hours')
@@ -133,6 +155,26 @@ class MeditationDB extends Dexie {
       settings: 'id',
       insights: 'id, sessionId, createdAt, sharedPearlId',
       plannedSessions: '++id, date, createdAt'
+    })
+
+    // v6: Extend plannedSessions with session linking, add course progress and saved templates
+    this.version(6).stores({
+      sessions: '++id, uuid, startTime, endTime',
+      appState: 'id',
+      profile: 'id',
+      settings: 'id',
+      insights: 'id, sessionId, createdAt, sharedPearlId',
+      plannedSessions: '++id, date, createdAt, linkedSessionUuid, courseId',
+      courseProgress: 'id, courseId, status',
+      savedTemplates: 'id, templateId, savedAt'
+    }).upgrade(async tx => {
+      // Backfill existing planned sessions with null linking fields
+      await tx.table('plannedSessions').toCollection().modify(plan => {
+        plan.linkedSessionUuid = plan.linkedSessionUuid ?? null
+        plan.sourceTemplateId = plan.sourceTemplateId ?? null
+        plan.courseId = plan.courseId ?? null
+        plan.coursePosition = plan.coursePosition ?? null
+      })
     })
   }
 }
@@ -367,4 +409,131 @@ export async function deletePlannedSession(id: number): Promise<void> {
 
 export async function getLatestInsight(): Promise<Insight | undefined> {
   return db.insights.orderBy('createdAt').reverse().first()
+}
+
+// Session-Plan Linking helpers
+export async function linkSessionToPlan(sessionUuid: string, date: number): Promise<boolean> {
+  // Find an unlinked plan for the given date and link it to the session
+  const plan = await db.plannedSessions
+    .where('date')
+    .equals(date)
+    .filter(p => !p.linkedSessionUuid)
+    .first()
+
+  if (plan && plan.id) {
+    await db.plannedSessions.update(plan.id, {
+      completed: true,
+      linkedSessionUuid: sessionUuid
+    })
+    return true
+  }
+  return false
+}
+
+export async function getPlannedSessionByLinkedUuid(sessionUuid: string): Promise<PlannedSession | undefined> {
+  return db.plannedSessions.where('linkedSessionUuid').equals(sessionUuid).first()
+}
+
+export async function getAllPlannedSessions(): Promise<PlannedSession[]> {
+  return db.plannedSessions.orderBy('date').reverse().toArray()
+}
+
+// Course Progress helpers
+export async function getCourseProgress(courseId: string): Promise<UserCourseProgress | undefined> {
+  return db.courseProgress.where('courseId').equals(courseId).first()
+}
+
+export async function getAllCourseProgress(): Promise<UserCourseProgress[]> {
+  return db.courseProgress.orderBy('lastActivityAt').reverse().toArray()
+}
+
+export async function getActiveCourses(): Promise<UserCourseProgress[]> {
+  return db.courseProgress.where('status').equals('active').toArray()
+}
+
+export async function startCourse(courseId: string): Promise<UserCourseProgress> {
+  const existing = await getCourseProgress(courseId)
+  if (existing) {
+    // Resume if paused
+    if (existing.status === 'paused') {
+      await db.courseProgress.update(existing.id, {
+        status: 'active',
+        lastActivityAt: Date.now()
+      })
+    }
+    return existing
+  }
+
+  const progress: UserCourseProgress = {
+    id: crypto.randomUUID(),
+    courseId,
+    sessionsCompleted: [],
+    startedAt: Date.now(),
+    lastActivityAt: Date.now(),
+    status: 'active'
+  }
+  await db.courseProgress.add(progress)
+  return progress
+}
+
+export async function updateCourseProgress(
+  courseId: string,
+  updates: Partial<Omit<UserCourseProgress, 'id' | 'courseId' | 'startedAt'>>
+): Promise<void> {
+  const progress = await getCourseProgress(courseId)
+  if (progress) {
+    await db.courseProgress.update(progress.id, {
+      ...updates,
+      lastActivityAt: Date.now()
+    })
+  }
+}
+
+export async function markCourseSessionComplete(courseId: string, position: number): Promise<void> {
+  const progress = await getCourseProgress(courseId)
+  if (progress && !progress.sessionsCompleted.includes(position)) {
+    const newCompleted = [...progress.sessionsCompleted, position].sort((a, b) => a - b)
+    await db.courseProgress.update(progress.id, {
+      sessionsCompleted: newCompleted,
+      lastActivityAt: Date.now()
+    })
+  }
+}
+
+export async function pauseCourse(courseId: string): Promise<void> {
+  await updateCourseProgress(courseId, { status: 'paused' })
+}
+
+export async function completeCourse(courseId: string): Promise<void> {
+  await updateCourseProgress(courseId, { status: 'completed' })
+}
+
+// Saved Templates helpers
+export async function saveTemplate(templateId: string): Promise<SavedTemplate> {
+  const existing = await db.savedTemplates.where('templateId').equals(templateId).first()
+  if (existing) return existing
+
+  const saved: SavedTemplate = {
+    id: crypto.randomUUID(),
+    templateId,
+    savedAt: Date.now()
+  }
+  await db.savedTemplates.add(saved)
+  return saved
+}
+
+export async function unsaveTemplate(templateId: string): Promise<void> {
+  const saved = await db.savedTemplates.where('templateId').equals(templateId).first()
+  if (saved) {
+    await db.savedTemplates.delete(saved.id)
+  }
+}
+
+export async function isTemplateSaved(templateId: string): Promise<boolean> {
+  const saved = await db.savedTemplates.where('templateId').equals(templateId).first()
+  return !!saved
+}
+
+export async function getSavedTemplates(): Promise<SavedTemplate[]> {
+  return db.savedTemplates.orderBy('savedAt').reverse().toArray()
 }

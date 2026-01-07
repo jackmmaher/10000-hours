@@ -1,9 +1,22 @@
 import { create } from 'zustand'
-import { Session, Achievement, addSession, getAllSessions, initAppState, markEnlightenmentReached, recordMilestoneIfNew } from '../lib/db'
+import { Session, Achievement, addSession, getAllSessions, initAppState, markEnlightenmentReached, recordMilestoneIfNew, linkSessionToPlan } from '../lib/db'
 import { GOAL_SECONDS } from '../lib/constants'
 import { MILESTONES } from '../lib/tierLogic'
 
-type AppView = 'timer' | 'stats' | 'calendar' | 'settings' | 'insights' | 'pearls' | 'saved-pearls'
+// New navigation structure: Timer | Journey | Explore | Progress | Settings
+// Legacy views maintained for backwards compatibility during transition
+type AppView =
+  | 'timer'
+  | 'journey'           // New: Personal space - plans, sessions, insights
+  | 'explore'           // New: Community discovery - pearls + sessions + courses
+  | 'progress'          // New: Milestones, stats, insight-driven history
+  | 'settings'
+  // Legacy views (mapped to new structure)
+  | 'stats'             // -> progress
+  | 'calendar'          // -> progress
+  | 'insights'          // -> journey
+  | 'pearls'            // -> explore
+  | 'saved-pearls'      // -> explore
 type TimerPhase = 'idle' | 'preparing' | 'running' | 'complete' | 'capture' | 'enlightenment'
 
 interface SessionState {
@@ -114,6 +127,11 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }
 
     await addSession(session)
+
+    // Silent session-plan linking: auto-link to any plan for this day
+    const todayStart = new Date(sessionStartTime)
+    todayStart.setHours(0, 0, 0, 0)
+    await linkSessionToPlan(sessionUuid, todayStart.getTime())
 
     const newTotalSeconds = totalSeconds + durationSeconds
     // Use a hash of UUID for local ID (ensures uniqueness)
