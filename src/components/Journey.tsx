@@ -15,7 +15,9 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
+import { useAuthStore } from '../stores/useAuthStore'
 import { useSwipe } from '../hooks/useSwipe'
+import type { Pearl } from '../lib/pearls'
 import { WeekStonesRow, getDayStatusWithPlan, ExtendedDayStatus } from './WeekStones'
 import { JourneyNextSession } from './JourneyNextSession'
 import { SessionStream, SessionWithDetails } from './SessionStream'
@@ -378,22 +380,99 @@ function SavedContent() {
   )
 }
 
-// Placeholder for My Pearls content
+// My Pearls content - shows user's created pearls
 function MyPearlsContent() {
-  return (
-    <div className="text-center py-12">
-      <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-cream-deep flex items-center justify-center">
-        <span className="text-2xl">✦</span>
+  const { user } = useAuthStore()
+  const [pearls, setPearls] = useState<Pearl[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const loadPearls = async () => {
+      if (!user) {
+        setIsLoading(false)
+        return
+      }
+      try {
+        const { getMyPearls } = await import('../lib/pearls')
+        const myPearls = await getMyPearls(user.id)
+        setPearls(myPearls)
+      } catch (err) {
+        console.error('Failed to load pearls:', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadPearls()
+  }, [user])
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="w-6 h-6 border-2 border-ink/10 border-t-ink/40 rounded-full animate-spin" />
       </div>
-      <p className="text-ink/50 text-sm">
-        Pearls you've shared with the community will appear here.
-      </p>
-      <button
-        onClick={() => useSessionStore.getState().setView('timer')}
-        className="mt-4 text-sm text-moss hover:text-moss/80 transition-colors"
-      >
-        Start a session →
-      </button>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="text-center py-12">
+        <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-cream-deep flex items-center justify-center">
+          <span className="text-2xl">✦</span>
+        </div>
+        <p className="text-ink/50 text-sm">
+          Sign in to see your pearls.
+        </p>
+      </div>
+    )
+  }
+
+  if (pearls.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-cream-deep flex items-center justify-center">
+          <span className="text-2xl">✦</span>
+        </div>
+        <p className="text-ink/50 text-sm">
+          No pearls yet.
+        </p>
+        <p className="text-ink/30 text-xs mt-2">
+          Create pearls from your meditation insights.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {pearls.map((pearl) => (
+        <div key={pearl.id} className="bg-cream-deep rounded-xl p-5">
+          {/* Pearl indicator */}
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs text-moss font-medium">✦ Pearl</span>
+            <span className="text-xs text-ink/30">
+              {new Date(pearl.createdAt).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+              })}
+            </span>
+          </div>
+
+          {/* Pearl text */}
+          <p className="font-serif text-ink leading-relaxed mb-4">
+            "{pearl.text}"
+          </p>
+
+          {/* Stats row */}
+          <div className="flex items-center gap-4 text-sm text-ink/40">
+            <span className="flex items-center gap-1">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 15l7-7 7 7" />
+              </svg>
+              <span className="tabular-nums">{pearl.upvotes}</span>
+            </span>
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
