@@ -15,10 +15,7 @@
 import { useMemo, useState } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useSwipe } from '../hooks/useSwipe'
-import {
-  getStatsForWindow,
-  getWeeklyConsistency
-} from '../lib/calculations'
+import { getStatsForWindow } from '../lib/calculations'
 import {
   formatTotalHours,
   formatDuration,
@@ -28,15 +25,11 @@ import { AchievementGallery } from './AchievementGallery'
 import { InsightCard } from './InsightCard'
 import { TimeRangeSlider } from './TimeRangeSlider'
 import { TrendChart } from './TrendChart'
-import { WeekStonesRow, ExtendedDayStatus } from './WeekStones'
-import { MeditationPlanner } from './MeditationPlanner'
 import { InteractiveTimeline } from './InteractiveTimeline'
 
 export function Progress() {
   const { sessions, totalSeconds, setView } = useSessionStore()
   const [selectedDays, setSelectedDays] = useState<number | null>(30)
-  const [planningDate, setPlanningDate] = useState<Date | null>(null)
-
   // Calculate max days based on first session
   const maxDays = useMemo(() => {
     if (sessions.length === 0) return 365
@@ -44,12 +37,6 @@ export function Progress() {
     const daysSince = Math.ceil((Date.now() - firstSession) / (24 * 60 * 60 * 1000))
     return Math.max(7, daysSince)
   }, [sessions])
-
-  // Compute weekly consistency
-  const weekly = useMemo(
-    () => getWeeklyConsistency(sessions),
-    [sessions]
-  )
 
   // Compute stats for selected range
   const windowStats = useMemo(
@@ -66,24 +53,6 @@ export function Progress() {
   const firstSessionDate = sessions.length > 0
     ? new Date(Math.min(...sessions.map(s => s.startTime)))
     : null
-
-  // Convert weekly.days to ExtendedDayStatus for WeekStonesRow
-  const weekDays = useMemo((): ExtendedDayStatus[] => {
-    return weekly.days.map(status => status as ExtendedDayStatus)
-  }, [weekly.days])
-
-  // Handle day click for planning
-  const handleDayClick = (_dayIndex: number, date: Date) => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const clickedDate = new Date(date)
-    clickedDate.setHours(0, 0, 0, 0)
-
-    // Only allow planning for today and future
-    if (clickedDate.getTime() >= today.getTime()) {
-      setPlanningDate(date)
-    }
-  }
 
   // Swipe navigation
   const navSwipeHandlers = useSwipe({
@@ -126,27 +95,6 @@ export function Progress() {
 
         {/* Interactive timeline */}
         <InteractiveTimeline sessions={sessions} />
-
-        {/* This Week - stones */}
-        <div className="mb-10">
-          <p className="font-serif text-sm text-ink/50 tracking-wide mb-5">
-            This Week
-          </p>
-
-          <WeekStonesRow
-            days={weekDays}
-            onDayClick={handleDayClick}
-            showLabels={true}
-            size="sm"
-          />
-
-          <p className="text-sm text-ink/50 mt-4">
-            {weekly.sessionsThisWeek} session{weekly.sessionsThisWeek !== 1 ? 's' : ''}
-            {weekly.hoursThisWeek > 0 && (
-              <span className="text-ink/40"> · {formatDuration(weekly.hoursThisWeek * 3600)}</span>
-            )}
-          </p>
-        </div>
 
         {/* Time range stats with slider */}
         <div className="mb-10">
@@ -239,15 +187,6 @@ export function Progress() {
           </div>
         </div>
       </div>
-
-      {/* Meditation planner modal */}
-      {planningDate && (
-        <MeditationPlanner
-          date={planningDate}
-          onClose={() => setPlanningDate(null)}
-          onSave={() => {}}
-        />
-      )}
     </div>
   )
 }
