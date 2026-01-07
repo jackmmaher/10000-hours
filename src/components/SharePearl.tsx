@@ -1,14 +1,18 @@
 /**
- * SharePearl - Share an insight as a pearl
+ * SharePearl - Create pearls from insights
  *
- * Modal for selecting text from an insight and sharing it
- * as a pearl to the community. Premium feature.
+ * Modal for extracting wisdom from an insight and either:
+ * - Saving as a draft (local, private, can resume later)
+ * - Posting as a pearl (public, shared with community)
+ *
+ * Premium feature for posting.
  */
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useAuthStore } from '../stores/useAuthStore'
 import { usePremiumStore } from '../stores/usePremiumStore'
 import { createPearl } from '../lib/pearls'
+import { getPearlDraft, savePearlDraft, deletePearlDraft } from '../lib/db'
 import { AuthModal } from './AuthModal'
 
 interface SharePearlProps {
@@ -22,15 +26,30 @@ interface SharePearlProps {
 
 const MAX_PEARL_LENGTH = 280
 
-export function SharePearl({ insightText, isAlreadyShared, onClose, onSuccess, onDelete }: SharePearlProps) {
+export function SharePearl({ insightId, insightText, isAlreadyShared, onClose, onSuccess, onDelete }: SharePearlProps) {
   const { user, isAuthenticated } = useAuthStore()
   const { isPremium } = usePremiumStore()
   const [text, setText] = useState('') // Start empty - user extracts the pearl
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSavingDraft, setIsSavingDraft] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [hasDraft, setHasDraft] = useState(false)
+  const [draftSaved, setDraftSaved] = useState(false)
+
+  // Load existing draft on mount
+  useEffect(() => {
+    const loadDraft = async () => {
+      const draft = await getPearlDraft(insightId)
+      if (draft) {
+        setText(draft.text)
+        setHasDraft(true)
+      }
+    }
+    loadDraft()
+  }, [insightId])
 
   const charCount = text.length
   const isOverLimit = charCount > MAX_PEARL_LENGTH
@@ -44,12 +63,37 @@ export function SharePearl({ insightText, isAlreadyShared, onClose, onSuccess, o
     setIsDeleting(true)
     setShowDeleteConfirm(false)
     try {
+      // Also delete any draft
+      await deletePearlDraft(insightId)
       await onDelete()
     } finally {
       setIsDeleting(false)
     }
-  }, [onDelete])
+  }, [insightId, onDelete])
 
+  // Save draft locally
+  const handleSaveDraft = useCallback(async () => {
+    if (isEmpty || isOverLimit) return
+
+    setIsSavingDraft(true)
+    setError(null)
+
+    try {
+      await savePearlDraft(insightId, text.trim())
+      setHasDraft(true)
+      setDraftSaved(true)
+      // Brief visual feedback then close
+      setTimeout(() => {
+        onClose()
+      }, 800)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save draft')
+    } finally {
+      setIsSavingDraft(false)
+    }
+  }, [insightId, text, isEmpty, isOverLimit, onClose])
+
+  // Post pearl to community
   const handleSubmit = useCallback(async () => {
     if (!isAuthenticated || !user) {
       setShowAuthModal(true)
@@ -57,7 +101,7 @@ export function SharePearl({ insightText, isAlreadyShared, onClose, onSuccess, o
     }
 
     if (!isPremium) {
-      setError('Premium required to share pearls')
+      setError('Premium required to post pearls')
       return
     }
 
@@ -68,13 +112,15 @@ export function SharePearl({ insightText, isAlreadyShared, onClose, onSuccess, o
 
     try {
       const pearl = await createPearl(text.trim(), user.id)
+      // Delete draft after successful post
+      await deletePearlDraft(insightId)
       onSuccess(pearl.id)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to share pearl')
+      setError(err instanceof Error ? err.message : 'Failed to post pearl')
     } finally {
       setIsSubmitting(false)
     }
-  }, [isAuthenticated, user, isPremium, text, isEmpty, isOverLimit, onSuccess])
+  }, [isAuthenticated, user, isPremium, text, isEmpty, isOverLimit, insightId, onSuccess])
 
   // Block swipe navigation when modal is open
   const handleTouchEvent = (e: React.TouchEvent) => {
@@ -129,18 +175,33 @@ export function SharePearl({ insightText, isAlreadyShared, onClose, onSuccess, o
         {/* Pearl editor - only show if not already shared */}
         {!isAlreadyShared && (
           <>
-            {/* Premium gate */}
-            {!isPremium && (
-              <div className="mb-6 p-4 bg-amber-50 rounded-xl">
+            {/* Draft indicator */}
+            {hasDraft && !draftSaved && (
+              <div className="mb-4 p-3 bg-amber-50 rounded-xl flex items-center gap-2">
+                <span className="text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                  Draft
+                </span>
                 <p className="text-sm text-amber-800">
-                  Sharing pearls is a Premium feature.
+                  Continuing from your saved draft
+                </p>
+              </div>
+            )}
+
+            {/* Draft saved feedback */}
+            {draftSaved && (
+              <div className="mb-4 p-3 bg-moss/10 rounded-xl flex items-center gap-2">
+                <svg className="w-4 h-4 text-moss" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <p className="text-sm text-moss">
+                  Draft saved
                 </p>
               </div>
             )}
 
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-xs text-ink/40">Extract your pearl to share with the community:</p>
+                <p className="text-xs text-ink/40">Extract your pearl:</p>
                 {text && (
                   <button
                     onClick={() => setText('')}
@@ -152,7 +213,10 @@ export function SharePearl({ insightText, isAlreadyShared, onClose, onSuccess, o
               </div>
               <textarea
                 value={text}
-                onChange={(e) => setText(e.target.value)}
+                onChange={(e) => {
+                  setText(e.target.value)
+                  setDraftSaved(false) // Reset saved indicator on edit
+                }}
                 placeholder="Type or paste the wisdom you want to share..."
                 className={`
                   w-full h-32 p-4 bg-cream-dark/50 rounded-xl resize-none
@@ -160,7 +224,6 @@ export function SharePearl({ insightText, isAlreadyShared, onClose, onSuccess, o
                   focus:outline-none focus:ring-2 focus:ring-indigo-deep/20
                   ${isOverLimit ? 'ring-2 ring-rose-400' : ''}
                 `}
-                disabled={!isPremium}
               />
 
               {/* Character count */}
@@ -181,24 +244,51 @@ export function SharePearl({ insightText, isAlreadyShared, onClose, onSuccess, o
         )}
       </div>
 
-      {/* Fixed bottom action - only show share if not already shared */}
+      {/* Fixed bottom action - only show if not already shared */}
       {!isAlreadyShared && (
         <div className="flex-none px-6 pb-8 pt-4 bg-cream border-t border-ink/5 safe-area-bottom">
-          <button
-            onClick={handleSubmit}
-            disabled={isSubmitting || isEmpty || isOverLimit || !isPremium}
-            className={`
-              w-full py-4 rounded-xl font-medium transition-all
-              ${isSubmitting || isEmpty || isOverLimit || !isPremium
-                ? 'bg-ink/20 text-ink/40'
-                : 'bg-ink text-cream active:scale-[0.98]'
-              }
-            `}
-          >
-            {isSubmitting ? 'Sharing...' : 'Share as Pearl'}
-          </button>
-          <p className="text-xs text-ink/30 text-center mt-3">
-            Pearls are shared anonymously
+          {/* Two-button layout: Save Draft + Post Pearl */}
+          <div className="flex gap-3 mb-3">
+            {/* Save Draft - always available */}
+            <button
+              onClick={handleSaveDraft}
+              disabled={isSavingDraft || isEmpty || isOverLimit || draftSaved}
+              className={`
+                flex-1 py-3.5 rounded-xl font-medium transition-all
+                ${isSavingDraft || isEmpty || isOverLimit || draftSaved
+                  ? 'bg-cream-dark/50 text-ink/30'
+                  : 'bg-cream-dark text-ink/70 hover:bg-cream-dark/80 active:scale-[0.98]'
+                }
+              `}
+            >
+              {isSavingDraft ? 'Saving...' : draftSaved ? 'Saved' : 'Save Draft'}
+            </button>
+
+            {/* Post Pearl - requires premium */}
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitting || isEmpty || isOverLimit || !isPremium}
+              className={`
+                flex-1 py-3.5 rounded-xl font-medium transition-all
+                ${isSubmitting || isEmpty || isOverLimit || !isPremium
+                  ? 'bg-ink/20 text-ink/40'
+                  : 'bg-ink text-cream active:scale-[0.98]'
+                }
+              `}
+            >
+              {isSubmitting ? 'Posting...' : 'Post Pearl'}
+            </button>
+          </div>
+
+          {/* Premium notice */}
+          {!isPremium && (
+            <p className="text-xs text-amber-600 text-center mb-2">
+              Premium required to post pearls
+            </p>
+          )}
+
+          <p className="text-xs text-ink/30 text-center">
+            Drafts are private. Posted pearls are shared anonymously.
           </p>
         </div>
       )}

@@ -14,6 +14,7 @@ export interface Pearl {
   upvotes: number
   saves: number
   createdAt: string
+  editedAt?: string | null  // When the pearl was last edited
   hasVoted?: boolean
   hasSaved?: boolean
   isPreserved?: boolean  // True if original pearl was deleted, this is a saved copy
@@ -277,7 +278,8 @@ export async function getSavedPearls(userId: string): Promise<Pearl[]> {
         text,
         upvotes,
         saves,
-        created_at
+        created_at,
+        edited_at
       )
     `)
     .eq('user_id', userId)
@@ -298,6 +300,7 @@ export async function getSavedPearls(userId: string): Promise<Pearl[]> {
         upvotes: number
         saves: number
         created_at: string
+        edited_at: string | null
       } | null
 
       // Use original pearl data if available, otherwise use preserved copy
@@ -309,6 +312,7 @@ export async function getSavedPearls(userId: string): Promise<Pearl[]> {
           upvotes: p.upvotes,
           saves: p.saves,
           createdAt: p.created_at,
+          editedAt: p.edited_at,
           hasVoted: false,
           hasSaved: true
         }
@@ -321,6 +325,7 @@ export async function getSavedPearls(userId: string): Promise<Pearl[]> {
           upvotes: 0,
           saves: 0,
           createdAt: d.saved_at || new Date().toISOString(),
+          editedAt: null,
           hasVoted: false,
           hasSaved: true,
           isPreserved: true // Flag to indicate this is a preserved copy
@@ -355,6 +360,7 @@ export async function getMyPearls(userId: string): Promise<Pearl[]> {
     upvotes: p.upvotes,
     saves: p.saves,
     createdAt: p.created_at,
+    editedAt: p.edited_at || null,
     hasVoted: false,
     hasSaved: false
   }))
@@ -384,6 +390,7 @@ export async function deletePearl(pearlId: string, userId: string): Promise<bool
 
 /**
  * Update a pearl's text (user can only edit their own)
+ * Sets edited_at timestamp for tracking edits
  */
 export async function updatePearl(pearlId: string, newText: string, userId: string): Promise<boolean> {
   if (!isSupabaseConfigured() || !supabase) {
@@ -397,7 +404,10 @@ export async function updatePearl(pearlId: string, newText: string, userId: stri
 
   const { error } = await supabase
     .from('pearls')
-    .update({ text: newText })
+    .update({
+      text: newText,
+      edited_at: new Date().toISOString()
+    })
     .eq('id', pearlId)
     .eq('user_id', userId) // RLS ensures user can only update own pearls
 

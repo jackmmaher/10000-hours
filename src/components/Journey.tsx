@@ -3,14 +3,14 @@
  *
  * The Journey tab is the user's personal space for:
  * - Planning upcoming sessions
- * - Viewing session history with insights
+ * - Reviewing and editing captured insights
+ * - Creating pearls from insights (private → public wisdom)
  * - Managing saved templates and pearls
  *
  * Layout:
  * - Top: "Your Next Moment" card (next planned session or invite to plan)
  * - Center: Week stones (M-S with status indicators)
- * - Bottom: Session stream with insights
- * - Sub-tabs: My Sessions | Saved | My Pearls
+ * - Sub-tabs: My Insights | Guided Meditations | My Pearls
  */
 
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
@@ -22,13 +22,14 @@ import type { Pearl } from '../lib/pearls'
 import type { SessionTemplate } from './SessionDetailModal'
 import { WeekStonesRow, getDayStatusWithPlan, ExtendedDayStatus } from './WeekStones'
 import { JourneyNextSession } from './JourneyNextSession'
-import { SessionStream, SessionWithDetails } from './SessionStream'
+import { InsightStream } from './InsightStream'
 import { Calendar } from './Calendar'
 import {
   getPlannedSessionsForWeek,
   getNextPlannedSession,
   PlannedSession,
-  Session
+  Session,
+  Insight
 } from '../lib/db'
 import { dateHasSession, getSessionsForDate } from '../lib/calculations'
 
@@ -56,8 +57,8 @@ export function Journey() {
   const [selectedDaySessions, setSelectedDaySessions] = useState<Session[]>([])
   const [plansRefreshKey, setPlansRefreshKey] = useState(0) // Unified refresh key for all plan data
   const [insightSession, setInsightSession] = useState<Session | null>(null)
-  const [pearlSession, setPearlSession] = useState<SessionWithDetails | null>(null)
-  const [sessionStreamKey, setSessionStreamKey] = useState(0) // For refreshing after insight/pearl added
+  const [pearlInsight, setPearlInsight] = useState<Insight | null>(null)
+  const [insightStreamKey, setInsightStreamKey] = useState(0) // For refreshing after insight/pearl added
   const [showTemplateEditor, setShowTemplateEditor] = useState(false)
 
   // Calculate total hours for creator badge
@@ -84,7 +85,7 @@ export function Journey() {
     onRefresh: async () => {
       // Refresh all data
       refreshAllPlanData()
-      setSessionStreamKey(k => k + 1)
+      setInsightStreamKey(k => k + 1)
       // Small delay for visual feedback
       await new Promise(resolve => setTimeout(resolve, 500))
     }
@@ -282,7 +283,7 @@ export function Journey() {
             active={subTab === 'sessions'}
             onClick={() => setSubTab('sessions')}
           >
-            My Meditations
+            My Insights
           </TabButton>
           <TabButton
             active={subTab === 'saved'}
@@ -313,11 +314,12 @@ export function Journey() {
 
         {/* Tab Content */}
         {subTab === 'sessions' && (
-          <SessionStream
-            key={sessionStreamKey}
-            sessions={sessions}
-            onAddInsight={(session) => setInsightSession(session)}
-            onCreatePearl={(session) => setPearlSession(session)}
+          <InsightStream
+            key={insightStreamKey}
+            onCreatePearl={(insight) => {
+              setPearlInsight(insight)
+            }}
+            refreshKey={insightStreamKey}
           />
         )}
         {subTab === 'saved' && (
@@ -347,24 +349,24 @@ export function Journey() {
           sessionId={insightSession.uuid}
           onComplete={() => {
             setInsightSession(null)
-            // Refresh session stream to show new insight
-            setSessionStreamKey(k => k + 1)
+            // Refresh insight stream to show new insight
+            setInsightStreamKey(k => k + 1)
           }}
           onSkip={() => setInsightSession(null)}
         />
       )}
 
       {/* Pearl creation modal */}
-      {pearlSession && pearlSession.insight && (
+      {pearlInsight && (
         <SharePearlWrapper
-          insightId={pearlSession.insight.id!}
-          insightText={pearlSession.insight.formattedText || pearlSession.insight.rawText}
+          insightId={pearlInsight.id}
+          insightText={pearlInsight.formattedText || pearlInsight.rawText}
           onComplete={() => {
-            setPearlSession(null)
-            // Refresh session stream to show pearl status
-            setSessionStreamKey(k => k + 1)
+            setPearlInsight(null)
+            // Refresh insight stream to show pearl status
+            setInsightStreamKey(k => k + 1)
           }}
-          onCancel={() => setPearlSession(null)}
+          onCancel={() => setPearlInsight(null)}
         />
       )}
 
@@ -705,7 +707,10 @@ function MyPearlsContent() {
       const success = await updatePearl(editingPearlId, editText, user.id)
       if (success) {
         setCreatedPearls(prev =>
-          prev.map(p => p.id === editingPearlId ? { ...p, text: editText } : p)
+          prev.map(p => p.id === editingPearlId
+            ? { ...p, text: editText, editedAt: new Date().toISOString() }
+            : p
+          )
         )
         setEditingPearlId(null)
         setEditText('')
@@ -776,6 +781,9 @@ function MyPearlsContent() {
                         day: 'numeric'
                       })}
                     </span>
+                    {pearl.editedAt && (
+                      <span className="text-xs text-ink/30 italic">· edited</span>
+                    )}
                   </div>
                   {editingPearlId !== pearl.id && (
                     <button

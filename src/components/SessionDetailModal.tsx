@@ -52,11 +52,35 @@ function getStartOfDay(date: Date): number {
   return d.getTime()
 }
 
+// Format date for input value (YYYY-MM-DD)
+function formatDateForInput(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+// Get suggested time based on bestTime field
+function getSuggestedTime(bestTime: string): string {
+  const lower = bestTime.toLowerCase()
+  if (lower.includes('morning')) return '07:00'
+  if (lower.includes('evening')) return '19:00'
+  if (lower.includes('night')) return '21:00'
+  if (lower.includes('afternoon')) return '14:00'
+  return '09:00' // Default for "Anytime" or unknown
+}
+
 export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailModalProps) {
   const [isSaved, setIsSaved] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [showDatePicker, setShowDatePicker] = useState(false)
-  const [selectedDate, setSelectedDate] = useState<'today' | 'tomorrow' | null>(null)
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    // Default to tomorrow
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    return tomorrow
+  })
+  const [plannedTime, setPlannedTime] = useState(() => getSuggestedTime(session.bestTime))
   const [isAdopting, setIsAdopting] = useState(false)
 
   // Get gradient based on intention or use fallback
@@ -87,21 +111,16 @@ export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailM
 
   const handleAdopt = () => {
     setShowDatePicker(true)
-    setSelectedDate(null)
   }
 
   const handleConfirmAdopt = async () => {
-    if (!selectedDate || isAdopting) return
+    if (isAdopting) return
 
     setIsAdopting(true)
     try {
-      const now = new Date()
-      const targetDate = selectedDate === 'today'
-        ? now
-        : new Date(now.getTime() + 24 * 60 * 60 * 1000)
-
       await addPlannedSession({
-        date: getStartOfDay(targetDate),
+        date: getStartOfDay(selectedDate),
+        plannedTime: plannedTime || undefined,
         duration: parseDuration(session.durationGuidance),
         pose: session.posture,
         discipline: session.discipline,
@@ -258,34 +277,86 @@ export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailM
                   onClick={handleAdopt}
                   className="flex-1 py-3 bg-moss text-cream rounded-xl text-sm font-medium hover:bg-moss/90 transition-colors active:scale-[0.98]"
                 >
-                  Add to my plans
+                  Plan this meditation
                 </button>
               </div>
             ) : (
               <div>
-                <p className="text-sm text-ink/60 mb-3">When would you like to try this?</p>
+                <p className="text-sm text-ink/60 mb-4">When would you like to practice this?</p>
+
+                {/* Date picker */}
+                <div className="mb-4">
+                  <label className="text-xs text-ink/50 block mb-2">Date</label>
+                  <input
+                    type="date"
+                    value={formatDateForInput(selectedDate)}
+                    min={formatDateForInput(new Date())}
+                    onChange={(e) => {
+                      const newDate = new Date(e.target.value + 'T00:00:00')
+                      setSelectedDate(newDate)
+                    }}
+                    className="w-full px-4 py-3 rounded-xl bg-cream-deep text-ink focus:outline-none focus:ring-2 focus:ring-moss/30"
+                  />
+                </div>
+
+                {/* Time picker */}
+                <div className="mb-4">
+                  <label className="text-xs text-ink/50 block mb-2">
+                    Time
+                    {session.bestTime && (
+                      <span className="text-ink/30 ml-1">(suggested: {session.bestTime.toLowerCase()})</span>
+                    )}
+                  </label>
+                  <input
+                    type="time"
+                    value={plannedTime}
+                    onChange={(e) => setPlannedTime(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl bg-cream-deep text-ink focus:outline-none focus:ring-2 focus:ring-moss/30"
+                  />
+                </div>
+
+                {/* Quick date buttons */}
                 <div className="flex gap-2 mb-4">
                   <button
-                    onClick={() => setSelectedDate('today')}
-                    className={`flex-1 py-2 rounded-lg text-sm transition-colors ${
-                      selectedDate === 'today'
-                        ? 'bg-moss text-cream'
-                        : 'bg-cream-deep text-ink/60 hover:bg-cream-deep/80'
+                    onClick={() => setSelectedDate(new Date())}
+                    className={`flex-1 py-2 rounded-lg text-xs transition-colors ${
+                      formatDateForInput(selectedDate) === formatDateForInput(new Date())
+                        ? 'bg-moss/20 text-moss font-medium'
+                        : 'bg-cream-deep text-ink/50 hover:bg-cream-deep/80'
                     }`}
                   >
                     Today
                   </button>
                   <button
-                    onClick={() => setSelectedDate('tomorrow')}
-                    className={`flex-1 py-2 rounded-lg text-sm transition-colors ${
-                      selectedDate === 'tomorrow'
-                        ? 'bg-moss text-cream'
-                        : 'bg-cream-deep text-ink/60 hover:bg-cream-deep/80'
+                    onClick={() => {
+                      const tomorrow = new Date()
+                      tomorrow.setDate(tomorrow.getDate() + 1)
+                      setSelectedDate(tomorrow)
+                    }}
+                    className={`flex-1 py-2 rounded-lg text-xs transition-colors ${
+                      formatDateForInput(selectedDate) === formatDateForInput(new Date(Date.now() + 86400000))
+                        ? 'bg-moss/20 text-moss font-medium'
+                        : 'bg-cream-deep text-ink/50 hover:bg-cream-deep/80'
                     }`}
                   >
                     Tomorrow
                   </button>
+                  <button
+                    onClick={() => {
+                      const nextWeek = new Date()
+                      nextWeek.setDate(nextWeek.getDate() + 7)
+                      setSelectedDate(nextWeek)
+                    }}
+                    className={`flex-1 py-2 rounded-lg text-xs transition-colors ${
+                      formatDateForInput(selectedDate) === formatDateForInput(new Date(Date.now() + 7 * 86400000))
+                        ? 'bg-moss/20 text-moss font-medium'
+                        : 'bg-cream-deep text-ink/50 hover:bg-cream-deep/80'
+                    }`}
+                  >
+                    Next week
+                  </button>
                 </div>
+
                 <div className="flex gap-3">
                   <button
                     onClick={() => setShowDatePicker(false)}
@@ -295,14 +366,10 @@ export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailM
                   </button>
                   <button
                     onClick={handleConfirmAdopt}
-                    disabled={!selectedDate || isAdopting}
-                    className={`flex-1 py-3 rounded-xl text-sm font-medium transition-colors active:scale-[0.98] ${
-                      selectedDate
-                        ? 'bg-moss text-cream hover:bg-moss/90'
-                        : 'bg-moss/50 text-cream/70 cursor-not-allowed'
-                    }`}
+                    disabled={isAdopting}
+                    className="flex-1 py-3 rounded-xl text-sm font-medium transition-colors active:scale-[0.98] bg-moss text-cream hover:bg-moss/90"
                   >
-                    {isAdopting ? 'Adding...' : 'Confirm'}
+                    {isAdopting ? 'Planning...' : 'Confirm'}
                   </button>
                 </div>
               </div>

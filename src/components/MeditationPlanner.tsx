@@ -22,6 +22,10 @@ import {
   updateSession,
   getSessionByUuid
 } from '../lib/db'
+import { SessionDetailModal, SessionTemplate } from './SessionDetailModal'
+
+// Import extracted session data for template lookups
+import extractedSessions from '../data/sessions.json'
 
 interface MeditationPlannerProps {
   date: Date
@@ -125,6 +129,55 @@ function formatDurationMinutes(seconds: number): string {
   return `${hours} hr ${remainingMinutes} min`
 }
 
+// Raw extracted session type (snake_case from JSON)
+interface ExtractedSession {
+  id: string
+  title: string
+  tagline: string
+  hero_gradient: string
+  duration_guidance: string
+  discipline: string
+  posture: string
+  best_time: string
+  environment?: string
+  guidance_notes: string
+  intention: string
+  recommended_after_hours: number
+  tags?: string[]
+  seed_karma: number
+  seed_saves: number
+  seed_completions: number
+  creator_hours: number
+  course_id?: string
+  course_position?: number
+}
+
+// Look up a session template by ID and transform to SessionTemplate format
+function getTemplateById(templateId: string): SessionTemplate | null {
+  const raw = (extractedSessions as ExtractedSession[]).find(s => s.id === templateId)
+  if (!raw) return null
+  return {
+    id: raw.id,
+    title: raw.title,
+    tagline: raw.tagline,
+    durationGuidance: raw.duration_guidance,
+    discipline: raw.discipline,
+    posture: raw.posture,
+    bestTime: raw.best_time,
+    environment: raw.environment,
+    guidanceNotes: raw.guidance_notes,
+    intention: raw.intention,
+    recommendedAfterHours: raw.recommended_after_hours,
+    tags: raw.tags,
+    karma: raw.seed_karma,
+    saves: raw.seed_saves,
+    completions: raw.seed_completions,
+    creatorHours: raw.creator_hours,
+    courseId: raw.course_id,
+    coursePosition: raw.course_position
+  }
+}
+
 export function MeditationPlanner({ date, sessions, onClose, onSave }: MeditationPlannerProps) {
   // Multiple sessions support
   const [selectedSessionIndex, setSelectedSessionIndex] = useState(0)
@@ -153,6 +206,9 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
   const [planPose, setPlanPose] = useState('')
   const [planDiscipline, setPlanDiscipline] = useState('')
   const [planNotes, setPlanNotes] = useState('')
+
+  // Source template modal state (for "View full guidance" link)
+  const [sourceTemplate, setSourceTemplate] = useState<SessionTemplate | null>(null)
 
   // Get current session's edits (from map or defaults)
   const currentEdits = session ? sessionEdits.get(session.uuid) : null
@@ -448,6 +504,22 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                 </div>
               )}
 
+              {/* Source template link - show when plan is from a guided meditation */}
+              {!isSessionMode && existingPlan?.sourceTemplateId && (
+                <button
+                  onClick={() => {
+                    const template = getTemplateById(existingPlan.sourceTemplateId!)
+                    if (template) setSourceTemplate(template)
+                  }}
+                  className="flex items-center gap-2 text-sm text-indigo-deep hover:text-indigo-deep/80 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                  <span>From guided meditation · View full guidance →</span>
+                </button>
+              )}
+
               {/* Plan mode: Time and Duration inputs */}
               {!isSessionMode && (
                 <>
@@ -646,6 +718,18 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
           )}
         </div>
       </div>
+
+      {/* Source template modal - shows full guidance from the original guided meditation */}
+      {sourceTemplate && (
+        <SessionDetailModal
+          session={sourceTemplate}
+          onClose={() => setSourceTemplate(null)}
+          onAdopt={() => {
+            // Already adopted - just close the modal
+            setSourceTemplate(null)
+          }}
+        />
+      )}
     </div>
   )
 }

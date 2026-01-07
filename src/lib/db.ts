@@ -87,6 +87,15 @@ export interface SavedTemplate {
   savedAt: number                 // Timestamp when saved
 }
 
+// Pearl draft - work in progress before posting to community
+export interface PearlDraft {
+  id: string                      // UUID
+  insightId: string               // Source insight
+  text: string                    // Draft pearl text (≤280 chars)
+  createdAt: number               // When draft started
+  updatedAt: number               // Last edit
+}
+
 class MeditationDB extends Dexie {
   sessions!: Table<Session>
   appState!: Table<AppState>
@@ -96,6 +105,7 @@ class MeditationDB extends Dexie {
   plannedSessions!: Table<PlannedSession>
   courseProgress!: Table<UserCourseProgress>
   savedTemplates!: Table<SavedTemplate>
+  pearlDrafts!: Table<PearlDraft>
 
   constructor() {
     super('10000hours')
@@ -196,6 +206,19 @@ class MeditationDB extends Dexie {
       plannedSessions: '++id, date, createdAt, linkedSessionUuid, courseId',
       courseProgress: 'id, courseId, status',
       savedTemplates: 'id, templateId, savedAt'
+    })
+
+    // v8: Add pearl drafts table for work-in-progress pearls
+    this.version(8).stores({
+      sessions: '++id, uuid, startTime, endTime',
+      appState: 'id',
+      profile: 'id',
+      settings: 'id',
+      insights: 'id, sessionId, createdAt, sharedPearlId',
+      plannedSessions: '++id, date, createdAt, linkedSessionUuid, courseId',
+      courseProgress: 'id, courseId, status',
+      savedTemplates: 'id, templateId, savedAt',
+      pearlDrafts: 'id, insightId, updatedAt'
     })
   }
 }
@@ -367,22 +390,34 @@ export async function addInsight(data: {
   return insight
 }
 
-export async function getInsights(): Promise<Insight[]> {
-  return db.insights.orderBy('createdAt').reverse().toArray()
-}
-
-export async function getInsightById(id: string): Promise<Insight | undefined> {
-  return db.insights.get(id)
-}
-
+// Update an insight's text (for editing after voice capture)
 export async function updateInsight(
   id: string,
-  updates: Partial<Pick<Insight, 'rawText' | 'formattedText'>>
+  updates: { rawText?: string; formattedText?: string | null }
 ): Promise<void> {
   await db.insights.update(id, {
     ...updates,
     updatedAt: new Date()
   })
+}
+
+// Link insight to a shared pearl
+export async function linkInsightToPearl(insightId: string, pearlId: string): Promise<void> {
+  await db.insights.update(insightId, { sharedPearlId: pearlId })
+}
+
+export async function getInsights(): Promise<Insight[]> {
+  return db.insights.orderBy('createdAt').reverse().toArray()
+}
+
+// Get only insights that have content (for My Insights view)
+export async function getInsightsWithContent(): Promise<Insight[]> {
+  const insights = await db.insights.orderBy('createdAt').reverse().toArray()
+  return insights.filter(i => i.rawText && i.rawText.trim().length > 0)
+}
+
+export async function getInsightById(id: string): Promise<Insight | undefined> {
+  return db.insights.get(id)
 }
 
 export async function deleteInsight(id: string): Promise<void> {
@@ -611,4 +646,43 @@ export async function isTemplateSaved(templateId: string): Promise<boolean> {
 
 export async function getSavedTemplates(): Promise<SavedTemplate[]> {
   return db.savedTemplates.orderBy('savedAt').reverse().toArray()
+}
+
+// Pearl Draft helpers - work-in-progress pearls before posting
+
+export async function savePearlDraft(insightId: string, text: string): Promise<PearlDraft> {
+  const existing = await db.pearlDrafts.where('insightId').equals(insightId).first()
+  const now = Date.now()
+
+  if (existing) {
+    // Update existing draft
+    await db.pearlDrafts.update(existing.id, { text, updatedAt: now })
+    return { ...existing, text, updatedAt: now }
+  } else {
+    // Create new draft
+    const draft: PearlDraft = {
+      id: crypto.randomUUID(),
+      insightId,
+      text,
+      createdAt: now,
+      updatedAt: now
+    }
+    await db.pearlDrafts.add(draft)
+    return draft
+  }
+}
+
+export async function getPearlDraft(insightId: string): Promise<PearlDraft | undefined> {
+  return db.pearlDrafts.where('insightId').equals(insightId).first()
+}
+
+export async function deletePearlDraft(insightId: string): Promise<void> {
+  const draft = await db.pearlDrafts.where('insightId').equals(insightId).first()
+  if (draft) {
+    await db.pearlDrafts.delete(draft.id)
+  }
+}
+
+export async function getAllPearlDrafts(): Promise<PearlDraft[]> {
+  return db.pearlDrafts.orderBy('updatedAt').reverse().toArray()
 }
