@@ -13,7 +13,7 @@
  * - Sub-tabs: My Sessions | Saved | My Pearls
  */
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSwipe } from '../hooks/useSwipe'
@@ -32,6 +32,19 @@ import {
 } from '../lib/db'
 import { dateHasSession, getSessionsForDate } from '../lib/calculations'
 
+/**
+ * Helper to get Monday of the current week at midnight
+ */
+function getMondayOfWeek(): Date {
+  const today = new Date()
+  const dayOfWeek = today.getDay()
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+  const monday = new Date(today)
+  monday.setDate(today.getDate() + mondayOffset)
+  monday.setHours(0, 0, 0, 0)
+  return monday
+}
+
 type JourneySubTab = 'sessions' | 'saved' | 'pearls'
 
 export function Journey() {
@@ -42,7 +55,7 @@ export function Journey() {
   const [planningDate, setPlanningDate] = useState<Date | null>(null)
   const [selectedDaySession, setSelectedDaySession] = useState<Session | null>(null)
   const [selectedDayInsight, setSelectedDayInsight] = useState<Insight | null>(null)
-  const [calendarRefreshKey, setCalendarRefreshKey] = useState(0)
+  const [plansRefreshKey, setPlansRefreshKey] = useState(0) // Unified refresh key for all plan data
   const [insightSession, setInsightSession] = useState<Session | null>(null)
   const [pearlSession, setPearlSession] = useState<SessionWithDetails | null>(null)
   const [sessionStreamKey, setSessionStreamKey] = useState(0) // For refreshing after insight/pearl added
@@ -54,6 +67,11 @@ export function Journey() {
     return Math.floor(totalSeconds / 3600)
   }, [sessions])
 
+  // Unified refresh function - call this after any plan changes
+  const refreshAllPlanData = useCallback(() => {
+    setPlansRefreshKey(k => k + 1)
+  }, [])
+
   // Swipe navigation
   const navSwipeHandlers = useSwipe({
     onSwipeDown: () => setView('timer'),
@@ -62,20 +80,15 @@ export function Journey() {
   })
 
   // Load planned sessions for the current week
+  // Refreshes when: sessions change (auto-linking), plansRefreshKey changes (manual save)
   useEffect(() => {
     const loadWeekPlans = async () => {
-      const today = new Date()
-      const dayOfWeek = today.getDay()
-      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
-      const monday = new Date(today)
-      monday.setDate(today.getDate() + mondayOffset)
-      monday.setHours(0, 0, 0, 0)
-
+      const monday = getMondayOfWeek()
       const plans = await getPlannedSessionsForWeek(monday.getTime())
       setWeekPlans(plans)
     }
     loadWeekPlans()
-  }, [sessions]) // Reload when sessions change (may have linked a plan)
+  }, [sessions, plansRefreshKey]) // Reload on sessions change OR explicit refresh
 
   // Compute week day statuses with plan data
   const weekDays = useMemo((): ExtendedDayStatus[] => {
@@ -212,7 +225,7 @@ export function Journey() {
           <Calendar
             embedded
             onDateClick={(date) => setPlanningDate(date)}
-            refreshKey={calendarRefreshKey}
+            refreshKey={plansRefreshKey}
           />
         </div>
 
@@ -279,22 +292,7 @@ export function Journey() {
             setSelectedDaySession(null)
             setSelectedDayInsight(null)
           }}
-          onSave={() => {
-            // Reload week plans after save
-            const loadWeekPlans = async () => {
-              const today = new Date()
-              const dayOfWeek = today.getDay()
-              const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
-              const monday = new Date(today)
-              monday.setDate(today.getDate() + mondayOffset)
-              monday.setHours(0, 0, 0, 0)
-              const plans = await getPlannedSessionsForWeek(monday.getTime())
-              setWeekPlans(plans)
-            }
-            loadWeekPlans()
-            // Also refresh calendar
-            setCalendarRefreshKey(k => k + 1)
-          }}
+          onSave={refreshAllPlanData}
         />
       )}
 
