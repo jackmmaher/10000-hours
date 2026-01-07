@@ -24,12 +24,13 @@ import {
   formatDuration,
   formatShortMonthYear
 } from '../lib/format'
-import { MilestoneBadges } from './MilestoneBadges'
+import { AchievementGallery } from './AchievementGallery'
 import { InsightCard } from './InsightCard'
 import { TimeRangeSlider } from './TimeRangeSlider'
 import { TrendChart } from './TrendChart'
 import { WeekStonesRow, ExtendedDayStatus } from './WeekStones'
 import { MeditationPlanner } from './MeditationPlanner'
+import { InteractiveTimeline } from './InteractiveTimeline'
 
 export function Progress() {
   const { sessions, totalSeconds, setView } = useSessionStore()
@@ -118,10 +119,13 @@ export function Progress() {
         </div>
 
         {/* Milestone badges - horizontal scroll */}
-        <MilestoneBadges />
+        <AchievementGallery />
 
         {/* Generated insight card */}
         <InsightCard sessions={sessions} />
+
+        {/* Interactive timeline */}
+        <InteractiveTimeline sessions={sessions} />
 
         {/* This Week - stones */}
         <div className="mb-10">
