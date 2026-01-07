@@ -26,9 +26,11 @@ import { Calendar } from './Calendar'
 import {
   getPlannedSessionsForWeek,
   PlannedSession,
-  Session
+  Session,
+  Insight,
+  getInsightsBySessionId
 } from '../lib/db'
-import { dateHasSession } from '../lib/calculations'
+import { dateHasSession, getSessionsForDate } from '../lib/calculations'
 
 type JourneySubTab = 'sessions' | 'saved' | 'pearls'
 
@@ -38,6 +40,8 @@ export function Journey() {
   const [subTab, setSubTab] = useState<JourneySubTab>('sessions')
   const [weekPlans, setWeekPlans] = useState<PlannedSession[]>([])
   const [planningDate, setPlanningDate] = useState<Date | null>(null)
+  const [selectedDaySession, setSelectedDaySession] = useState<Session | null>(null)
+  const [selectedDayInsight, setSelectedDayInsight] = useState<Insight | null>(null)
   const [calendarRefreshKey, setCalendarRefreshKey] = useState(0)
   const [insightSession, setInsightSession] = useState<Session | null>(null)
   const [pearlSession, setPearlSession] = useState<SessionWithDetails | null>(null)
@@ -83,8 +87,7 @@ export function Journey() {
     monday.setDate(today.getDate() + mondayOffset)
     monday.setHours(0, 0, 0, 0)
 
-    // Check if today has a session (for determining 'next' glow)
-    const todayHasSessionFlag = dateHasSession(sessions, today)
+    // Tomorrow always gets the 'next' glow to encourage planning ahead
     const tomorrowIndex = todayIndex < 6 ? todayIndex + 1 : null
 
     return Array.from({ length: 7 }, (_, i) => {
@@ -102,14 +105,31 @@ export function Journey() {
       const isToday = i === todayIndex
       const isFuture = i > todayIndex
       const isPast = i < todayIndex
-      const isNextPlannable = todayHasSessionFlag && tomorrowIndex !== null && i === tomorrowIndex
+      // Tomorrow always glows to encourage planning (unless it already has a plan or session)
+      const isNextPlannable = tomorrowIndex !== null && i === tomorrowIndex && !hasPlan && !hasSession
 
       return getDayStatusWithPlan(hasSession, hasPlan, isToday, isFuture, isNextPlannable, isPast)
     })
   }, [sessions, weekPlans])
 
-  // Handle day click - open planner for that day
-  const handleDayClick = (_dayIndex: number, date: Date) => {
+  // Handle day click - open planner/summary for that day
+  const handleDayClick = async (_dayIndex: number, date: Date) => {
+    // Check if this day has a completed session
+    const daySessions = getSessionsForDate(sessions, date)
+
+    if (daySessions.length > 0) {
+      // Get the first session for this day (most recent if multiple)
+      const session = daySessions[0]
+      setSelectedDaySession(session)
+
+      // Try to get the insight for this session
+      const insights = await getInsightsBySessionId(session.uuid)
+      setSelectedDayInsight(insights.length > 0 ? insights[0] : null)
+    } else {
+      setSelectedDaySession(null)
+      setSelectedDayInsight(null)
+    }
+
     setPlanningDate(date)
   }
 
@@ -156,7 +176,7 @@ export function Journey() {
         {/* Week Stones */}
         <div className="mb-10">
           <p className="font-serif text-sm text-ink/50 tracking-wide mb-5">
-            This Week
+            Meditations this week
           </p>
           <WeekStonesRow
             days={weekDays}
@@ -231,7 +251,13 @@ export function Journey() {
       {planningDate && (
         <MeditationPlannerWrapper
           date={planningDate}
-          onClose={() => setPlanningDate(null)}
+          session={selectedDaySession}
+          insight={selectedDayInsight}
+          onClose={() => {
+            setPlanningDate(null)
+            setSelectedDaySession(null)
+            setSelectedDayInsight(null)
+          }}
           onSave={() => {
             // Reload week plans after save
             const loadWeekPlans = async () => {
@@ -322,16 +348,22 @@ function TabButton({
 // Wrapper for lazy loading MeditationPlanner
 function MeditationPlannerWrapper({
   date,
+  session,
+  insight,
   onClose,
   onSave
 }: {
   date: Date
+  session?: Session | null
+  insight?: Insight | null
   onClose: () => void
   onSave: () => void
 }) {
   // Import the existing MeditationPlanner
   const [MeditationPlanner, setMeditationPlanner] = useState<React.ComponentType<{
     date: Date
+    session?: Session | null
+    insight?: Insight | null
     onClose: () => void
     onSave: () => void
   }> | null>(null)
@@ -350,7 +382,7 @@ function MeditationPlannerWrapper({
     )
   }
 
-  return <MeditationPlanner date={date} onClose={onClose} onSave={onSave} />
+  return <MeditationPlanner date={date} session={session} insight={insight} onClose={onClose} onSave={onSave} />
 }
 
 // Wrapper for lazy loading InsightCapture

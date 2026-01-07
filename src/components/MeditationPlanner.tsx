@@ -1,13 +1,17 @@
 /**
- * MeditationPlanner - Plan your next meditation session
+ * MeditationPlanner - Plan or view meditation sessions
  *
- * Modal for setting intentions for a specific day's meditation.
- * Fields: date, time, pose, discipline, and guidance notes.
+ * Two modes:
+ * 1. Plan mode (no session): For future dates, all fields editable
+ * 2. Session mode (has session): For past sessions, shows read-only time/duration,
+ *    allows editing metadata (pose, discipline, notes), displays insight if captured
  */
 
 import { useState, useEffect, useCallback } from 'react'
 import {
   PlannedSession,
+  Session,
+  Insight,
   addPlannedSession,
   getPlannedSession,
   updatePlannedSession,
@@ -16,6 +20,8 @@ import {
 
 interface MeditationPlannerProps {
   date: Date
+  session?: Session | null  // If provided, we're viewing a completed session
+  insight?: Insight | null  // Insight captured for this session
   onClose: () => void
   onSave: () => void
 }
@@ -84,7 +90,33 @@ function formatDateForInput(date: Date): string {
   return `${year}-${month}-${day}`
 }
 
-export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerProps) {
+// Format time from timestamp (HH:MM AM/PM)
+function formatTimeFromTimestamp(timestamp: number): string {
+  const date = new Date(timestamp)
+  return date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  })
+}
+
+// Format duration in minutes to readable string
+function formatDurationMinutes(seconds: number): string {
+  const minutes = Math.round(seconds / 60)
+  if (minutes < 60) {
+    return `${minutes} min`
+  }
+  const hours = Math.floor(minutes / 60)
+  const remainingMinutes = minutes % 60
+  if (remainingMinutes === 0) {
+    return `${hours} hr`
+  }
+  return `${hours} hr ${remainingMinutes} min`
+}
+
+export function MeditationPlanner({ date, session, insight, onClose, onSave }: MeditationPlannerProps) {
+  // Determine if we're viewing a completed session vs planning
+  const isSessionMode = !!session
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [existingPlan, setExistingPlan] = useState<PlannedSession | null>(null)
@@ -187,9 +219,16 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
         {/* Header */}
         <div className="px-6 pb-4 border-b border-ink/5">
           <div className="flex items-start justify-between">
-            <p className="font-serif text-xl text-indigo-deep">
-              Plan Meditation
-            </p>
+            <div>
+              <p className="font-serif text-xl text-indigo-deep">
+                {isSessionMode ? 'Session Details' : 'Plan Meditation'}
+              </p>
+              {isSessionMode && (
+                <p className="text-sm text-ink/50 mt-1">
+                  {formatDateForDisplay(date)}
+                </p>
+              )}
+            </div>
             <button
               onClick={onClose}
               className="p-2 -mr-2 text-ink/40 hover:text-ink/60 transition-colors"
@@ -209,120 +248,145 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
             </div>
           ) : (
             <>
-              {/* Date */}
-              <div>
-                <label className="text-xs text-ink/50 block mb-2">
-                  What day?
-                </label>
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={formatDateForInput(selectedDate)}
-                    onChange={(e) => {
-                      const newDate = new Date(e.target.value + 'T00:00:00')
-                      setSelectedDate(newDate)
-                      // Reset form when date changes (will reload any existing plan)
-                      setExistingPlan(null)
-                      setPlannedTime('')
-                      setDuration(null)
-                      setShowCustomDuration(false)
-                      setCustomDurationInput('')
-                      setPose('')
-                      setDiscipline('')
-                      setNotes('')
-                    }}
-                    className="w-full px-4 py-4 rounded-xl bg-cream-dark text-ink text-lg font-medium focus:outline-none focus:ring-2 focus:ring-indigo-deep/30"
-                  />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-ink/40 text-sm pointer-events-none">
-                    {formatDateForDisplay(selectedDate)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Time */}
-              <div>
-                <label className="text-xs text-ink/50 block mb-2">
-                  What time?
-                </label>
-                <div className="relative">
-                  <input
-                    type="time"
-                    value={plannedTime}
-                    onChange={(e) => setPlannedTime(e.target.value)}
-                    className="w-full px-4 py-4 rounded-xl bg-cream-dark text-ink text-lg font-medium focus:outline-none focus:ring-2 focus:ring-indigo-deep/30"
-                  />
-                  {!plannedTime && (
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/50 font-medium pointer-events-none">
-                      Tap to set time
+              {/* Session mode: Show read-only time and duration from actual session */}
+              {isSessionMode && session && (
+                <div className="bg-moss/10 rounded-xl p-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-ink/50">Time</span>
+                    <span className="text-ink font-medium">
+                      {formatTimeFromTimestamp(session.startTime)}
                     </span>
-                  )}
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-ink/50">Duration</span>
+                    <span className="text-ink font-medium">
+                      {formatDurationMinutes(session.durationSeconds)}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Duration */}
-              <div>
-                <label className="text-xs text-ink/50 block mb-2">
-                  How long?
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {DURATIONS.map((d) => (
-                    <button
-                      key={d}
-                      onClick={() => {
-                        setDuration(duration === d ? null : d)
+              {/* Plan mode: Show editable date picker */}
+              {!isSessionMode && (
+                <div>
+                  <label className="text-xs text-ink/50 block mb-2">
+                    What day?
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="date"
+                      value={formatDateForInput(selectedDate)}
+                      onChange={(e) => {
+                        const newDate = new Date(e.target.value + 'T00:00:00')
+                        setSelectedDate(newDate)
+                        // Reset form when date changes (will reload any existing plan)
+                        setExistingPlan(null)
+                        setPlannedTime('')
+                        setDuration(null)
                         setShowCustomDuration(false)
                         setCustomDurationInput('')
+                        setPose('')
+                        setDiscipline('')
+                        setNotes('')
                       }}
-                      className={`px-3 py-1.5 rounded-full text-xs transition-colors ${
-                        duration === d && !showCustomDuration
-                          ? 'bg-indigo-deep text-cream'
-                          : 'bg-cream-dark/50 text-ink/70 hover:bg-cream-dark'
-                      }`}
-                    >
-                      {d} min
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => {
-                      setShowCustomDuration(!showCustomDuration)
-                      if (!showCustomDuration) {
-                        setDuration(null)
-                      }
-                    }}
-                    className={`px-3 py-1.5 rounded-full text-xs transition-colors ${
-                      showCustomDuration
-                        ? 'bg-indigo-deep text-cream'
-                        : 'bg-cream-dark/50 text-ink/70 hover:bg-cream-dark'
-                    }`}
-                  >
-                    Other
-                  </button>
+                      className="w-full px-4 py-4 rounded-xl bg-cream-dark text-ink text-lg font-medium focus:outline-none focus:ring-2 focus:ring-indigo-deep/30"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-ink/40 text-sm pointer-events-none">
+                      {formatDateForDisplay(selectedDate)}
+                    </span>
+                  </div>
                 </div>
+              )}
 
-                {/* Custom duration input - only shown when Other is selected */}
-                {showCustomDuration && (
-                  <div className="mt-3">
-                    <div className="flex items-center gap-2">
+              {/* Plan mode: Time and Duration inputs */}
+              {!isSessionMode && (
+                <>
+                  {/* Time */}
+                  <div>
+                    <label className="text-xs text-ink/50 block mb-2">
+                      What time?
+                    </label>
+                    <div className="relative">
                       <input
-                        type="number"
-                        min="1"
-                        max="480"
-                        placeholder="Enter minutes"
-                        value={customDurationInput}
-                        onChange={(e) => {
-                          setCustomDurationInput(e.target.value)
-                          setDuration(e.target.value ? parseInt(e.target.value) : null)
-                        }}
-                        className="flex-1 px-4 py-3 rounded-xl bg-cream-dark text-ink focus:outline-none focus:ring-2 focus:ring-indigo-deep/30"
-                        autoFocus
+                        type="time"
+                        value={plannedTime}
+                        onChange={(e) => setPlannedTime(e.target.value)}
+                        className="w-full px-4 py-4 rounded-xl bg-cream-dark text-ink text-lg font-medium focus:outline-none focus:ring-2 focus:ring-indigo-deep/30"
                       />
-                      <span className="text-sm text-ink/50">min</span>
+                      {!plannedTime && (
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/50 font-medium pointer-events-none">
+                          Tap to set time
+                        </span>
+                      )}
                     </div>
                   </div>
-                )}
-              </div>
 
-              {/* Pose */}
+                  {/* Duration */}
+                  <div>
+                    <label className="text-xs text-ink/50 block mb-2">
+                      How long?
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {DURATIONS.map((d) => (
+                        <button
+                          key={d}
+                          onClick={() => {
+                            setDuration(duration === d ? null : d)
+                            setShowCustomDuration(false)
+                            setCustomDurationInput('')
+                          }}
+                          className={`px-3 py-1.5 rounded-full text-xs transition-colors ${
+                            duration === d && !showCustomDuration
+                              ? 'bg-indigo-deep text-cream'
+                              : 'bg-cream-dark/50 text-ink/70 hover:bg-cream-dark'
+                          }`}
+                        >
+                          {d} min
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => {
+                          setShowCustomDuration(!showCustomDuration)
+                          if (!showCustomDuration) {
+                            setDuration(null)
+                          }
+                        }}
+                        className={`px-3 py-1.5 rounded-full text-xs transition-colors ${
+                          showCustomDuration
+                            ? 'bg-indigo-deep text-cream'
+                            : 'bg-cream-dark/50 text-ink/70 hover:bg-cream-dark'
+                        }`}
+                      >
+                        Other
+                      </button>
+                    </div>
+
+                    {/* Custom duration input - only shown when Other is selected */}
+                    {showCustomDuration && (
+                      <div className="mt-3">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            min="1"
+                            max="480"
+                            placeholder="Enter minutes"
+                            value={customDurationInput}
+                            onChange={(e) => {
+                              setCustomDurationInput(e.target.value)
+                              setDuration(e.target.value ? parseInt(e.target.value) : null)
+                            }}
+                            className="flex-1 px-4 py-3 rounded-xl bg-cream-dark text-ink focus:outline-none focus:ring-2 focus:ring-indigo-deep/30"
+                            autoFocus
+                          />
+                          <span className="text-sm text-ink/50">min</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* Pose - always editable */}
               <div>
                 <label className="text-xs text-ink/50 block mb-2">
                   Position
@@ -366,18 +430,40 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
                 </div>
               </div>
 
-              {/* Notes */}
+              {/* Notes / Intention */}
               <div>
                 <label className="text-xs text-ink/50 block mb-2">
-                  Notes
+                  {isSessionMode ? 'Intention' : 'Notes'}
                 </label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Set your intention for this session..."
+                  placeholder={isSessionMode ? "What was your intention for this session?" : "Set your intention for this session..."}
                   className="w-full h-24 px-4 py-3 rounded-xl bg-cream-dark/50 text-ink placeholder:text-ink/30 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-deep/20"
                 />
               </div>
+
+              {/* Insight display - only in session mode when insight exists */}
+              {isSessionMode && insight && (
+                <div>
+                  <label className="text-xs text-ink/50 block mb-2">
+                    Insight captured
+                  </label>
+                  <div className="bg-indigo-deep/5 rounded-xl p-4 border border-indigo-deep/10">
+                    <p className="text-ink text-sm whitespace-pre-wrap">
+                      {insight.formattedText || insight.rawText}
+                    </p>
+                    <p className="text-xs text-ink/40 mt-2">
+                      {new Date(insight.createdAt).toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -389,10 +475,10 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
             disabled={isSaving || isLoading}
             className="w-full py-3 rounded-xl text-sm font-medium bg-indigo-deep text-cream hover:bg-indigo-deep/90 transition-colors active:scale-[0.98] disabled:opacity-50"
           >
-            {isSaving ? 'Saving...' : existingPlan ? 'Update Plan' : 'Save Plan'}
+            {isSaving ? 'Saving...' : isSessionMode ? 'Save Details' : existingPlan ? 'Update Plan' : 'Save Plan'}
           </button>
 
-          {existingPlan && (
+          {existingPlan && !isSessionMode && (
             <button
               onClick={handleDelete}
               className="w-full py-3 rounded-xl text-sm font-medium text-rose-500 hover:bg-rose-50 transition-colors active:scale-[0.98]"
