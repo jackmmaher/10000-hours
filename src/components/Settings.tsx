@@ -17,16 +17,24 @@ import { useAuthStore } from '../stores/useAuthStore'
 import { useSwipe } from '../hooks/useSwipe'
 import { trackHideTimeToggle } from '../lib/analytics'
 import { AuthModal } from './AuthModal'
+import { ThemeMode } from '../lib/db'
 
 interface SettingsProps {
   onShowPaywall: () => void
   onRestorePurchase: () => void
 }
 
+const THEME_OPTIONS: { value: ThemeMode; label: string; description: string }[] = [
+  { value: 'auto', label: 'Auto', description: 'Shifts with time of day' },
+  { value: 'light', label: 'Light', description: 'Bright, clear' },
+  { value: 'warm', label: 'Warm', description: 'Golden, soft' },
+  { value: 'dark', label: 'Dark', description: 'Deep, restful' }
+]
+
 export function Settings({ onShowPaywall, onRestorePurchase }: SettingsProps) {
   const { setView } = useSessionStore()
   const { tier, isPremium } = usePremiumStore()
-  const { hideTimeDisplay, setHideTimeDisplay } = useSettingsStore()
+  const { hideTimeDisplay, setHideTimeDisplay, themeMode, setThemeMode } = useSettingsStore()
   const { user, isAuthenticated, profile, signOut, isLoading: authLoading } = useAuthStore()
   const [showAuthModal, setShowAuthModal] = useState(false)
 
@@ -132,7 +140,7 @@ export function Settings({ onShowPaywall, onRestorePurchase }: SettingsProps) {
         </div>
 
         {/* Settings Options */}
-        <div className="mb-10">
+        <div className="mb-10 space-y-1">
           {/* Hide Time Display - with custom organic toggle */}
           <button
             onClick={handleHideTimeToggle}
@@ -164,6 +172,33 @@ export function Settings({ onShowPaywall, onRestorePurchase }: SettingsProps) {
               />
             </div>
           </button>
+
+          {/* Theme Selector */}
+          <div className="py-5">
+            <div className="mb-3">
+              <p className="text-sm text-ink">Theme</p>
+              <p className="text-xs text-ink/35 mt-1">
+                Ambient colors that shift naturally
+              </p>
+            </div>
+            <div className="flex gap-2">
+              {THEME_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setThemeMode(option.value)}
+                  className={`
+                    flex-1 py-2.5 px-2 rounded-lg text-center transition-all duration-200
+                    ${themeMode === option.value
+                      ? 'bg-moss text-cream'
+                      : 'bg-cream-deep text-ink/60 hover:bg-cream-deep/80'
+                    }
+                  `}
+                >
+                  <p className="text-xs font-medium">{option.label}</p>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Links - with breathing space */}

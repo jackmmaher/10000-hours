@@ -40,7 +40,10 @@
       "Bash(findstr:*)",
       "Bash(ls:*)",
       "Bash(git -C \"C:\\\\Users\\\\jackm\\\\Projects\\\\10000-hours\" status)",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "Bash(node scripts/generate-sessions.js:*)",
+      "Bash(node scripts/generate-courses.js:*)",
+      "Bash(node scripts/validate-meditation-data.js:*)"
     ]
   }
 }

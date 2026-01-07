@@ -18,7 +18,7 @@ import { useSessionStore } from '../stores/useSessionStore'
 import { useSwipe } from '../hooks/useSwipe'
 import { WeekStonesRow, getDayStatusWithPlan, ExtendedDayStatus } from './WeekStones'
 import { JourneyNextSession } from './JourneyNextSession'
-import { SessionStream } from './SessionStream'
+import { SessionStream, SessionWithDetails } from './SessionStream'
 import { Calendar } from './Calendar'
 import {
   getPlannedSessionsForWeek,
@@ -35,8 +35,9 @@ export function Journey() {
   const [weekPlans, setWeekPlans] = useState<PlannedSession[]>([])
   const [planningDate, setPlanningDate] = useState<Date | null>(null)
   const [calendarRefreshKey, setCalendarRefreshKey] = useState(0)
-  const [reflectionSession, setReflectionSession] = useState<Session | null>(null)
-  const [sessionStreamKey, setSessionStreamKey] = useState(0) // For refreshing after insight added
+  const [insightSession, setInsightSession] = useState<Session | null>(null)
+  const [pearlSession, setPearlSession] = useState<SessionWithDetails | null>(null)
+  const [sessionStreamKey, setSessionStreamKey] = useState(0) // For refreshing after insight/pearl added
 
   // Swipe navigation
   const navSwipeHandlers = useSwipe({
@@ -190,7 +191,8 @@ export function Journey() {
           <SessionStream
             key={sessionStreamKey}
             sessions={sessions}
-            onAddReflection={(session) => setReflectionSession(session)}
+            onAddInsight={(session) => setInsightSession(session)}
+            onCreatePearl={(session) => setPearlSession(session)}
           />
         )}
         {subTab === 'saved' && (
@@ -225,16 +227,30 @@ export function Journey() {
         />
       )}
 
-      {/* Insight capture modal for adding reflections */}
-      {reflectionSession && (
+      {/* Insight capture modal for adding insights */}
+      {insightSession && (
         <InsightCaptureWrapper
-          sessionId={reflectionSession.uuid}
+          sessionId={insightSession.uuid}
           onComplete={() => {
-            setReflectionSession(null)
+            setInsightSession(null)
             // Refresh session stream to show new insight
             setSessionStreamKey(k => k + 1)
           }}
-          onSkip={() => setReflectionSession(null)}
+          onSkip={() => setInsightSession(null)}
+        />
+      )}
+
+      {/* Pearl creation modal */}
+      {pearlSession && pearlSession.insight && (
+        <SharePearlWrapper
+          insightId={pearlSession.insight.id!}
+          insightText={pearlSession.insight.formattedText || pearlSession.insight.rawText}
+          onComplete={() => {
+            setPearlSession(null)
+            // Refresh session stream to show pearl status
+            setSessionStreamKey(k => k + 1)
+          }}
+          onCancel={() => setPearlSession(null)}
         />
       )}
     </div>
@@ -379,5 +395,61 @@ function MyPearlsContent() {
         Start a session →
       </button>
     </div>
+  )
+}
+
+// Wrapper for lazy loading SharePearl
+function SharePearlWrapper({
+  insightId,
+  insightText,
+  onComplete,
+  onCancel
+}: {
+  insightId: string
+  insightText: string
+  onComplete: () => void
+  onCancel: () => void
+}) {
+  const [SharePearl, setSharePearl] = useState<React.ComponentType<{
+    insightId: string
+    insightText: string
+    isAlreadyShared?: boolean
+    onClose: () => void
+    onSuccess: (pearlId: string) => void
+    onDelete: () => void
+  }> | null>(null)
+
+  useEffect(() => {
+    import('./SharePearl').then(module => {
+      setSharePearl(() => module.SharePearl)
+    })
+  }, [])
+
+  if (!SharePearl) {
+    return (
+      <div className="fixed inset-0 bg-ink/50 flex items-center justify-center z-50">
+        <div className="w-1 h-1 bg-cream rounded-full animate-pulse" />
+      </div>
+    )
+  }
+
+  return (
+    <SharePearl
+      insightId={insightId}
+      insightText={insightText}
+      onClose={onCancel}
+      onSuccess={async (pearlId) => {
+        // Mark insight as shared
+        const { markInsightAsShared } = await import('../lib/db')
+        await markInsightAsShared(insightId, pearlId)
+        onComplete()
+      }}
+      onDelete={async () => {
+        // Delete the insight
+        const { deleteInsight } = await import('../lib/db')
+        await deleteInsight(insightId)
+        onComplete()
+      }}
+    />
   )
 }

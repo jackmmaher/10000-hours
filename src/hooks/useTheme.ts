@@ -3,12 +3,14 @@
  *
  * Provides current theme values and applies CSS custom properties.
  * Updates automatically based on time of day and season.
+ * Respects user's theme mode preference (auto/light/warm/dark).
  */
 
 import { useEffect, useState, useCallback } from 'react'
 import {
   ThemeState,
   ThemeValues,
+  TimeOfDay,
   getTimeOfDay,
   getSeason,
   calculateTheme,
@@ -16,19 +18,30 @@ import {
   themeToCSSProperties,
   detectSouthernHemisphere
 } from '../lib/themeEngine'
+import { useSettingsStore } from '../stores/useSettingsStore'
+import { ThemeMode } from '../lib/db'
 
 // Update interval (check every minute)
 const UPDATE_INTERVAL = 60 * 1000
 
+// Map theme mode to time of day
+const MODE_TO_TIME: Record<Exclude<ThemeMode, 'auto'>, TimeOfDay> = {
+  light: 'daytime',
+  warm: 'evening',
+  dark: 'night'
+}
+
 export function useTheme() {
+  const { themeMode } = useSettingsStore()
+
   const [themeState, setThemeState] = useState<ThemeState>(() => {
-    const timeOfDay = getTimeOfDay()
+    const timeOfDay = themeMode === 'auto' ? getTimeOfDay() : MODE_TO_TIME[themeMode]
     const season = getSeason(new Date(), detectSouthernHemisphere())
     return {
       timeOfDay,
       season,
       values: calculateTheme(timeOfDay, season),
-      isTransitioning: isTransitionPeriod()
+      isTransitioning: themeMode === 'auto' && isTransitionPeriod()
     }
   })
 
@@ -50,12 +63,12 @@ export function useTheme() {
     })
   }, [])
 
-  // Update theme based on current time
+  // Update theme based on current time and mode
   const updateTheme = useCallback(() => {
     const now = new Date()
-    const timeOfDay = getTimeOfDay(now)
+    const timeOfDay = themeMode === 'auto' ? getTimeOfDay(now) : MODE_TO_TIME[themeMode]
     const season = getSeason(now, detectSouthernHemisphere())
-    const transitioning = isTransitionPeriod(now)
+    const transitioning = themeMode === 'auto' && isTransitionPeriod(now)
     const values = calculateTheme(timeOfDay, season)
 
     setThemeState(prev => {
@@ -73,14 +86,19 @@ export function useTheme() {
     })
 
     applyTheme(values, transitioning)
-  }, [applyTheme])
+  }, [applyTheme, themeMode])
+
+  // Re-apply theme when mode changes
+  useEffect(() => {
+    updateTheme()
+  }, [updateTheme])
 
   // Initial application and periodic updates
   useEffect(() => {
     // Apply initial theme
     applyTheme(themeState.values, themeState.isTransitioning)
 
-    // Set up interval for updates
+    // Set up interval for updates (only needed for auto mode, but harmless otherwise)
     const interval = setInterval(updateTheme, UPDATE_INTERVAL)
 
     return () => clearInterval(interval)

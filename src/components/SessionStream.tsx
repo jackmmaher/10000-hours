@@ -12,13 +12,15 @@ import { ORB_COLORS } from '../lib/animations'
 
 interface SessionStreamProps {
   sessions: Session[]
-  /** Called when user wants to add reflection to a session */
-  onAddReflection?: (session: Session) => void
+  /** Called when user wants to add insight to a session (voice capture) */
+  onAddInsight?: (session: Session) => void
+  /** Called when user wants to create a pearl from an insight */
+  onCreatePearl?: (session: SessionWithDetails) => void
   /** Called when a session card is clicked (for Calendar sync) */
   onSessionClick?: (session: Session) => void
 }
 
-interface SessionWithDetails extends Session {
+export interface SessionWithDetails extends Session {
   insight?: Insight | null
   plan?: PlannedSession | null
 }
@@ -59,7 +61,7 @@ function formatSessionTime(timestamp: number): string {
   })
 }
 
-export function SessionStream({ sessions, onAddReflection, onSessionClick }: SessionStreamProps) {
+export function SessionStream({ sessions, onAddInsight, onCreatePearl, onSessionClick }: SessionStreamProps) {
   const [sessionsWithDetails, setSessionsWithDetails] = useState<SessionWithDetails[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -162,7 +164,8 @@ export function SessionStream({ sessions, onAddReflection, onSessionClick }: Ses
               <SessionCard
                 key={session.uuid}
                 session={session}
-                onAddReflection={onAddReflection}
+                onAddInsight={onAddInsight}
+                onCreatePearl={onCreatePearl}
                 onSessionClick={onSessionClick}
               />
             ))}
@@ -176,25 +179,33 @@ export function SessionStream({ sessions, onAddReflection, onSessionClick }: Ses
 // Individual session card - now interactive
 function SessionCard({
   session,
-  onAddReflection,
+  onAddInsight,
+  onCreatePearl,
   onSessionClick
 }: {
   session: SessionWithDetails
-  onAddReflection?: (session: Session) => void
+  onAddInsight?: (session: Session) => void
+  onCreatePearl?: (session: SessionWithDetails) => void
   onSessionClick?: (session: Session) => void
 }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const hasInsight = !!session.insight
   const hasPlan = !!session.plan
+  const hasSharedPearl = !!session.insight?.sharedPearlId
 
   const handleCardClick = () => {
     setIsExpanded(!isExpanded)
     onSessionClick?.(session)
   }
 
-  const handleAddReflection = (e: React.MouseEvent) => {
+  const handleAddInsight = (e: React.MouseEvent) => {
     e.stopPropagation() // Don't trigger card expand
-    onAddReflection?.(session)
+    onAddInsight?.(session)
+  }
+
+  const handleCreatePearl = (e: React.MouseEvent) => {
+    e.stopPropagation() // Don't trigger card expand
+    onCreatePearl?.(session)
   }
 
   return (
@@ -281,20 +292,24 @@ function SessionCard({
             </div>
           )}
 
-          {/* Add/Edit reflection button */}
+          {/* Actions based on insight state */}
           {!hasInsight ? (
             <button
-              onClick={handleAddReflection}
+              onClick={handleAddInsight}
               className="text-sm text-indigo-deep hover:text-indigo-deep/80 transition-colors font-medium"
             >
-              Add reflection →
+              Add insight →
             </button>
+          ) : hasSharedPearl ? (
+            <span className="text-xs text-moss font-medium">
+              ✦ Pearl shared
+            </span>
           ) : (
             <button
-              onClick={handleAddReflection}
-              className="text-xs text-ink/40 hover:text-ink/60 transition-colors"
+              onClick={handleCreatePearl}
+              className="text-sm text-moss hover:text-moss/80 transition-colors font-medium"
             >
-              Edit reflection
+              Create Pearl →
             </button>
           )}
         </div>
@@ -303,7 +318,7 @@ function SessionCard({
       {/* No insight preview - show invite (collapsed only) */}
       {!hasInsight && !isExpanded && (
         <p className="text-sm text-ink/40">
-          Tap to add reflection
+          Tap to add insight
         </p>
       )}
     </button>

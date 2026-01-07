@@ -7,7 +7,13 @@
     "difficulty": "beginner",
     "seed_karma": 234,
     "seed_saves": 567,
-    "session_ids": ["session-001", "session-007", "session-025", "session-030", "session-010"]
+    "session_ids": [
+      "session-001",
+      "session-007",
+      "session-025",
+      "session-030",
+      "session-010"
+    ]
   },
   {
     "id": "course-002",
@@ -17,7 +23,12 @@
     "difficulty": "intermediate",
     "seed_karma": 189,
     "seed_saves": 456,
-    "session_ids": ["session-002", "session-017", "session-020", "session-034"]
+    "session_ids": [
+      "session-002",
+      "session-017",
+      "session-020",
+      "session-034"
+    ]
   },
   {
     "id": "course-003",
@@ -27,17 +38,29 @@
     "difficulty": "beginner",
     "seed_karma": 256,
     "seed_saves": 534,
-    "session_ids": ["session-003", "session-019", "session-015", "session-049"]
+    "session_ids": [
+      "session-003",
+      "session-019",
+      "session-015",
+      "session-049"
+    ]
   },
   {
     "id": "course-004",
     "title": "Open Heart: A Loving-Kindness Journey",
-    "description": "A transformative 7-session journey through loving-kindness practice. Begin with self-compassion, expand to loved ones, and eventually extend kindness even to difficult people.",
-    "session_count": 7,
+    "description": "A transformative 6-session journey through loving-kindness practice. Begin with self-compassion, expand to loved ones, and eventually extend kindness even to difficult people.",
+    "session_count": 6,
     "difficulty": "intermediate",
     "seed_karma": 198,
     "seed_saves": 423,
-    "session_ids": ["session-004", "session-027", "session-013", "session-036", "session-022", "session-033"]
+    "session_ids": [
+      "session-004",
+      "session-027",
+      "session-013",
+      "session-036",
+      "session-022",
+      "session-033"
+    ]
   },
   {
     "id": "course-005",
@@ -47,7 +70,13 @@
     "difficulty": "intermediate",
     "seed_karma": 167,
     "seed_saves": 378,
-    "session_ids": ["session-005", "session-014", "session-044", "session-035", "session-024"]
+    "session_ids": [
+      "session-005",
+      "session-014",
+      "session-044",
+      "session-035",
+      "session-024"
+    ]
   },
   {
     "id": "course-006",
@@ -57,7 +86,12 @@
     "difficulty": "intermediate",
     "seed_karma": 145,
     "seed_saves": 312,
-    "session_ids": ["session-031", "session-008", "session-026", "session-042"]
+    "session_ids": [
+      "session-031",
+      "session-008",
+      "session-026",
+      "session-042"
+    ]
   },
   {
     "id": "course-007",
@@ -67,7 +101,12 @@
     "difficulty": "beginner",
     "seed_karma": 212,
     "seed_saves": 456,
-    "session_ids": ["session-023", "session-041", "session-010", "session-001"]
+    "session_ids": [
+      "session-023",
+      "session-041",
+      "session-010",
+      "session-001"
+    ]
   },
   {
     "id": "course-008",
@@ -77,7 +116,13 @@
     "difficulty": "intermediate",
     "seed_karma": 178,
     "seed_saves": 389,
-    "session_ids": ["session-011", "session-003", "session-038", "session-048", "session-043"]
+    "session_ids": [
+      "session-011",
+      "session-003",
+      "session-038",
+      "session-048",
+      "session-043"
+    ]
   },
   {
     "id": "course-009",
@@ -87,7 +132,12 @@
     "difficulty": "advanced",
     "seed_karma": 134,
     "seed_saves": 278,
-    "session_ids": ["session-012", "session-018", "session-047", "session-037"]
+    "session_ids": [
+      "session-012",
+      "session-018",
+      "session-047",
+      "session-037"
+    ]
   },
   {
     "id": "course-010",
@@ -97,7 +147,11 @@
     "difficulty": "beginner",
     "seed_karma": 156,
     "seed_saves": 312,
-    "session_ids": ["session-016", "session-007", "session-031"]
+    "session_ids": [
+      "session-016",
+      "session-007",
+      "session-031"
+    ]
   },
   {
     "id": "course-011",
@@ -107,7 +161,12 @@
     "difficulty": "beginner",
     "seed_karma": 287,
     "seed_saves": 567,
-    "session_ids": ["session-017", "session-046", "session-020", "session-030"]
+    "session_ids": [
+      "session-017",
+      "session-046",
+      "session-020",
+      "session-030"
+    ]
   },
   {
     "id": "course-012",
@@ -117,7 +176,13 @@
     "difficulty": "advanced",
     "seed_karma": 123,
     "seed_saves": 267,
-    "session_ids": ["session-018", "session-021", "session-042", "session-047", "session-032"]
+    "session_ids": [
+      "session-018",
+      "session-021",
+      "session-042",
+      "session-047",
+      "session-032"
+    ]
   },
   {
     "id": "course-013",
@@ -127,7 +192,11 @@
     "difficulty": "beginner",
     "seed_karma": 198,
     "seed_saves": 423,
-    "session_ids": ["session-019", "session-041", "session-036"]
+    "session_ids": [
+      "session-019",
+      "session-041",
+      "session-036"
+    ]
   },
   {
     "id": "course-014",
@@ -137,7 +206,12 @@
     "difficulty": "beginner",
     "seed_karma": 189,
     "seed_saves": 378,
-    "session_ids": ["session-020", "session-011", "session-003", "session-048"]
+    "session_ids": [
+      "session-020",
+      "session-011",
+      "session-003",
+      "session-048"
+    ]
   },
   {
     "id": "course-015",
@@ -147,7 +221,13 @@
     "difficulty": "advanced",
     "seed_karma": 112,
     "seed_saves": 234,
-    "session_ids": ["session-024", "session-029", "session-040", "session-032", "session-047"]
+    "session_ids": [
+      "session-024",
+      "session-029",
+      "session-040",
+      "session-032",
+      "session-047"
+    ]
   },
   {
     "id": "course-016",
@@ -157,7 +237,12 @@
     "difficulty": "intermediate",
     "seed_karma": 167,
     "seed_saves": 345,
-    "session_ids": ["session-028", "session-026", "session-009", "session-043"]
+    "session_ids": [
+      "session-028",
+      "session-026",
+      "session-009",
+      "session-043"
+    ]
   },
   {
     "id": "course-017",
@@ -167,7 +252,12 @@
     "difficulty": "beginner",
     "seed_karma": 234,
     "seed_saves": 512,
-    "session_ids": ["session-030", "session-010", "session-046", "session-041"]
+    "session_ids": [
+      "session-030",
+      "session-010",
+      "session-046",
+      "session-041"
+    ]
   },
   {
     "id": "course-018",
@@ -177,7 +267,11 @@
     "difficulty": "advanced",
     "seed_karma": 89,
     "seed_saves": 178,
-    "session_ids": ["session-032", "session-047", "session-018"]
+    "session_ids": [
+      "session-032",
+      "session-047",
+      "session-018"
+    ]
   },
   {
     "id": "course-019",
@@ -187,7 +281,12 @@
     "difficulty": "intermediate",
     "seed_karma": 178,
     "seed_saves": 367,
-    "session_ids": ["session-035", "session-009", "session-029", "session-049"]
+    "session_ids": [
+      "session-035",
+      "session-009",
+      "session-029",
+      "session-049"
+    ]
   },
   {
     "id": "course-020",
@@ -197,7 +296,12 @@
     "difficulty": "intermediate",
     "seed_karma": 189,
     "seed_saves": 423,
-    "session_ids": ["session-039", "session-006", "session-050", "session-034"]
+    "session_ids": [
+      "session-039",
+      "session-006",
+      "session-050",
+      "session-034"
+    ]
   },
   {
     "id": "course-021",
@@ -207,7 +311,15 @@
     "difficulty": "beginner",
     "seed_karma": 256,
     "seed_saves": 534,
-    "session_ids": ["session-001", "session-007", "session-025", "session-003", "session-004", "session-030", "session-019"]
+    "session_ids": [
+      "session-001",
+      "session-007",
+      "session-025",
+      "session-003",
+      "session-004",
+      "session-030",
+      "session-019"
+    ]
   },
   {
     "id": "course-022",
@@ -217,7 +329,11 @@
     "difficulty": "beginner",
     "seed_karma": 156,
     "seed_saves": 312,
-    "session_ids": ["session-006", "session-023", "session-034"]
+    "session_ids": [
+      "session-006",
+      "session-023",
+      "session-034"
+    ]
   },
   {
     "id": "course-023",
@@ -227,7 +343,13 @@
     "difficulty": "intermediate",
     "seed_karma": 178,
     "seed_saves": 389,
-    "session_ids": ["session-004", "session-022", "session-027", "session-049", "session-035"]
+    "session_ids": [
+      "session-004",
+      "session-022",
+      "session-027",
+      "session-049",
+      "session-035"
+    ]
   },
   {
     "id": "course-024",
@@ -237,7 +359,12 @@
     "difficulty": "beginner",
     "seed_karma": 198,
     "seed_saves": 423,
-    "session_ids": ["session-010", "session-031", "session-007", "session-046"]
+    "session_ids": [
+      "session-010",
+      "session-031",
+      "session-007",
+      "session-046"
+    ]
   },
   {
     "id": "course-025",
@@ -247,7 +374,13 @@
     "difficulty": "intermediate",
     "seed_karma": 167,
     "seed_saves": 356,
-    "session_ids": ["session-009", "session-028", "session-029", "session-043", "session-002"]
+    "session_ids": [
+      "session-009",
+      "session-028",
+      "session-029",
+      "session-043",
+      "session-002"
+    ]
   },
   {
     "id": "course-026",
@@ -257,7 +390,11 @@
     "difficulty": "intermediate",
     "seed_karma": 145,
     "seed_saves": 289,
-    "session_ids": ["session-021", "session-047", "session-037"]
+    "session_ids": [
+      "session-021",
+      "session-047",
+      "session-037"
+    ]
   },
   {
     "id": "course-027",
@@ -267,7 +404,15 @@
     "difficulty": "beginner",
     "seed_karma": 234,
     "seed_saves": 567,
-    "session_ids": ["session-001", "session-007", "session-025", "session-010", "session-004", "session-011", "session-019"]
+    "session_ids": [
+      "session-001",
+      "session-007",
+      "session-025",
+      "session-010",
+      "session-004",
+      "session-011",
+      "session-019"
+    ]
   },
   {
     "id": "course-028",
@@ -277,7 +422,12 @@
     "difficulty": "beginner",
     "seed_karma": 189,
     "seed_saves": 412,
-    "session_ids": ["session-003", "session-015", "session-019", "session-049"]
+    "session_ids": [
+      "session-003",
+      "session-015",
+      "session-019",
+      "session-049"
+    ]
   },
   {
     "id": "course-029",
@@ -287,7 +437,13 @@
     "difficulty": "advanced",
     "seed_karma": 112,
     "seed_saves": 234,
-    "session_ids": ["session-018", "session-032", "session-047", "session-029", "session-040"]
+    "session_ids": [
+      "session-018",
+      "session-032",
+      "session-047",
+      "session-029",
+      "session-040"
+    ]
   },
   {
     "id": "course-030",
@@ -297,7 +453,13 @@
     "difficulty": "intermediate",
     "seed_karma": 178,
     "seed_saves": 367,
-    "session_ids": ["session-013", "session-033", "session-036", "session-022", "session-050"]
+    "session_ids": [
+      "session-013",
+      "session-033",
+      "session-036",
+      "session-022",
+      "session-050"
+    ]
   },
   {
     "id": "course-031",
@@ -307,7 +469,13 @@
     "difficulty": "beginner",
     "seed_karma": 267,
     "seed_saves": 534,
-    "session_ids": ["session-017", "session-046", "session-020", "session-030", "session-010"]
+    "session_ids": [
+      "session-017",
+      "session-046",
+      "session-020",
+      "session-030",
+      "session-010"
+    ]
   },
   {
     "id": "course-032",
@@ -317,7 +485,12 @@
     "difficulty": "intermediate",
     "seed_karma": 156,
     "seed_saves": 334,
-    "session_ids": ["session-003", "session-011", "session-038", "session-048"]
+    "session_ids": [
+      "session-003",
+      "session-011",
+      "session-038",
+      "session-048"
+    ]
   },
   {
     "id": "course-033",
@@ -327,7 +500,12 @@
     "difficulty": "beginner",
     "seed_karma": 189,
     "seed_saves": 389,
-    "session_ids": ["session-007", "session-025", "session-046", "session-031"]
+    "session_ids": [
+      "session-007",
+      "session-025",
+      "session-046",
+      "session-031"
+    ]
   },
   {
     "id": "course-034",
@@ -337,7 +515,12 @@
     "difficulty": "intermediate",
     "seed_karma": 167,
     "seed_saves": 345,
-    "session_ids": ["session-036", "session-019", "session-027", "session-013"]
+    "session_ids": [
+      "session-036",
+      "session-019",
+      "session-027",
+      "session-013"
+    ]
   },
   {
     "id": "course-035",
@@ -347,7 +530,12 @@
     "difficulty": "intermediate",
     "seed_karma": 178,
     "seed_saves": 367,
-    "session_ids": ["session-049", "session-003", "session-022", "session-024"]
+    "session_ids": [
+      "session-049",
+      "session-003",
+      "session-022",
+      "session-024"
+    ]
   },
   {
     "id": "course-036",
@@ -357,7 +545,12 @@
     "difficulty": "intermediate",
     "seed_karma": 145,
     "seed_saves": 312,
-    "session_ids": ["session-045", "session-037", "session-006", "session-019"]
+    "session_ids": [
+      "session-045",
+      "session-037",
+      "session-006",
+      "session-019"
+    ]
   },
   {
     "id": "course-037",
@@ -367,7 +560,12 @@
     "difficulty": "beginner",
     "seed_karma": 198,
     "seed_saves": 423,
-    "session_ids": ["session-039", "session-006", "session-050", "session-030"]
+    "session_ids": [
+      "session-039",
+      "session-006",
+      "session-050",
+      "session-030"
+    ]
   },
   {
     "id": "course-038",
@@ -377,7 +575,13 @@
     "difficulty": "intermediate",
     "seed_karma": 178,
     "seed_saves": 378,
-    "session_ids": ["session-009", "session-035", "session-028", "session-029", "session-049"]
+    "session_ids": [
+      "session-009",
+      "session-035",
+      "session-028",
+      "session-029",
+      "session-049"
+    ]
   },
   {
     "id": "course-039",
@@ -387,7 +591,13 @@
     "difficulty": "intermediate",
     "seed_karma": 167,
     "seed_saves": 345,
-    "session_ids": ["session-025", "session-007", "session-008", "session-042", "session-046"]
+    "session_ids": [
+      "session-025",
+      "session-007",
+      "session-008",
+      "session-042",
+      "session-046"
+    ]
   },
   {
     "id": "course-040",
@@ -397,6 +607,250 @@
     "difficulty": "beginner",
     "seed_karma": 178,
     "seed_saves": 356,
-    "session_ids": ["session-034", "session-006", "session-021"]
+    "session_ids": [
+      "session-034",
+      "session-006",
+      "session-021"
+    ]
+  },
+  {
+    "id": "course-041",
+    "title": "Walking Wisdom: A Movement Journey",
+    "description": "Discover the profound practice of walking meditation. These 5 sessions take you from basic walking awareness to deep embodied presence, proving that stillness doesn't require standing still.",
+    "session_count": 5,
+    "difficulty": "beginner",
+    "seed_karma": 178,
+    "seed_saves": 345,
+    "session_ids": [
+      "session-051",
+      "session-054",
+      "session-056",
+      "session-058",
+      "session-055"
+    ]
+  },
+  {
+    "id": "course-042",
+    "title": "Zen Essentials: The Art of Just Sitting",
+    "description": "An introduction to Zen meditation practices. From breath counting to shikantaza (just sitting), explore the elegant simplicity that has transformed practitioners for centuries.",
+    "session_count": 5,
+    "difficulty": "intermediate",
+    "seed_karma": 145,
+    "seed_saves": 289,
+    "session_ids": [
+      "session-061",
+      "session-060",
+      "session-063",
+      "session-066",
+      "session-059"
+    ]
+  },
+  {
+    "id": "course-043",
+    "title": "Sound Medicine: Mantra Mastery",
+    "description": "Harness the power of sacred sound. This 6-session journey teaches traditional mantras and modern applications, from Om to personalized affirmations.",
+    "session_count": 6,
+    "difficulty": "beginner",
+    "seed_karma": 167,
+    "seed_saves": 312,
+    "session_ids": [
+      "session-067",
+      "session-068",
+      "session-073",
+      "session-069",
+      "session-071",
+      "session-074"
+    ]
+  },
+  {
+    "id": "course-044",
+    "title": "Midday Mindfulness",
+    "description": "Reclaim your lunch hour with these 5 midday practices. Each session is designed for the workplace, helping you reset and return to your afternoon with clarity.",
+    "session_count": 5,
+    "difficulty": "beginner",
+    "seed_karma": 189,
+    "seed_saves": 367,
+    "session_ids": [
+      "session-052",
+      "session-076",
+      "session-088",
+      "session-099",
+      "session-109"
+    ]
+  },
+  {
+    "id": "course-045",
+    "title": "Sleep Sanctuary Extended",
+    "description": "Expand your before-sleep practice with these 5 sessions designed to transition you from waking to restful slumber. End each day with peace.",
+    "session_count": 5,
+    "difficulty": "beginner",
+    "seed_karma": 212,
+    "seed_saves": 423,
+    "session_ids": [
+      "session-079",
+      "session-089",
+      "session-101",
+      "session-072",
+      "session-110"
+    ]
+  },
+  {
+    "id": "course-046",
+    "title": "Body Wisdom: Deep Somatic Practice",
+    "description": "Your body holds wisdom your mind doesn't know. These 6 body scan sessions teach you to listen to the body's messages and release stored tension.",
+    "session_count": 6,
+    "difficulty": "intermediate",
+    "seed_karma": 156,
+    "seed_saves": 298,
+    "session_ids": [
+      "session-075",
+      "session-077",
+      "session-078",
+      "session-080",
+      "session-076",
+      "session-087"
+    ]
+  },
+  {
+    "id": "course-047",
+    "title": "Compassion Deep Dive",
+    "description": "Take loving-kindness practice to new depths. From self-compassion to tonglen, these 6 sessions systematically open the heart and develop genuine care for all beings.",
+    "session_count": 6,
+    "difficulty": "advanced",
+    "seed_karma": 134,
+    "seed_saves": 256,
+    "session_ids": [
+      "session-083",
+      "session-084",
+      "session-082",
+      "session-085",
+      "session-081",
+      "session-086"
+    ]
+  },
+  {
+    "id": "course-048",
+    "title": "Vipassana Insight Path",
+    "description": "Develop the clear seeing of insight meditation. These 5 sessions introduce noting, impermanence observation, and open awareness in the Vipassana tradition.",
+    "session_count": 5,
+    "difficulty": "advanced",
+    "seed_karma": 123,
+    "seed_saves": 234,
+    "session_ids": [
+      "session-092",
+      "session-093",
+      "session-094",
+      "session-096",
+      "session-095"
+    ]
+  },
+  {
+    "id": "course-049",
+    "title": "Breath Mastery Foundations",
+    "description": "Master the breath as your primary meditation tool. From belly breathing to whole-body awareness, these 5 sessions build a solid foundation for all other practices.",
+    "session_count": 5,
+    "difficulty": "beginner",
+    "seed_karma": 198,
+    "seed_saves": 378,
+    "session_ids": [
+      "session-087",
+      "session-107",
+      "session-088",
+      "session-090",
+      "session-091"
+    ]
+  },
+  {
+    "id": "course-050",
+    "title": "Anxiety Toolkit",
+    "description": "Practical meditation techniques for managing anxiety. These 4 sessions provide go-to practices for when worry strikes, building resilience over time.",
+    "session_count": 4,
+    "difficulty": "beginner",
+    "seed_karma": 234,
+    "seed_saves": 456,
+    "session_ids": [
+      "session-108",
+      "session-076",
+      "session-088",
+      "session-083"
+    ]
+  },
+  {
+    "id": "course-051",
+    "title": "Evening Wind-Down",
+    "description": "Create a consistent evening practice that helps you transition from the active day to restful night. These 5 sessions are perfect for unwinding.",
+    "session_count": 5,
+    "difficulty": "beginner",
+    "seed_karma": 189,
+    "seed_saves": 367,
+    "session_ids": [
+      "session-054",
+      "session-104",
+      "session-077",
+      "session-100",
+      "session-106"
+    ]
+  },
+  {
+    "id": "course-052",
+    "title": "Advanced Open Awareness",
+    "description": "For experienced practitioners ready to rest in awareness itself. These 5 sessions explore equanimity, not-knowing, and the spacious nature of mind.",
+    "session_count": 5,
+    "difficulty": "advanced",
+    "seed_karma": 112,
+    "seed_saves": 198,
+    "session_ids": [
+      "session-097",
+      "session-100",
+      "session-102",
+      "session-106",
+      "session-095"
+    ]
+  },
+  {
+    "id": "course-053",
+    "title": "Nature Connection Practices",
+    "description": "Take your meditation outdoors with these 4 sessions designed for natural settings. From walking to sitting, learn to let nature be your teacher.",
+    "session_count": 4,
+    "difficulty": "beginner",
+    "seed_karma": 167,
+    "seed_saves": 312,
+    "session_ids": [
+      "session-058",
+      "session-103",
+      "session-056",
+      "session-051"
+    ]
+  },
+  {
+    "id": "course-054",
+    "title": "Zen at Work",
+    "description": "Bring Zen principles to your professional life. These 4 sessions teach you to find stillness amid activity, making the workplace a place of practice.",
+    "session_count": 4,
+    "difficulty": "intermediate",
+    "seed_karma": 145,
+    "seed_saves": 278,
+    "session_ids": [
+      "session-066",
+      "session-099",
+      "session-109",
+      "session-105"
+    ]
+  },
+  {
+    "id": "course-055",
+    "title": "The Complete Day: Morning to Night",
+    "description": "A full-day meditation journey with practices for each phase of the day. From morning awakening to nighttime reflection, live your whole day mindfully.",
+    "session_count": 5,
+    "difficulty": "intermediate",
+    "seed_karma": 178,
+    "seed_saves": 345,
+    "session_ids": [
+      "session-107",
+      "session-099",
+      "session-104",
+      "session-101",
+      "session-110"
+    ]
   }
 ]
