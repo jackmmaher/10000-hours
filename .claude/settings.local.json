@@ -43,7 +43,13 @@
       "Bash(node -e:*)",
       "Bash(node scripts/generate-sessions.js:*)",
       "Bash(node scripts/generate-courses.js:*)",
-      "Bash(node scripts/validate-meditation-data.js:*)"
+      "Bash(node scripts/validate-meditation-data.js:*)",
+      "Bash(git -C \"C:\\\\Users\\\\jackm\\\\Projects\\\\10000-hours\" add src/components/Journey.tsx src/components/MeditationPlanner.tsx screenshots/IMG_6879.png screenshots/IMG_6880.png)",
+      "Skill(superpowers:systematic-debugging)",
+      "Bash(powershell -Command:*)",
+      "Bash(npm run build:check:*)",
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

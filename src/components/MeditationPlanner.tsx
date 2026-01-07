@@ -23,6 +23,7 @@ import {
   getSessionByUuid
 } from '../lib/db'
 import { SessionDetailModal, SessionTemplate } from './SessionDetailModal'
+import { DISCIPLINES, POSES, DURATIONS_MINUTES } from '../lib/meditation-options'
 
 // Import extracted session data for template lookups
 import extractedSessions from '../data/sessions.json'
@@ -40,34 +41,6 @@ interface SessionEdits {
   discipline: string
   notes: string
 }
-
-// Common meditation poses
-const POSES = [
-  'Seated (cushion)',
-  'Seated (chair)',
-  'Kneeling (seiza)',
-  'Lotus',
-  'Half-lotus',
-  'Lying down',
-  'Walking',
-  'Standing'
-]
-
-// Common meditation disciplines
-const DISCIPLINES = [
-  'Breath awareness',
-  'Body scan',
-  'Loving-kindness (metta)',
-  'Vipassana',
-  'Zen (zazen)',
-  'Mantra',
-  'Open awareness',
-  'Guided',
-  'Contemplative'
-]
-
-// Common session durations (minutes)
-const DURATIONS = [10, 15, 20, 25, 30, 45, 60]
 
 function formatDateForDisplay(date: Date): string {
   const today = new Date()
@@ -301,7 +274,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
         setPlannedTime(existing.plannedTime || '')
         setDuration(existing.duration || null)
         // If duration exists but not in presets, show custom mode
-        if (existing.duration && !DURATIONS.includes(existing.duration)) {
+        if (existing.duration && !DURATIONS_MINUTES.includes(existing.duration)) {
           setShowCustomDuration(true)
           setCustomDurationInput(existing.duration.toString())
         }
@@ -549,7 +522,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                       How long?
                     </label>
                     <div className="flex flex-wrap gap-2">
-                      {DURATIONS.map((d) => (
+                      {DURATIONS_MINUTES.map((d) => (
                         <button
                           key={d}
                           onClick={() => {

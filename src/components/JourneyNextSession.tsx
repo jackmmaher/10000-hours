@@ -79,17 +79,20 @@ export function JourneyNextSession({
               {dateDisplay}
             </p>
 
-            {/* Discipline and details */}
-            <p className="font-serif text-xl text-ink mb-3">
-              {plannedSession.discipline || 'Meditation'}
+            {/* Title - from guided meditation or fallback */}
+            <p className="font-serif text-xl text-ink mb-2">
+              {plannedSession.title || plannedSession.discipline || 'Meditation'}
             </p>
 
             {/* Details row */}
-            <div className="flex gap-4 text-sm text-ink/50 mb-4">
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink/50 mb-4">
+              {plannedSession.discipline && (
+                <span>{plannedSession.discipline}</span>
+              )}
               {plannedSession.pose && (
                 <span>{plannedSession.pose}</span>
               )}
-              {plannedSession.notes && (
+              {plannedSession.notes && !plannedSession.title && (
                 <span className="truncate max-w-[200px]">{plannedSession.notes}</span>
               )}
             </div>

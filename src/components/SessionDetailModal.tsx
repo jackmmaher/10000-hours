@@ -122,6 +122,7 @@ export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailM
         date: getStartOfDay(selectedDate),
         plannedTime: plannedTime || undefined,
         duration: parseDuration(session.durationGuidance),
+        title: session.title,
         pose: session.posture,
         discipline: session.discipline,
         notes: session.intention,
@@ -251,7 +252,7 @@ export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailM
           </div>
 
           {/* Actions */}
-          <div className="sticky bottom-0 bg-cream pt-4 pb-safe border-t border-ink/5 -mx-6 px-6">
+          <div className="sticky bottom-0 bg-cream pt-4 pb-safe border-t border-ink/5 -mx-6 px-6 overflow-hidden">
             {!showDatePicker ? (
               <div className="flex gap-3">
                 <button
@@ -281,7 +282,7 @@ export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailM
                 </button>
               </div>
             ) : (
-              <div>
+              <div className="overflow-hidden">
                 <p className="text-sm text-ink/60 mb-4">When would you like to practice this?</p>
 
                 {/* Date picker */}
@@ -295,7 +296,7 @@ export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailM
                       const newDate = new Date(e.target.value + 'T00:00:00')
                       setSelectedDate(newDate)
                     }}
-                    className="w-full px-4 py-3 rounded-xl bg-cream-deep text-ink focus:outline-none focus:ring-2 focus:ring-moss/30"
+                    className="w-full max-w-full px-4 py-3 rounded-xl bg-cream-deep text-ink focus:outline-none focus:ring-2 focus:ring-moss/30 box-border"
                   />
                 </div>
 
@@ -311,7 +312,7 @@ export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailM
                     type="time"
                     value={plannedTime}
                     onChange={(e) => setPlannedTime(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-cream-deep text-ink focus:outline-none focus:ring-2 focus:ring-moss/30"
+                    className="w-full max-w-full px-4 py-3 rounded-xl bg-cream-deep text-ink focus:outline-none focus:ring-2 focus:ring-moss/30 box-border"
                   />
                 </div>
 

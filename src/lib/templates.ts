@@ -22,6 +22,16 @@ export interface TemplateInput {
   tags?: string[]
 }
 
+// Timeout wrapper for Supabase calls
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Request timed out after ${ms}ms`)), ms)
+    )
+  ])
+}
+
 /**
  * Create a new session template
  */
@@ -31,35 +41,53 @@ export async function createTemplate(
   creatorHours: number
 ): Promise<SessionTemplate | null> {
   if (!isSupabaseConfigured() || !supabase) {
-    throw new Error('Supabase not configured')
+    console.error('Supabase not configured - cannot publish template')
+    throw new Error('Supabase not configured. Please check your connection settings.')
   }
 
-  const { data, error } = await supabase
-    .from('session_templates')
-    .insert({
-      user_id: userId,
-      title: template.title,
-      tagline: template.tagline,
-      duration_guidance: template.durationGuidance,
-      discipline: template.discipline,
-      posture: template.posture,
-      best_time: template.bestTime,
-      environment: template.environment || null,
-      guidance_notes: template.guidanceNotes,
-      intention: template.intention,
-      recommended_after_hours: template.recommendedAfterHours || 0,
-      tags: template.tags || [],
-      creator_hours: creatorHours
+  console.log('Creating template:', { title: template.title, userId })
+
+  try {
+    const supabasePromise = new Promise<{ data: Record<string, unknown> | null; error: { message: string } | null }>((resolve) => {
+      supabase!
+        .from('session_templates')
+        .insert({
+          user_id: userId,
+          title: template.title,
+          tagline: template.tagline,
+          duration_guidance: template.durationGuidance,
+          discipline: template.discipline,
+          posture: template.posture,
+          best_time: template.bestTime,
+          environment: template.environment || null,
+          guidance_notes: template.guidanceNotes,
+          intention: template.intention,
+          recommended_after_hours: template.recommendedAfterHours || 0,
+          tags: template.tags || [],
+          creator_hours: creatorHours
+        })
+        .select()
+        .single()
+        .then(resolve)
     })
-    .select()
-    .single()
 
-  if (error) {
-    console.error('Create template error:', error)
-    return null
+    const { data, error } = await withTimeout(supabasePromise, 15000)
+
+    if (error) {
+      console.error('Create template error:', error)
+      throw new Error(error.message || 'Failed to create template')
+    }
+
+    if (!data) {
+      throw new Error('No data returned from server')
+    }
+
+    console.log('Template created successfully:', data.id)
+    return mapTemplateFromDb(data)
+  } catch (err) {
+    console.error('Create template failed:', err)
+    throw err
   }
-
-  return mapTemplateFromDb(data)
 }
 
 /**

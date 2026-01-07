@@ -60,6 +60,7 @@ export interface PlannedSession {
   date: number              // Date timestamp (start of day)
   plannedTime?: string      // "07:30" format
   duration?: number         // Planned duration in minutes
+  title?: string            // Session title (e.g., "First Breath Awakening")
   pose?: string             // Seating position/pose
   discipline?: string       // Meditation discipline (e.g., "Vipassana", "Zen")
   notes?: string            // Guidance notes
@@ -96,6 +97,24 @@ export interface PearlDraft {
   updatedAt: number               // Last edit
 }
 
+// Template draft - work in progress before publishing to community
+export interface TemplateDraft {
+  id: string                      // Always 'current' - only one draft at a time
+  title: string
+  tagline: string
+  durationGuidance: string
+  discipline: string
+  posture: string
+  bestTime: string
+  environment: string
+  guidanceNotes: string
+  intention: string
+  recommendedAfterHours: number
+  tags: string
+  createdAt: number
+  updatedAt: number
+}
+
 class MeditationDB extends Dexie {
   sessions!: Table<Session>
   appState!: Table<AppState>
@@ -106,6 +125,7 @@ class MeditationDB extends Dexie {
   courseProgress!: Table<UserCourseProgress>
   savedTemplates!: Table<SavedTemplate>
   pearlDrafts!: Table<PearlDraft>
+  templateDrafts!: Table<TemplateDraft>
 
   constructor() {
     super('10000hours')
@@ -219,6 +239,20 @@ class MeditationDB extends Dexie {
       courseProgress: 'id, courseId, status',
       savedTemplates: 'id, templateId, savedAt',
       pearlDrafts: 'id, insightId, updatedAt'
+    })
+
+    // v9: Add template drafts table for work-in-progress templates
+    this.version(9).stores({
+      sessions: '++id, uuid, startTime, endTime',
+      appState: 'id',
+      profile: 'id',
+      settings: 'id',
+      insights: 'id, sessionId, createdAt, sharedPearlId',
+      plannedSessions: '++id, date, createdAt, linkedSessionUuid, courseId',
+      courseProgress: 'id, courseId, status',
+      savedTemplates: 'id, templateId, savedAt',
+      pearlDrafts: 'id, insightId, updatedAt',
+      templateDrafts: 'id, updatedAt'
     })
   }
 }
@@ -685,4 +719,43 @@ export async function deletePearlDraft(insightId: string): Promise<void> {
 
 export async function getAllPearlDrafts(): Promise<PearlDraft[]> {
   return db.pearlDrafts.orderBy('updatedAt').reverse().toArray()
+}
+
+// Template Draft helpers - work-in-progress meditation templates before publishing
+
+export async function saveTemplateDraft(
+  data: Omit<TemplateDraft, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<TemplateDraft> {
+  const existing = await db.templateDrafts.get('current')
+  const now = Date.now()
+
+  if (existing) {
+    // Update existing draft
+    const updated = { ...existing, ...data, updatedAt: now }
+    await db.templateDrafts.update('current', updated)
+    return updated
+  } else {
+    // Create new draft
+    const draft: TemplateDraft = {
+      id: 'current',
+      ...data,
+      createdAt: now,
+      updatedAt: now
+    }
+    await db.templateDrafts.add(draft)
+    return draft
+  }
+}
+
+export async function getTemplateDraft(): Promise<TemplateDraft | undefined> {
+  return db.templateDrafts.get('current')
+}
+
+export async function deleteTemplateDraft(): Promise<void> {
+  await db.templateDrafts.delete('current')
+}
+
+export async function hasTemplateDraft(): Promise<boolean> {
+  const draft = await db.templateDrafts.get('current')
+  return !!draft
 }
