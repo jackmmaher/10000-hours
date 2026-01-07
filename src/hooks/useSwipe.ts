@@ -13,7 +13,7 @@ interface SwipeState {
   startTime: number
 }
 
-const SWIPE_THRESHOLD = 100  // Increased to prevent accidental triggers
+const SWIPE_THRESHOLD = 150  // Higher threshold prevents accidental navigation while scrolling
 const SWIPE_TIMEOUT = 400
 const SCROLL_TOLERANCE = 30  // If scrolled more than this, ignore swipe
 
