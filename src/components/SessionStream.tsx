@@ -140,10 +140,10 @@ export function SessionStream({ sessions, onAddInsight, onCreatePearl, onSession
           />
         </div>
         <p className="text-ink/50 text-sm">
-          Your meditation sessions will appear here.
+          Your meditations will appear here.
         </p>
         <p className="text-ink/30 text-xs mt-2">
-          Start your first sit to begin your journey.
+          Start your first meditation to begin your journey.
         </p>
       </div>
     )

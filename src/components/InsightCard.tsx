@@ -69,13 +69,13 @@ function generateInsights(sessions: Session[]): Insight[] {
     insights.push({
       type: 'time_pattern',
       message: 'You\'re a morning practitioner.',
-      detail: `${Math.round(morningRatio * 100)}% of your sessions start before noon.`
+      detail: `${Math.round(morningRatio * 100)}% of your meditations start before noon.`
     })
   } else if (eveningRatio > 0.6) {
     insights.push({
       type: 'time_pattern',
       message: 'Evening is your time for stillness.',
-      detail: `${Math.round(eveningRatio * 100)}% of your sessions are in the evening.`
+      detail: `${Math.round(eveningRatio * 100)}% of your meditations are in the evening.`
     })
   }
 
@@ -90,8 +90,8 @@ function generateInsights(sessions: Session[]): Insight[] {
     const increase = Math.round(((recentStats.avgSessionMinutes - olderStats.avgSessionMinutes) / olderStats.avgSessionMinutes) * 100)
     insights.push({
       type: 'growth',
-      message: 'Your sessions are getting longer.',
-      detail: `Average session up ${increase}% compared to before.`
+      message: 'Your meditations are getting longer.',
+      detail: `Average meditation up ${increase}% compared to before.`
     })
   }
 

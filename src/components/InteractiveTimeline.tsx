@@ -81,7 +81,7 @@ export function InteractiveTimeline({ sessions, onSessionTap }: InteractiveTimel
     return (
       <div className="py-6 text-center">
         <p className="text-xs text-ink/30 italic">
-          Your sessions will appear here
+          Your meditations will appear here
         </p>
       </div>
     )

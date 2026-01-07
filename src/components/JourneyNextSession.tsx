@@ -139,7 +139,7 @@ export function JourneyNextSession({
 
           <div className="flex-1 min-w-0">
             <p className="font-serif text-lg text-ink group-hover:text-ink/80 transition-colors">
-              Plan your next sit
+              Plan your next meditation
             </p>
             <p className="text-sm text-ink/40 mt-1">
               Set an intention for tomorrow, or just begin now

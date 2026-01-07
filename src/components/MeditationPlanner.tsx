@@ -369,7 +369,7 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder={suggestedPrompt || "Set your intention for this session..."}
+                  placeholder={suggestedPrompt || "Set your intention for this meditation..."}
                   className="w-full h-24 px-4 py-3 rounded-xl bg-cream-dark/50 text-ink placeholder:text-ink/30 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-deep/20"
                 />
               </div>
