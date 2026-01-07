@@ -11,8 +11,7 @@ import {
   addPlannedSession,
   getPlannedSession,
   updatePlannedSession,
-  deletePlannedSession,
-  getLatestInsight
+  deletePlannedSession
 } from '../lib/db'
 
 interface MeditationPlannerProps {
@@ -77,12 +76,21 @@ function getStartOfDay(date: Date): number {
   return d.getTime()
 }
 
+// Format date for input value (YYYY-MM-DD)
+function formatDateForInput(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [existingPlan, setExistingPlan] = useState<PlannedSession | null>(null)
 
-  // Form state
+  // Form state - selectedDate can be changed by user
+  const [selectedDate, setSelectedDate] = useState<Date>(date)
   const [plannedTime, setPlannedTime] = useState('')
   const [duration, setDuration] = useState<number | null>(null)
   const [showCustomDuration, setShowCustomDuration] = useState(false)
@@ -90,15 +98,13 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
   const [pose, setPose] = useState('')
   const [discipline, setDiscipline] = useState('')
   const [notes, setNotes] = useState('')
-  const [suggestedPrompt, setSuggestedPrompt] = useState('')
 
-  // Load existing plan and suggested prompt
+  // Load existing plan for selected date
   useEffect(() => {
     async function load() {
       setIsLoading(true)
 
-      // Load existing plan for this date
-      const dateStart = getStartOfDay(date)
+      const dateStart = getStartOfDay(selectedDate)
       const existing = await getPlannedSession(dateStart)
 
       if (existing) {
@@ -115,29 +121,19 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
         setNotes(existing.notes || '')
       }
 
-      // Get latest insight for suggested prompt
-      const latestInsight = await getLatestInsight()
-      if (latestInsight) {
-        const text = latestInsight.formattedText || latestInsight.rawText
-        if (text.length > 50) {
-          setSuggestedPrompt(`Meditate on: "${text.substring(0, 50)}..."`)
-        } else {
-          setSuggestedPrompt(`Meditate on: "${text}"`)
-        }
-      }
-
       setIsLoading(false)
     }
     load()
-  }, [date])
+  }, [selectedDate])
 
   const handleSave = useCallback(async () => {
     setIsSaving(true)
-    const dateStart = getStartOfDay(date)
+    const dateStart = getStartOfDay(selectedDate)
 
     try {
       if (existingPlan?.id) {
         await updatePlannedSession(existingPlan.id, {
+          date: dateStart,
           plannedTime: plannedTime || undefined,
           duration: duration || undefined,
           pose: pose || undefined,
@@ -161,7 +157,7 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
     } finally {
       setIsSaving(false)
     }
-  }, [date, existingPlan, plannedTime, duration, pose, discipline, notes, onSave, onClose])
+  }, [selectedDate, existingPlan, plannedTime, duration, pose, discipline, notes, onSave, onClose])
 
   const handleDelete = useCallback(async () => {
     if (!existingPlan?.id) return
@@ -173,12 +169,6 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
       console.error('Failed to delete plan:', err)
     }
   }, [existingPlan, onSave, onClose])
-
-  const handleUseSuggestion = useCallback(() => {
-    if (suggestedPrompt) {
-      setNotes(suggestedPrompt)
-    }
-  }, [suggestedPrompt])
 
   return (
     <div
@@ -197,14 +187,9 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
         {/* Header */}
         <div className="px-6 pb-4 border-b border-ink/5">
           <div className="flex items-start justify-between">
-            <div>
-              <p className="font-serif text-xl text-indigo-deep">
-                Plan Meditation
-              </p>
-              <p className="text-sm text-ink/50 mt-1">
-                {formatDateForDisplay(date)}
-              </p>
-            </div>
+            <p className="font-serif text-xl text-indigo-deep">
+              Plan Meditation
+            </p>
             <button
               onClick={onClose}
               className="p-2 -mr-2 text-ink/40 hover:text-ink/60 transition-colors"
@@ -224,6 +209,36 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
             </div>
           ) : (
             <>
+              {/* Date */}
+              <div>
+                <label className="text-xs text-ink/50 block mb-2">
+                  What day?
+                </label>
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={formatDateForInput(selectedDate)}
+                    onChange={(e) => {
+                      const newDate = new Date(e.target.value + 'T00:00:00')
+                      setSelectedDate(newDate)
+                      // Reset form when date changes (will reload any existing plan)
+                      setExistingPlan(null)
+                      setPlannedTime('')
+                      setDuration(null)
+                      setShowCustomDuration(false)
+                      setCustomDurationInput('')
+                      setPose('')
+                      setDiscipline('')
+                      setNotes('')
+                    }}
+                    className="w-full px-4 py-4 rounded-xl bg-cream-dark text-ink text-lg font-medium focus:outline-none focus:ring-2 focus:ring-indigo-deep/30"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-ink/40 text-sm pointer-events-none">
+                    {formatDateForDisplay(selectedDate)}
+                  </span>
+                </div>
+              </div>
+
               {/* Time */}
               <div>
                 <label className="text-xs text-ink/50 block mb-2">
@@ -237,7 +252,7 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
                     className="w-full px-4 py-4 rounded-xl bg-cream-dark text-ink text-lg font-medium focus:outline-none focus:ring-2 focus:ring-indigo-deep/30"
                   />
                   {!plannedTime && (
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/30 pointer-events-none">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/50 font-medium pointer-events-none">
                       Tap to set time
                     </span>
                   )}
@@ -353,23 +368,13 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
 
               {/* Notes */}
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs text-ink/50">
-                    Notes
-                  </label>
-                  {suggestedPrompt && !notes && (
-                    <button
-                      onClick={handleUseSuggestion}
-                      className="text-xs text-indigo-deep/70 hover:text-indigo-deep transition-colors"
-                    >
-                      Use suggestion
-                    </button>
-                  )}
-                </div>
+                <label className="text-xs text-ink/50 block mb-2">
+                  Notes
+                </label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder={suggestedPrompt || "Set your intention for this meditation..."}
+                  placeholder="Set your intention for this session..."
                   className="w-full h-24 px-4 py-3 rounded-xl bg-cream-dark/50 text-ink placeholder:text-ink/30 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-deep/20"
                 />
               </div>
