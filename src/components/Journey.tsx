@@ -187,7 +187,7 @@ export function Journey() {
             active={subTab === 'saved'}
             onClick={() => setSubTab('saved')}
           >
-            Guided
+            Guided Meditations
           </TabButton>
           <TabButton
             active={subTab === 'pearls'}
