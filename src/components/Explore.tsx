@@ -22,6 +22,7 @@ import { AuthModal } from './AuthModal'
 import { SessionCard } from './SessionCard'
 import { SessionDetailModal, SessionTemplate } from './SessionDetailModal'
 import { SESSION_HERO_GRADIENTS, INTENTION_TO_GRADIENT } from '../lib/animations'
+import { getPublishedTemplates } from '../lib/templates'
 
 // Import extracted data
 import extractedSessions from '../data/sessions.json'
@@ -92,20 +93,31 @@ export function Explore() {
   const { setView } = useSessionStore()
   const { user, isAuthenticated, refreshProfile } = useAuthStore()
   const [pearls, setPearls] = useState<Pearl[]>([])
+  const [communityTemplates, setCommunityTemplates] = useState<SessionTemplate[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [filterType, setFilterType] = useState<FilterType>('all')
   const [sortType, setSortType] = useState<SortType>('rising')
   const [selectedSession, setSelectedSession] = useState<SessionTemplate | null>(null)
 
-  // Load pearls from Supabase
+  // Combine seeded sessions with community templates
+  const allSessions = useMemo(() => {
+    // Community templates first (newest), then seeded
+    return [...communityTemplates, ...SEEDED_SESSIONS]
+  }, [communityTemplates])
+
+  // Load pearls and community templates from Supabase
   const loadContent = useCallback(async () => {
     setIsLoading(true)
     try {
       // Map sort type to pearl filter
       const pearlFilter: PearlFilter = sortType === 'new' ? 'new' : sortType === 'top' ? 'top' : 'rising'
-      const data = await getPearls(pearlFilter, user?.id)
-      setPearls(data)
+      const [pearlData, templateData] = await Promise.all([
+        getPearls(pearlFilter, user?.id),
+        getPublishedTemplates(20) // Limit to 20 community templates
+      ])
+      setPearls(pearlData)
+      setCommunityTemplates(templateData)
     } catch (err) {
       console.error('Failed to load content:', err)
     } finally {
@@ -126,7 +138,7 @@ export function Explore() {
       return pearls.map(p => ({ type: 'pearl' as FeedItemType, id: p.id, data: p }))
     }
     if (filterType === 'sessions') {
-      return SEEDED_SESSIONS.map(s => ({ type: 'session' as FeedItemType, id: s.id, data: s }))
+      return allSessions.map(s => ({ type: 'session' as FeedItemType, id: s.id, data: s }))
     }
 
     // Mixed feed pattern: pearls → session → pearls → session
@@ -141,8 +153,8 @@ export function Explore() {
     }
 
     // Add session
-    if (sessionIndex < SEEDED_SESSIONS.length) {
-      items.push({ type: 'session', id: SEEDED_SESSIONS[sessionIndex].id, data: SEEDED_SESSIONS[sessionIndex] })
+    if (sessionIndex < allSessions.length) {
+      items.push({ type: 'session', id: allSessions[sessionIndex].id, data: allSessions[sessionIndex] })
       sessionIndex++
     }
 
@@ -154,8 +166,8 @@ export function Explore() {
     }
 
     // Add another session
-    if (sessionIndex < SEEDED_SESSIONS.length) {
-      items.push({ type: 'session', id: SEEDED_SESSIONS[sessionIndex].id, data: SEEDED_SESSIONS[sessionIndex] })
+    if (sessionIndex < allSessions.length) {
+      items.push({ type: 'session', id: allSessions[sessionIndex].id, data: allSessions[sessionIndex] })
       sessionIndex++
     }
 
@@ -165,14 +177,14 @@ export function Explore() {
       pearlIndex++
 
       // Insert remaining sessions periodically
-      if (pearlIndex % 4 === 0 && sessionIndex < SEEDED_SESSIONS.length) {
-        items.push({ type: 'session', id: SEEDED_SESSIONS[sessionIndex].id, data: SEEDED_SESSIONS[sessionIndex] })
+      if (pearlIndex % 4 === 0 && sessionIndex < allSessions.length) {
+        items.push({ type: 'session', id: allSessions[sessionIndex].id, data: allSessions[sessionIndex] })
         sessionIndex++
       }
     }
 
     return items
-  }, [pearls, filterType])
+  }, [pearls, filterType, allSessions])
 
   // Handle vote
   const handleVote = async (pearlId: string, shouldVote: boolean) => {
