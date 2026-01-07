@@ -19,7 +19,8 @@ import {
   updatePlannedSession,
   deletePlannedSession,
   getInsightsBySessionId,
-  updateSession
+  updateSession,
+  getSessionByUuid
 } from '../lib/db'
 
 interface MeditationPlannerProps {
@@ -141,6 +142,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
   const [notes, setNotes] = useState('')
 
   // Fetch insight and session metadata when session changes
+  // IMPORTANT: Always load from IndexedDB (fresh data), not from props (potentially stale)
   useEffect(() => {
     async function loadSessionData() {
       if (session) {
@@ -148,12 +150,17 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
         const insights = await getInsightsBySessionId(session.uuid)
         setInsight(insights.length > 0 ? insights[0] : null)
 
-        // Load per-session metadata (pose, discipline, notes are stored on Session)
-        setPose(session.pose || '')
-        setDiscipline(session.discipline || '')
-        setNotes(session.notes || '')
+        // Load per-session metadata from IndexedDB (fresh data)
+        // Props may be stale if user saved metadata without refreshing the parent
+        const freshSession = await getSessionByUuid(session.uuid)
+        setPose(freshSession?.pose || '')
+        setDiscipline(freshSession?.discipline || '')
+        setNotes(freshSession?.notes || '')
       } else {
         setInsight(null)
+        setPose('')
+        setDiscipline('')
+        setNotes('')
       }
     }
     loadSessionData()
