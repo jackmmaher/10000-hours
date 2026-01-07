@@ -30,6 +30,13 @@ interface MeditationPlannerProps {
   onSave: () => void
 }
 
+// Track edits for each session independently
+interface SessionEdits {
+  pose: string
+  discipline: string
+  notes: string
+}
+
 // Common meditation poses
 const POSES = [
   'Seated (cushion)',
@@ -137,12 +144,66 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
   const [duration, setDuration] = useState<number | null>(null)
   const [showCustomDuration, setShowCustomDuration] = useState(false)
   const [customDurationInput, setCustomDurationInput] = useState('')
-  const [pose, setPose] = useState('')
-  const [discipline, setDiscipline] = useState('')
-  const [notes, setNotes] = useState('')
+
+  // Multi-session edit tracking: Map<sessionUuid, edits>
+  // This preserves edits when switching between sessions
+  const [sessionEdits, setSessionEdits] = useState<Map<string, SessionEdits>>(new Map())
+
+  // Plan mode state (separate from session mode)
+  const [planPose, setPlanPose] = useState('')
+  const [planDiscipline, setPlanDiscipline] = useState('')
+  const [planNotes, setPlanNotes] = useState('')
+
+  // Get current session's edits (from map or defaults)
+  const currentEdits = session ? sessionEdits.get(session.uuid) : null
+
+  // Use session edits in session mode, plan state in plan mode
+  const pose = isSessionMode ? (currentEdits?.pose ?? '') : planPose
+  const discipline = isSessionMode ? (currentEdits?.discipline ?? '') : planDiscipline
+  const notes = isSessionMode ? (currentEdits?.notes ?? '') : planNotes
+
+  // Update edits - routes to correct state based on mode
+  const setPose = useCallback((value: string) => {
+    if (isSessionMode && session) {
+      setSessionEdits(prev => {
+        const newMap = new Map(prev)
+        const existing = newMap.get(session.uuid) || { pose: '', discipline: '', notes: '' }
+        newMap.set(session.uuid, { ...existing, pose: value })
+        return newMap
+      })
+    } else {
+      setPlanPose(value)
+    }
+  }, [isSessionMode, session])
+
+  const setDiscipline = useCallback((value: string) => {
+    if (isSessionMode && session) {
+      setSessionEdits(prev => {
+        const newMap = new Map(prev)
+        const existing = newMap.get(session.uuid) || { pose: '', discipline: '', notes: '' }
+        newMap.set(session.uuid, { ...existing, discipline: value })
+        return newMap
+      })
+    } else {
+      setPlanDiscipline(value)
+    }
+  }, [isSessionMode, session])
+
+  const setNotes = useCallback((value: string) => {
+    if (isSessionMode && session) {
+      setSessionEdits(prev => {
+        const newMap = new Map(prev)
+        const existing = newMap.get(session.uuid) || { pose: '', discipline: '', notes: '' }
+        newMap.set(session.uuid, { ...existing, notes: value })
+        return newMap
+      })
+    } else {
+      setPlanNotes(value)
+    }
+  }, [isSessionMode, session])
 
   // Fetch insight and session metadata when session changes
-  // IMPORTANT: Always load from IndexedDB (fresh data), not from props (potentially stale)
+  // Only load from DB if we don't already have local edits for this session
   useEffect(() => {
     async function loadSessionData() {
       if (session) {
@@ -150,21 +211,26 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
         const insights = await getInsightsBySessionId(session.uuid)
         setInsight(insights.length > 0 ? insights[0] : null)
 
-        // Load per-session metadata from IndexedDB (fresh data)
-        // Props may be stale if user saved metadata without refreshing the parent
-        const freshSession = await getSessionByUuid(session.uuid)
-        setPose(freshSession?.pose || '')
-        setDiscipline(freshSession?.discipline || '')
-        setNotes(freshSession?.notes || '')
+        // Only load metadata from DB if we don't have local edits yet
+        // This preserves user edits when switching between sessions
+        if (!sessionEdits.has(session.uuid)) {
+          const freshSession = await getSessionByUuid(session.uuid)
+          setSessionEdits(prev => {
+            const newMap = new Map(prev)
+            newMap.set(session.uuid, {
+              pose: freshSession?.pose || '',
+              discipline: freshSession?.discipline || '',
+              notes: freshSession?.notes || ''
+            })
+            return newMap
+          })
+        }
       } else {
         setInsight(null)
-        setPose('')
-        setDiscipline('')
-        setNotes('')
       }
     }
     loadSessionData()
-  }, [session])
+  }, [session, sessionEdits])
 
   // Load existing plan for selected date (only for plan mode scheduling data)
   useEffect(() => {
@@ -186,9 +252,9 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
         // Only load pose/discipline/notes from plan in plan mode
         // In session mode, these come from the Session object (loaded in separate effect)
         if (!isSessionMode) {
-          setPose(existing.pose || '')
-          setDiscipline(existing.discipline || '')
-          setNotes(existing.notes || '')
+          setPlanPose(existing.pose || '')
+          setPlanDiscipline(existing.discipline || '')
+          setPlanNotes(existing.notes || '')
         }
       }
 
@@ -202,13 +268,19 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
     const dateStart = getStartOfDay(selectedDate)
 
     try {
-      if (isSessionMode && session) {
-        // Session mode: Save metadata directly to the Session record
-        await updateSession(session.uuid, {
-          pose: pose || undefined,
-          discipline: discipline || undefined,
-          notes: notes || undefined
+      if (isSessionMode) {
+        // Session mode: Save ALL sessions that have edits
+        const savePromises: Promise<void>[] = []
+        sessionEdits.forEach((edits, uuid) => {
+          savePromises.push(
+            updateSession(uuid, {
+              pose: edits.pose || undefined,
+              discipline: edits.discipline || undefined,
+              notes: edits.notes || undefined
+            })
+          )
         })
+        await Promise.all(savePromises)
       } else {
         // Plan mode: Save to PlannedSession
         if (existingPlan?.id) {
@@ -216,18 +288,18 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
             date: dateStart,
             plannedTime: plannedTime || undefined,
             duration: duration || undefined,
-            pose: pose || undefined,
-            discipline: discipline || undefined,
-            notes: notes || undefined
+            pose: planPose || undefined,
+            discipline: planDiscipline || undefined,
+            notes: planNotes || undefined
           })
         } else {
           await addPlannedSession({
             date: dateStart,
             plannedTime: plannedTime || undefined,
             duration: duration || undefined,
-            pose: pose || undefined,
-            discipline: discipline || undefined,
-            notes: notes || undefined
+            pose: planPose || undefined,
+            discipline: planDiscipline || undefined,
+            notes: planNotes || undefined
           })
         }
       }
@@ -238,7 +310,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
     } finally {
       setIsSaving(false)
     }
-  }, [selectedDate, existingPlan, plannedTime, duration, pose, discipline, notes, onSave, onClose, isSessionMode, session])
+  }, [selectedDate, existingPlan, plannedTime, duration, planPose, planDiscipline, planNotes, onSave, onClose, isSessionMode, sessionEdits])
 
   const handleDelete = useCallback(async () => {
     if (!existingPlan?.id) return
