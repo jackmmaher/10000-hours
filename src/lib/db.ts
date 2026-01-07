@@ -406,6 +406,17 @@ export async function getPlannedSessionsForWeek(weekStartDate: number): Promise<
     .toArray()
 }
 
+export async function getPlannedSessionsForMonth(year: number, month: number): Promise<PlannedSession[]> {
+  const monthStart = new Date(year, month, 1)
+  monthStart.setHours(0, 0, 0, 0)
+  const monthEnd = new Date(year, month + 1, 1)
+  monthEnd.setHours(0, 0, 0, 0)
+  return db.plannedSessions
+    .where('date')
+    .between(monthStart.getTime(), monthEnd.getTime(), true, false)
+    .toArray()
+}
+
 export async function updatePlannedSession(
   id: number,
   updates: Partial<Omit<PlannedSession, 'id' | 'createdAt'>>

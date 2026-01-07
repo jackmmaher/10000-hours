@@ -33,6 +33,7 @@ export function Journey() {
   const [subTab, setSubTab] = useState<JourneySubTab>('sessions')
   const [weekPlans, setWeekPlans] = useState<PlannedSession[]>([])
   const [planningDate, setPlanningDate] = useState<Date | null>(null)
+  const [calendarRefreshKey, setCalendarRefreshKey] = useState(0)
 
   // Swipe navigation
   const navSwipeHandlers = useSwipe({
@@ -152,7 +153,11 @@ export function Journey() {
 
         {/* Calendar */}
         <div className="mb-10">
-          <Calendar />
+          <Calendar
+            embedded
+            onDateClick={(date) => setPlanningDate(date)}
+            refreshKey={calendarRefreshKey}
+          />
         </div>
 
         {/* Sub-tabs */}
@@ -207,6 +212,8 @@ export function Journey() {
               setWeekPlans(plans)
             }
             loadWeekPlans()
+            // Also refresh calendar
+            setCalendarRefreshKey(k => k + 1)
           }}
         />
       )}

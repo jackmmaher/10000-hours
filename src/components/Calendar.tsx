@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useSwipe } from '../hooks/useSwipe'
 import {
@@ -14,13 +14,23 @@ import {
   formatTime,
   formatTotalHours
 } from '../lib/format'
+import { getPlannedSessionsForMonth, PlannedSession } from '../lib/db'
 
 const DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 const MONTHS_SHORT = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D']
 
 type CalendarView = 'month' | 'year'
 
-export function Calendar() {
+interface CalendarProps {
+  /** When true, hides the standalone header (for embedding in Journey) */
+  embedded?: boolean
+  /** Called when a date is clicked - receives the Date object */
+  onDateClick?: (date: Date) => void
+  /** Key to force refresh when plans change */
+  refreshKey?: number
+}
+
+export function Calendar({ embedded = false, onDateClick, refreshKey }: CalendarProps) {
   const { sessions, setView } = useSessionStore()
 
   const today = new Date()
@@ -29,6 +39,28 @@ export function Calendar() {
   const [currentYear, setCurrentYear] = useState(today.getFullYear())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [expandedSession, setExpandedSession] = useState(false)
+  const [plannedSessions, setPlannedSessions] = useState<PlannedSession[]>([])
+
+  // Load planned sessions for current month
+  useEffect(() => {
+    const loadPlans = async () => {
+      const plans = await getPlannedSessionsForMonth(currentYear, currentMonth)
+      setPlannedSessions(plans)
+    }
+    loadPlans()
+  }, [currentYear, currentMonth, refreshKey])
+
+  // Get planned dates for current month
+  const plannedDates = useMemo(() => {
+    const dates = new Set<number>()
+    plannedSessions.forEach(p => {
+      const planDate = new Date(p.date)
+      if (planDate.getMonth() === currentMonth && planDate.getFullYear() === currentYear) {
+        dates.add(planDate.getDate())
+      }
+    })
+    return dates
+  }, [plannedSessions, currentMonth, currentYear])
 
   // Monthly heat map data
   const monthlyData = useMemo(() => getMonthlyData(sessions), [sessions])
@@ -155,28 +187,45 @@ export function Calendar() {
   }
 
   return (
-    <div className="h-full bg-cream overflow-y-auto" {...navSwipeHandlers}>
-      <div className="px-6 py-8 max-w-lg mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <button
-            onClick={() => setView('stats')}
-            className="flex items-center text-sm text-ink/40 hover:text-ink/60 transition-colors active:scale-[0.98]"
-          >
-            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
-            </svg>
-            Stats
-          </button>
+    <div className={embedded ? '' : 'h-full bg-cream overflow-y-auto'} {...(embedded ? {} : navSwipeHandlers)}>
+      <div className={embedded ? '' : 'px-6 py-8 max-w-lg mx-auto'}>
+        {/* Header - only show when standalone */}
+        {!embedded && (
+          <div className="flex items-center justify-between mb-8">
+            <button
+              onClick={() => setView('stats')}
+              className="flex items-center text-sm text-ink/40 hover:text-ink/60 transition-colors active:scale-[0.98]"
+            >
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+              </svg>
+              Stats
+            </button>
 
-          {/* Toggle view type */}
-          <button
-            onClick={() => setViewType(viewType === 'month' ? 'year' : 'month')}
-            className="text-xs text-ink/40 hover:text-ink/60 transition-colors tracking-wide"
-          >
-            {viewType === 'month' ? 'Year View' : 'Month View'}
-          </button>
-        </div>
+            {/* Toggle view type */}
+            <button
+              onClick={() => setViewType(viewType === 'month' ? 'year' : 'month')}
+              className="text-xs text-ink/40 hover:text-ink/60 transition-colors tracking-wide"
+            >
+              {viewType === 'month' ? 'Year View' : 'Month View'}
+            </button>
+          </div>
+        )}
+
+        {/* View type toggle for embedded mode */}
+        {embedded && (
+          <div className="flex items-center justify-between mb-4">
+            <p className="font-serif text-sm text-ink/50 tracking-wide">
+              Calendar
+            </p>
+            <button
+              onClick={() => setViewType(viewType === 'month' ? 'year' : 'month')}
+              className="text-xs text-moss hover:text-moss/80 transition-colors"
+            >
+              {viewType === 'month' ? 'Year →' : '← Month'}
+            </button>
+          </div>
+        )}
 
         {viewType === 'year' ? (
           // Year heat map view - garden overview
@@ -278,12 +327,24 @@ export function Calendar() {
             <div className="grid grid-cols-7 gap-1.5 mb-8">
               {calendarDays.map((day, index) => {
                 const hasSession = day ? sessionDates.has(day) : false
+                const hasPlan = day ? plannedDates.has(day) : false
+
+                const handleDayClick = () => {
+                  if (!day) return
+                  const clickedDate = new Date(currentYear, currentMonth, day)
+                  clickedDate.setHours(0, 0, 0, 0)
+                  setSelectedDate(clickedDate)
+                  // If onDateClick provided, call it (for opening planner)
+                  if (onDateClick) {
+                    onDateClick(clickedDate)
+                  }
+                }
 
                 return (
                   <div key={index} className="aspect-square">
                     {day && (
                       <button
-                        onClick={() => setSelectedDate(new Date(currentYear, currentMonth, day))}
+                        onClick={handleDayClick}
                         className={`
                           w-full h-full flex flex-col items-center justify-center rounded-lg
                           transition-all relative active:scale-[0.95]
@@ -291,7 +352,9 @@ export function Calendar() {
                             ? 'bg-ink text-cream shadow-sm'
                             : isToday(day)
                               ? 'ring-1 ring-ink/30 text-ink'
-                              : 'text-ink/60 hover:bg-cream-deep'
+                              : hasPlan && !hasSession
+                                ? 'ring-1 ring-indigo-deep/40 text-ink/70'
+                                : 'text-ink/60 hover:bg-cream-deep'
                           }
                         `}
                         style={{
@@ -301,11 +364,16 @@ export function Calendar() {
                         }}
                       >
                         <span className="text-sm">{day}</span>
+                        {/* Completed session indicator - moss dot */}
                         {hasSession && !isSelected(day) && (
                           <span className="absolute bottom-1.5 w-1 h-1 rounded-full bg-moss/60" />
                         )}
                         {hasSession && isSelected(day) && (
                           <span className="absolute bottom-1.5 w-1 h-1 rounded-full bg-cream/80" />
+                        )}
+                        {/* Planned but not completed - indigo dot */}
+                        {hasPlan && !hasSession && !isSelected(day) && (
+                          <span className="absolute bottom-1.5 w-1 h-1 rounded-full bg-indigo-deep/50" />
                         )}
                       </button>
                     )}
