@@ -13,10 +13,11 @@
  * - Sub-tabs: My Sessions | Saved | My Pearls
  */
 
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSwipe } from '../hooks/useSwipe'
+import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import type { Pearl } from '../lib/pearls'
 import type { SessionTemplate } from './SessionDetailModal'
 import { WeekStonesRow, getDayStatusWithPlan, ExtendedDayStatus } from './WeekStones'
@@ -72,9 +73,33 @@ export function Journey() {
     setPlansRefreshKey(k => k + 1)
   }, [])
 
-  // Swipe navigation
+  // Reference to scroll container
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Pull-to-refresh
+  const {
+    isPulling,
+    isRefreshing,
+    pullDistance,
+    handlers: pullHandlers
+  } = usePullToRefresh({
+    onRefresh: async () => {
+      // Refresh all data
+      refreshAllPlanData()
+      setSessionStreamKey(k => k + 1)
+      // Small delay for visual feedback
+      await new Promise(resolve => setTimeout(resolve, 500))
+    }
+  })
+
+  // Swipe navigation (only when not pulling to refresh)
   const navSwipeHandlers = useSwipe({
-    onSwipeDown: () => setView('timer'),
+    onSwipeDown: () => {
+      // Only navigate if not at top (pull-to-refresh handles top)
+      if (scrollRef.current && scrollRef.current.scrollTop > 50) {
+        setView('timer')
+      }
+    },
     onSwipeLeft: () => setView('explore'),
     onSwipeRight: () => setView('timer')
   })
@@ -181,9 +206,47 @@ export function Journey() {
 
   return (
     <div
+      ref={scrollRef}
       className="h-full bg-cream overflow-y-auto pb-24"
       {...navSwipeHandlers}
+      onTouchStart={(e) => {
+        pullHandlers.onTouchStart(e)
+        navSwipeHandlers.onTouchStart?.(e)
+      }}
+      onTouchMove={pullHandlers.onTouchMove}
+      onTouchEnd={(e) => {
+        pullHandlers.onTouchEnd()
+        navSwipeHandlers.onTouchEnd?.(e)
+      }}
     >
+      {/* Pull-to-refresh indicator */}
+      <div
+        className="flex justify-center overflow-hidden transition-all duration-200"
+        style={{
+          height: isPulling || isRefreshing ? Math.min(pullDistance, 80) : 0,
+          opacity: isPulling || isRefreshing ? 1 : 0
+        }}
+      >
+        <div className="flex items-center gap-2 py-2">
+          {isRefreshing ? (
+            <div className="w-5 h-5 border-2 border-moss/30 border-t-moss rounded-full animate-spin" />
+          ) : (
+            <svg
+              className="w-5 h-5 text-moss transition-transform duration-200"
+              style={{ transform: pullDistance >= 80 ? 'rotate(180deg)' : 'rotate(0deg)' }}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+          )}
+          <span className="text-sm text-moss">
+            {isRefreshing ? 'Refreshing...' : pullDistance >= 80 ? 'Release to refresh' : 'Pull to refresh'}
+          </span>
+        </div>
+      </div>
+
       <div className="px-6 py-8 max-w-lg mx-auto">
         {/* Back to timer */}
         <button
@@ -200,10 +263,17 @@ export function Journey() {
         <JourneyNextSession
           plannedSession={nextPlannedSession}
           onPlanClick={() => {
-            // Open planner for today or next plannable day
-            const today = new Date()
-            today.setHours(0, 0, 0, 0)
-            setPlanningDate(today)
+            // If there's an existing planned session, edit that date
+            // Otherwise open planner for today
+            if (nextPlannedSession) {
+              const planDate = new Date(nextPlannedSession.date)
+              planDate.setHours(0, 0, 0, 0)
+              setPlanningDate(planDate)
+            } else {
+              const today = new Date()
+              today.setHours(0, 0, 0, 0)
+              setPlanningDate(today)
+            }
           }}
         />
 

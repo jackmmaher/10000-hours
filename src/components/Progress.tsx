@@ -12,9 +12,10 @@
  * Moved: Community karma/saves to Settings
  */
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useSwipe } from '../hooks/useSwipe'
+import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import { getStatsForWindow } from '../lib/calculations'
 import {
   formatTotalHours,
@@ -54,17 +55,79 @@ export function Progress() {
     ? new Date(Math.min(...sessions.map(s => s.startTime)))
     : null
 
+  // Reference to scroll container
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Pull-to-refresh - trigger re-render with state change
+  const [refreshKey, setRefreshKey] = useState(0)
+  const {
+    isPulling,
+    isRefreshing,
+    pullDistance,
+    handlers: pullHandlers
+  } = usePullToRefresh({
+    onRefresh: async () => {
+      // Force re-render by changing key
+      setRefreshKey(k => k + 1)
+      await new Promise(resolve => setTimeout(resolve, 300))
+    }
+  })
+
   // Swipe navigation
   const navSwipeHandlers = useSwipe({
-    onSwipeDown: () => setView('timer'),
+    onSwipeDown: () => {
+      // Only navigate if not at top
+      if (scrollRef.current && scrollRef.current.scrollTop > 50) {
+        setView('timer')
+      }
+    },
     onSwipeRight: () => setView('explore')
   })
 
   return (
     <div
+      ref={scrollRef}
+      key={refreshKey}
       className="h-full bg-cream overflow-y-auto pb-24"
       {...navSwipeHandlers}
+      onTouchStart={(e) => {
+        pullHandlers.onTouchStart(e)
+        navSwipeHandlers.onTouchStart?.(e)
+      }}
+      onTouchMove={pullHandlers.onTouchMove}
+      onTouchEnd={(e) => {
+        pullHandlers.onTouchEnd()
+        navSwipeHandlers.onTouchEnd?.(e)
+      }}
     >
+      {/* Pull-to-refresh indicator */}
+      <div
+        className="flex justify-center overflow-hidden transition-all duration-200"
+        style={{
+          height: isPulling || isRefreshing ? Math.min(pullDistance, 80) : 0,
+          opacity: isPulling || isRefreshing ? 1 : 0
+        }}
+      >
+        <div className="flex items-center gap-2 py-2">
+          {isRefreshing ? (
+            <div className="w-5 h-5 border-2 border-moss/30 border-t-moss rounded-full animate-spin" />
+          ) : (
+            <svg
+              className="w-5 h-5 text-moss transition-transform duration-200"
+              style={{ transform: pullDistance >= 80 ? 'rotate(180deg)' : 'rotate(0deg)' }}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+          )}
+          <span className="text-sm text-moss">
+            {isRefreshing ? 'Refreshing...' : pullDistance >= 80 ? 'Release to refresh' : 'Pull to refresh'}
+          </span>
+        </div>
+      </div>
+
       <div className="px-6 py-8 max-w-lg mx-auto">
         {/* Back to timer */}
         <button
