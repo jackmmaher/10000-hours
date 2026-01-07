@@ -510,6 +510,9 @@ function MyPearlsContent() {
   const [createdPearls, setCreatedPearls] = useState<Pearl[]>([])
   const [savedPearls, setSavedPearls] = useState<Pearl[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [editingPearlId, setEditingPearlId] = useState<string | null>(null)
+  const [editText, setEditText] = useState('')
+  const [isSavingEdit, setIsSavingEdit] = useState(false)
 
   const loadPearls = async () => {
     if (!user) {
@@ -543,6 +546,38 @@ function MyPearlsContent() {
       setSavedPearls(prev => prev.filter(p => p.id !== pearlId))
     } catch (err) {
       console.error('Failed to unsave pearl:', err)
+    }
+  }
+
+  const handleStartEdit = (pearl: Pearl) => {
+    setEditingPearlId(pearl.id)
+    setEditText(pearl.text)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingPearlId(null)
+    setEditText('')
+  }
+
+  const handleSaveEdit = async () => {
+    if (!user || !editingPearlId || isSavingEdit) return
+    if (editText.length > 280) return
+
+    setIsSavingEdit(true)
+    try {
+      const { updatePearl } = await import('../lib/pearls')
+      const success = await updatePearl(editingPearlId, editText, user.id)
+      if (success) {
+        setCreatedPearls(prev =>
+          prev.map(p => p.id === editingPearlId ? { ...p, text: editText } : p)
+        )
+        setEditingPearlId(null)
+        setEditText('')
+      }
+    } catch (err) {
+      console.error('Failed to update pearl:', err)
+    } finally {
+      setIsSavingEdit(false)
     }
   }
 
@@ -606,18 +641,62 @@ function MyPearlsContent() {
                       })}
                     </span>
                   </div>
+                  {editingPearlId !== pearl.id && (
+                    <button
+                      onClick={() => handleStartEdit(pearl)}
+                      className="text-xs text-ink/30 hover:text-ink/60 transition-colors"
+                    >
+                      Edit
+                    </button>
+                  )}
                 </div>
-                <p className="font-serif text-ink leading-relaxed mb-4">
-                  "{pearl.text}"
-                </p>
-                <div className="flex items-center gap-4 text-sm text-ink/40">
-                  <span className="flex items-center gap-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 15l7-7 7 7" />
-                    </svg>
-                    <span className="tabular-nums">{pearl.upvotes}</span>
-                  </span>
-                </div>
+
+                {editingPearlId === pearl.id ? (
+                  <div className="space-y-3">
+                    <textarea
+                      value={editText}
+                      onChange={(e) => setEditText(e.target.value)}
+                      className="w-full h-24 px-3 py-2 rounded-lg bg-cream text-ink placeholder:text-ink/30 resize-none focus:outline-none focus:ring-2 focus:ring-moss/30 font-serif"
+                      maxLength={280}
+                      autoFocus
+                    />
+                    <div className="flex items-center justify-between">
+                      <span className={`text-xs ${editText.length > 280 ? 'text-rose-500' : 'text-ink/30'}`}>
+                        {editText.length}/280
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleCancelEdit}
+                          className="text-xs text-ink/50 hover:text-ink/70 transition-colors px-3 py-1"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleSaveEdit}
+                          disabled={isSavingEdit || editText.length === 0 || editText.length > 280}
+                          className="text-xs text-moss font-medium hover:text-moss/80 transition-colors px-3 py-1 disabled:opacity-50"
+                        >
+                          {isSavingEdit ? 'Saving...' : 'Save'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="font-serif text-ink leading-relaxed mb-4">
+                    "{pearl.text}"
+                  </p>
+                )}
+
+                {editingPearlId !== pearl.id && (
+                  <div className="flex items-center gap-4 text-sm text-ink/40">
+                    <span className="flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 15l7-7 7 7" />
+                      </svg>
+                      <span className="tabular-nums">{pearl.upvotes}</span>
+                    </span>
+                  </div>
+                )}
               </div>
             ))}
           </div>

@@ -383,6 +383,33 @@ export async function deletePearl(pearlId: string, userId: string): Promise<bool
 }
 
 /**
+ * Update a pearl's text (user can only edit their own)
+ */
+export async function updatePearl(pearlId: string, newText: string, userId: string): Promise<boolean> {
+  if (!isSupabaseConfigured() || !supabase) {
+    return false
+  }
+
+  // Validate text length
+  if (newText.length > 280) {
+    throw new Error('Pearl text must be 280 characters or less')
+  }
+
+  const { error } = await supabase
+    .from('pearls')
+    .update({ text: newText })
+    .eq('id', pearlId)
+    .eq('user_id', userId) // RLS ensures user can only update own pearls
+
+  if (error) {
+    console.error('Update pearl error:', error)
+    return false
+  }
+
+  return true
+}
+
+/**
  * Get user's community stats
  */
 export async function getUserStats(userId: string): Promise<{ karma: number; saves: number } | null> {
