@@ -214,10 +214,18 @@ export function MeditationPlanner({ date, session, insight, onClose, onSave }: M
     }
   }, [existingPlan, onSave, onClose])
 
+  // Block swipe navigation when modal is open
+  const handleTouchEvent = (e: React.TouchEvent) => {
+    e.stopPropagation()
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 backdrop-blur-sm"
       onClick={onClose}
+      onTouchStart={handleTouchEvent}
+      onTouchEnd={handleTouchEvent}
+      onTouchMove={handleTouchEvent}
     >
       <div
         className="bg-cream rounded-t-3xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-xl animate-slide-up"

@@ -76,8 +76,18 @@ export function SharePearl({ insightText, isAlreadyShared, onClose, onSuccess, o
     }
   }, [isAuthenticated, user, isPremium, text, isEmpty, isOverLimit, onSuccess])
 
+  // Block swipe navigation when modal is open
+  const handleTouchEvent = (e: React.TouchEvent) => {
+    e.stopPropagation()
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-cream">
+    <div
+      className="fixed inset-0 z-50 flex flex-col bg-cream"
+      onTouchStart={handleTouchEvent}
+      onTouchEnd={handleTouchEvent}
+      onTouchMove={handleTouchEvent}
+    >
       {/* Header */}
       <div className="flex-none flex items-center justify-between px-6 pt-8 pb-4">
         <button

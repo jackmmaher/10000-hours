@@ -428,6 +428,11 @@ function InsightCaptureWrapper({
     })
   }, [])
 
+  // Block swipe navigation when modal is open
+  const handleTouchEvent = (e: React.TouchEvent) => {
+    e.stopPropagation()
+  }
+
   if (!InsightCapture) {
     return (
       <div className="fixed inset-0 bg-ink/50 flex items-center justify-center z-50">
@@ -437,7 +442,12 @@ function InsightCaptureWrapper({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-ink/50 backdrop-blur-sm flex items-end justify-center">
+    <div
+      className="fixed inset-0 z-50 bg-ink/50 backdrop-blur-sm flex items-end justify-center"
+      onTouchStart={handleTouchEvent}
+      onTouchEnd={handleTouchEvent}
+      onTouchMove={handleTouchEvent}
+    >
       <div className="bg-cream rounded-t-3xl w-full max-w-lg max-h-[80vh] overflow-y-auto shadow-xl animate-slide-up">
         <InsightCapture sessionId={sessionId} onComplete={onComplete} onSkip={onSkip} />
       </div>

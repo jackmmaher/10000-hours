@@ -127,10 +127,20 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
     onSkip()
   }, [isRecording, cancelCapture, onSkip, stopAnalyzing])
 
+  // Block swipe navigation when modal is open
+  const handleTouchEvent = (e: React.TouchEvent) => {
+    e.stopPropagation()
+  }
+
   // Not supported fallback
   if (!isSupported) {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-cream p-8">
+      <div
+        className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-cream p-8"
+        onTouchStart={handleTouchEvent}
+        onTouchEnd={handleTouchEvent}
+        onTouchMove={handleTouchEvent}
+      >
         <p className="font-serif text-xl text-ink mb-4">
           Voice capture not supported
         </p>
@@ -150,7 +160,12 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
   // Error state
   if (state === 'error' && error) {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-cream p-8">
+      <div
+        className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-cream p-8"
+        onTouchStart={handleTouchEvent}
+        onTouchEnd={handleTouchEvent}
+        onTouchMove={handleTouchEvent}
+      >
         <p className="font-serif text-xl text-ink mb-4">
           Couldn't access microphone
         </p>
@@ -168,7 +183,12 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-cream">
+    <div
+      className="fixed inset-0 z-50 flex flex-col bg-cream"
+      onTouchStart={handleTouchEvent}
+      onTouchEnd={handleTouchEvent}
+      onTouchMove={handleTouchEvent}
+    >
       {/* Header */}
       <div className="flex-none px-6 pt-8 pb-4">
         <button
