@@ -55,8 +55,18 @@ export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailM
     onAdopt()
   }
 
+  // Block swipe navigation when modal is open
+  const handleTouchEvent = (e: React.TouchEvent) => {
+    e.stopPropagation()
+  }
+
   return (
-    <div className="fixed inset-0 z-50 bg-ink/50 backdrop-blur-sm">
+    <div
+      className="fixed inset-0 z-50 bg-ink/50 backdrop-blur-sm"
+      onTouchStart={handleTouchEvent}
+      onTouchEnd={handleTouchEvent}
+      onTouchMove={handleTouchEvent}
+    >
       <div className="h-full overflow-y-auto">
         {/* Hero section */}
         <div className={`relative h-48 bg-gradient-to-br ${gradient}`}>
