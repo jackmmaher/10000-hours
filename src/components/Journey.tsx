@@ -19,6 +19,7 @@ import { useSwipe } from '../hooks/useSwipe'
 import { WeekStonesRow, getDayStatusWithPlan, ExtendedDayStatus } from './WeekStones'
 import { JourneyNextSession } from './JourneyNextSession'
 import { SessionStream } from './SessionStream'
+import { Calendar } from './Calendar'
 import {
   getPlannedSessionsForWeek,
   PlannedSession
@@ -147,6 +148,11 @@ export function Journey() {
             showLabels={true}
             size="md"
           />
+        </div>
+
+        {/* Calendar */}
+        <div className="mb-10">
+          <Calendar />
         </div>
 
         {/* Sub-tabs */}
