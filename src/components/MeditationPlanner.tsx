@@ -458,25 +458,33 @@ export function MeditationPlanner({ date, session, insight, onClose, onSave }: M
                 />
               </div>
 
-              {/* Insight display - only in session mode when insight exists */}
-              {isSessionMode && insight && (
+              {/* Insight display - show in session mode (with content or empty state) */}
+              {isSessionMode && (
                 <div>
                   <label className="text-xs text-ink/50 block mb-2">
                     Insight captured
                   </label>
-                  <div className="bg-indigo-deep/5 rounded-xl p-4 border border-indigo-deep/10">
-                    <p className="text-ink text-sm whitespace-pre-wrap">
-                      {insight.formattedText || insight.rawText}
-                    </p>
-                    <p className="text-xs text-ink/40 mt-2">
-                      {new Date(insight.createdAt).toLocaleString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit'
-                      })}
-                    </p>
-                  </div>
+                  {insight ? (
+                    <div className="bg-indigo-deep/5 rounded-xl p-4 border border-indigo-deep/10">
+                      <p className="text-ink text-sm whitespace-pre-wrap">
+                        {insight.formattedText || insight.rawText}
+                      </p>
+                      <p className="text-xs text-ink/40 mt-2">
+                        {new Date(insight.createdAt).toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="bg-cream-dark/30 rounded-xl p-4">
+                      <p className="text-ink/40 text-sm italic">
+                        No insight captured for this session
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </>
