@@ -38,6 +38,7 @@ export function useVoiceCapture() {
   const [transcript, setTranscript] = useState<string>('')
   const [interimText, setInterimText] = useState<string>('')
   const [durationMs, setDurationMs] = useState<number>(0)
+  const [mediaStream, setMediaStream] = useState<MediaStream | null>(null)
 
   // Refs to track recording state
   const mediaStreamRef = useRef<MediaStream | null>(null)
@@ -64,6 +65,7 @@ export function useVoiceCapture() {
       // Request microphone permission
       const stream = await requestMicrophonePermission()
       mediaStreamRef.current = stream
+      setMediaStream(stream) // Set state to trigger re-render for audio level hook
 
       setState('recording')
       startTimeRef.current = Date.now()
@@ -168,6 +170,7 @@ export function useVoiceCapture() {
       mediaStreamRef.current.getTracks().forEach(track => track.stop())
       mediaStreamRef.current = null
     }
+    setMediaStream(null)
     transcriptionResultsRef.current = []
   }
 
@@ -179,7 +182,7 @@ export function useVoiceCapture() {
     durationMs,
     isSupported,
     isRecording: state === 'recording',
-    mediaStream: mediaStreamRef.current,
+    mediaStream, // Now using state instead of ref for proper React dependency tracking
     startCapture,
     stopCapture,
     cancelCapture,

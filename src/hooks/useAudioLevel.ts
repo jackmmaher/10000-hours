@@ -39,23 +39,27 @@ export function useAudioLevel() {
       source.connect(analyser)
       streamRef.current = stream
 
-      // Start animation loop
-      const dataArray = new Uint8Array(analyser.frequencyBinCount)
+      // Start animation loop - use time domain data for iOS Safari compatibility
+      // (getByteFrequencyData returns zeros on iOS Safari)
+      const dataArray = new Uint8Array(analyser.fftSize)
 
       const updateLevel = () => {
         if (!analyserRef.current) return
 
-        analyserRef.current.getByteFrequencyData(dataArray)
+        // Use time domain data - more reliable across browsers including iOS Safari
+        analyserRef.current.getByteTimeDomainData(dataArray)
 
-        // Calculate average level
-        let sum = 0
+        // Calculate RMS (root mean square) for audio level
+        // Time domain values are centered at 128, deviation indicates amplitude
+        let sumSquares = 0
         for (let i = 0; i < dataArray.length; i++) {
-          sum += dataArray[i]
+          const deviation = (dataArray[i] - 128) / 128 // Normalize to -1 to 1
+          sumSquares += deviation * deviation
         }
-        const average = sum / dataArray.length
+        const rms = Math.sqrt(sumSquares / dataArray.length)
 
-        // Normalize to 0-1 range with some boost for visibility
-        const normalized = Math.min(1, (average / 128) * 1.5)
+        // Boost for visibility (voice typically has low RMS values)
+        const normalized = Math.min(1, rms * 4)
         setAudioLevel(normalized)
 
         animationRef.current = requestAnimationFrame(updateLevel)
