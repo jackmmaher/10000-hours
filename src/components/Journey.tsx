@@ -504,30 +504,47 @@ function SavedContent() {
   )
 }
 
-// My Pearls content - shows user's created pearls
+// My Pearls content - shows created + saved pearls with clear separation
 function MyPearlsContent() {
   const { user } = useAuthStore()
-  const [pearls, setPearls] = useState<Pearl[]>([])
+  const [createdPearls, setCreatedPearls] = useState<Pearl[]>([])
+  const [savedPearls, setSavedPearls] = useState<Pearl[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    const loadPearls = async () => {
-      if (!user) {
-        setIsLoading(false)
-        return
-      }
-      try {
-        const { getMyPearls } = await import('../lib/pearls')
-        const myPearls = await getMyPearls(user.id)
-        setPearls(myPearls)
-      } catch (err) {
-        console.error('Failed to load pearls:', err)
-      } finally {
-        setIsLoading(false)
-      }
+  const loadPearls = async () => {
+    if (!user) {
+      setIsLoading(false)
+      return
     }
+    try {
+      const { getMyPearls, getSavedPearls } = await import('../lib/pearls')
+      const [created, saved] = await Promise.all([
+        getMyPearls(user.id),
+        getSavedPearls(user.id)
+      ])
+      setCreatedPearls(created)
+      setSavedPearls(saved)
+    } catch (err) {
+      console.error('Failed to load pearls:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
     loadPearls()
   }, [user])
+
+  const handleUnsave = async (pearlId: string) => {
+    if (!user) return
+    try {
+      const { unsavePearl } = await import('../lib/pearls')
+      await unsavePearl(pearlId, user.id)
+      setSavedPearls(prev => prev.filter(p => p.id !== pearlId))
+    } catch (err) {
+      console.error('Failed to unsave pearl:', err)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -550,7 +567,9 @@ function MyPearlsContent() {
     )
   }
 
-  if (pearls.length === 0) {
+  const hasNoPearls = createdPearls.length === 0 && savedPearls.length === 0
+
+  if (hasNoPearls) {
     return (
       <div className="text-center py-12">
         <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-cream-deep flex items-center justify-center">
@@ -560,43 +579,90 @@ function MyPearlsContent() {
           No pearls yet.
         </p>
         <p className="text-ink/30 text-xs mt-2">
-          Create pearls from your meditation insights.
+          Create pearls from insights or save from Explore.
         </p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-4">
-      {pearls.map((pearl) => (
-        <div key={pearl.id} className="bg-cream-deep rounded-xl p-5">
-          {/* Pearl indicator */}
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs text-moss font-medium">✦ Pearl</span>
-            <span className="text-xs text-ink/30">
-              {new Date(pearl.createdAt).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric'
-              })}
-            </span>
-          </div>
-
-          {/* Pearl text */}
-          <p className="font-serif text-ink leading-relaxed mb-4">
-            "{pearl.text}"
+    <div className="space-y-6">
+      {/* Created by me section */}
+      {createdPearls.length > 0 && (
+        <div>
+          <p className="text-xs text-ink/40 font-medium uppercase tracking-wider mb-3">
+            Created by me
           </p>
-
-          {/* Stats row */}
-          <div className="flex items-center gap-4 text-sm text-ink/40">
-            <span className="flex items-center gap-1">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 15l7-7 7 7" />
-              </svg>
-              <span className="tabular-nums">{pearl.upvotes}</span>
-            </span>
+          <div className="space-y-3">
+            {createdPearls.map((pearl) => (
+              <div key={pearl.id} className="bg-cream-deep rounded-xl p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-moss font-medium">✦ Pearl</span>
+                    <span className="text-xs text-ink/30">
+                      {new Date(pearl.createdAt).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </span>
+                  </div>
+                </div>
+                <p className="font-serif text-ink leading-relaxed mb-4">
+                  "{pearl.text}"
+                </p>
+                <div className="flex items-center gap-4 text-sm text-ink/40">
+                  <span className="flex items-center gap-1">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 15l7-7 7 7" />
+                    </svg>
+                    <span className="tabular-nums">{pearl.upvotes}</span>
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-      ))}
+      )}
+
+      {/* Saved from community section */}
+      {savedPearls.length > 0 && (
+        <div>
+          <p className="text-xs text-ink/40 font-medium uppercase tracking-wider mb-3">
+            Saved from community
+          </p>
+          <div className="space-y-3">
+            {savedPearls.map((pearl) => (
+              <div key={pearl.id} className="bg-cream-deep rounded-xl p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-indigo-deep font-medium">✦ Saved</span>
+                    {pearl.isPreserved && (
+                      <span className="text-xs text-ink/30">(original removed)</span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => handleUnsave(pearl.id)}
+                    className="text-xs text-ink/30 hover:text-rose-500 transition-colors"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <p className="font-serif text-ink leading-relaxed mb-4">
+                  "{pearl.text}"
+                </p>
+                <div className="flex items-center gap-4 text-sm text-ink/40">
+                  <span className="flex items-center gap-1">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 15l7-7 7 7" />
+                    </svg>
+                    <span className="tabular-nums">{pearl.upvotes}</span>
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
