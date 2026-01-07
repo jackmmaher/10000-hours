@@ -220,20 +220,27 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
               {/* Time */}
               <div>
                 <label className="text-xs text-ink/50 block mb-2">
-                  Planned time (optional)
+                  What time?
                 </label>
-                <input
-                  type="time"
-                  value={plannedTime}
-                  onChange={(e) => setPlannedTime(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-cream-dark/50 text-ink focus:outline-none focus:ring-2 focus:ring-indigo-deep/20"
-                />
+                <div className="relative">
+                  <input
+                    type="time"
+                    value={plannedTime}
+                    onChange={(e) => setPlannedTime(e.target.value)}
+                    className="w-full px-4 py-4 rounded-xl bg-cream-dark text-ink text-lg font-medium focus:outline-none focus:ring-2 focus:ring-indigo-deep/30"
+                  />
+                  {!plannedTime && (
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/30 pointer-events-none">
+                      Tap to set time
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Duration */}
               <div>
                 <label className="text-xs text-ink/50 block mb-2">
-                  Planned duration (optional)
+                  How long?
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {DURATIONS.map((d) => (
@@ -249,13 +256,22 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
                       {d} min
                     </button>
                   ))}
+                  <input
+                    type="number"
+                    min="1"
+                    max="240"
+                    placeholder="Other"
+                    value={duration && !DURATIONS.includes(duration) ? duration : ''}
+                    onChange={(e) => setDuration(e.target.value ? parseInt(e.target.value) : null)}
+                    className="w-16 px-3 py-1.5 rounded-full text-xs bg-cream-dark/50 text-ink/70 placeholder:text-ink/40 focus:outline-none focus:ring-2 focus:ring-indigo-deep/20 text-center"
+                  />
                 </div>
               </div>
 
               {/* Pose */}
               <div>
                 <label className="text-xs text-ink/50 block mb-2">
-                  Seating position (optional)
+                  Position
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {POSES.map((p) => (
@@ -277,7 +293,7 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
               {/* Discipline */}
               <div>
                 <label className="text-xs text-ink/50 block mb-2">
-                  Meditation discipline (optional)
+                  Technique
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {DISCIPLINES.map((d) => (
@@ -300,7 +316,7 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-xs text-ink/50">
-                    Guidance notes (optional)
+                    Notes
                   </label>
                   {suggestedPrompt && !notes && (
                     <button
