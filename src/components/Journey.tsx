@@ -79,21 +79,22 @@ export function Journey() {
 
   // Compute week day statuses with plan data
   const weekDays = useMemo((): ExtendedDayStatus[] => {
-    const today = new Date()
-    const dayOfWeek = today.getDay()
-    const todayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1
-    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
-    const monday = new Date(today)
-    monday.setDate(today.getDate() + mondayOffset)
-    monday.setHours(0, 0, 0, 0)
+    const now = new Date()
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 
-    // Tomorrow always gets the 'next' glow to encourage planning ahead
-    const tomorrowIndex = todayIndex < 6 ? todayIndex + 1 : null
+    // Calculate Monday of this week
+    const dayOfWeek = todayStart.getDay() // 0=Sun, 1=Mon, ..., 6=Sat
+    const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+    const monday = new Date(todayStart)
+    monday.setDate(todayStart.getDate() - daysFromMonday)
+
+    // Calculate tomorrow's date
+    const tomorrow = new Date(todayStart)
+    tomorrow.setDate(todayStart.getDate() + 1)
 
     return Array.from({ length: 7 }, (_, i) => {
       const dayDate = new Date(monday)
       dayDate.setDate(monday.getDate() + i)
-      dayDate.setHours(0, 0, 0, 0)
 
       const hasSession = dateHasSession(sessions, dayDate)
       const plan = weekPlans.find(p => {
@@ -102,11 +103,15 @@ export function Journey() {
         return planDate.getTime() === dayDate.getTime()
       })
       const hasPlan = !!plan && !plan.completed // Only count incomplete plans
-      const isToday = i === todayIndex
-      const isFuture = i > todayIndex
-      const isPast = i < todayIndex
-      // Tomorrow always glows to encourage planning (unless it already has a completed session)
-      const isNextPlannable = tomorrowIndex !== null && i === tomorrowIndex && !hasSession
+
+      // Compare dates directly
+      const isToday = dayDate.getTime() === todayStart.getTime()
+      const isTomorrow = dayDate.getTime() === tomorrow.getTime()
+      const isFuture = dayDate.getTime() > todayStart.getTime()
+      const isPast = dayDate.getTime() < todayStart.getTime()
+
+      // Tomorrow always glows to encourage planning (unless already has a session)
+      const isNextPlannable = isTomorrow && !hasSession
 
       return getDayStatusWithPlan(hasSession, hasPlan, isToday, isFuture, isNextPlannable, isPast)
     })
