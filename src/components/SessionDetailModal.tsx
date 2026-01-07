@@ -4,8 +4,9 @@
  * Shows full guidance notes, personalization options, and adoption flow.
  */
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { SESSION_HERO_GRADIENTS, INTENTION_TO_GRADIENT } from '../lib/animations'
+import { saveTemplate, unsaveTemplate, isTemplateSaved } from '../lib/db'
 
 export interface SessionTemplate {
   id: string
@@ -37,15 +38,34 @@ interface SessionDetailModalProps {
 
 export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailModalProps) {
   const [isSaved, setIsSaved] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [showDatePicker, setShowDatePicker] = useState(false)
 
   // Get gradient based on intention or use fallback
   const gradient = INTENTION_TO_GRADIENT[session.intention] || SESSION_HERO_GRADIENTS[0]
 
-  const handleSave = () => {
-    setIsSaved(!isSaved)
-    // TODO: Actually save to local DB / Supabase
-  }
+  // Check if already saved on mount
+  useEffect(() => {
+    isTemplateSaved(session.id).then(setIsSaved)
+  }, [session.id])
+
+  const handleSave = useCallback(async () => {
+    if (isSaving) return
+    setIsSaving(true)
+    try {
+      if (isSaved) {
+        await unsaveTemplate(session.id)
+        setIsSaved(false)
+      } else {
+        await saveTemplate(session.id)
+        setIsSaved(true)
+      }
+    } catch (err) {
+      console.error('Failed to save template:', err)
+    } finally {
+      setIsSaving(false)
+    }
+  }, [isSaved, isSaving, session.id])
 
   const handleAdopt = () => {
     setShowDatePicker(true)

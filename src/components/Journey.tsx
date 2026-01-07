@@ -18,6 +18,7 @@ import { useSessionStore } from '../stores/useSessionStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSwipe } from '../hooks/useSwipe'
 import type { Pearl } from '../lib/pearls'
+import type { SessionTemplate } from './SessionDetailModal'
 import { WeekStonesRow, getDayStatusWithPlan, ExtendedDayStatus } from './WeekStones'
 import { JourneyNextSession } from './JourneyNextSession'
 import { SessionStream, SessionWithDetails } from './SessionStream'
@@ -358,25 +359,148 @@ function InsightCaptureWrapper({
   )
 }
 
-// Placeholder for Saved content
+// Saved content - shows saved session templates from Explore
 function SavedContent() {
-  return (
-    <div className="text-center py-12">
-      <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-cream-deep flex items-center justify-center">
-        <svg className="w-6 h-6 text-ink/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-        </svg>
+  const [savedSessions, setSavedSessions] = useState<SessionTemplate[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [selectedSession, setSelectedSession] = useState<SessionTemplate | null>(null)
+
+  useEffect(() => {
+    const loadSaved = async () => {
+      try {
+        const { getSavedTemplates } = await import('../lib/db')
+        const savedTemplates = await getSavedTemplates()
+
+        if (savedTemplates.length === 0) {
+          setSavedSessions([])
+          setIsLoading(false)
+          return
+        }
+
+        // Load session data to match saved template IDs
+        const sessionsModule = await import('../data/sessions.json')
+        const allSessions = sessionsModule.default as Array<{
+          id: string
+          title: string
+          tagline: string
+          hero_gradient: string
+          duration_guidance: string
+          discipline: string
+          posture: string
+          best_time: string
+          environment?: string
+          guidance_notes: string
+          intention: string
+          recommended_after_hours: number
+          tags?: string[]
+          seed_karma: number
+          seed_saves: number
+          seed_completions: number
+          creator_hours: number
+        }>
+
+        // Map saved template IDs to full session data
+        const savedIds = new Set(savedTemplates.map(t => t.templateId))
+        const matched = allSessions
+          .filter(s => savedIds.has(s.id))
+          .map(s => ({
+            id: s.id,
+            title: s.title,
+            tagline: s.tagline,
+            durationGuidance: s.duration_guidance,
+            discipline: s.discipline,
+            posture: s.posture,
+            bestTime: s.best_time,
+            environment: s.environment,
+            guidanceNotes: s.guidance_notes,
+            intention: s.intention,
+            recommendedAfterHours: s.recommended_after_hours,
+            tags: s.tags,
+            karma: s.seed_karma,
+            saves: s.seed_saves,
+            completions: s.seed_completions,
+            creatorHours: s.creator_hours
+          }))
+
+        setSavedSessions(matched)
+      } catch (err) {
+        console.error('Failed to load saved sessions:', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadSaved()
+  }, [])
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="w-6 h-6 border-2 border-ink/10 border-t-ink/40 rounded-full animate-spin" />
       </div>
-      <p className="text-ink/50 text-sm">
-        Sessions you save from Explore will appear here.
-      </p>
-      <button
-        onClick={() => useSessionStore.getState().setView('explore')}
-        className="mt-4 text-sm text-moss hover:text-moss/80 transition-colors"
-      >
-        Browse sessions →
-      </button>
-    </div>
+    )
+  }
+
+  if (savedSessions.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-cream-deep flex items-center justify-center">
+          <svg className="w-6 h-6 text-ink/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+          </svg>
+        </div>
+        <p className="text-ink/50 text-sm">
+          No saved sessions yet.
+        </p>
+        <p className="text-ink/30 text-xs mt-2">
+          Save sessions from Explore to find them here.
+        </p>
+        <button
+          onClick={() => useSessionStore.getState().setView('explore')}
+          className="mt-4 text-sm text-moss hover:text-moss/80 transition-colors"
+        >
+          Browse sessions →
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <div className="space-y-3">
+        {savedSessions.map((session) => (
+          <button
+            key={session.id}
+            onClick={() => setSelectedSession(session)}
+            className="w-full text-left bg-cream-deep rounded-xl p-4 transition-all hover:bg-cream-deep/80 active:scale-[0.99]"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <svg className="w-4 h-4 text-indigo-deep" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+              <span className="text-xs text-ink/40">{session.discipline}</span>
+            </div>
+            <p className="font-serif text-ink mb-1">{session.title}</p>
+            <p className="text-sm text-ink/50 line-clamp-2">"{session.tagline}"</p>
+            <div className="flex gap-2 mt-2 text-xs text-ink/40">
+              <span>{session.durationGuidance}</span>
+              <span>·</span>
+              <span>{session.posture}</span>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* Session detail modal */}
+      {selectedSession && (
+        <SessionDetailModalWrapper
+          session={selectedSession}
+          onClose={() => setSelectedSession(null)}
+          onAdopt={() => {
+            setSelectedSession(null)
+          }}
+        />
+      )}
+    </>
   )
 }
 
@@ -531,4 +655,37 @@ function SharePearlWrapper({
       }}
     />
   )
+}
+
+// Wrapper for lazy loading SessionDetailModal
+function SessionDetailModalWrapper({
+  session,
+  onClose,
+  onAdopt
+}: {
+  session: SessionTemplate
+  onClose: () => void
+  onAdopt: () => void
+}) {
+  const [SessionDetailModal, setSessionDetailModal] = useState<React.ComponentType<{
+    session: SessionTemplate
+    onClose: () => void
+    onAdopt: () => void
+  }> | null>(null)
+
+  useEffect(() => {
+    import('./SessionDetailModal').then(module => {
+      setSessionDetailModal(() => module.SessionDetailModal)
+    })
+  }, [])
+
+  if (!SessionDetailModal) {
+    return (
+      <div className="fixed inset-0 bg-ink/50 flex items-center justify-center z-50">
+        <div className="w-1 h-1 bg-cream rounded-full animate-pulse" />
+      </div>
+    )
+  }
+
+  return <SessionDetailModal session={session} onClose={onClose} onAdopt={onAdopt} />
 }
