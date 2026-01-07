@@ -33,9 +33,12 @@ export interface UserProfile {
   achievements?: Achievement[]      // Recorded milestone achievements
 }
 
+export type ThemeMode = 'auto' | 'light' | 'warm' | 'dark'
+
 export interface UserSettings {
   id: 1
   hideTimeDisplay: boolean
+  themeMode: ThemeMode
 }
 
 export interface Insight {
@@ -52,6 +55,7 @@ export interface PlannedSession {
   id?: number
   date: number              // Date timestamp (start of day)
   plannedTime?: string      // "07:30" format
+  duration?: number         // Planned duration in minutes
   pose?: string             // Seating position/pose
   discipline?: string       // Meditation discipline (e.g., "Vipassana", "Zen")
   notes?: string            // Guidance notes
@@ -246,8 +250,14 @@ export async function getSettings(): Promise<UserSettings> {
   if (!settings) {
     settings = {
       id: 1,
-      hideTimeDisplay: false
+      hideTimeDisplay: false,
+      themeMode: 'auto'
     }
+    await db.settings.put(settings)
+  }
+  // Backfill themeMode for existing users
+  if (!settings.themeMode) {
+    settings.themeMode = 'auto'
     await db.settings.put(settings)
   }
   return settings

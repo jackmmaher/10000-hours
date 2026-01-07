@@ -46,6 +46,9 @@ const DISCIPLINES = [
   'Contemplative'
 ]
 
+// Common session durations (minutes)
+const DURATIONS = [10, 15, 20, 25, 30, 45, 60]
+
 function formatDateForDisplay(date: Date): string {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -81,6 +84,7 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
 
   // Form state
   const [plannedTime, setPlannedTime] = useState('')
+  const [duration, setDuration] = useState<number | null>(null)
   const [pose, setPose] = useState('')
   const [discipline, setDiscipline] = useState('')
   const [notes, setNotes] = useState('')
@@ -98,6 +102,7 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
       if (existing) {
         setExistingPlan(existing)
         setPlannedTime(existing.plannedTime || '')
+        setDuration(existing.duration || null)
         setPose(existing.pose || '')
         setDiscipline(existing.discipline || '')
         setNotes(existing.notes || '')
@@ -127,6 +132,7 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
       if (existingPlan?.id) {
         await updatePlannedSession(existingPlan.id, {
           plannedTime: plannedTime || undefined,
+          duration: duration || undefined,
           pose: pose || undefined,
           discipline: discipline || undefined,
           notes: notes || undefined
@@ -135,6 +141,7 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
         await addPlannedSession({
           date: dateStart,
           plannedTime: plannedTime || undefined,
+          duration: duration || undefined,
           pose: pose || undefined,
           discipline: discipline || undefined,
           notes: notes || undefined
@@ -147,7 +154,7 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
     } finally {
       setIsSaving(false)
     }
-  }, [date, existingPlan, plannedTime, pose, discipline, notes, onSave, onClose])
+  }, [date, existingPlan, plannedTime, duration, pose, discipline, notes, onSave, onClose])
 
   const handleDelete = useCallback(async () => {
     if (!existingPlan?.id) return
@@ -221,6 +228,28 @@ export function MeditationPlanner({ date, onClose, onSave }: MeditationPlannerPr
                   onChange={(e) => setPlannedTime(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl bg-cream-dark/50 text-ink focus:outline-none focus:ring-2 focus:ring-indigo-deep/20"
                 />
+              </div>
+
+              {/* Duration */}
+              <div>
+                <label className="text-xs text-ink/50 block mb-2">
+                  Planned duration (optional)
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {DURATIONS.map((d) => (
+                    <button
+                      key={d}
+                      onClick={() => setDuration(duration === d ? null : d)}
+                      className={`px-3 py-1.5 rounded-full text-xs transition-colors ${
+                        duration === d
+                          ? 'bg-indigo-deep text-cream'
+                          : 'bg-cream-dark/50 text-ink/70 hover:bg-cream-dark'
+                      }`}
+                    >
+                      {d} min
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Pose */}
