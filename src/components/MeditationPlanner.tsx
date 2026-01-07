@@ -164,22 +164,34 @@ export function MeditationPlanner({ date, session, insight, onClose, onSave }: M
 
     try {
       if (existingPlan?.id) {
+        // Update existing plan - if in session mode, mark as completed and link to session
         await updatePlannedSession(existingPlan.id, {
           date: dateStart,
           plannedTime: plannedTime || undefined,
           duration: duration || undefined,
           pose: pose || undefined,
           discipline: discipline || undefined,
-          notes: notes || undefined
+          notes: notes || undefined,
+          // In session mode, mark plan as completed and link to session
+          ...(isSessionMode && session ? {
+            completed: true,
+            linkedSessionUuid: session.uuid
+          } : {})
         })
       } else {
+        // Create new plan - if in session mode, mark as completed immediately
         await addPlannedSession({
           date: dateStart,
           plannedTime: plannedTime || undefined,
           duration: duration || undefined,
           pose: pose || undefined,
           discipline: discipline || undefined,
-          notes: notes || undefined
+          notes: notes || undefined,
+          // In session mode, mark plan as completed and link to session
+          ...(isSessionMode && session ? {
+            completed: true,
+            linkedSessionUuid: session.uuid
+          } : {})
         })
       }
       onSave()
@@ -189,7 +201,7 @@ export function MeditationPlanner({ date, session, insight, onClose, onSave }: M
     } finally {
       setIsSaving(false)
     }
-  }, [selectedDate, existingPlan, plannedTime, duration, pose, discipline, notes, onSave, onClose])
+  }, [selectedDate, existingPlan, plannedTime, duration, pose, discipline, notes, onSave, onClose, isSessionMode, session])
 
   const handleDelete = useCallback(async () => {
     if (!existingPlan?.id) return
@@ -272,29 +284,24 @@ export function MeditationPlanner({ date, session, insight, onClose, onSave }: M
                   <label className="text-xs text-ink/50 block mb-2">
                     What day?
                   </label>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      value={formatDateForInput(selectedDate)}
-                      onChange={(e) => {
-                        const newDate = new Date(e.target.value + 'T00:00:00')
-                        setSelectedDate(newDate)
-                        // Reset form when date changes (will reload any existing plan)
-                        setExistingPlan(null)
-                        setPlannedTime('')
-                        setDuration(null)
-                        setShowCustomDuration(false)
-                        setCustomDurationInput('')
-                        setPose('')
-                        setDiscipline('')
-                        setNotes('')
-                      }}
-                      className="w-full px-4 py-4 rounded-xl bg-cream-dark text-ink text-lg font-medium focus:outline-none focus:ring-2 focus:ring-indigo-deep/30"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-ink/40 text-sm pointer-events-none">
-                      {formatDateForDisplay(selectedDate)}
-                    </span>
-                  </div>
+                  <input
+                    type="date"
+                    value={formatDateForInput(selectedDate)}
+                    onChange={(e) => {
+                      const newDate = new Date(e.target.value + 'T00:00:00')
+                      setSelectedDate(newDate)
+                      // Reset form when date changes (will reload any existing plan)
+                      setExistingPlan(null)
+                      setPlannedTime('')
+                      setDuration(null)
+                      setShowCustomDuration(false)
+                      setCustomDurationInput('')
+                      setPose('')
+                      setDiscipline('')
+                      setNotes('')
+                    }}
+                    className="w-full px-4 py-4 rounded-xl bg-cream-dark text-ink text-lg font-medium focus:outline-none focus:ring-2 focus:ring-indigo-deep/30"
+                  />
                 </div>
               )}
 

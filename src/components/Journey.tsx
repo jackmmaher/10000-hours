@@ -101,12 +101,12 @@ export function Journey() {
         planDate.setHours(0, 0, 0, 0)
         return planDate.getTime() === dayDate.getTime()
       })
-      const hasPlan = !!plan
+      const hasPlan = !!plan && !plan.completed // Only count incomplete plans
       const isToday = i === todayIndex
       const isFuture = i > todayIndex
       const isPast = i < todayIndex
-      // Tomorrow always glows to encourage planning (unless it already has a plan or session)
-      const isNextPlannable = tomorrowIndex !== null && i === tomorrowIndex && !hasPlan && !hasSession
+      // Tomorrow always glows to encourage planning (unless it already has a completed session)
+      const isNextPlannable = tomorrowIndex !== null && i === tomorrowIndex && !hasSession
 
       return getDayStatusWithPlan(hasSession, hasPlan, isToday, isFuture, isNextPlannable, isPast)
     })
@@ -133,17 +133,33 @@ export function Journey() {
     setPlanningDate(date)
   }
 
-  // Get next planned session
+  // Get next planned session (future only, not completed)
   const nextPlannedSession = useMemo(() => {
     const now = new Date()
     now.setHours(0, 0, 0, 0)
     const nowTime = now.getTime()
 
+    // Check if today already has a session
+    const todayHasSession = dateHasSession(sessions, now)
+
     // Find the next upcoming plan that isn't completed
+    // If today has a session, skip today's plans (they're done)
     return weekPlans
-      .filter(p => p.date >= nowTime && !p.completed)
+      .filter(p => {
+        const isTodayPlan = p.date === nowTime
+        const isFuturePlan = p.date > nowTime
+
+        // Skip completed plans
+        if (p.completed) return false
+        // Skip today's plans if we already meditated today
+        if (isTodayPlan && todayHasSession) return false
+        // Skip plans linked to sessions (already done even if not marked completed)
+        if (p.linkedSessionUuid) return false
+
+        return isTodayPlan || isFuturePlan
+      })
       .sort((a, b) => a.date - b.date)[0] || null
-  }, [weekPlans])
+  }, [weekPlans, sessions])
 
   return (
     <div
