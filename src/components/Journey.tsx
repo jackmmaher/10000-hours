@@ -931,15 +931,24 @@ function SharePearlWrapper({
       insightText={insightText}
       onClose={onCancel}
       onSuccess={async (pearlId) => {
-        // Mark insight as shared
-        const { markInsightAsShared } = await import('../lib/db')
-        await markInsightAsShared(insightId, pearlId)
+        // Mark insight as shared - wrapped in try/catch to ensure modal closes
+        // even if IndexedDB fails (Safari PWA can have stale connections)
+        try {
+          const { markInsightAsShared } = await import('../lib/db')
+          await markInsightAsShared(insightId, pearlId)
+        } catch (err) {
+          console.error('Failed to mark insight as shared:', err)
+        }
         onComplete()
       }}
       onDelete={async () => {
-        // Delete the insight
-        const { deleteInsight } = await import('../lib/db')
-        await deleteInsight(insightId)
+        // Delete the insight - wrapped in try/catch for Safari PWA resilience
+        try {
+          const { deleteInsight } = await import('../lib/db')
+          await deleteInsight(insightId)
+        } catch (err) {
+          console.error('Failed to delete insight:', err)
+        }
         onComplete()
       }}
     />
