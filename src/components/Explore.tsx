@@ -21,7 +21,7 @@ import {
 import { AuthModal } from './AuthModal'
 import { SessionCard } from './SessionCard'
 import { SessionDetailModal, SessionTemplate } from './SessionDetailModal'
-import { SESSION_HERO_GRADIENTS } from '../lib/animations'
+import { SESSION_HERO_GRADIENTS, INTENTION_TO_GRADIENT } from '../lib/animations'
 
 // Import extracted data
 import extractedSessions from '../data/sessions.json'
@@ -278,7 +278,7 @@ export function Explore() {
         {/* Feed */}
         {!isLoading && (
           <div className="space-y-4">
-            {feedItems.map((item, index) => {
+            {feedItems.map((item) => {
               if (item.type === 'pearl') {
                 const pearl = item.data as Pearl
                 return (
@@ -299,7 +299,7 @@ export function Explore() {
                   <SessionCard
                     key={item.id}
                     session={session}
-                    gradient={SESSION_HERO_GRADIENTS[index % SESSION_HERO_GRADIENTS.length]}
+                    gradient={INTENTION_TO_GRADIENT[session.intention] || SESSION_HERO_GRADIENTS[0]}
                     onClick={() => setSelectedSession(session)}
                   />
                 )
