@@ -16,7 +16,7 @@ import {
 } from '../lib/format'
 import { getPlannedSessionsForMonth, PlannedSession } from '../lib/db'
 
-const DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
+const DAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'] // Monday-first to match WeekStones
 const MONTHS_SHORT = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D']
 
 type CalendarView = 'month' | 'year'
@@ -90,9 +90,12 @@ export function Calendar({ embedded = false, onDateClick, refreshKey }: Calendar
     return getTotalForDate(sessions, selectedDate)
   }, [sessions, selectedDate])
 
-  // Calendar grid
+  // Calendar grid (Monday-first)
   const calendarDays = useMemo(() => {
-    const firstDay = new Date(currentYear, currentMonth, 1).getDay()
+    // getDay() returns 0=Sunday, 1=Monday, etc.
+    // Convert to Monday-first: Monday=0, Tuesday=1, ..., Sunday=6
+    const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay()
+    const firstDay = (firstDayOfMonth + 6) % 7 // Sunday(0)→6, Monday(1)→0, etc.
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
 
     const days: (number | null)[] = []
@@ -333,10 +336,15 @@ export function Calendar({ embedded = false, onDateClick, refreshKey }: Calendar
                   if (!day) return
                   const clickedDate = new Date(currentYear, currentMonth, day)
                   clickedDate.setHours(0, 0, 0, 0)
-                  setSelectedDate(clickedDate)
-                  // If onDateClick provided, call it (for opening planner)
-                  if (onDateClick) {
+
+                  // When embedded with onDateClick, skip internal state (MeditationPlanner handles it)
+                  if (embedded && onDateClick) {
                     onDateClick(clickedDate)
+                  } else {
+                    setSelectedDate(clickedDate)
+                    if (onDateClick) {
+                      onDateClick(clickedDate)
+                    }
                   }
                 }
 
@@ -382,8 +390,8 @@ export function Calendar({ embedded = false, onDateClick, refreshKey }: Calendar
               })}
             </div>
 
-            {/* Selected date detail - no divider, breathing space */}
-            {selectedDate && (
+            {/* Selected date detail - skip when embedded with onDateClick (MeditationPlanner shows this) */}
+            {selectedDate && !(embedded && onDateClick) && (
               <div className="pt-4">
                 <p className="text-sm text-ink/50 mb-2">
                   {formatFullDate(selectedDate)}

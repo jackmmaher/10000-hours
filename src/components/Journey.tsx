@@ -26,6 +26,7 @@ import { SessionStream, SessionWithDetails } from './SessionStream'
 import { Calendar } from './Calendar'
 import {
   getPlannedSessionsForWeek,
+  getNextPlannedSession,
   PlannedSession,
   Session
 } from '../lib/db'
@@ -163,33 +164,22 @@ export function Journey() {
     setPlanningDate(date)
   }
 
-  // Get next planned session (future only, not completed)
-  const nextPlannedSession = useMemo(() => {
-    const now = new Date()
-    now.setHours(0, 0, 0, 0)
-    const nowTime = now.getTime()
+  // Get next planned session (looks beyond current week)
+  const [nextPlannedSession, setNextPlannedSession] = useState<PlannedSession | null>(null)
 
-    // Check if today already has a session
-    const todayHasSession = dateHasSession(sessions, now)
+  useEffect(() => {
+    const loadNextPlan = async () => {
+      const now = new Date()
+      now.setHours(0, 0, 0, 0)
+      const todayHasSession = dateHasSession(sessions, now)
 
-    // Find the next upcoming plan that isn't completed
-    // If today has a session, skip today's plans (they're done)
-    return weekPlans
-      .filter(p => {
-        const isTodayPlan = p.date === nowTime
-        const isFuturePlan = p.date > nowTime
-
-        // Skip completed plans
-        if (p.completed) return false
-        // Skip today's plans if we already meditated today
-        if (isTodayPlan && todayHasSession) return false
-        // Skip plans linked to sessions (already done even if not marked completed)
-        if (p.linkedSessionUuid) return false
-
-        return isTodayPlan || isFuturePlan
-      })
-      .sort((a, b) => a.date - b.date)[0] || null
-  }, [weekPlans, sessions])
+      // If today has a session, skip today's plans
+      const skipDate = todayHasSession ? now.getTime() : undefined
+      const nextPlan = await getNextPlannedSession(skipDate)
+      setNextPlannedSession(nextPlan || null)
+    }
+    loadNextPlan()
+  }, [sessions, plansRefreshKey])
 
   return (
     <div

@@ -459,6 +459,29 @@ export async function deletePlannedSession(id: number): Promise<void> {
   await db.plannedSessions.delete(id)
 }
 
+// Get the next upcoming planned session (today or future, not completed)
+// Pass afterDate to skip plans on that date (useful when today already has a session)
+export async function getNextPlannedSession(afterDate?: number): Promise<PlannedSession | undefined> {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const todayTime = today.getTime()
+
+  // Get all plans from today onwards
+  const plans = await db.plannedSessions
+    .where('date')
+    .aboveOrEqual(todayTime)
+    .toArray()
+
+  return plans
+    .filter(p => {
+      if (p.completed || p.linkedSessionUuid) return false
+      // If afterDate provided, skip plans on that exact date
+      if (afterDate !== undefined && p.date === afterDate) return false
+      return true
+    })
+    .sort((a, b) => a.date - b.date)[0]
+}
+
 export async function getLatestInsight(): Promise<Insight | undefined> {
   return db.insights.orderBy('createdAt').reverse().first()
 }
