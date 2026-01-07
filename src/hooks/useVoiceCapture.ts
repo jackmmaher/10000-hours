@@ -179,6 +179,7 @@ export function useVoiceCapture() {
     durationMs,
     isSupported,
     isRecording: state === 'recording',
+    mediaStream: mediaStreamRef.current,
     startCapture,
     stopCapture,
     cancelCapture,

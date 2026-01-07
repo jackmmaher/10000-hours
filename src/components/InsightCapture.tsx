@@ -5,7 +5,7 @@
  * Features audio level visualization for feedback.
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useVoiceCapture } from '../hooks/useVoiceCapture'
 import { useAudioLevel } from '../hooks/useAudioLevel'
 import { addInsight } from '../lib/db'
@@ -55,6 +55,7 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
     durationMs,
     isSupported,
     isRecording,
+    mediaStream,
     startCapture,
     stopCapture,
     cancelCapture
@@ -62,33 +63,33 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
 
   const { audioLevel, startAnalyzing, stopAnalyzing } = useAudioLevel()
   const [isSaving, setIsSaving] = useState(false)
-  const streamRef = useRef<MediaStream | null>(null)
 
   // Auto-start recording on mount (after brief delay for UI to settle)
   useEffect(() => {
+    let cancelled = false
     const timer = setTimeout(async () => {
+      if (cancelled) return
       if (isSupported && state === 'idle') {
-        // Get stream for audio level analysis
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-          streamRef.current = stream
-          startAnalyzing(stream)
-        } catch (err) {
-          console.error('Failed to get audio stream for visualization:', err)
-        }
         startCapture()
       }
     }, 500)
-    return () => clearTimeout(timer)
-  }, [isSupported, state, startCapture, startAnalyzing])
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [isSupported, state, startCapture])
+
+  // Start audio level analysis when recording begins
+  useEffect(() => {
+    if (isRecording && mediaStream) {
+      startAnalyzing(mediaStream)
+    }
+  }, [isRecording, mediaStream, startAnalyzing])
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       stopAnalyzing()
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop())
-      }
     }
   }, [stopAnalyzing])
 
