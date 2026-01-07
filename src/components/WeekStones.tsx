@@ -36,8 +36,16 @@ export function WeekStone({ status, onClick, size = 'sm' }: WeekStoneProps) {
     lg: 'w-5 h-5'
   }
 
+  // Animated sizes must be slightly larger than base for breathing effect
+  // Using Tailwind arbitrary values since w-4.5/w-5.5 don't exist
+  const animatedSizeClasses = {
+    sm: 'w-3.5 h-3.5',           // 0.875rem - valid Tailwind class
+    md: 'w-[1.125rem] h-[1.125rem]', // 18px - between w-4 (16px) and w-5 (20px)
+    lg: 'w-[1.375rem] h-[1.375rem]'  // 22px - between w-5 (20px) and w-6 (24px)
+  }
+
   const baseSize = sizeClasses[size]
-  const animatedSize = size === 'sm' ? 'w-3.5 h-3.5' : size === 'md' ? 'w-4.5 h-4.5' : 'w-5.5 h-5.5'
+  const animatedSize = animatedSizeClasses[size]
 
   // Completed session (any session done)
   if (status === 'completed') {
