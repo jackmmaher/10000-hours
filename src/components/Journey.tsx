@@ -34,6 +34,7 @@ type JourneySubTab = 'sessions' | 'saved' | 'pearls'
 
 export function Journey() {
   const { sessions, setView } = useSessionStore()
+  const { user } = useAuthStore()
   const [subTab, setSubTab] = useState<JourneySubTab>('sessions')
   const [weekPlans, setWeekPlans] = useState<PlannedSession[]>([])
   const [planningDate, setPlanningDate] = useState<Date | null>(null)
@@ -41,6 +42,13 @@ export function Journey() {
   const [insightSession, setInsightSession] = useState<Session | null>(null)
   const [pearlSession, setPearlSession] = useState<SessionWithDetails | null>(null)
   const [sessionStreamKey, setSessionStreamKey] = useState(0) // For refreshing after insight/pearl added
+  const [showTemplateEditor, setShowTemplateEditor] = useState(false)
+
+  // Calculate total hours for creator badge
+  const totalHours = useMemo(() => {
+    const totalSeconds = sessions.reduce((acc, s) => acc + s.durationSeconds, 0)
+    return Math.floor(totalSeconds / 3600)
+  }, [sessions])
 
   // Swipe navigation
   const navSwipeHandlers = useSwipe({
@@ -168,7 +176,7 @@ export function Journey() {
         </div>
 
         {/* Sub-tabs */}
-        <div className="flex gap-1 mb-6 bg-cream-deep rounded-lg p-1">
+        <div className="flex gap-1 mb-4 bg-cream-deep rounded-lg p-1">
           <TabButton
             active={subTab === 'sessions'}
             onClick={() => setSubTab('sessions')}
@@ -188,6 +196,19 @@ export function Journey() {
             My Pearls
           </TabButton>
         </div>
+
+        {/* Create button - only show when logged in */}
+        {user && (
+          <button
+            onClick={() => setShowTemplateEditor(true)}
+            className="w-full mb-6 py-3 px-4 bg-cream-deep hover:bg-cream-deep/80 rounded-xl text-sm text-ink/60 hover:text-ink/80 transition-colors flex items-center justify-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+            </svg>
+            Create Guided Meditation
+          </button>
+        )}
 
         {/* Tab Content */}
         {subTab === 'sessions' && (
@@ -254,6 +275,18 @@ export function Journey() {
             setSessionStreamKey(k => k + 1)
           }}
           onCancel={() => setPearlSession(null)}
+        />
+      )}
+
+      {/* Template editor modal */}
+      {showTemplateEditor && (
+        <TemplateEditorWrapper
+          onClose={() => setShowTemplateEditor(false)}
+          onPublished={() => {
+            setShowTemplateEditor(false)
+            // Could show a success message or navigate somewhere
+          }}
+          creatorHours={totalHours}
         />
       )}
     </div>
@@ -833,4 +866,37 @@ function SessionDetailModalWrapper({
   }
 
   return <SessionDetailModal session={session} onClose={onClose} onAdopt={onAdopt} />
+}
+
+// Wrapper for lazy loading TemplateEditor
+function TemplateEditorWrapper({
+  onClose,
+  onPublished,
+  creatorHours
+}: {
+  onClose: () => void
+  onPublished: () => void
+  creatorHours: number
+}) {
+  const [TemplateEditor, setTemplateEditor] = useState<React.ComponentType<{
+    onClose: () => void
+    onPublished: () => void
+    creatorHours: number
+  }> | null>(null)
+
+  useEffect(() => {
+    import('./TemplateEditor').then(module => {
+      setTemplateEditor(() => module.TemplateEditor)
+    })
+  }, [])
+
+  if (!TemplateEditor) {
+    return (
+      <div className="fixed inset-0 bg-ink/50 flex items-center justify-center z-50">
+        <div className="w-1 h-1 bg-cream rounded-full animate-pulse" />
+      </div>
+    )
+  }
+
+  return <TemplateEditor onClose={onClose} onPublished={onPublished} creatorHours={creatorHours} />
 }
