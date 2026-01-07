@@ -20,30 +20,19 @@ import {
 } from '../lib/pearls'
 import { AuthModal } from './AuthModal'
 import { SessionCard } from './SessionCard'
-import { CourseCard } from './CourseCard'
 import { SessionDetailModal, SessionTemplate } from './SessionDetailModal'
 import { SESSION_HERO_GRADIENTS } from '../lib/animations'
 
 // Import extracted data
 import extractedSessions from '../data/sessions.json'
-import extractedCourses from '../data/courses.json'
 
 // Types for explore feed
-type FeedItemType = 'pearl' | 'session' | 'course'
+type FeedItemType = 'pearl' | 'session'
 
 interface FeedItem {
   type: FeedItemType
   id: string
-  data: Pearl | SessionTemplate | CoursePreview
-}
-
-interface CoursePreview {
-  id: string
-  title: string
-  description: string
-  sessionCount: number
-  karma: number
-  saves: number
+  data: Pearl | SessionTemplate
 }
 
 // Raw extracted session type (snake_case from JSON)
@@ -67,16 +56,6 @@ interface ExtractedSession {
   creator_hours: number
   course_id?: string
   course_position?: number
-}
-
-// Raw extracted course type
-interface ExtractedCourse {
-  id: string
-  title: string
-  description: string
-  session_count: number
-  seed_karma: number
-  seed_saves: number
 }
 
 // Transform extracted sessions to SessionTemplate format
@@ -103,25 +82,10 @@ function transformSession(raw: ExtractedSession): SessionTemplate {
   }
 }
 
-// Transform extracted courses to CoursePreview format
-function transformCourse(raw: ExtractedCourse): CoursePreview {
-  return {
-    id: raw.id,
-    title: raw.title,
-    description: raw.description,
-    sessionCount: raw.session_count,
-    karma: raw.seed_karma,
-    saves: raw.seed_saves
-  }
-}
-
 // Load and transform sessions
 const SEEDED_SESSIONS: SessionTemplate[] = (extractedSessions as ExtractedSession[]).map(transformSession)
 
-// Load and transform courses
-const SEEDED_COURSES: CoursePreview[] = (extractedCourses as ExtractedCourse[]).map(transformCourse)
-
-type FilterType = 'all' | 'pearls' | 'sessions' | 'courses'
+type FilterType = 'all' | 'pearls' | 'sessions'
 type SortType = 'rising' | 'new' | 'top' | 'saved'
 
 export function Explore() {
@@ -164,14 +128,10 @@ export function Explore() {
     if (filterType === 'sessions') {
       return SEEDED_SESSIONS.map(s => ({ type: 'session' as FeedItemType, id: s.id, data: s }))
     }
-    if (filterType === 'courses') {
-      return SEEDED_COURSES.map(c => ({ type: 'course' as FeedItemType, id: c.id, data: c }))
-    }
 
-    // Mixed feed pattern: pearls → session → pearls → course
+    // Mixed feed pattern: pearls → session → pearls → session
     let pearlIndex = 0
     let sessionIndex = 0
-    let courseIndex = 0
 
     // Add initial pearls (3-5)
     const initialPearls = 3 + Math.floor(Math.random() * 3)
@@ -193,31 +153,21 @@ export function Explore() {
       pearlIndex++
     }
 
-    // Add course
-    if (courseIndex < SEEDED_COURSES.length) {
-      items.push({ type: 'course', id: SEEDED_COURSES[courseIndex].id, data: SEEDED_COURSES[courseIndex] })
-      courseIndex++
-    }
-
     // Add another session
     if (sessionIndex < SEEDED_SESSIONS.length) {
       items.push({ type: 'session', id: SEEDED_SESSIONS[sessionIndex].id, data: SEEDED_SESSIONS[sessionIndex] })
       sessionIndex++
     }
 
-    // Add remaining pearls
+    // Add remaining pearls with sessions interspersed
     while (pearlIndex < pearls.length) {
       items.push({ type: 'pearl', id: pearls[pearlIndex].id, data: pearls[pearlIndex] })
       pearlIndex++
 
-      // Insert remaining sessions/courses periodically
+      // Insert remaining sessions periodically
       if (pearlIndex % 4 === 0 && sessionIndex < SEEDED_SESSIONS.length) {
         items.push({ type: 'session', id: SEEDED_SESSIONS[sessionIndex].id, data: SEEDED_SESSIONS[sessionIndex] })
         sessionIndex++
-      }
-      if (pearlIndex % 8 === 0 && courseIndex < SEEDED_COURSES.length) {
-        items.push({ type: 'course', id: SEEDED_COURSES[courseIndex].id, data: SEEDED_COURSES[courseIndex] })
-        courseIndex++
       }
     }
 
@@ -276,13 +226,13 @@ export function Explore() {
             Explore
           </p>
           <p className="text-sm text-ink/40 mt-1">
-            Wisdom, sessions, and courses from the community
+            Wisdom and meditations from the community
           </p>
         </div>
 
         {/* Filter bar */}
         <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-          {(['all', 'pearls', 'sessions', 'courses'] as FilterType[]).map((f) => (
+          {(['all', 'pearls', 'sessions'] as FilterType[]).map((f) => (
             <button
               key={f}
               onClick={() => setFilterType(f)}
@@ -351,16 +301,6 @@ export function Explore() {
                     session={session}
                     gradient={SESSION_HERO_GRADIENTS[index % SESSION_HERO_GRADIENTS.length]}
                     onClick={() => setSelectedSession(session)}
-                  />
-                )
-              }
-
-              if (item.type === 'course') {
-                const course = item.data as CoursePreview
-                return (
-                  <CourseCard
-                    key={item.id}
-                    course={course}
                   />
                 )
               }
