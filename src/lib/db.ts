@@ -6,6 +6,10 @@ export interface Session {
   startTime: number  // Unix timestamp (ms)
   endTime: number    // Unix timestamp (ms)
   durationSeconds: number
+  // Per-session metadata (added in v7)
+  pose?: string             // Seating position/pose
+  discipline?: string       // Meditation technique
+  notes?: string            // Intention or notes for this session
 }
 
 export interface AppState {
@@ -180,6 +184,19 @@ class MeditationDB extends Dexie {
         plan.coursePosition = plan.coursePosition ?? null
       })
     })
+
+    // v7: Add per-session metadata (pose, discipline, notes) to sessions
+    // No index changes needed - fields are optional and stored directly on session
+    this.version(7).stores({
+      sessions: '++id, uuid, startTime, endTime',
+      appState: 'id',
+      profile: 'id',
+      settings: 'id',
+      insights: 'id, sessionId, createdAt, sharedPearlId',
+      plannedSessions: '++id, date, createdAt, linkedSessionUuid, courseId',
+      courseProgress: 'id, courseId, status',
+      savedTemplates: 'id, templateId, savedAt'
+    })
   }
 }
 
@@ -209,6 +226,20 @@ export async function getAllSessions(): Promise<Session[]> {
 
 export async function addSession(session: Omit<Session, 'id'>): Promise<number> {
   return db.sessions.add(session as Session)
+}
+
+export async function updateSession(
+  uuid: string,
+  updates: Partial<Pick<Session, 'pose' | 'discipline' | 'notes'>>
+): Promise<void> {
+  const session = await db.sessions.where('uuid').equals(uuid).first()
+  if (session && session.id) {
+    await db.sessions.update(session.id, updates)
+  }
+}
+
+export async function getSessionByUuid(uuid: string): Promise<Session | undefined> {
+  return db.sessions.where('uuid').equals(uuid).first()
 }
 
 export async function getTotalSeconds(): Promise<number> {

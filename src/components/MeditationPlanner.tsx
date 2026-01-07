@@ -18,7 +18,8 @@ import {
   getPlannedSession,
   updatePlannedSession,
   deletePlannedSession,
-  getInsightsBySessionId
+  getInsightsBySessionId,
+  updateSession
 } from '../lib/db'
 
 interface MeditationPlannerProps {
@@ -139,20 +140,26 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
   const [discipline, setDiscipline] = useState('')
   const [notes, setNotes] = useState('')
 
-  // Fetch insight when session changes
+  // Fetch insight and session metadata when session changes
   useEffect(() => {
-    async function loadInsight() {
+    async function loadSessionData() {
       if (session) {
+        // Load insight for this session
         const insights = await getInsightsBySessionId(session.uuid)
         setInsight(insights.length > 0 ? insights[0] : null)
+
+        // Load per-session metadata (pose, discipline, notes are stored on Session)
+        setPose(session.pose || '')
+        setDiscipline(session.discipline || '')
+        setNotes(session.notes || '')
       } else {
         setInsight(null)
       }
     }
-    loadInsight()
+    loadSessionData()
   }, [session])
 
-  // Load existing plan for selected date
+  // Load existing plan for selected date (only for plan mode scheduling data)
   useEffect(() => {
     async function load() {
       setIsLoading(true)
@@ -169,56 +176,58 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
           setShowCustomDuration(true)
           setCustomDurationInput(existing.duration.toString())
         }
-        setPose(existing.pose || '')
-        setDiscipline(existing.discipline || '')
-        setNotes(existing.notes || '')
+        // Only load pose/discipline/notes from plan in plan mode
+        // In session mode, these come from the Session object (loaded in separate effect)
+        if (!isSessionMode) {
+          setPose(existing.pose || '')
+          setDiscipline(existing.discipline || '')
+          setNotes(existing.notes || '')
+        }
       }
 
       setIsLoading(false)
     }
     load()
-  }, [selectedDate])
+  }, [selectedDate, isSessionMode])
 
   const handleSave = useCallback(async () => {
     setIsSaving(true)
     const dateStart = getStartOfDay(selectedDate)
 
     try {
-      if (existingPlan?.id) {
-        // Update existing plan - if in session mode, mark as completed and link to session
-        await updatePlannedSession(existingPlan.id, {
-          date: dateStart,
-          plannedTime: plannedTime || undefined,
-          duration: duration || undefined,
+      if (isSessionMode && session) {
+        // Session mode: Save metadata directly to the Session record
+        await updateSession(session.uuid, {
           pose: pose || undefined,
           discipline: discipline || undefined,
-          notes: notes || undefined,
-          // In session mode, mark plan as completed and link to session
-          ...(isSessionMode && session ? {
-            completed: true,
-            linkedSessionUuid: session.uuid
-          } : {})
+          notes: notes || undefined
         })
       } else {
-        // Create new plan - if in session mode, mark as completed immediately
-        await addPlannedSession({
-          date: dateStart,
-          plannedTime: plannedTime || undefined,
-          duration: duration || undefined,
-          pose: pose || undefined,
-          discipline: discipline || undefined,
-          notes: notes || undefined,
-          // In session mode, mark plan as completed and link to session
-          ...(isSessionMode && session ? {
-            completed: true,
-            linkedSessionUuid: session.uuid
-          } : {})
-        })
+        // Plan mode: Save to PlannedSession
+        if (existingPlan?.id) {
+          await updatePlannedSession(existingPlan.id, {
+            date: dateStart,
+            plannedTime: plannedTime || undefined,
+            duration: duration || undefined,
+            pose: pose || undefined,
+            discipline: discipline || undefined,
+            notes: notes || undefined
+          })
+        } else {
+          await addPlannedSession({
+            date: dateStart,
+            plannedTime: plannedTime || undefined,
+            duration: duration || undefined,
+            pose: pose || undefined,
+            discipline: discipline || undefined,
+            notes: notes || undefined
+          })
+        }
       }
       onSave()
       onClose()
     } catch (err) {
-      console.error('Failed to save plan:', err)
+      console.error('Failed to save:', err)
     } finally {
       setIsSaving(false)
     }
