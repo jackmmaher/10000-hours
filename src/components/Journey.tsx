@@ -294,7 +294,7 @@ export function Journey() {
         <div className="mb-10">
           <Calendar
             embedded
-            onDateClick={(date) => setPlanningDate(date)}
+            onDateClick={(date) => handleDayClick(0, date)}
             refreshKey={plansRefreshKey}
           />
         </div>
