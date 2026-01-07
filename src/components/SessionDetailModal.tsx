@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { SESSION_HERO_GRADIENTS, INTENTION_TO_GRADIENT } from '../lib/animations'
-import { saveTemplate, unsaveTemplate, isTemplateSaved } from '../lib/db'
+import { saveTemplate, unsaveTemplate, isTemplateSaved, addPlannedSession } from '../lib/db'
 
 export interface SessionTemplate {
   id: string
@@ -36,10 +36,28 @@ interface SessionDetailModalProps {
   onAdopt: () => void
 }
 
+// Parse duration from string like "5-10 mins" → 10 (take max)
+function parseDuration(guidance: string): number {
+  const match = guidance.match(/(\d+)(?:-(\d+))?\s*min/)
+  if (match) {
+    return parseInt(match[2] || match[1], 10)
+  }
+  return 10 // default
+}
+
+// Get start of day timestamp
+function getStartOfDay(date: Date): number {
+  const d = new Date(date)
+  d.setHours(0, 0, 0, 0)
+  return d.getTime()
+}
+
 export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailModalProps) {
   const [isSaved, setIsSaved] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [showDatePicker, setShowDatePicker] = useState(false)
+  const [selectedDate, setSelectedDate] = useState<'today' | 'tomorrow' | null>(null)
+  const [isAdopting, setIsAdopting] = useState(false)
 
   // Get gradient based on intention or use fallback
   const gradient = INTENTION_TO_GRADIENT[session.intention] || SESSION_HERO_GRADIENTS[0]
@@ -69,10 +87,34 @@ export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailM
 
   const handleAdopt = () => {
     setShowDatePicker(true)
+    setSelectedDate(null)
   }
 
-  const handleConfirmAdopt = () => {
-    onAdopt()
+  const handleConfirmAdopt = async () => {
+    if (!selectedDate || isAdopting) return
+
+    setIsAdopting(true)
+    try {
+      const now = new Date()
+      const targetDate = selectedDate === 'today'
+        ? now
+        : new Date(now.getTime() + 24 * 60 * 60 * 1000)
+
+      await addPlannedSession({
+        date: getStartOfDay(targetDate),
+        duration: parseDuration(session.durationGuidance),
+        pose: session.posture,
+        discipline: session.discipline,
+        notes: session.intention,
+        sourceTemplateId: session.id
+      })
+
+      onAdopt()
+    } catch (err) {
+      console.error('Failed to add planned session:', err)
+    } finally {
+      setIsAdopting(false)
+    }
   }
 
   // Block swipe navigation when modal is open
@@ -223,14 +265,25 @@ export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailM
               <div>
                 <p className="text-sm text-ink/60 mb-3">When would you like to try this?</p>
                 <div className="flex gap-2 mb-4">
-                  <button className="flex-1 py-2 bg-cream-deep text-ink/60 rounded-lg text-sm hover:bg-cream-deep/80 transition-colors">
+                  <button
+                    onClick={() => setSelectedDate('today')}
+                    className={`flex-1 py-2 rounded-lg text-sm transition-colors ${
+                      selectedDate === 'today'
+                        ? 'bg-moss text-cream'
+                        : 'bg-cream-deep text-ink/60 hover:bg-cream-deep/80'
+                    }`}
+                  >
                     Today
                   </button>
-                  <button className="flex-1 py-2 bg-cream-deep text-ink/60 rounded-lg text-sm hover:bg-cream-deep/80 transition-colors">
+                  <button
+                    onClick={() => setSelectedDate('tomorrow')}
+                    className={`flex-1 py-2 rounded-lg text-sm transition-colors ${
+                      selectedDate === 'tomorrow'
+                        ? 'bg-moss text-cream'
+                        : 'bg-cream-deep text-ink/60 hover:bg-cream-deep/80'
+                    }`}
+                  >
                     Tomorrow
-                  </button>
-                  <button className="flex-1 py-2 bg-cream-deep text-ink/60 rounded-lg text-sm hover:bg-cream-deep/80 transition-colors">
-                    Pick day
                   </button>
                 </div>
                 <div className="flex gap-3">
@@ -242,9 +295,14 @@ export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailM
                   </button>
                   <button
                     onClick={handleConfirmAdopt}
-                    className="flex-1 py-3 bg-moss text-cream rounded-xl text-sm font-medium hover:bg-moss/90 transition-colors active:scale-[0.98]"
+                    disabled={!selectedDate || isAdopting}
+                    className={`flex-1 py-3 rounded-xl text-sm font-medium transition-colors active:scale-[0.98] ${
+                      selectedDate
+                        ? 'bg-moss text-cream hover:bg-moss/90'
+                        : 'bg-moss/50 text-cream/70 cursor-not-allowed'
+                    }`}
                   >
-                    Confirm
+                    {isAdopting ? 'Adding...' : 'Confirm'}
                   </button>
                 </div>
               </div>
