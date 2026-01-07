@@ -27,9 +27,7 @@ import { Calendar } from './Calendar'
 import {
   getPlannedSessionsForWeek,
   PlannedSession,
-  Session,
-  Insight,
-  getInsightsBySessionId
+  Session
 } from '../lib/db'
 import { dateHasSession, getSessionsForDate } from '../lib/calculations'
 
@@ -54,8 +52,7 @@ export function Journey() {
   const [subTab, setSubTab] = useState<JourneySubTab>('sessions')
   const [weekPlans, setWeekPlans] = useState<PlannedSession[]>([])
   const [planningDate, setPlanningDate] = useState<Date | null>(null)
-  const [selectedDaySession, setSelectedDaySession] = useState<Session | null>(null)
-  const [selectedDayInsight, setSelectedDayInsight] = useState<Insight | null>(null)
+  const [selectedDaySessions, setSelectedDaySessions] = useState<Session[]>([])
   const [plansRefreshKey, setPlansRefreshKey] = useState(0) // Unified refresh key for all plan data
   const [insightSession, setInsightSession] = useState<Session | null>(null)
   const [pearlSession, setPearlSession] = useState<SessionWithDetails | null>(null)
@@ -156,28 +153,14 @@ export function Journey() {
   }, [sessions, weekPlans])
 
   // Handle day click - open planner/summary for that day
-  const handleDayClick = async (_dayIndex: number, date: Date) => {
-    // Check if this day has a completed session
+  const handleDayClick = (_dayIndex: number, date: Date) => {
+    // Get all sessions for this date (sorted by time, most recent first)
     const daySessions = getSessionsForDate(sessions, date)
+      .sort((a, b) => b.startTime - a.startTime)
 
-    if (daySessions.length > 0) {
-      // Get the first session for this day (most recent if multiple)
-      const session = daySessions[0]
-
-      // Fetch insight FIRST, then set all state together to ensure batching
-      const insights = await getInsightsBySessionId(session.uuid)
-      const insight = insights.length > 0 ? insights[0] : null
-
-      // Set all state in one synchronous block after await
-      setSelectedDaySession(session)
-      setSelectedDayInsight(insight)
-      setPlanningDate(date)
-    } else {
-      // No session - set all state together
-      setSelectedDaySession(null)
-      setSelectedDayInsight(null)
-      setPlanningDate(date)
-    }
+    // Set state - insight will be fetched by MeditationPlanner
+    setSelectedDaySessions(daySessions)
+    setPlanningDate(date)
   }
 
   // Get next planned session (future only, not completed)
@@ -359,12 +342,10 @@ export function Journey() {
       {planningDate && (
         <MeditationPlannerWrapper
           date={planningDate}
-          session={selectedDaySession}
-          insight={selectedDayInsight}
+          sessions={selectedDaySessions}
           onClose={() => {
             setPlanningDate(null)
-            setSelectedDaySession(null)
-            setSelectedDayInsight(null)
+            setSelectedDaySessions([])
           }}
           onSave={refreshAllPlanData}
         />
@@ -441,22 +422,19 @@ function TabButton({
 // Wrapper for lazy loading MeditationPlanner
 function MeditationPlannerWrapper({
   date,
-  session,
-  insight,
+  sessions,
   onClose,
   onSave
 }: {
   date: Date
-  session?: Session | null
-  insight?: Insight | null
+  sessions: Session[]
   onClose: () => void
   onSave: () => void
 }) {
   // Import the existing MeditationPlanner
   const [MeditationPlanner, setMeditationPlanner] = useState<React.ComponentType<{
     date: Date
-    session?: Session | null
-    insight?: Insight | null
+    sessions: Session[]
     onClose: () => void
     onSave: () => void
   }> | null>(null)
@@ -475,7 +453,7 @@ function MeditationPlannerWrapper({
     )
   }
 
-  return <MeditationPlanner date={date} session={session} insight={insight} onClose={onClose} onSave={onSave} />
+  return <MeditationPlanner date={date} sessions={sessions} onClose={onClose} onSave={onSave} />
 }
 
 // Wrapper for lazy loading InsightCapture

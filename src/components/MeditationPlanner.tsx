@@ -2,9 +2,11 @@
  * MeditationPlanner - Plan or view meditation sessions
  *
  * Two modes:
- * 1. Plan mode (no session): For future dates, all fields editable
- * 2. Session mode (has session): For past sessions, shows read-only time/duration,
+ * 1. Plan mode (no sessions): For future dates, all fields editable
+ * 2. Session mode (has sessions): For past sessions, shows read-only time/duration,
  *    allows editing metadata (pose, discipline, notes), displays insight if captured
+ *
+ * Supports multiple sessions per day with a session selector.
  */
 
 import { useState, useEffect, useCallback } from 'react'
@@ -15,13 +17,13 @@ import {
   addPlannedSession,
   getPlannedSession,
   updatePlannedSession,
-  deletePlannedSession
+  deletePlannedSession,
+  getInsightsBySessionId
 } from '../lib/db'
 
 interface MeditationPlannerProps {
   date: Date
-  session?: Session | null  // If provided, we're viewing a completed session
-  insight?: Insight | null  // Insight captured for this session
+  sessions: Session[]  // All sessions for this date (may be empty for future dates)
   onClose: () => void
   onSave: () => void
 }
@@ -114,12 +116,18 @@ function formatDurationMinutes(seconds: number): string {
   return `${hours} hr ${remainingMinutes} min`
 }
 
-export function MeditationPlanner({ date, session, insight, onClose, onSave }: MeditationPlannerProps) {
+export function MeditationPlanner({ date, sessions, onClose, onSave }: MeditationPlannerProps) {
+  // Multiple sessions support
+  const [selectedSessionIndex, setSelectedSessionIndex] = useState(0)
+  const session = sessions.length > 0 ? sessions[selectedSessionIndex] : null
+  const hasMultipleSessions = sessions.length > 1
+
   // Determine if we're viewing a completed session vs planning
   const isSessionMode = !!session
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [existingPlan, setExistingPlan] = useState<PlannedSession | null>(null)
+  const [insight, setInsight] = useState<Insight | null>(null)
 
   // Form state - selectedDate can be changed by user
   const [selectedDate, setSelectedDate] = useState<Date>(date)
@@ -130,6 +138,19 @@ export function MeditationPlanner({ date, session, insight, onClose, onSave }: M
   const [pose, setPose] = useState('')
   const [discipline, setDiscipline] = useState('')
   const [notes, setNotes] = useState('')
+
+  // Fetch insight when session changes
+  useEffect(() => {
+    async function loadInsight() {
+      if (session) {
+        const insights = await getInsightsBySessionId(session.uuid)
+        setInsight(insights.length > 0 ? insights[0] : null)
+      } else {
+        setInsight(null)
+      }
+    }
+    loadInsight()
+  }, [session])
 
   // Load existing plan for selected date
   useEffect(() => {
@@ -268,6 +289,32 @@ export function MeditationPlanner({ date, session, insight, onClose, onSave }: M
             </div>
           ) : (
             <>
+              {/* Session selector - show when multiple sessions on same day */}
+              {isSessionMode && hasMultipleSessions && (
+                <div>
+                  <label className="text-xs text-ink/50 block mb-2">
+                    {sessions.length} sessions this day
+                  </label>
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {sessions.map((s, index) => (
+                      <button
+                        key={s.uuid}
+                        onClick={() => setSelectedSessionIndex(index)}
+                        className={`
+                          px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-all
+                          ${selectedSessionIndex === index
+                            ? 'bg-indigo-deep text-cream'
+                            : 'bg-cream-dark text-ink/60 hover:bg-cream-dark/80'
+                          }
+                        `}
+                      >
+                        {formatTimeFromTimestamp(s.startTime)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Session mode: Show read-only time and duration from actual session */}
               {isSessionMode && session && (
                 <div className="bg-moss/10 rounded-xl p-4 space-y-3">

@@ -6,6 +6,7 @@ import {
   getStatsForWindow,
   getProjection,
   getWeeklyConsistency,
+  getSessionsForDate,
   DayStatus
 } from '../lib/calculations'
 import {
@@ -359,6 +360,7 @@ export function Stats() {
       {planningDate && (
         <MeditationPlanner
           date={planningDate}
+          sessions={getSessionsForDate(sessions, planningDate).sort((a, b) => b.startTime - a.startTime)}
           onClose={() => setPlanningDate(null)}
           onSave={() => {
             // Could refresh weekly data here if needed
