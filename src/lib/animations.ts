@@ -34,28 +34,78 @@ export const ORB_GRADIENTS = {
   empty: `radial-gradient(circle at 30% 30%, ${ORB_COLORS.creamDeep}, ${ORB_COLORS.cream})`
 }
 
-// Hero gradients for session cards (Tailwind classes)
+// Hero gradients for session cards - refined, muted palette
+// Designed to feel natural and sophisticated on cream backgrounds
 export const SESSION_HERO_GRADIENTS = [
-  'from-emerald-400 to-teal-600',     // Calm, nature
-  'from-indigo-400 to-violet-600',    // Focus, depth
-  'from-amber-400 to-orange-600',     // Energy, warmth
-  'from-rose-400 to-pink-600',        // Compassion, love
-  'from-sky-400 to-blue-600',         // Clarity, openness
-  'from-stone-400 to-slate-600',      // Grounding, stability
-  'from-lime-400 to-green-600',       // Growth, renewal
-  'from-purple-400 to-fuchsia-600'    // Transcendence, mystery
+  'from-[#9DB4A0] to-[#5C7C5E]',     // Calm - soft sage to deep moss
+  'from-[#7C8A98] to-[#3D4A5C]',     // Focus - cool steel to deep slate
+  'from-[#D4A574] to-[#A67B5B]',     // Energy - warm sand to terracotta
+  'from-[#C4A4A8] to-[#8C6B70]',     // Compassion - dusty rose to mauve
+  'from-[#8BA4B4] to-[#4A6B7C]',     // Clarity - soft sky to ocean
+  'from-[#A69B8C] to-[#5C544A]',     // Grounding - warm stone to charcoal
+  'from-[#8CB08C] to-[#4A6B4A]',     // Growth - fresh sage to forest
+  'from-[#A8A0B8] to-[#5C5470]'      // Release - soft lavender to dusk
 ]
 
-// Map intentions to gradients
+// Intention options with their gradient mappings
+// Used by TemplateEditor for visual color picker
+export const INTENTIONS = [
+  { label: 'Calm', gradient: 'from-[#9DB4A0] to-[#5C7C5E]' },
+  { label: 'Focus', gradient: 'from-[#7C8A98] to-[#3D4A5C]' },
+  { label: 'Energy', gradient: 'from-[#D4A574] to-[#A67B5B]' },
+  { label: 'Compassion', gradient: 'from-[#C4A4A8] to-[#8C6B70]' },
+  { label: 'Clarity', gradient: 'from-[#8BA4B4] to-[#4A6B7C]' },
+  { label: 'Grounding', gradient: 'from-[#A69B8C] to-[#5C544A]' },
+  { label: 'Growth', gradient: 'from-[#8CB08C] to-[#4A6B4A]' },
+  { label: 'Release', gradient: 'from-[#A8A0B8] to-[#5C5470]' }
+] as const
+
+// Map intentions to gradients (for lookup by label)
+// Supports both simple labels and full phrases via keyword matching
 export const INTENTION_TO_GRADIENT: Record<string, string> = {
-  'Cultivating calm': 'from-emerald-400 to-teal-600',
-  'Building focus': 'from-indigo-400 to-violet-600',
-  'Finding energy': 'from-amber-400 to-orange-600',
-  'Developing compassion': 'from-rose-400 to-pink-600',
-  'Cultivating clarity': 'from-sky-400 to-blue-600',
-  'Grounding': 'from-stone-400 to-slate-600',
-  'Growth': 'from-lime-400 to-green-600',
-  'Letting go': 'from-purple-400 to-fuchsia-600'
+  // Simple labels (used by TemplateEditor)
+  'Calm': 'from-[#9DB4A0] to-[#5C7C5E]',
+  'Focus': 'from-[#7C8A98] to-[#3D4A5C]',
+  'Energy': 'from-[#D4A574] to-[#A67B5B]',
+  'Compassion': 'from-[#C4A4A8] to-[#8C6B70]',
+  'Clarity': 'from-[#8BA4B4] to-[#4A6B7C]',
+  'Grounding': 'from-[#A69B8C] to-[#5C544A]',
+  'Growth': 'from-[#8CB08C] to-[#4A6B4A]',
+  'Release': 'from-[#A8A0B8] to-[#5C5470]'
+}
+
+// Keyword patterns for fuzzy intention matching
+const INTENTION_KEYWORDS: Array<{ keywords: string[], gradient: string }> = [
+  { keywords: ['calm', 'peace', 'still', 'quiet', 'tranquil', 'serene'], gradient: INTENTION_TO_GRADIENT['Calm'] },
+  { keywords: ['focus', 'concentrat', 'attention', 'insight', 'aware'], gradient: INTENTION_TO_GRADIENT['Focus'] },
+  { keywords: ['energy', 'refresh', 'vital', 'awaken', 'morning'], gradient: INTENTION_TO_GRADIENT['Energy'] },
+  { keywords: ['compass', 'love', 'kind', 'heart', 'gratitude', 'self-'], gradient: INTENTION_TO_GRADIENT['Compassion'] },
+  { keywords: ['clar', 'open', 'expand', 'presence', 'embodi'], gradient: INTENTION_TO_GRADIENT['Clarity'] },
+  { keywords: ['ground', 'stabil', 'root', 'earth', 'resilien'], gradient: INTENTION_TO_GRADIENT['Grounding'] },
+  { keywords: ['grow', 'develop', 'build', 'deepen', 'cultivat'], gradient: INTENTION_TO_GRADIENT['Growth'] },
+  { keywords: ['release', 'let', 'sleep', 'evening', 'relax', 'anxiet'], gradient: INTENTION_TO_GRADIENT['Release'] }
+]
+
+/**
+ * Get gradient for an intention string
+ * First tries exact match, then keyword matching, then falls back to default
+ */
+export function getIntentionGradient(intention: string): string {
+  // Try exact match first
+  if (INTENTION_TO_GRADIENT[intention]) {
+    return INTENTION_TO_GRADIENT[intention]
+  }
+
+  // Try keyword matching
+  const lower = intention.toLowerCase()
+  for (const { keywords, gradient } of INTENTION_KEYWORDS) {
+    if (keywords.some(kw => lower.includes(kw))) {
+      return gradient
+    }
+  }
+
+  // Default to Calm (sage/moss - fits meditation context)
+  return INTENTION_TO_GRADIENT['Calm']
 }
 
 // Transition durations

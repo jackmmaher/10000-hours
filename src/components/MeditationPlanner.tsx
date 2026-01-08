@@ -179,6 +179,9 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
   const [planPose, setPlanPose] = useState('')
   const [planDiscipline, setPlanDiscipline] = useState('')
   const [planNotes, setPlanNotes] = useState('')
+  // These persist across date changes to preserve guided meditation link
+  const [planTitle, setPlanTitle] = useState('')
+  const [planSourceTemplateId, setPlanSourceTemplateId] = useState<string | undefined>(undefined)
 
   // Source template modal state (for "View full guidance" link)
   const [sourceTemplate, setSourceTemplate] = useState<SessionTemplate | null>(null)
@@ -285,6 +288,13 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
           setPlanDiscipline(existing.discipline || '')
           setPlanNotes(existing.notes || '')
         }
+        // Load title and sourceTemplateId (only on initial load, preserve across date changes)
+        if (!planTitle && existing.title) {
+          setPlanTitle(existing.title)
+        }
+        if (!planSourceTemplateId && existing.sourceTemplateId) {
+          setPlanSourceTemplateId(existing.sourceTemplateId)
+        }
       }
 
       setIsLoading(false)
@@ -317,18 +327,22 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
             date: dateStart,
             plannedTime: plannedTime || undefined,
             duration: duration || undefined,
+            title: planTitle || undefined,
             pose: planPose || undefined,
             discipline: planDiscipline || undefined,
-            notes: planNotes || undefined
+            notes: planNotes || undefined,
+            sourceTemplateId: planSourceTemplateId
           })
         } else {
           await addPlannedSession({
             date: dateStart,
             plannedTime: plannedTime || undefined,
             duration: duration || undefined,
+            title: planTitle || undefined,
             pose: planPose || undefined,
             discipline: planDiscipline || undefined,
-            notes: planNotes || undefined
+            notes: planNotes || undefined,
+            sourceTemplateId: planSourceTemplateId
           })
         }
       }
@@ -339,7 +353,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
     } finally {
       setIsSaving(false)
     }
-  }, [selectedDate, existingPlan, plannedTime, duration, planPose, planDiscipline, planNotes, onSave, onClose, isSessionMode, sessionEdits])
+  }, [selectedDate, existingPlan, plannedTime, duration, planTitle, planPose, planDiscipline, planNotes, planSourceTemplateId, onSave, onClose, isSessionMode, sessionEdits])
 
   const handleDelete = useCallback(async () => {
     if (!existingPlan?.id) return
@@ -379,11 +393,16 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
           <div className="flex items-start justify-between">
             <div>
               <p className="font-serif text-xl text-indigo-deep">
-                {isSessionMode ? 'Session Details' : 'Plan Meditation'}
+                {isSessionMode ? 'Session Details' : (planTitle || 'Plan Meditation')}
               </p>
               {isSessionMode && (
                 <p className="text-sm text-ink/50 mt-1">
                   {formatDateForDisplay(date)}
+                </p>
+              )}
+              {!isSessionMode && planTitle && (
+                <p className="text-sm text-ink/50 mt-1">
+                  Guided meditation
                 </p>
               )}
             </div>
@@ -478,10 +497,10 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
               )}
 
               {/* Source template link - show when plan is from a guided meditation */}
-              {!isSessionMode && existingPlan?.sourceTemplateId && (
+              {!isSessionMode && planSourceTemplateId && (
                 <button
                   onClick={() => {
-                    const template = getTemplateById(existingPlan.sourceTemplateId!)
+                    const template = getTemplateById(planSourceTemplateId)
                     if (template) setSourceTemplate(template)
                   }}
                   className="flex items-center gap-2 text-sm text-indigo-deep hover:text-indigo-deep/80 transition-colors"

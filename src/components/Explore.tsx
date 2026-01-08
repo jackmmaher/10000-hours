@@ -22,7 +22,7 @@ import {
 import { AuthModal } from './AuthModal'
 import { SessionCard } from './SessionCard'
 import { SessionDetailModal, SessionTemplate } from './SessionDetailModal'
-import { SESSION_HERO_GRADIENTS, INTENTION_TO_GRADIENT } from '../lib/animations'
+import { getIntentionGradient } from '../lib/animations'
 import { getPublishedTemplates } from '../lib/templates'
 
 // Import extracted data
@@ -369,7 +369,7 @@ export function Explore() {
                   <SessionCard
                     key={item.id}
                     session={session}
-                    gradient={INTENTION_TO_GRADIENT[session.intention] || SESSION_HERO_GRADIENTS[0]}
+                    gradient={getIntentionGradient(session.intention)}
                     onClick={() => setSelectedSession(session)}
                   />
                 )

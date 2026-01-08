@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
-import { SESSION_HERO_GRADIENTS, INTENTION_TO_GRADIENT } from '../lib/animations'
+import { getIntentionGradient } from '../lib/animations'
 import { saveTemplate, unsaveTemplate, isTemplateSaved, addPlannedSession } from '../lib/db'
 
 export interface SessionTemplate {
@@ -84,7 +84,7 @@ export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailM
   const [isAdopting, setIsAdopting] = useState(false)
 
   // Get gradient based on intention or use fallback
-  const gradient = INTENTION_TO_GRADIENT[session.intention] || SESSION_HERO_GRADIENTS[0]
+  const gradient = getIntentionGradient(session.intention)
 
   // Check if already saved on mount
   useEffect(() => {

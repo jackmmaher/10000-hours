@@ -7,9 +7,9 @@
  * States:
  * - completed: Session done (any session, planned or not)
  * - fulfilled: Planned + completed (the plan was executed)
- * - planned: Upcoming plan exists
- * - today: Current day with breathing animation
- * - next: Next plannable day with breathing animation
+ * - planned: Upcoming plan exists (including today with a plan)
+ * - today: Current day without plan (cream orb, same as future)
+ * - next: Tomorrow - breathing animation to encourage planning ahead
  * - future: No plan yet
  */
 
@@ -80,8 +80,8 @@ export function WeekStone({ status, onClick, size = 'sm' }: WeekStoneProps) {
     )
   }
 
-  // Today or next plannable day - breathing animation
-  if (status === 'today' || status === 'next') {
+  // Next plannable day (tomorrow) - breathing animation to encourage planning ahead
+  if (status === 'next') {
     return (
       <div
         className={`${animatedSize} rounded-full animate-breathe ring-2 ring-ink/15 ring-offset-2 ring-offset-cream cursor-pointer`}
@@ -89,6 +89,17 @@ export function WeekStone({ status, onClick, size = 'sm' }: WeekStoneProps) {
           background: `radial-gradient(circle at 30% 30%, ${ORB_COLORS.moss}, ${ORB_COLORS.slate})`,
           animationDuration: `${ANIMATION_BREATHE_DURATION}ms`
         }}
+        onClick={onClick}
+      />
+    )
+  }
+
+  // Today without a session - render as cream orb (same as future)
+  // The day has arrived; no special visual needed if no plan exists
+  if (status === 'today') {
+    return (
+      <div
+        className={`${baseSize} rounded-full bg-cream-deep cursor-pointer hover:bg-ink/10 transition-colors`}
         onClick={onClick}
       />
     )
@@ -193,9 +204,9 @@ export function getDayStatusWithPlan(
   if (hasSession && hasPlan) return 'fulfilled'
   if (hasSession) return 'completed'
   if (isPast && !hasSession) return 'missed'
-  if (isToday) return 'today'
   if (isNextPlannable) return 'next'
-  if (hasPlan && isFuture) return 'planned'
+  if (hasPlan && (isFuture || isToday)) return 'planned'  // Today or future with plan
+  if (isToday) return 'today'  // Today without plan (renders as cream)
   if (isFuture) return 'future'
   return 'missed' // Past days without sessions
 }

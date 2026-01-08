@@ -9,8 +9,8 @@
 import { useState, useCallback, useEffect } from 'react'
 import { createTemplate, TemplateInput } from '../lib/templates'
 import { useAuthStore } from '../stores/useAuthStore'
-import { INTENTION_TO_GRADIENT, SESSION_HERO_GRADIENTS } from '../lib/animations'
-import { DISCIPLINES, POSES, BEST_TIMES, DURATION_OPTIONS } from '../lib/meditation-options'
+import { INTENTION_TO_GRADIENT, INTENTIONS } from '../lib/animations'
+import { DISCIPLINES, POSES, BEST_TIMES } from '../lib/meditation-options'
 import { saveTemplateDraft, getTemplateDraft, deleteTemplateDraft } from '../lib/db'
 
 interface TemplateEditorProps {
@@ -19,19 +19,30 @@ interface TemplateEditorProps {
   creatorHours: number
 }
 
+// Duration options in minutes (matches MeditationPlanner)
+const DURATION_MINUTES = [5, 10, 15, 20, 30, 45, 60]
+
+// Experience level presets
+const EXPERIENCE_LEVELS = [
+  { label: 'Beginner', hours: 0, description: 'New to meditation' },
+  { label: '10+ hours', hours: 10, description: 'Some experience' },
+  { label: '50+ hours', hours: 50, description: 'Regular practice' },
+  { label: '100+ hours', hours: 100, description: 'Dedicated practitioner' }
+]
+
 export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateEditorProps) {
   const { user } = useAuthStore()
 
   // Form state
   const [title, setTitle] = useState('')
   const [tagline, setTagline] = useState('')
-  const [durationGuidance, setDurationGuidance] = useState('15-20 mins')
+  const [duration, setDuration] = useState(15)
   const [discipline, setDiscipline] = useState(DISCIPLINES[0])
   const [posture, setPosture] = useState(POSES[0])
   const [bestTime, setBestTime] = useState('Anytime')
   const [environment, setEnvironment] = useState('')
   const [guidanceNotes, setGuidanceNotes] = useState('')
-  const [intention, setIntention] = useState('')
+  const [intention, setIntention] = useState('Calm')
   const [recommendedHours, setRecommendedHours] = useState(0)
   const [tags, setTags] = useState('')
 
@@ -47,13 +58,17 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
       if (draft) {
         setTitle(draft.title)
         setTagline(draft.tagline)
-        setDurationGuidance(draft.durationGuidance)
+        // Parse duration from guidance string if needed
+        const durationMatch = draft.durationGuidance.match(/(\d+)/)
+        if (durationMatch) {
+          setDuration(parseInt(durationMatch[1], 10))
+        }
         setDiscipline(draft.discipline)
         setPosture(draft.posture)
         setBestTime(draft.bestTime)
         setEnvironment(draft.environment)
         setGuidanceNotes(draft.guidanceNotes)
-        setIntention(draft.intention)
+        setIntention(draft.intention || 'Calm')
         setRecommendedHours(draft.recommendedAfterHours)
         setTags(draft.tags)
         setHasDraft(true)
@@ -63,10 +78,13 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
   }, [])
 
   // Get preview gradient based on intention
-  const previewGradient = INTENTION_TO_GRADIENT[intention] || SESSION_HERO_GRADIENTS[0]
+  const previewGradient = INTENTION_TO_GRADIENT[intention] || INTENTIONS[0].gradient
 
   const isValid = title.trim() && tagline.trim() && guidanceNotes.trim() && intention.trim()
-  const hasContent = title.trim() || tagline.trim() || guidanceNotes.trim() || intention.trim()
+  const hasContent = title.trim() || tagline.trim() || guidanceNotes.trim()
+
+  // Format duration for storage (e.g., "15 mins")
+  const formatDurationGuidance = (mins: number) => `${mins} mins`
 
   // Save current form as draft
   const handleSaveDraft = useCallback(async () => {
@@ -77,7 +95,7 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
       await saveTemplateDraft({
         title,
         tagline,
-        durationGuidance,
+        durationGuidance: formatDurationGuidance(duration),
         discipline,
         posture,
         bestTime,
@@ -88,27 +106,27 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
         tags
       })
       setHasDraft(true)
-      onClose() // Close after saving draft
+      onClose()
     } catch (err) {
       console.error('Save draft error:', err)
       setError('Failed to save draft')
     } finally {
       setIsSavingDraft(false)
     }
-  }, [isSavingDraft, title, tagline, durationGuidance, discipline, posture, bestTime, environment, guidanceNotes, intention, recommendedHours, tags, onClose])
+  }, [isSavingDraft, title, tagline, duration, discipline, posture, bestTime, environment, guidanceNotes, intention, recommendedHours, tags, onClose])
 
   // Discard draft and clear form
   const handleDiscardDraft = useCallback(async () => {
     await deleteTemplateDraft()
     setTitle('')
     setTagline('')
-    setDurationGuidance('15-20 mins')
+    setDuration(15)
     setDiscipline(DISCIPLINES[0])
     setPosture(POSES[0])
     setBestTime('Anytime')
     setEnvironment('')
     setGuidanceNotes('')
-    setIntention('')
+    setIntention('Calm')
     setRecommendedHours(0)
     setTags('')
     setHasDraft(false)
@@ -124,7 +142,7 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
       const template: TemplateInput = {
         title: title.trim(),
         tagline: tagline.trim(),
-        durationGuidance,
+        durationGuidance: formatDurationGuidance(duration),
         discipline,
         posture,
         bestTime,
@@ -138,7 +156,6 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
       const result = await createTemplate(template, user.id, creatorHours)
 
       if (result) {
-        // Clear draft on successful publish
         await deleteTemplateDraft()
         onPublished()
       } else {
@@ -157,7 +174,7 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
     } finally {
       setIsPublishing(false)
     }
-  }, [user, isValid, isPublishing, title, tagline, durationGuidance, discipline, posture, bestTime, environment, guidanceNotes, intention, recommendedHours, tags, creatorHours, onPublished])
+  }, [user, isValid, isPublishing, title, tagline, duration, discipline, posture, bestTime, environment, guidanceNotes, intention, recommendedHours, tags, creatorHours, onPublished])
 
   // Block swipe navigation
   const handleTouchEvent = (e: React.TouchEvent) => {
@@ -199,25 +216,8 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
           </div>
         </div>
 
-        {/* Preview card */}
-        <div className="px-6 py-4">
-          <p className="text-xs text-ink/40 mb-2">Preview</p>
-          <div className="bg-cream-deep rounded-xl overflow-hidden">
-            <div className={`h-20 bg-gradient-to-br ${previewGradient} flex items-center justify-center`}>
-              <p className="font-serif text-lg text-white text-center px-4 drop-shadow-sm">
-                {title || 'Your title here'}
-              </p>
-            </div>
-            <div className="p-3">
-              <p className="text-sm text-ink/60 italic line-clamp-1">
-                "{tagline || 'Your tagline here'}"
-              </p>
-            </div>
-          </div>
-        </div>
-
         {/* Form */}
-        <div className="px-6 pb-32 space-y-6">
+        <div className="px-6 pb-32 pt-6 space-y-6">
           {error && (
             <div className="bg-rose-50 text-rose-600 text-sm px-4 py-3 rounded-xl">
               {error}
@@ -250,65 +250,125 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
             />
           </div>
 
-          {/* Duration & Discipline row */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-ink/40 mb-2">Duration</label>
-              <select
-                value={durationGuidance}
-                onChange={(e) => setDurationGuidance(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-cream-deep text-ink focus:outline-none focus:ring-2 focus:ring-moss/30"
-              >
-                {DURATION_OPTIONS.map(d => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
+          {/* Live Preview Card - only shows when title has content */}
+          {title.trim() && (
+            <div className="animate-fade-in">
+              <p className="text-xs text-ink/40 mb-2">Preview</p>
+              <div className="bg-cream-deep rounded-xl overflow-hidden shadow-sm">
+                <div className={`h-20 bg-gradient-to-br ${previewGradient} flex items-center justify-center`}>
+                  <p className="font-serif text-lg text-white text-center px-4 drop-shadow-sm">
+                    {title}
+                  </p>
+                </div>
+                {tagline.trim() && (
+                  <div className="p-3">
+                    <p className="text-sm text-ink/60 italic line-clamp-1">
+                      "{tagline}"
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
+          )}
+
+          {/* Intention - Visual Color Picker */}
+          <div>
+            <label className="block text-xs text-ink/40 mb-3">Intention * <span className="text-ink/30">(sets card color)</span></label>
+            <div className="grid grid-cols-4 gap-2">
+              {INTENTIONS.map(({ label, gradient }) => (
+                <button
+                  key={label}
+                  onClick={() => setIntention(label)}
+                  className={`
+                    relative rounded-xl overflow-hidden transition-all
+                    ${intention === label
+                      ? 'ring-2 ring-ink/40 ring-offset-2 ring-offset-cream scale-105'
+                      : 'opacity-80 hover:opacity-100'
+                    }
+                  `}
+                >
+                  <div className={`h-12 bg-gradient-to-br ${gradient}`} />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-xs font-medium text-white drop-shadow-sm">
+                      {label}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Duration - Chip Buttons */}
+          <div>
+            <label className="block text-xs text-ink/40 mb-2">Duration</label>
+            <div className="flex flex-wrap gap-2">
+              {DURATION_MINUTES.map((mins) => (
+                <button
+                  key={mins}
+                  onClick={() => setDuration(mins)}
+                  className={`px-4 py-2 rounded-xl text-sm transition-all ${
+                    duration === mins
+                      ? 'bg-ink text-cream'
+                      : 'bg-cream-deep text-ink/70 hover:bg-cream-deep/80'
+                  }`}
+                >
+                  {mins} min
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Discipline & Posture row */}
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-ink/40 mb-2">Discipline</label>
               <select
                 value={discipline}
                 onChange={(e) => setDiscipline(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-cream-deep text-ink focus:outline-none focus:ring-2 focus:ring-moss/30"
+                className="w-full px-4 py-3 rounded-xl bg-cream-deep text-ink focus:outline-none focus:ring-2 focus:ring-moss/30 appearance-none"
               >
                 {DISCIPLINES.map(d => (
                   <option key={d} value={d}>{d}</option>
                 ))}
               </select>
             </div>
-          </div>
-
-          {/* Posture & Best Time row */}
-          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-ink/40 mb-2">Posture</label>
               <select
                 value={posture}
                 onChange={(e) => setPosture(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-cream-deep text-ink focus:outline-none focus:ring-2 focus:ring-moss/30"
+                className="w-full px-4 py-3 rounded-xl bg-cream-deep text-ink focus:outline-none focus:ring-2 focus:ring-moss/30 appearance-none"
               >
                 {POSES.map(p => (
                   <option key={p} value={p}>{p}</option>
                 ))}
               </select>
             </div>
-            <div>
-              <label className="block text-xs text-ink/40 mb-2">Best Time</label>
-              <select
-                value={bestTime}
-                onChange={(e) => setBestTime(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-cream-deep text-ink focus:outline-none focus:ring-2 focus:ring-moss/30"
-              >
-                {BEST_TIMES.map(t => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
+          </div>
+
+          {/* Best Time */}
+          <div>
+            <label className="block text-xs text-ink/40 mb-2">Best Time</label>
+            <div className="flex flex-wrap gap-2">
+              {BEST_TIMES.map((time) => (
+                <button
+                  key={time}
+                  onClick={() => setBestTime(time)}
+                  className={`px-4 py-2 rounded-xl text-sm transition-all ${
+                    bestTime === time
+                      ? 'bg-ink text-cream'
+                      : 'bg-cream-deep text-ink/70 hover:bg-cream-deep/80'
+                  }`}
+                >
+                  {time}
+                </button>
+              ))}
             </div>
           </div>
 
           {/* Environment (optional) */}
           <div>
-            <label className="block text-xs text-ink/40 mb-2">Environment (optional)</label>
+            <label className="block text-xs text-ink/40 mb-2">Environment <span className="text-ink/30">(optional)</span></label>
             <input
               type="text"
               value={environment}
@@ -317,22 +377,6 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
               className="w-full px-4 py-3 rounded-xl bg-cream-deep text-ink placeholder:text-ink/30 focus:outline-none focus:ring-2 focus:ring-moss/30"
               maxLength={100}
             />
-          </div>
-
-          {/* Intention (drives gradient color) */}
-          <div>
-            <label className="block text-xs text-ink/40 mb-2">Intention * <span className="text-ink/30">(drives card color)</span></label>
-            <input
-              type="text"
-              value={intention}
-              onChange={(e) => setIntention(e.target.value)}
-              placeholder="e.g., Presence, Calm, Focus, Clarity"
-              className="w-full px-4 py-3 rounded-xl bg-cream-deep text-ink placeholder:text-ink/30 focus:outline-none focus:ring-2 focus:ring-moss/30"
-              maxLength={50}
-            />
-            <p className="text-xs text-ink/30 mt-1">
-              Try: Presence, Calm, Focus, Clarity, Release, Compassion, Awareness
-            </p>
           </div>
 
           {/* Guidance Notes */}
@@ -350,24 +394,35 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
             </p>
           </div>
 
-          {/* Recommended hours */}
+          {/* Experience Level - Chip Buttons */}
           <div>
-            <label className="block text-xs text-ink/40 mb-2">Recommended after hours</label>
-            <input
-              type="number"
-              value={recommendedHours}
-              onChange={(e) => setRecommendedHours(Math.max(0, parseInt(e.target.value) || 0))}
-              min={0}
-              className="w-24 px-4 py-3 rounded-xl bg-cream-deep text-ink focus:outline-none focus:ring-2 focus:ring-moss/30"
-            />
-            <p className="text-xs text-ink/30 mt-1">
-              0 = suitable for beginners
-            </p>
+            <label className="block text-xs text-ink/40 mb-2">Experience Level</label>
+            <p className="text-xs text-ink/30 mb-3">Who is this meditation best suited for?</p>
+            <div className="grid grid-cols-2 gap-2">
+              {EXPERIENCE_LEVELS.map(({ label, hours, description }) => (
+                <button
+                  key={hours}
+                  onClick={() => setRecommendedHours(hours)}
+                  className={`px-4 py-3 rounded-xl text-left transition-all ${
+                    recommendedHours === hours
+                      ? 'bg-ink text-cream'
+                      : 'bg-cream-deep text-ink/70 hover:bg-cream-deep/80'
+                  }`}
+                >
+                  <span className="block text-sm font-medium">{label}</span>
+                  <span className={`block text-xs mt-0.5 ${
+                    recommendedHours === hours ? 'text-cream/70' : 'text-ink/40'
+                  }`}>
+                    {description}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Tags */}
           <div>
-            <label className="block text-xs text-ink/40 mb-2">Tags (comma-separated)</label>
+            <label className="block text-xs text-ink/40 mb-2">Tags <span className="text-ink/30">(comma-separated)</span></label>
             <input
               type="text"
               value={tags}

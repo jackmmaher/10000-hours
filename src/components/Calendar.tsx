@@ -326,18 +326,25 @@ export function Calendar({ embedded = false, onDateClick, refreshKey }: Calendar
               ))}
             </div>
 
-            {/* Calendar grid - garden of days */}
+            {/* Calendar grid - typographic field of days */}
             <div className="grid grid-cols-7 gap-1.5 mb-8">
               {calendarDays.map((day, index) => {
-                const hasSession = day ? sessionDates.has(day) : false
-                const hasPlan = day ? plannedDates.has(day) : false
+                if (!day) {
+                  return <div key={index} className="aspect-square" />
+                }
+
+                const hasSession = sessionDates.has(day)
+                const hasPlan = plannedDates.has(day)
+                const dayDate = new Date(currentYear, currentMonth, day)
+                const isPast = dayDate < new Date(today.getFullYear(), today.getMonth(), today.getDate())
+                const isFuture = dayDate > new Date(today.getFullYear(), today.getMonth(), today.getDate())
+                const isTodayDate = isToday(day)
+                const isSelectedDate = isSelected(day)
 
                 const handleDayClick = () => {
-                  if (!day) return
                   const clickedDate = new Date(currentYear, currentMonth, day)
                   clickedDate.setHours(0, 0, 0, 0)
 
-                  // When embedded with onDateClick, skip internal state (MeditationPlanner handles it)
                   if (embedded && onDateClick) {
                     onDateClick(clickedDate)
                   } else {
@@ -348,43 +355,92 @@ export function Calendar({ embedded = false, onDateClick, refreshKey }: Calendar
                   }
                 }
 
-                return (
-                  <div key={index} className="aspect-square">
-                    {day && (
+                // Typographic visual language - the number IS the interface
+                // Selected state overrides all
+                if (isSelectedDate) {
+                  return (
+                    <div key={index} className="aspect-square">
+                      <button
+                        onClick={handleDayClick}
+                        className="w-full h-full flex items-center justify-center rounded-lg bg-ink transition-all active:scale-[0.95]"
+                      >
+                        <span className="text-sm font-medium text-cream">{day}</span>
+                      </button>
+                    </div>
+                  )
+                }
+
+                // Today - the threshold moment
+                if (isTodayDate) {
+                  return (
+                    <div key={index} className="aspect-square">
                       <button
                         onClick={handleDayClick}
                         className={`
-                          w-full h-full flex flex-col items-center justify-center rounded-lg
-                          transition-all relative active:scale-[0.95]
-                          ${isSelected(day)
-                            ? 'bg-ink text-cream shadow-sm'
-                            : isToday(day)
-                              ? 'ring-1 ring-ink/30 text-ink'
-                              : hasPlan && !hasSession
-                                ? 'ring-1 ring-indigo-deep/40 text-ink/70'
-                                : 'text-ink/60 hover:bg-cream-deep'
+                          w-full h-full flex items-center justify-center rounded-lg transition-all active:scale-[0.95]
+                          ${hasSession || hasPlan
+                            ? 'bg-[#F5EDE4]' // Warm touched paper - path continues
+                            : 'bg-[#FAF6F1]' // Softer warm - open invitation
                           }
                         `}
-                        style={{
-                          backgroundColor: hasSession && !isSelected(day) && !isToday(day)
-                            ? 'rgba(135, 168, 120, 0.08)'
-                            : undefined
-                        }}
                       >
-                        <span className="text-sm">{day}</span>
-                        {/* Completed session indicator - moss dot */}
-                        {hasSession && !isSelected(day) && (
-                          <span className="absolute bottom-1.5 w-1 h-1 rounded-full bg-moss/60" />
-                        )}
-                        {hasSession && isSelected(day) && (
-                          <span className="absolute bottom-1.5 w-1 h-1 rounded-full bg-cream/80" />
-                        )}
-                        {/* Planned but not completed - indigo dot */}
-                        {hasPlan && !hasSession && !isSelected(day) && (
-                          <span className="absolute bottom-1.5 w-1 h-1 rounded-full bg-indigo-deep/50" />
-                        )}
+                        <span className="text-sm font-medium text-ink">{day}</span>
                       </button>
-                    )}
+                    </div>
+                  )
+                }
+
+                // Past with session - settled, present, weight
+                if (isPast && hasSession) {
+                  return (
+                    <div key={index} className="aspect-square">
+                      <button
+                        onClick={handleDayClick}
+                        className="w-full h-full flex items-center justify-center rounded-lg bg-[#F7F2EC] hover:bg-[#F2EBE3] transition-all active:scale-[0.95]"
+                      >
+                        <span className="text-sm font-medium text-ink/90">{day}</span>
+                      </button>
+                    </div>
+                  )
+                }
+
+                // Past without session - receded, light, unburdened
+                if (isPast && !hasSession) {
+                  return (
+                    <div key={index} className="aspect-square">
+                      <button
+                        onClick={handleDayClick}
+                        className="w-full h-full flex items-center justify-center rounded-lg hover:bg-cream-deep/50 transition-all active:scale-[0.95]"
+                      >
+                        <span className="text-sm text-ink/25">{day}</span>
+                      </button>
+                    </div>
+                  )
+                }
+
+                // Future with plan - warm anticipation, treasure ahead
+                if (isFuture && hasPlan) {
+                  return (
+                    <div key={index} className="aspect-square">
+                      <button
+                        onClick={handleDayClick}
+                        className="w-full h-full flex items-center justify-center rounded-lg hover:bg-[#FDF8F3] transition-all active:scale-[0.95]"
+                      >
+                        <span className="text-sm font-medium text-[#B8956C]">{day}</span>
+                      </button>
+                    </div>
+                  )
+                }
+
+                // Future without plan - possibility, air, lightness
+                return (
+                  <div key={index} className="aspect-square">
+                    <button
+                      onClick={handleDayClick}
+                      className="w-full h-full flex items-center justify-center rounded-lg hover:bg-cream-deep/50 transition-all active:scale-[0.95]"
+                    >
+                      <span className="text-sm text-ink/40">{day}</span>
+                    </button>
                   </div>
                 )
               })}
