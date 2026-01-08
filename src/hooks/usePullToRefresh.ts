@@ -27,6 +27,7 @@ export function usePullToRefresh({
   const currentYRef = useRef<number>(0)
   const isAtTopRef = useRef<boolean>(false)
   const canPullRef = useRef<boolean>(false)
+  const pullDistanceRef = useRef<number>(0)
 
   const onTouchStart = useCallback((e: TouchEvent) => {
     if (state.isRefreshing) return
@@ -61,8 +62,10 @@ export function usePullToRefresh({
     if (deltaY > 0) {
       // Apply resistance to make it feel natural
       const pullDistance = deltaY / resistance
+      pullDistanceRef.current = pullDistance
       setState(s => ({ ...s, isPulling: true, pullDistance }))
     } else {
+      pullDistanceRef.current = 0
       setState(s => ({ ...s, isPulling: false, pullDistance: 0 }))
     }
   }, [state.isRefreshing, resistance])
@@ -70,7 +73,8 @@ export function usePullToRefresh({
   const onTouchEnd = useCallback(async () => {
     if (state.isRefreshing) return
 
-    const { pullDistance } = state
+    // Read from ref to get current value (avoids stale closure)
+    const pullDistance = pullDistanceRef.current
 
     if (pullDistance >= threshold) {
       // Trigger refresh
@@ -79,15 +83,17 @@ export function usePullToRefresh({
       try {
         await onRefresh()
       } finally {
+        pullDistanceRef.current = 0
         setState({ isPulling: false, isRefreshing: false, pullDistance: 0 })
       }
     } else {
       // Reset without refresh
+      pullDistanceRef.current = 0
       setState({ isPulling: false, isRefreshing: false, pullDistance: 0 })
     }
 
     canPullRef.current = false
-  }, [state, threshold, onRefresh])
+  }, [state.isRefreshing, threshold, onRefresh])
 
   return {
     ...state,

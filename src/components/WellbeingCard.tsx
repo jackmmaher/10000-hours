@@ -59,6 +59,9 @@ export function WellbeingCard({
   const [swipingId, setSwipingId] = useState<string | null>(null)
   const [swipeOffset, setSwipeOffset] = useState(0)
   const touchStartX = useRef(0)
+  const touchStartY = useRef(0)
+  const swipeActivated = useRef(false) // Only true after threshold crossed
+  const swipeLocked = useRef(false) // Locks swipe when direction determined
 
   // Load progress data for a dimension
   const loadProgress = async (dimensionId: string): Promise<DimensionProgress | null> => {
@@ -127,27 +130,65 @@ export function WellbeingCard({
     onRefresh()
   }
 
-  // Swipe handlers
+  // Swipe handlers with proper gesture detection
+  const SWIPE_THRESHOLD = 10 // Minimum horizontal movement to start swipe
+
   const handleTouchStart = (e: TouchEvent, id: string) => {
     touchStartX.current = e.touches[0].clientX
+    touchStartY.current = e.touches[0].clientY
+    swipeActivated.current = false
+    swipeLocked.current = false
     setSwipingId(id)
   }
 
   const handleTouchMove = (e: TouchEvent) => {
-    if (!swipingId) return
-    const diff = touchStartX.current - e.touches[0].clientX
+    if (!swipingId || swipeLocked.current) return
+
+    const currentX = e.touches[0].clientX
+    const currentY = e.touches[0].clientY
+    const diffX = touchStartX.current - currentX
+    const diffY = Math.abs(currentY - touchStartY.current)
+
+    // If not yet activated, check if we should activate or lock out
+    if (!swipeActivated.current) {
+      // If vertical movement exceeds horizontal, this is a scroll - lock out swipe
+      if (diffY > Math.abs(diffX) && diffY > 5) {
+        swipeLocked.current = true
+        setSwipingId(null)
+        return
+      }
+
+      // Only activate swipe after crossing threshold with horizontal intent
+      if (Math.abs(diffX) < SWIPE_THRESHOLD) {
+        return
+      }
+
+      swipeActivated.current = true
+    }
+
     // Only allow left swipe, max 80px
-    setSwipeOffset(Math.min(Math.max(0, diff), 80))
+    setSwipeOffset(Math.min(Math.max(0, diffX), 80))
   }
 
   const handleTouchEnd = () => {
-    if (swipeOffset > 60) {
+    // Only process if swipe was actually activated
+    if (swipeActivated.current && swipeOffset > 60) {
       // Keep showing delete button
       setSwipeOffset(80)
     } else {
       setSwipeOffset(0)
       setSwipingId(null)
     }
+    swipeActivated.current = false
+    swipeLocked.current = false
+  }
+
+  // Reset swipe state when opening another item
+  const resetSwipeState = () => {
+    setSwipeOffset(0)
+    setSwipingId(null)
+    swipeActivated.current = false
+    swipeLocked.current = false
   }
 
   // Get available dimensions (not yet added)
@@ -157,6 +198,9 @@ export function WellbeingCard({
 
   // Expand an item for editing
   const handleExpandEdit = async (dim: WellbeingDimension) => {
+    // Reset any swipe state first
+    resetSwipeState()
+
     const checkIn = latestCheckIns.get(dim.id)
     setSliderValue(checkIn?.score || 5)
     setExpandedEdit(dim.id)
@@ -324,13 +368,15 @@ export function WellbeingCard({
                     </button>
                   </div>
 
-                  {/* Main content */}
+                  {/* Main content - swipe handlers only when collapsed */}
                   <div
                     className="relative bg-cream rounded-xl transition-transform"
-                    style={{ transform: `translateX(-${isSwiping ? swipeOffset : 0}px)` }}
-                    onTouchStart={e => handleTouchStart(e, dim.id)}
-                    onTouchMove={handleTouchMove}
-                    onTouchEnd={handleTouchEnd}
+                    style={{ transform: `translateX(-${isSwiping && !isExpanded ? swipeOffset : 0}px)` }}
+                    {...(!isExpanded ? {
+                      onTouchStart: (e: TouchEvent<HTMLDivElement>) => handleTouchStart(e, dim.id),
+                      onTouchMove: handleTouchMove,
+                      onTouchEnd: handleTouchEnd
+                    } : {})}
                   >
                     {isExpanded ? (
                       /* Expanded edit view */
