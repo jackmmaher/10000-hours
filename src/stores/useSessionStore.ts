@@ -3,14 +3,15 @@ import { Session, Achievement, addSession, getAllSessions, initAppState, markEnl
 import { GOAL_SECONDS } from '../lib/constants'
 import { MILESTONES } from '../lib/tierLogic'
 
-// New navigation structure: Timer | Journey | Explore | Progress | Settings
+// New navigation structure: Timer | Journey | Explore | Progress | Profile
 // Legacy views maintained for backwards compatibility during transition
 type AppView =
   | 'timer'
   | 'journey'           // New: Personal space - plans, sessions, insights
   | 'explore'           // New: Community discovery - pearls + sessions + courses
   | 'progress'          // New: Milestones, stats, insight-driven history
-  | 'settings'
+  | 'profile'           // New: User identity, preferences, wellbeing tracking
+  | 'settings'          // Sub-page: Theme, display options, legal
   // Legacy views (mapped to new structure)
   | 'stats'             // -> progress
   | 'calendar'          // -> progress

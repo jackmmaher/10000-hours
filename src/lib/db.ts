@@ -115,6 +115,47 @@ export interface TemplateDraft {
   updatedAt: number
 }
 
+// User profile preferences for meditation
+export interface UserPreferences {
+  id: 1
+  displayName?: string
+  avatarUrl?: string               // URL or base64 data URI
+  preferredPosture?: string        // 'seated-cushion' | 'seated-chair' | 'lying' | 'walking' | 'varies'
+  preferredDiscipline?: string     // 'open' | 'breath' | 'vipassana' | 'zen' | 'loving-kindness' | 'body-scan' | 'varies'
+  preferredDuration?: string       // '5-10' | '15-20' | '30+' | 'varies'
+  preferredTime?: string           // 'morning' | 'afternoon' | 'evening' | 'varies'
+  updatedAt: number
+}
+
+// Wellbeing dimension being tracked
+export interface WellbeingDimension {
+  id: string                       // UUID
+  name: string                     // 'anxiety' | 'stress' | 'low-mood' | custom
+  label: string                    // Display label (e.g., "Anxiety", "Work Stress")
+  description?: string             // Optional description
+  isCustom: boolean                // True if user-defined
+  createdAt: number
+  archivedAt?: number              // Soft delete - when user stops tracking
+}
+
+// A single check-in entry for a dimension
+export interface WellbeingCheckIn {
+  id: string                       // UUID
+  dimensionId: string              // References WellbeingDimension
+  score: number                    // 1-10 scale
+  note?: string                    // Optional journal note
+  createdAt: number
+}
+
+// Wellbeing tracking settings
+export interface WellbeingSettings {
+  id: 1
+  checkInFrequencyDays: number     // 7-30, how often to prompt
+  lastCheckInPrompt?: number       // Timestamp of last prompt
+  nextCheckInDue?: number          // When next check-in is due
+  isEnabled: boolean               // Master toggle for wellbeing tracking
+}
+
 class MeditationDB extends Dexie {
   sessions!: Table<Session>
   appState!: Table<AppState>
@@ -126,6 +167,10 @@ class MeditationDB extends Dexie {
   savedTemplates!: Table<SavedTemplate>
   pearlDrafts!: Table<PearlDraft>
   templateDrafts!: Table<TemplateDraft>
+  userPreferences!: Table<UserPreferences>
+  wellbeingDimensions!: Table<WellbeingDimension>
+  wellbeingCheckIns!: Table<WellbeingCheckIn>
+  wellbeingSettings!: Table<WellbeingSettings>
 
   constructor() {
     super('10000hours')
@@ -253,6 +298,24 @@ class MeditationDB extends Dexie {
       savedTemplates: 'id, templateId, savedAt',
       pearlDrafts: 'id, insightId, updatedAt',
       templateDrafts: 'id, updatedAt'
+    })
+
+    // v10: Add user preferences, wellbeing tracking tables
+    this.version(10).stores({
+      sessions: '++id, uuid, startTime, endTime',
+      appState: 'id',
+      profile: 'id',
+      settings: 'id',
+      insights: 'id, sessionId, createdAt, sharedPearlId',
+      plannedSessions: '++id, date, createdAt, linkedSessionUuid, courseId',
+      courseProgress: 'id, courseId, status',
+      savedTemplates: 'id, templateId, savedAt',
+      pearlDrafts: 'id, insightId, updatedAt',
+      templateDrafts: 'id, updatedAt',
+      userPreferences: 'id',
+      wellbeingDimensions: 'id, name, createdAt',
+      wellbeingCheckIns: 'id, dimensionId, createdAt',
+      wellbeingSettings: 'id'
     })
   }
 }
@@ -758,4 +821,150 @@ export async function deleteTemplateDraft(): Promise<void> {
 export async function hasTemplateDraft(): Promise<boolean> {
   const draft = await db.templateDrafts.get('current')
   return !!draft
+}
+
+// User Preferences helpers
+export async function getUserPreferences(): Promise<UserPreferences> {
+  let prefs = await db.userPreferences.get(1)
+  if (!prefs) {
+    prefs = {
+      id: 1,
+      updatedAt: Date.now()
+    }
+    await db.userPreferences.put(prefs)
+  }
+  return prefs
+}
+
+export async function updateUserPreferences(
+  updates: Partial<Omit<UserPreferences, 'id'>>
+): Promise<void> {
+  await db.userPreferences.update(1, { ...updates, updatedAt: Date.now() })
+}
+
+// Wellbeing Settings helpers
+export async function getWellbeingSettings(): Promise<WellbeingSettings> {
+  let settings = await db.wellbeingSettings.get(1)
+  if (!settings) {
+    settings = {
+      id: 1,
+      checkInFrequencyDays: 14,
+      isEnabled: false
+    }
+    await db.wellbeingSettings.put(settings)
+  }
+  return settings
+}
+
+export async function updateWellbeingSettings(
+  updates: Partial<Omit<WellbeingSettings, 'id'>>
+): Promise<void> {
+  await db.wellbeingSettings.update(1, updates)
+}
+
+// Wellbeing Dimension helpers
+export async function addWellbeingDimension(
+  data: { name: string; label: string; description?: string; isCustom: boolean }
+): Promise<WellbeingDimension> {
+  const dimension: WellbeingDimension = {
+    id: crypto.randomUUID(),
+    ...data,
+    createdAt: Date.now()
+  }
+  await db.wellbeingDimensions.add(dimension)
+  return dimension
+}
+
+export async function getWellbeingDimensions(): Promise<WellbeingDimension[]> {
+  return db.wellbeingDimensions
+    .filter(d => !d.archivedAt)
+    .toArray()
+}
+
+export async function getAllWellbeingDimensions(): Promise<WellbeingDimension[]> {
+  return db.wellbeingDimensions.orderBy('createdAt').toArray()
+}
+
+export async function archiveWellbeingDimension(id: string): Promise<void> {
+  await db.wellbeingDimensions.update(id, { archivedAt: Date.now() })
+}
+
+export async function restoreWellbeingDimension(id: string): Promise<void> {
+  await db.wellbeingDimensions.update(id, { archivedAt: undefined })
+}
+
+// Wellbeing Check-in helpers
+export async function addWellbeingCheckIn(
+  data: { dimensionId: string; score: number; note?: string }
+): Promise<WellbeingCheckIn> {
+  const checkIn: WellbeingCheckIn = {
+    id: crypto.randomUUID(),
+    ...data,
+    createdAt: Date.now()
+  }
+  await db.wellbeingCheckIns.add(checkIn)
+  return checkIn
+}
+
+export async function getCheckInsForDimension(dimensionId: string): Promise<WellbeingCheckIn[]> {
+  return db.wellbeingCheckIns
+    .where('dimensionId')
+    .equals(dimensionId)
+    .reverse()
+    .sortBy('createdAt')
+}
+
+export async function getLatestCheckIns(): Promise<Map<string, WellbeingCheckIn>> {
+  const dimensions = await getWellbeingDimensions()
+  const latestMap = new Map<string, WellbeingCheckIn>()
+
+  for (const dim of dimensions) {
+    const latest = await db.wellbeingCheckIns
+      .where('dimensionId')
+      .equals(dim.id)
+      .reverse()
+      .sortBy('createdAt')
+    if (latest.length > 0) {
+      latestMap.set(dim.id, latest[0])
+    }
+  }
+
+  return latestMap
+}
+
+export async function getAllCheckIns(): Promise<WellbeingCheckIn[]> {
+  return db.wellbeingCheckIns.orderBy('createdAt').reverse().toArray()
+}
+
+export async function getCheckInHistory(
+  dimensionId: string,
+  limit?: number
+): Promise<WellbeingCheckIn[]> {
+  let query = db.wellbeingCheckIns
+    .where('dimensionId')
+    .equals(dimensionId)
+    .reverse()
+
+  const results = await query.sortBy('createdAt')
+  return limit ? results.slice(0, limit) : results
+}
+
+// Calculate improvement percentage between first and latest check-in
+export async function getImprovementForDimension(
+  dimensionId: string
+): Promise<{ first: number; latest: number; percentChange: number } | null> {
+  const checkIns = await getCheckInsForDimension(dimensionId)
+  if (checkIns.length < 2) return null
+
+  const latest = checkIns[0]
+  const first = checkIns[checkIns.length - 1]
+
+  // Lower score is better (1-10 scale where 10 is worst)
+  const percentChange = ((first.score - latest.score) / first.score) * 100
+
+  return {
+    first: first.score,
+    latest: latest.score,
+    percentChange: Math.round(percentChange)
+  }
 }

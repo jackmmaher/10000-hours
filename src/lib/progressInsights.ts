@@ -586,6 +586,49 @@ export function getSuggestedActions(
     }
   }
 
+  // Add fallback suggestions if we don't have enough
+  if (suggestions.length < 2 && sessions.length >= 3) {
+    // Encourage exploring community content
+    if (savedTemplates.length === 0) {
+      suggestions.push({
+        id: 'explore-templates',
+        type: 'template',
+        message: 'Discover guided meditations',
+        detail: 'Community-created sessions to try',
+        actionLabel: 'Explore',
+        actionView: 'explore',
+        priority: 7
+      })
+    }
+
+    // Encourage recording insights
+    if (insights.length < 3 && sessions.length >= 5) {
+      suggestions.push({
+        id: 'record-insights',
+        type: 'insight',
+        message: 'Capture post-session insights',
+        detail: 'Voice notes after meditation preserve realizations',
+        actionLabel: 'Learn more',
+        actionView: 'journey',
+        priority: 8
+      })
+    }
+
+    // Celebrate consistency if they have regular practice
+    const uniqueDays = new Set(
+      sessions.map(s => new Date(s.startTime).toDateString())
+    ).size
+    if (uniqueDays >= 5 && suggestions.length < 2) {
+      suggestions.push({
+        id: 'consistency-note',
+        type: 'day',
+        message: `${uniqueDays} days of practice`,
+        detail: 'Building a sustainable rhythm',
+        priority: 9
+      })
+    }
+  }
+
   // Sort by priority and limit to top 4
   return suggestions.sort((a, b) => a.priority - b.priority).slice(0, 4)
 }

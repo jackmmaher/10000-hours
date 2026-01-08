@@ -7,6 +7,7 @@ import { Timer } from './components/Timer'
 import { Stats } from './components/Stats'
 import { Calendar } from './components/Calendar'
 import { Settings } from './components/Settings'
+import { Profile } from './components/Profile'
 import { Insights } from './components/Insights'
 import { PearlsFeed } from './components/PearlsFeed'
 import { SavedPearls } from './components/SavedPearls'
@@ -24,7 +25,7 @@ import { purchasePremium, restorePurchases } from './lib/purchases'
 type PaywallSource = 'settings' | 'stats' | 'calendar'
 
 function AppContent() {
-  const { view, isLoading, hydrate } = useSessionStore()
+  const { view, setView, isLoading, hydrate } = useSessionStore()
   const premiumStore = usePremiumStore()
   const settingsStore = useSettingsStore()
   const authStore = useAuthStore()
@@ -121,8 +122,14 @@ function AppContent() {
       {view === 'pearls' && <PearlsFeed />}
       {view === 'explore' && <Explore />}
       {view === 'saved-pearls' && <SavedPearls />}
+      {view === 'profile' && (
+        <Profile
+          onNavigateToSettings={() => setView('settings')}
+        />
+      )}
       {view === 'settings' && (
         <Settings
+          onBack={() => setView('profile')}
           onShowPaywall={() => handleShowPaywall('settings')}
           onRestorePurchase={handleRestore}
         />

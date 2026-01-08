@@ -5,26 +5,64 @@
  * Human-readable, not a "college presentation" chart.
  *
  * Design: Show progress simply, celebrate deepening practice
+ * Graceful degradation: Show single month with helpful context
  */
 
 import { GrowthTrajectory } from '../lib/progressInsights'
 
 interface GrowthBarsProps {
   trajectory: GrowthTrajectory
+  totalSessions: number
 }
 
-export function GrowthBars({ trajectory }: GrowthBarsProps) {
+export function GrowthBars({ trajectory, totalSessions }: GrowthBarsProps) {
   const { months, trend, changePercent } = trajectory
 
-  // Need at least 2 months to show trajectory
-  if (months.length < 2) {
+  // Need at least 5 sessions to show anything meaningful
+  if (totalSessions < 5) {
     return null
   }
 
-  // Find max for scaling bars
+  // Single month case - show with context
+  if (months.length === 1) {
+    const month = months[0]
+    return (
+      <div className="mb-10">
+        <p className="font-serif text-sm text-ink/50 tracking-wide mb-5">
+          Session Length
+        </p>
+
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-ink/40 w-8 text-right tabular-nums">
+            {month.label}
+          </span>
+          <div className="flex-1 h-4 bg-cream-deep rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-bark to-moss"
+              style={{ width: '75%' }}
+            />
+          </div>
+          <span className="text-xs text-ink font-medium tabular-nums w-12 text-right">
+            {month.avgMinutes} min
+          </span>
+        </div>
+
+        <p className="text-xs text-ink/30 mt-4">
+          {month.sessionCount} session{month.sessionCount !== 1 ? 's' : ''} this month.
+          Growth trends appear with more history.
+        </p>
+      </div>
+    )
+  }
+
+  // No months at all (shouldn't happen with 5+ sessions, but safety)
+  if (months.length === 0) {
+    return null
+  }
+
+  // Multi-month case - show comparison
   const maxMinutes = Math.max(...months.map(m => m.avgMinutes), 1)
 
-  // Header text based on trend
   const headerText = trend === 'deepening'
     ? 'Sessions Are Deepening'
     : trend === 'shortening'
@@ -51,12 +89,9 @@ export function GrowthBars({ trajectory }: GrowthBarsProps) {
 
           return (
             <div key={month.label} className="flex items-center gap-3">
-              {/* Month label */}
               <span className="text-xs text-ink/40 w-8 text-right tabular-nums">
                 {month.label}
               </span>
-
-              {/* Bar */}
               <div className="flex-1 h-4 bg-cream-deep rounded-full overflow-hidden">
                 <div
                   className={`
@@ -69,8 +104,6 @@ export function GrowthBars({ trajectory }: GrowthBarsProps) {
                   style={{ width: `${Math.max(widthPercent, 8)}%` }}
                 />
               </div>
-
-              {/* Value */}
               <span className={`
                 text-xs tabular-nums w-12 text-right
                 ${isNewest ? 'text-ink font-medium' : 'text-ink/40'}
@@ -82,7 +115,6 @@ export function GrowthBars({ trajectory }: GrowthBarsProps) {
         })}
       </div>
 
-      {/* Summary insight */}
       {trend === 'deepening' && (
         <p className="text-xs text-ink/40 mt-4">
           Your average session has grown from {trajectory.oldestAvg} to {trajectory.newestAvg} minutes.

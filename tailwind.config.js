@@ -7,21 +7,21 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Ghibli-inspired warm palette (refined for elegance)
-        cream: '#FAF8F3',
-        'cream-warm': '#F7F3EA',    // Slightly warmer
-        'cream-deep': '#EBE6D9',    // Deeper for contrast
+        // Dynamic theme colors (reference CSS variables for theming)
+        cream: 'var(--bg-base, #FAF8F3)',
+        'cream-warm': 'var(--bg-warm, #F7F3EA)',
+        'cream-deep': 'var(--bg-deep, #EBE6D9)',
         // Legacy alias for backward compatibility
-        'cream-dark': '#F7F3EA',
-        // Ink tones - refined with subtle blue undertone
-        ink: '#2C3E50',             // Slightly bluer, more elegant
-        'ink-soft': '#5D6D7E',      // Softer, less harsh
-        // Accent colors - more vibrant/warm
-        moss: '#87A878',            // Slightly more vibrant green
-        bark: '#A08060',            // Warmer, more golden brown
+        'cream-dark': 'var(--bg-warm, #F7F3EA)',
+        // Ink tones - dynamic text colors
+        ink: 'var(--text-primary, #2C3E50)',
+        'ink-soft': 'var(--text-secondary, #5D6D7E)',
+        // Accent colors - seasonal
+        moss: 'var(--accent, #87A878)',
+        bark: 'var(--accent-warm, #A08060)',
         // Legacy alias
         indigo: {
-          deep: '#2C3E50',
+          deep: 'var(--text-primary, #2C3E50)',
         }
       },
       fontFamily: {
