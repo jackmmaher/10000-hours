@@ -7,6 +7,7 @@
  */
 
 import { useSessionStore } from '../stores/useSessionStore'
+import { useTapFeedback } from '../hooks/useTapFeedback'
 
 type NavItem = {
   view: 'timer' | 'journey' | 'explore' | 'progress' | 'profile'
@@ -65,6 +66,7 @@ const navItems: NavItem[] = [
 
 export function Navigation() {
   const { view, timerPhase, setView } = useSessionStore()
+  const haptic = useTapFeedback()
 
   // Hide during active meditation phases
   const isTimerActive = timerPhase === 'preparing' || timerPhase === 'running' || timerPhase === 'capture' || timerPhase === 'enlightenment'
@@ -91,7 +93,10 @@ export function Navigation() {
           return (
             <button
               key={item.view}
-              onClick={() => setView(item.view)}
+              onClick={() => {
+                haptic.light()
+                setView(item.view)
+              }}
               aria-label={`Navigate to ${item.label}`}
               aria-current={isActive ? 'page' : undefined}
               className="flex flex-col items-center justify-center flex-1 py-2 transition-colors active:scale-95"

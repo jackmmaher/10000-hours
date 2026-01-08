@@ -19,6 +19,7 @@ import { PaywallPremium } from './components/PaywallPremium'
 import { MilestoneCelebration } from './components/MilestoneCelebration'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { LivingTheme } from './components/LivingTheme'
+import { PWAInstallPrompt } from './components/PWAInstallPrompt'
 import { purchasePremium, restorePurchases } from './lib/purchases'
 
 type PaywallSource = 'settings' | 'progress' | 'calendar'
@@ -147,6 +148,8 @@ function AppContent() {
         {/* Bottom navigation */}
         <Navigation />
 
+        {/* PWA install prompt for iOS Safari */}
+        <PWAInstallPrompt />
       </div>
     </LivingTheme>
   )

@@ -341,6 +341,98 @@ select:focus-visible,
 }
 
 /* ========================================
+ * FORM VALIDATION: Error States
+ * Consistent error styling for form inputs
+ * ======================================== */
+
+/* Error state for inputs */
+.input-error,
+input.input-error,
+textarea.input-error,
+select.input-error {
+  border-color: #EF4444 !important;
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+.input-error:focus {
+  outline-color: #EF4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+/* Error message styling */
+.error-message {
+  color: #DC2626;
+  font-size: 0.75rem;
+  margin-top: 0.375rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.error-message::before {
+  content: '';
+  width: 0.875rem;
+  height: 0.875rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23DC2626'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'/%3E%3C/svg%3E");
+  background-size: contain;
+  flex-shrink: 0;
+}
+
+/* Warning state (for approaching limits) */
+.input-warning,
+input.input-warning,
+textarea.input-warning {
+  border-color: #F59E0B !important;
+}
+
+.warning-message {
+  color: #D97706;
+  font-size: 0.75rem;
+  margin-top: 0.375rem;
+}
+
+/* Success state */
+.input-success,
+input.input-success,
+textarea.input-success {
+  border-color: #10B981 !important;
+}
+
+/* Character counter near limit */
+.char-count-warning {
+  color: #D97706;
+}
+
+.char-count-error {
+  color: #DC2626;
+}
+
+/* ========================================
+ * LOADING: Skeleton Animation
+ * Smooth shimmer effect for loading states
+ * ======================================== */
+
+@keyframes skeletonWave {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-wave {
+  background: linear-gradient(
+    90deg,
+    var(--bg-deep) 25%,
+    var(--bg-elevated) 50%,
+    var(--bg-deep) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonWave 1.5s ease-in-out infinite;
+}
+
+/* ========================================
  * ACCESSIBILITY: Reduced Motion
  * Respect user's motion preferences
  * ======================================== */

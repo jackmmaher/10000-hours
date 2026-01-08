@@ -238,14 +238,14 @@ export function PearlsFeed() {
         </button>
 
         {/* Header */}
-        <div className="mb-6">
-          <p className="font-serif text-2xl text-indigo-deep">
+        <header className="mb-6">
+          <h1 className="font-serif text-2xl text-indigo-deep">
             Pearls of Wisdom
-          </p>
+          </h1>
           <p className="text-sm text-ink/40 mt-1">
             Insights shared by meditators
           </p>
-        </div>
+        </header>
 
         {/* Filter tabs */}
         <div className="flex gap-1 mb-6 bg-cream-dark/50 rounded-lg p-1">

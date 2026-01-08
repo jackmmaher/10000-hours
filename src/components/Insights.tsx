@@ -179,9 +179,9 @@ export function Insights() {
         </button>
 
         {/* Header */}
-        <p className="font-serif text-2xl text-indigo-deep mb-6">
+        <h1 className="font-serif text-2xl text-indigo-deep mb-6">
           Insights
-        </p>
+        </h1>
 
         {/* Tabs */}
         <div className="flex gap-1 p-1 bg-cream-dark/40 rounded-lg mb-6">

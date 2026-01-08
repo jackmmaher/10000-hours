@@ -110,14 +110,14 @@ export function SavedPearls() {
         </button>
 
         {/* Header */}
-        <div className="mb-8">
-          <p className="font-serif text-2xl text-indigo-deep">
+        <header className="mb-8">
+          <h1 className="font-serif text-2xl text-indigo-deep">
             Saved Pearls
-          </p>
+          </h1>
           <p className="text-sm text-ink/40 mt-1">
             {pearls.length} saved
           </p>
-        </div>
+        </header>
 
         {/* Loading */}
         {isLoading && (

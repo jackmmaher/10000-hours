@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useTapFeedback } from '../hooks/useTapFeedback'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSwipe } from '../hooks/useSwipe'
@@ -293,14 +294,14 @@ export function Explore() {
         </button>
 
         {/* Header */}
-        <div className="mb-6">
-          <p className="font-serif text-2xl text-indigo-deep">
+        <header className="mb-6">
+          <h1 className="font-serif text-2xl text-indigo-deep">
             Explore
-          </p>
+          </h1>
           <p className="text-sm text-ink/40 mt-1">
             Wisdom and meditations from the community
           </p>
-        </div>
+        </header>
 
         {/* Filter bar */}
         <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
@@ -461,6 +462,7 @@ function PearlCardExplore({
   const [localSaved, setLocalSaved] = useState(pearl.hasSaved || false)
   const [localUpvotes, setLocalUpvotes] = useState(pearl.upvotes)
   const [localSaves, setLocalSaves] = useState(pearl.saves || 0)
+  const haptic = useTapFeedback()
 
   // Calculate feed Voice score from karma and saves only
   // Pearls don't have creator hours - their credibility comes from community validation
@@ -473,6 +475,7 @@ function PearlCardExplore({
     }
     if (isVoting) return
 
+    haptic.light()
     setIsVoting(true)
     const newVoted = !localVoted
     setLocalVoted(newVoted)
@@ -495,6 +498,7 @@ function PearlCardExplore({
     }
     if (isSaving) return
 
+    haptic.light()
     setIsSaving(true)
     const newSaved = !localSaved
     setLocalSaved(newSaved)

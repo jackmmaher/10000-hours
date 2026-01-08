@@ -392,9 +392,9 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
         <div className="px-6 pb-4 border-b border-ink/5">
           <div className="flex items-start justify-between">
             <div>
-              <p className="font-serif text-xl text-indigo-deep">
+              <h2 className="font-serif text-xl text-indigo-deep">
                 {isSessionMode ? 'Session Details' : (planTitle || 'Plan Meditation')}
-              </p>
+              </h2>
               {isSessionMode && (
                 <p className="text-sm text-ink/50 mt-1">
                   {formatDateForDisplay(date)}

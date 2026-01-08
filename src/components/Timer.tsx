@@ -3,6 +3,7 @@ import { useSessionStore } from '../stores/useSessionStore'
 import { useSettingsStore } from '../stores/useSettingsStore'
 import { useTimer, useWakeLock } from '../hooks/useTimer'
 import { useSwipe } from '../hooks/useSwipe'
+import { useTapFeedback } from '../hooks/useTapFeedback'
 import { formatTimer, formatTotalHours, formatSessionAdded } from '../lib/format'
 import { ZenMessage } from './ZenMessage'
 import { InsightCapture } from './InsightCapture'
@@ -26,6 +27,7 @@ export function Timer() {
   } = useSessionStore()
 
   const { hideTimeDisplay } = useSettingsStore()
+  const haptic = useTapFeedback()
 
   const { elapsed, isRunning } = useTimer()
 
@@ -38,12 +40,14 @@ export function Timer() {
   // Handle tap on main area
   const handleTap = useCallback(() => {
     if (timerPhase === 'idle') {
+      haptic.medium() // Session start - noticeable feedback
       startPreparing()
     } else if (timerPhase === 'running') {
+      haptic.success() // Session complete - celebratory pattern
       stopTimer()
     }
     // Don't handle tap during 'complete' - let it transition to capture
-  }, [timerPhase, startPreparing, stopTimer])
+  }, [timerPhase, startPreparing, stopTimer, haptic])
 
   // After session complete, transition to insight capture
   useEffect(() => {
