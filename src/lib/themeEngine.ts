@@ -106,6 +106,20 @@ export interface ThemeTokens {
   navInactive: string      // Inactive nav item
   pullIndicator: string    // Pull-to-refresh color
 
+  // === VOICE BADGE (Credibility indicator) ===
+  voiceHighBg: string        // High voice (70+) background
+  voiceHighText: string      // High voice text color
+  voiceHighDot: string       // High voice dot color
+  voiceEstablishedBg: string // Established voice (45-69) background
+  voiceEstablishedText: string
+  voiceEstablishedDot: string
+  voiceGrowingBg: string     // Growing voice (20-44) background
+  voiceGrowingText: string
+  voiceGrowingDot: string
+  voiceNewBg: string         // New voice (0-19) background
+  voiceNewText: string
+  voiceNewDot: string
+
   // === META ===
   isDark: boolean
   seasonalAccent: string   // The season's signature color
@@ -313,6 +327,20 @@ const WINTER_MORNING: ThemeTokens = {
   navInactive: '#94A3B8',
   pullIndicator: '#38BDF8',
 
+  // Voice Badge - Cool morning tones
+  voiceHighBg: 'rgba(251, 191, 36, 0.15)',
+  voiceHighText: '#B45309',
+  voiceHighDot: '#D97706',
+  voiceEstablishedBg: 'rgba(16, 185, 129, 0.12)',
+  voiceEstablishedText: '#047857',
+  voiceEstablishedDot: '#10B981',
+  voiceGrowingBg: 'rgba(56, 189, 248, 0.15)',
+  voiceGrowingText: '#64748B',
+  voiceGrowingDot: '#38BDF8',
+  voiceNewBg: '#E2E8F0',
+  voiceNewText: '#64748B',
+  voiceNewDot: '#94A3B8',
+
   // Meta
   isDark: false,
   seasonalAccent: '#38BDF8'
@@ -406,6 +434,20 @@ const WINTER_DAYTIME: ThemeTokens = {
   navActive: '#1E293B',
   navInactive: '#94A3B8',
   pullIndicator: '#0EA5E9',
+
+  // Voice Badge
+  voiceHighBg: 'rgba(251, 191, 36, 0.15)',
+  voiceHighText: '#B45309',
+  voiceHighDot: '#D97706',
+  voiceEstablishedBg: 'rgba(16, 185, 129, 0.12)',
+  voiceEstablishedText: '#047857',
+  voiceEstablishedDot: '#10B981',
+  voiceGrowingBg: 'rgba(14, 165, 233, 0.12)',
+  voiceGrowingText: '#475569',
+  voiceGrowingDot: '#0EA5E9',
+  voiceNewBg: '#F1F5F9',
+  voiceNewText: '#64748B',
+  voiceNewDot: '#94A3B8',
 
   // Meta
   isDark: false,
@@ -501,6 +543,20 @@ const WINTER_EVENING: ThemeTokens = {
   navInactive: '#A8A29E',
   pullIndicator: '#F59E0B',
 
+  // Voice Badge - Warm evening tones
+  voiceHighBg: 'rgba(251, 191, 36, 0.18)',
+  voiceHighText: '#B45309',
+  voiceHighDot: '#F59E0B',
+  voiceEstablishedBg: 'rgba(16, 185, 129, 0.12)',
+  voiceEstablishedText: '#047857',
+  voiceEstablishedDot: '#10B981',
+  voiceGrowingBg: 'rgba(245, 158, 11, 0.12)',
+  voiceGrowingText: '#78716C',
+  voiceGrowingDot: '#F59E0B',
+  voiceNewBg: '#F5EBE0',
+  voiceNewText: '#A8A29E',
+  voiceNewDot: '#A8A29E',
+
   // Meta
   isDark: false,
   seasonalAccent: '#F59E0B'
@@ -594,6 +650,20 @@ const WINTER_NIGHT: ThemeTokens = {
   navActive: '#E2E8F0',
   navInactive: '#64748B',
   pullIndicator: '#22D3EE',
+
+  // Voice Badge - Dark mode, lighter tones
+  voiceHighBg: 'rgba(251, 191, 36, 0.2)',
+  voiceHighText: '#FCD34D',
+  voiceHighDot: '#FBBF24',
+  voiceEstablishedBg: 'rgba(52, 211, 153, 0.15)',
+  voiceEstablishedText: '#6EE7B7',
+  voiceEstablishedDot: '#34D399',
+  voiceGrowingBg: 'rgba(34, 211, 238, 0.15)',
+  voiceGrowingText: '#94A3B8',
+  voiceGrowingDot: '#22D3EE',
+  voiceNewBg: '#334155',
+  voiceNewText: '#64748B',
+  voiceNewDot: '#475569',
 
   // Meta
   isDark: true,
@@ -696,6 +766,20 @@ const SPRING_MORNING: ThemeTokens = {
   navInactive: '#8A8A80',
   pullIndicator: '#7C9A6E',
 
+  // Voice Badge - Spring morning sage tones
+  voiceHighBg: 'rgba(251, 191, 36, 0.15)',
+  voiceHighText: '#B45309',
+  voiceHighDot: '#D97706',
+  voiceEstablishedBg: 'rgba(124, 154, 110, 0.15)',
+  voiceEstablishedText: '#4A6840',
+  voiceEstablishedDot: '#7C9A6E',
+  voiceGrowingBg: 'rgba(124, 154, 110, 0.12)',
+  voiceGrowingText: '#6B6B60',
+  voiceGrowingDot: '#7C9A6E',
+  voiceNewBg: '#ECEEE8',
+  voiceNewText: '#8A8A80',
+  voiceNewDot: '#8A8A80',
+
   // Meta
   isDark: false,
   seasonalAccent: '#7C9A6E'
@@ -789,6 +873,20 @@ const SPRING_DAYTIME: ThemeTokens = {
   navActive: '#3D4A35',
   navInactive: '#7A8570',
   pullIndicator: '#6B8F5E',
+
+  // Voice Badge - Spring daytime leaf green tones
+  voiceHighBg: 'rgba(251, 191, 36, 0.15)',
+  voiceHighText: '#B45309',
+  voiceHighDot: '#D97706',
+  voiceEstablishedBg: 'rgba(107, 143, 94, 0.15)',
+  voiceEstablishedText: '#3D5A30',
+  voiceEstablishedDot: '#6B8F5E',
+  voiceGrowingBg: 'rgba(107, 143, 94, 0.12)',
+  voiceGrowingText: '#5A6650',
+  voiceGrowingDot: '#6B8F5E',
+  voiceNewBg: '#F0F2EB',
+  voiceNewText: '#7A8570',
+  voiceNewDot: '#7A8570',
 
   // Meta
   isDark: false,
@@ -884,6 +982,20 @@ const SPRING_EVENING: ThemeTokens = {
   navInactive: '#8A8580',
   pullIndicator: '#8B7B6B',
 
+  // Voice Badge - Spring evening driftwood tones
+  voiceHighBg: 'rgba(251, 191, 36, 0.15)',
+  voiceHighText: '#B45309',
+  voiceHighDot: '#D97706',
+  voiceEstablishedBg: 'rgba(16, 185, 129, 0.12)',
+  voiceEstablishedText: '#047857',
+  voiceEstablishedDot: '#10B981',
+  voiceGrowingBg: 'rgba(139, 123, 107, 0.15)',
+  voiceGrowingText: '#6B6560',
+  voiceGrowingDot: '#8B7B6B',
+  voiceNewBg: '#E0DAD0',
+  voiceNewText: '#8A8580',
+  voiceNewDot: '#8A8580',
+
   // Meta
   isDark: false,
   seasonalAccent: '#8B7B6B'
@@ -977,6 +1089,20 @@ const SPRING_NIGHT: ThemeTokens = {
   navActive: '#C5C9C0',
   navInactive: '#707568',
   pullIndicator: '#6B7C5F',
+
+  // Voice Badge - Dark forest night
+  voiceHighBg: 'rgba(251, 191, 36, 0.2)',
+  voiceHighText: '#FCD34D',
+  voiceHighDot: '#FBBF24',
+  voiceEstablishedBg: 'rgba(107, 124, 95, 0.2)',
+  voiceEstablishedText: '#A0B090',
+  voiceEstablishedDot: '#8FA880',
+  voiceGrowingBg: 'rgba(107, 124, 95, 0.15)',
+  voiceGrowingText: '#9AA095',
+  voiceGrowingDot: '#6B7C5F',
+  voiceNewBg: '#353830',
+  voiceNewText: '#707568',
+  voiceNewDot: '#505850',
 
   // Meta
   isDark: true,
@@ -1078,6 +1204,20 @@ const SUMMER_MORNING: ThemeTokens = {
   navInactive: '#B45309',
   pullIndicator: '#F59E0B',
 
+  // Voice Badge - Golden summer morning
+  voiceHighBg: 'rgba(251, 191, 36, 0.2)',
+  voiceHighText: '#92400E',
+  voiceHighDot: '#F59E0B',
+  voiceEstablishedBg: 'rgba(16, 185, 129, 0.12)',
+  voiceEstablishedText: '#047857',
+  voiceEstablishedDot: '#10B981',
+  voiceGrowingBg: 'rgba(245, 158, 11, 0.15)',
+  voiceGrowingText: '#78350F',
+  voiceGrowingDot: '#F59E0B',
+  voiceNewBg: '#FEF3C7',
+  voiceNewText: '#B45309',
+  voiceNewDot: '#B45309',
+
   // Meta
   isDark: false,
   seasonalAccent: '#F59E0B'
@@ -1171,6 +1311,20 @@ const SUMMER_DAYTIME: ThemeTokens = {
   navActive: '#431407',
   navInactive: '#C2410C',
   pullIndicator: '#EA580C',
+
+  // Voice Badge - Vibrant summer day
+  voiceHighBg: 'rgba(251, 191, 36, 0.18)',
+  voiceHighText: '#92400E',
+  voiceHighDot: '#F59E0B',
+  voiceEstablishedBg: 'rgba(16, 185, 129, 0.12)',
+  voiceEstablishedText: '#047857',
+  voiceEstablishedDot: '#10B981',
+  voiceGrowingBg: 'rgba(234, 88, 12, 0.12)',
+  voiceGrowingText: '#7C2D12',
+  voiceGrowingDot: '#EA580C',
+  voiceNewBg: '#FFF7ED',
+  voiceNewText: '#C2410C',
+  voiceNewDot: '#C2410C',
 
   // Meta
   isDark: false,
@@ -1266,6 +1420,20 @@ const SUMMER_EVENING: ThemeTokens = {
   navInactive: '#A36220',
   pullIndicator: '#D97706',
 
+  // Voice Badge - Golden hour amber
+  voiceHighBg: 'rgba(251, 191, 36, 0.2)',
+  voiceHighText: '#92400E',
+  voiceHighDot: '#FBBF24',
+  voiceEstablishedBg: 'rgba(16, 185, 129, 0.12)',
+  voiceEstablishedText: '#047857',
+  voiceEstablishedDot: '#10B981',
+  voiceGrowingBg: 'rgba(217, 119, 6, 0.15)',
+  voiceGrowingText: '#6B3410',
+  voiceGrowingDot: '#D97706',
+  voiceNewBg: '#FEECC8',
+  voiceNewText: '#A36220',
+  voiceNewDot: '#A36220',
+
   // Meta
   isDark: false,
   seasonalAccent: '#D97706'
@@ -1359,6 +1527,20 @@ const SUMMER_NIGHT: ThemeTokens = {
   navActive: '#F5F5F4',
   navInactive: '#A8A29E',
   pullIndicator: '#FBBF24',
+
+  // Voice Badge - Warm summer night
+  voiceHighBg: 'rgba(251, 191, 36, 0.25)',
+  voiceHighText: '#FDE68A',
+  voiceHighDot: '#FBBF24',
+  voiceEstablishedBg: 'rgba(52, 211, 153, 0.15)',
+  voiceEstablishedText: '#6EE7B7',
+  voiceEstablishedDot: '#34D399',
+  voiceGrowingBg: 'rgba(251, 191, 36, 0.15)',
+  voiceGrowingText: '#D6D3D1',
+  voiceGrowingDot: '#FBBF24',
+  voiceNewBg: '#44403C',
+  voiceNewText: '#A8A29E',
+  voiceNewDot: '#78716C',
 
   // Meta
   isDark: true,
@@ -1460,6 +1642,20 @@ const AUTUMN_MORNING: ThemeTokens = {
   navInactive: '#A16207',
   pullIndicator: '#CA8A04',
 
+  // Voice Badge - Misty autumn morning
+  voiceHighBg: 'rgba(251, 191, 36, 0.18)',
+  voiceHighText: '#92400E',
+  voiceHighDot: '#EAB308',
+  voiceEstablishedBg: 'rgba(16, 185, 129, 0.12)',
+  voiceEstablishedText: '#047857',
+  voiceEstablishedDot: '#10B981',
+  voiceGrowingBg: 'rgba(202, 138, 4, 0.15)',
+  voiceGrowingText: '#713F12',
+  voiceGrowingDot: '#CA8A04',
+  voiceNewBg: '#F5EDE0',
+  voiceNewText: '#A16207',
+  voiceNewDot: '#A16207',
+
   // Meta
   isDark: false,
   seasonalAccent: '#CA8A04'
@@ -1553,6 +1749,20 @@ const AUTUMN_DAYTIME: ThemeTokens = {
   navActive: '#431407',
   navInactive: '#B45309',
   pullIndicator: '#C2410C',
+
+  // Voice Badge - Crisp autumn day
+  voiceHighBg: 'rgba(251, 191, 36, 0.18)',
+  voiceHighText: '#92400E',
+  voiceHighDot: '#F59E0B',
+  voiceEstablishedBg: 'rgba(16, 185, 129, 0.12)',
+  voiceEstablishedText: '#047857',
+  voiceEstablishedDot: '#10B981',
+  voiceGrowingBg: 'rgba(194, 65, 12, 0.12)',
+  voiceGrowingText: '#7C2D12',
+  voiceGrowingDot: '#C2410C',
+  voiceNewBg: '#F3EDE3',
+  voiceNewText: '#B45309',
+  voiceNewDot: '#B45309',
 
   // Meta
   isDark: false,
@@ -1648,6 +1858,20 @@ const AUTUMN_EVENING: ThemeTokens = {
   navInactive: '#92400E',
   pullIndicator: '#B45309',
 
+  // Voice Badge - Harvest golden hour
+  voiceHighBg: 'rgba(251, 191, 36, 0.2)',
+  voiceHighText: '#92400E',
+  voiceHighDot: '#FBBF24',
+  voiceEstablishedBg: 'rgba(16, 185, 129, 0.12)',
+  voiceEstablishedText: '#047857',
+  voiceEstablishedDot: '#10B981',
+  voiceGrowingBg: 'rgba(180, 83, 9, 0.15)',
+  voiceGrowingText: '#5C2A0E',
+  voiceGrowingDot: '#B45309',
+  voiceNewBg: '#F5E6D3',
+  voiceNewText: '#92400E',
+  voiceNewDot: '#92400E',
+
   // Meta
   isDark: false,
   seasonalAccent: '#B45309'
@@ -1742,9 +1966,243 @@ const AUTUMN_NIGHT: ThemeTokens = {
   navInactive: '#A68B70',
   pullIndicator: '#F59E0B',
 
+  // Voice Badge - Warm autumn night
+  voiceHighBg: 'rgba(251, 191, 36, 0.25)',
+  voiceHighText: '#FDE68A',
+  voiceHighDot: '#FBBF24',
+  voiceEstablishedBg: 'rgba(52, 211, 153, 0.15)',
+  voiceEstablishedText: '#6EE7B7',
+  voiceEstablishedDot: '#34D399',
+  voiceGrowingBg: 'rgba(245, 158, 11, 0.15)',
+  voiceGrowingText: '#D4BEA8',
+  voiceGrowingDot: '#F59E0B',
+  voiceNewBg: '#3D3230',
+  voiceNewText: '#A68B70',
+  voiceNewDot: '#6D5D50',
+
   // Meta
   isDark: true,
   seasonalAccent: '#F59E0B'
+}
+
+// ============================================================================
+// NEUTRAL THEMES
+// ============================================================================
+
+/**
+ * Neutral Light
+ * Mood: Clean, focused, distraction-free. A calm canvas for concentration.
+ * Design: Slate-based neutrals with no seasonal character. Pure functionality.
+ */
+export const NEUTRAL_LIGHT: ThemeTokens = {
+  // Backgrounds - Clean slate
+  bgBase: '#F8FAFC',
+  bgElevated: '#FFFFFF',
+  bgDeep: '#F1F5F9',
+  bgOverlay: 'rgba(15, 23, 42, 0.4)',
+
+  // Text - Slate scale
+  textPrimary: '#1E293B',
+  textSecondary: '#475569',
+  textMuted: '#64748B',
+  textOnAccent: '#FFFFFF',
+
+  // Accent - Slate blue (functional, not decorative)
+  accent: '#475569',
+  accentHover: '#334155',
+  accentMuted: 'rgba(71, 85, 105, 0.12)',
+  accentGlow: 'rgba(71, 85, 105, 0.25)',
+
+  // Orb - Soft neutral gradient
+  orbCore: '#FFFFFF',
+  orbMid: '#E2E8F0',
+  orbEdge: '#CBD5E1',
+  orbGlow: 'rgba(148, 163, 184, 0.3)',
+  orbAtmosphere: 'rgba(148, 163, 184, 0.1)',
+
+  // Stones - Slate scale
+  stoneCompleted: '#334155',
+  stoneCompletedInner: '#475569',
+  stonePlanned: 'rgba(71, 85, 105, 0.2)',
+  stonePlannedBorder: 'rgba(71, 85, 105, 0.4)',
+  stoneEmpty: '#F1F5F9',
+  stoneToday: '#E2E8F0',
+
+  // Cards - Clean white
+  cardBg: '#FFFFFF',
+  cardBorder: 'rgba(71, 85, 105, 0.1)',
+  cardShadow: 'rgba(15, 23, 42, 0.05)',
+
+  // Calendar
+  calendarDayBg: '#FFFFFF',
+  calendarDayText: '#475569',
+  calendarIntensity1: 'rgba(71, 85, 105, 0.15)',
+  calendarIntensity2: 'rgba(71, 85, 105, 0.30)',
+  calendarIntensity3: 'rgba(71, 85, 105, 0.50)',
+  calendarIntensity4: 'rgba(71, 85, 105, 0.70)',
+
+  // Progress
+  progressTrack: '#E2E8F0',
+  progressFill: '#475569',
+  progressGlow: 'rgba(71, 85, 105, 0.25)',
+
+  // Interactive
+  buttonPrimaryBg: '#334155',
+  buttonPrimaryText: '#FFFFFF',
+  buttonSecondaryBg: '#F1F5F9',
+  buttonSecondaryText: '#1E293B',
+  toggleOn: '#475569',
+  toggleOff: '#CBD5E1',
+  toggleThumb: '#FFFFFF',
+
+  // Borders
+  border: 'rgba(71, 85, 105, 0.15)',
+  borderSubtle: 'rgba(71, 85, 105, 0.08)',
+  divider: 'rgba(71, 85, 105, 0.08)',
+
+  // Shadows
+  shadowColor: 'rgba(15, 23, 42, 0.06)',
+  shadowElevation1: '0 1px 3px rgba(15, 23, 42, 0.04)',
+  shadowElevation2: '0 4px 12px rgba(15, 23, 42, 0.06)',
+  shadowElevation3: '0 8px 24px rgba(15, 23, 42, 0.08)',
+
+  // Pearls - Subtle shimmer
+  pearlBg: '#FFFFFF',
+  pearlShimmer: 'rgba(248, 250, 252, 0.8)',
+  pearlOrb: '#F1F5F9',
+  pearlOrbInner: '#E2E8F0',
+
+  // Navigation
+  navBg: 'rgba(248, 250, 252, 0.95)',
+  navActive: '#1E293B',
+  navInactive: '#64748B',
+  pullIndicator: '#475569',
+
+  // Voice Badge - Neutral slate scale
+  voiceHighBg: 'rgba(34, 197, 94, 0.12)',
+  voiceHighText: '#166534',
+  voiceHighDot: '#22C55E',
+  voiceEstablishedBg: 'rgba(59, 130, 246, 0.12)',
+  voiceEstablishedText: '#1D4ED8',
+  voiceEstablishedDot: '#3B82F6',
+  voiceGrowingBg: 'rgba(71, 85, 105, 0.12)',
+  voiceGrowingText: '#334155',
+  voiceGrowingDot: '#64748B',
+  voiceNewBg: '#F1F5F9',
+  voiceNewText: '#64748B',
+  voiceNewDot: '#94A3B8',
+
+  // Meta
+  isDark: false,
+  seasonalAccent: '#475569'
+}
+
+/**
+ * Neutral Dark
+ * Mood: Focused nighttime work. Easy on the eyes. Zero distraction.
+ * Design: Deep slate with subtle elevation. Professional and calm.
+ */
+export const NEUTRAL_DARK: ThemeTokens = {
+  // Backgrounds - Deep slate
+  bgBase: '#0F172A',
+  bgElevated: '#1E293B',
+  bgDeep: '#0B1120',
+  bgOverlay: 'rgba(0, 0, 0, 0.6)',
+
+  // Text - Light slate
+  textPrimary: '#F1F5F9',
+  textSecondary: '#CBD5E1',
+  textMuted: '#94A3B8',
+  textOnAccent: '#FFFFFF',
+
+  // Accent - Brighter slate for visibility
+  accent: '#94A3B8',
+  accentHover: '#CBD5E1',
+  accentMuted: 'rgba(148, 163, 184, 0.15)',
+  accentGlow: 'rgba(148, 163, 184, 0.3)',
+
+  // Orb - Soft glow in darkness
+  orbCore: '#F1F5F9',
+  orbMid: '#94A3B8',
+  orbEdge: '#64748B',
+  orbGlow: 'rgba(148, 163, 184, 0.35)',
+  orbAtmosphere: 'rgba(148, 163, 184, 0.12)',
+
+  // Stones - Slate variations
+  stoneCompleted: '#94A3B8',
+  stoneCompletedInner: '#CBD5E1',
+  stonePlanned: 'rgba(148, 163, 184, 0.25)',
+  stonePlannedBorder: 'rgba(148, 163, 184, 0.5)',
+  stoneEmpty: '#1E293B',
+  stoneToday: '#334155',
+
+  // Cards - Elevated slate
+  cardBg: '#1E293B',
+  cardBorder: 'rgba(148, 163, 184, 0.1)',
+  cardShadow: 'rgba(0, 0, 0, 0.3)',
+
+  // Calendar
+  calendarDayBg: '#1E293B',
+  calendarDayText: '#CBD5E1',
+  calendarIntensity1: 'rgba(148, 163, 184, 0.15)',
+  calendarIntensity2: 'rgba(148, 163, 184, 0.30)',
+  calendarIntensity3: 'rgba(148, 163, 184, 0.50)',
+  calendarIntensity4: 'rgba(148, 163, 184, 0.70)',
+
+  // Progress
+  progressTrack: '#334155',
+  progressFill: '#94A3B8',
+  progressGlow: 'rgba(148, 163, 184, 0.3)',
+
+  // Interactive
+  buttonPrimaryBg: '#94A3B8',
+  buttonPrimaryText: '#0F172A',
+  buttonSecondaryBg: '#334155',
+  buttonSecondaryText: '#F1F5F9',
+  toggleOn: '#94A3B8',
+  toggleOff: '#334155',
+  toggleThumb: '#FFFFFF',
+
+  // Borders
+  border: 'rgba(148, 163, 184, 0.15)',
+  borderSubtle: 'rgba(148, 163, 184, 0.08)',
+  divider: 'rgba(148, 163, 184, 0.08)',
+
+  // Shadows
+  shadowColor: 'rgba(0, 0, 0, 0.4)',
+  shadowElevation1: '0 1px 3px rgba(0, 0, 0, 0.2)',
+  shadowElevation2: '0 4px 12px rgba(0, 0, 0, 0.3)',
+  shadowElevation3: '0 8px 24px rgba(0, 0, 0, 0.4)',
+
+  // Pearls - Subtle shimmer
+  pearlBg: '#1E293B',
+  pearlShimmer: 'rgba(30, 41, 59, 0.8)',
+  pearlOrb: '#334155',
+  pearlOrbInner: '#475569',
+
+  // Navigation
+  navBg: 'rgba(15, 23, 42, 0.95)',
+  navActive: '#F1F5F9',
+  navInactive: '#94A3B8',
+  pullIndicator: '#94A3B8',
+
+  // Voice Badge - Neutral but visible
+  voiceHighBg: 'rgba(34, 197, 94, 0.15)',
+  voiceHighText: '#86EFAC',
+  voiceHighDot: '#22C55E',
+  voiceEstablishedBg: 'rgba(59, 130, 246, 0.15)',
+  voiceEstablishedText: '#93C5FD',
+  voiceEstablishedDot: '#3B82F6',
+  voiceGrowingBg: 'rgba(148, 163, 184, 0.15)',
+  voiceGrowingText: '#CBD5E1',
+  voiceGrowingDot: '#94A3B8',
+  voiceNewBg: '#334155',
+  voiceNewText: '#94A3B8',
+  voiceNewDot: '#64748B',
+
+  // Meta
+  isDark: true,
+  seasonalAccent: '#94A3B8'
 }
 
 // ============================================================================
@@ -2020,6 +2478,20 @@ export function themeToCSSProperties(tokens: ThemeTokens): Record<string, string
     '--nav-inactive': tokens.navInactive,
     '--pull-indicator': tokens.pullIndicator,
 
+    // Voice Badge
+    '--voice-high-bg': tokens.voiceHighBg,
+    '--voice-high-text': tokens.voiceHighText,
+    '--voice-high-dot': tokens.voiceHighDot,
+    '--voice-established-bg': tokens.voiceEstablishedBg,
+    '--voice-established-text': tokens.voiceEstablishedText,
+    '--voice-established-dot': tokens.voiceEstablishedDot,
+    '--voice-growing-bg': tokens.voiceGrowingBg,
+    '--voice-growing-text': tokens.voiceGrowingText,
+    '--voice-growing-dot': tokens.voiceGrowingDot,
+    '--voice-new-bg': tokens.voiceNewBg,
+    '--voice-new-text': tokens.voiceNewText,
+    '--voice-new-dot': tokens.voiceNewDot,
+
     // Seasonal accent
     '--seasonal-accent': tokens.seasonalAccent
   }
@@ -2292,6 +2764,20 @@ export function interpolateThemes(from: ThemeTokens, to: ThemeTokens, t: number)
     navActive: lerp(from.navActive, to.navActive),
     navInactive: lerp(from.navInactive, to.navInactive),
     pullIndicator: lerp(from.pullIndicator, to.pullIndicator),
+
+    // Voice Badge
+    voiceHighBg: lerp(from.voiceHighBg, to.voiceHighBg),
+    voiceHighText: lerp(from.voiceHighText, to.voiceHighText),
+    voiceHighDot: lerp(from.voiceHighDot, to.voiceHighDot),
+    voiceEstablishedBg: lerp(from.voiceEstablishedBg, to.voiceEstablishedBg),
+    voiceEstablishedText: lerp(from.voiceEstablishedText, to.voiceEstablishedText),
+    voiceEstablishedDot: lerp(from.voiceEstablishedDot, to.voiceEstablishedDot),
+    voiceGrowingBg: lerp(from.voiceGrowingBg, to.voiceGrowingBg),
+    voiceGrowingText: lerp(from.voiceGrowingText, to.voiceGrowingText),
+    voiceGrowingDot: lerp(from.voiceGrowingDot, to.voiceGrowingDot),
+    voiceNewBg: lerp(from.voiceNewBg, to.voiceNewBg),
+    voiceNewText: lerp(from.voiceNewText, to.voiceNewText),
+    voiceNewDot: lerp(from.voiceNewDot, to.voiceNewDot),
 
     // Meta - use destination values past 50%
     isDark: t < 0.5 ? from.isDark : to.isDark,

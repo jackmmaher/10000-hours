@@ -220,17 +220,26 @@ export function calculateVoice(inputs: VoiceInputs): VoiceScore {
 }
 
 /**
+ * Voice level type for semantic styling
+ */
+export type VoiceLevel = 'high' | 'established' | 'growing' | 'new'
+
+/**
  * Get visual treatment based on Voice score
  * Returns styling info for the VoiceBadge component
+ *
+ * Colors now use CSS variables from the Living Theme system:
+ * - --voice-{level}-bg: Background color
+ * - --voice-{level}-text: Text color
+ * - --voice-{level}-dot: Dot fill color
  */
 export function getVoiceVisual(score: number): {
   // Dot pattern: filled dots out of 5
   dots: number
   // Glow intensity for high scores
   glow: 'none' | 'subtle' | 'medium' | 'strong'
-  // Color treatment
-  color: string
-  bgColor: string
+  // Voice level for CSS variable selection
+  level: VoiceLevel
 } {
   // Score ranges for dot display
   // 0-10: 1 dot, 11-25: 2 dots, 26-45: 3 dots, 46-70: 4 dots, 71+: 5 dots
@@ -248,30 +257,19 @@ export function getVoiceVisual(score: number): {
   else if (score >= 40) glow = 'subtle'
   else glow = 'none'
 
-  // Color progression: muted → warm
-  // Low scores are neutral, high scores have earned warmth
-  let color: string
-  let bgColor: string
-
+  // Voice level determines which CSS variables to use
+  let level: VoiceLevel
   if (score >= 70) {
-    // High voice: warm amber (earned, not given)
-    color = 'text-amber-700'
-    bgColor = 'bg-amber-50'
+    level = 'high'
   } else if (score >= 45) {
-    // Established voice: moss green
-    color = 'text-moss'
-    bgColor = 'bg-emerald-50/80'
+    level = 'established'
   } else if (score >= 20) {
-    // Growing voice: soft indigo
-    color = 'text-indigo-deep/70'
-    bgColor = 'bg-indigo-50/60'
+    level = 'growing'
   } else {
-    // New voice: neutral
-    color = 'text-ink/40'
-    bgColor = 'bg-cream-deep'
+    level = 'new'
   }
 
-  return { dots, glow, color, bgColor }
+  return { dots, glow, level }
 }
 
 /**

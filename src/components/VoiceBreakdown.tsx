@@ -11,11 +11,18 @@
  * - Actionable suggestions for lowest-scoring areas
  */
 
-import { VoiceScore, VoiceInputs, calculateVoice, getVoiceVisual } from '../lib/voice'
+import { VoiceScore, VoiceInputs, calculateVoice, getVoiceVisual, VoiceLevel } from '../lib/voice'
 import { VoiceBadge } from './VoiceBadge'
 
 interface VoiceBreakdownProps {
   inputs: VoiceInputs
+}
+
+/**
+ * Get CSS variable values for a voice level
+ */
+function getVoiceTextStyle(level: VoiceLevel) {
+  return `var(--voice-${level}-text)`
 }
 
 export function VoiceBreakdown({ inputs }: VoiceBreakdownProps) {
@@ -46,7 +53,10 @@ export function VoiceBreakdown({ inputs }: VoiceBreakdownProps) {
           </p>
         </div>
         <div className="text-right">
-          <div className={`text-3xl font-serif ${visual.color} mb-1`}>
+          <div
+            className="text-3xl font-serif mb-1"
+            style={{ color: getVoiceTextStyle(visual.level) }}
+          >
             {voice.total}
           </div>
           <VoiceBadge score={voice.total} />
@@ -276,7 +286,10 @@ export function VoiceCompact({ inputs }: { inputs: VoiceInputs }) {
 
   return (
     <div className="flex items-center gap-3">
-      <div className={`text-2xl font-serif ${visual.color}`}>
+      <div
+        className="text-2xl font-serif"
+        style={{ color: getVoiceTextStyle(visual.level) }}
+      >
         {voice.total}
       </div>
       <div>

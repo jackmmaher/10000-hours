@@ -5,11 +5,18 @@
  * Makes the algorithm transparent and helps users understand how to build credibility.
  */
 
-import { VoiceScore, getVoiceVisual } from '../lib/voice'
+import { VoiceScore, getVoiceVisual, VoiceLevel } from '../lib/voice'
 
 interface VoiceDetailModalProps {
   voice: VoiceScore
   onClose: () => void
+}
+
+/**
+ * Get CSS variable value for voice dot color
+ */
+function getVoiceDotStyle(level: VoiceLevel) {
+  return `var(--voice-${level}-dot)`
 }
 
 export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
@@ -42,13 +49,12 @@ export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
                   {[1, 2, 3, 4, 5].map((dot) => (
                     <div
                       key={dot}
-                      className={`
-                        w-2 h-2 rounded-full transition-colors
-                        ${dot <= visual.dots
-                          ? visual.color.replace('text-', 'bg-').replace('/70', '').replace('/40', '/60')
-                          : 'bg-ink/10'
-                        }
-                      `}
+                      className="w-2 h-2 rounded-full transition-colors"
+                      style={{
+                        backgroundColor: dot <= visual.dots
+                          ? getVoiceDotStyle(visual.level)
+                          : 'var(--border-subtle, rgba(0,0,0,0.1))'
+                      }}
                     />
                   ))}
                 </div>

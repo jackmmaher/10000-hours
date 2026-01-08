@@ -97,6 +97,24 @@
   --nav-inactive: #94A3B8;
   --pull-indicator: #0EA5E9;
 
+  /* === VOICE BADGE (Credibility indicator) === */
+  /* High Voice (70+) - Warm amber, earned credibility */
+  --voice-high-bg: rgba(251, 191, 36, 0.15);
+  --voice-high-text: #B45309;
+  --voice-high-dot: #D97706;
+  /* Established Voice (45-69) - Green/moss, solid contribution */
+  --voice-established-bg: rgba(16, 185, 129, 0.12);
+  --voice-established-text: #047857;
+  --voice-established-dot: #10B981;
+  /* Growing Voice (20-44) - Soft accent, building up */
+  --voice-growing-bg: var(--accent-muted);
+  --voice-growing-text: var(--text-secondary);
+  --voice-growing-dot: var(--accent);
+  /* New Voice (0-19) - Neutral, just starting */
+  --voice-new-bg: var(--bg-deep);
+  --voice-new-text: var(--text-muted);
+  --voice-new-dot: var(--text-muted);
+
   /* === SEASONAL === */
   --seasonal-accent: #0EA5E9;
 
