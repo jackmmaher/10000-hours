@@ -1,67 +1,111 @@
 /**
- * Progress - Milestones, stats, and insight-driven history
+ * Progress - Redesigned stats page
  *
- * Redesigned stats page focused on:
- * - Milestone badges (horizontal scroll)
- * - Cumulative achievement display
- * - Trend visualization
- * - Generated insights (not raw data)
- * - Week consistency
+ * Structure (Global → Local → Actionable):
+ * 1. Hero: Cumulative hours + session count + Voice score
+ * 2. Milestones: Achievement badges + progress to next
+ * 3. Practice Shape: Pattern recognition (time, discipline, pose)
+ * 4. Commitment: Planned vs actual follow-through
+ * 5. Growth: Session duration evolution
+ * 6. Suggested Actions: Conditional, actionable insights
  *
- * Removed: "The Long View" (fog of war principle)
- * Moved: Community karma/saves to Settings
+ * Design principle: Insights over data dumps
  */
 
-import { useMemo, useState, useRef } from 'react'
+import { useMemo, useState, useRef, useEffect } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useSwipe } from '../hooks/useSwipe'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import { useVoice } from '../hooks/useVoice'
-import { getStatsForWindow } from '../lib/calculations'
+import { formatTotalHours } from '../lib/format'
 import {
-  formatTotalHours,
-  formatDuration,
-  formatShortMonthYear
-} from '../lib/format'
+  getAllPlannedSessions,
+  getSavedTemplates,
+  getAllCourseProgress,
+  getInsightsWithContent,
+  Session,
+  PlannedSession,
+  SavedTemplate,
+  UserCourseProgress,
+  Insight
+} from '../lib/db'
+import {
+  getPracticeShape,
+  getCommitmentStats,
+  getGrowthTrajectory,
+  getSuggestedActions
+} from '../lib/progressInsights'
+
+// Components
 import { AchievementGallery } from './AchievementGallery'
 import { InsightCard } from './InsightCard'
-import { TimeRangeSlider } from './TimeRangeSlider'
-import { TrendChart } from './TrendChart'
-import { InteractiveTimeline } from './InteractiveTimeline'
 import { VoiceBadge } from './VoiceBadge'
+import { PracticeShape } from './PracticeShape'
+import { CommitmentCard } from './CommitmentCard'
+import { GrowthBars } from './GrowthBars'
+import { SuggestedActions } from './SuggestedActions'
 
 export function Progress() {
   const { sessions, totalSeconds, setView } = useSessionStore()
   const { voice } = useVoice()
-  const [selectedDays, setSelectedDays] = useState<number | null>(30)
-  // Calculate max days based on first session
-  const maxDays = useMemo(() => {
-    if (sessions.length === 0) return 365
-    const firstSession = Math.min(...sessions.map(s => s.startTime))
-    const daysSince = Math.ceil((Date.now() - firstSession) / (24 * 60 * 60 * 1000))
-    return Math.max(7, daysSince)
-  }, [sessions])
 
-  // Compute stats for selected range
-  const windowStats = useMemo(
-    () => getStatsForWindow(sessions, selectedDays),
-    [sessions, selectedDays]
-  )
+  // Load additional data from IndexedDB
+  const [plannedSessions, setPlannedSessions] = useState<PlannedSession[]>([])
+  const [savedTemplates, setSavedTemplates] = useState<SavedTemplate[]>([])
+  const [courseProgress, setCourseProgress] = useState<UserCourseProgress[]>([])
+  const [insights, setInsights] = useState<Insight[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  // All-time stats
-  const allTimeStats = useMemo(
-    () => getStatsForWindow(sessions, null),
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [plans, templates, courses, insightData] = await Promise.all([
+          getAllPlannedSessions(),
+          getSavedTemplates(),
+          getAllCourseProgress(),
+          getInsightsWithContent()
+        ])
+        setPlannedSessions(plans)
+        setSavedTemplates(templates)
+        setCourseProgress(courses)
+        setInsights(insightData)
+      } catch (err) {
+        console.error('Failed to load progress data:', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadData()
+  }, [sessions]) // Reload when sessions change
+
+  // All-time session count
+  const sessionCount = sessions.length
+
+  // Compute insights
+  const practiceShape = useMemo(
+    () => getPracticeShape(sessions),
     [sessions]
   )
 
-  const firstSessionDate = sessions.length > 0
-    ? new Date(Math.min(...sessions.map(s => s.startTime)))
-    : null
+  const commitmentStats = useMemo(
+    () => getCommitmentStats(sessions, plannedSessions),
+    [sessions, plannedSessions]
+  )
+
+  const growthTrajectory = useMemo(
+    () => getGrowthTrajectory(sessions),
+    [sessions]
+  )
+
+  const suggestedActions = useMemo(
+    () => getSuggestedActions(sessions, plannedSessions, savedTemplates, courseProgress, insights),
+    [sessions, plannedSessions, savedTemplates, courseProgress, insights]
+  )
 
   // Reference to scroll container
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  // Pull-to-refresh - trigger re-render with state change
+  // Pull-to-refresh
   const [refreshKey, setRefreshKey] = useState(0)
   const {
     isPulling,
@@ -70,16 +114,24 @@ export function Progress() {
     handlers: pullHandlers
   } = usePullToRefresh({
     onRefresh: async () => {
-      // Force re-render by changing key
       setRefreshKey(k => k + 1)
-      await new Promise(resolve => setTimeout(resolve, 300))
+      // Reload data
+      const [plans, templates, courses, insightData] = await Promise.all([
+        getAllPlannedSessions(),
+        getSavedTemplates(),
+        getAllCourseProgress(),
+        getInsightsWithContent()
+      ])
+      setPlannedSessions(plans)
+      setSavedTemplates(templates)
+      setCourseProgress(courses)
+      setInsights(insightData)
     }
   })
 
   // Swipe navigation
   const navSwipeHandlers = useSwipe({
     onSwipeDown: () => {
-      // Only navigate if not at top
       if (scrollRef.current && scrollRef.current.scrollTop > 50) {
         setView('timer')
       }
@@ -143,13 +195,15 @@ export function Progress() {
           Timer
         </button>
 
-        {/* Cumulative achievement - hero display */}
+        {/* ============================================ */}
+        {/* SECTION 1: Hero - Cumulative achievement */}
+        {/* ============================================ */}
         <div className="mb-8 text-center">
           <p className="font-serif text-display-sm text-indigo-deep tabular-nums">
             {formatTotalHours(totalSeconds)}
           </p>
           <p className="text-sm text-ink/40 mt-1">
-            {allTimeStats.sessionCount} session{allTimeStats.sessionCount !== 1 ? 's' : ''}
+            {sessionCount} session{sessionCount !== 1 ? 's' : ''}
           </p>
 
           {/* Voice score display */}
@@ -161,106 +215,100 @@ export function Progress() {
           )}
         </div>
 
-        {/* Milestone badges - horizontal scroll */}
+        {/* ============================================ */}
+        {/* SECTION 2: Milestones */}
+        {/* ============================================ */}
         <AchievementGallery />
 
-        {/* Generated insight card */}
+        {/* ============================================ */}
+        {/* SECTION 3: Generated insight message */}
+        {/* ============================================ */}
         <InsightCard sessions={sessions} />
 
-        {/* Interactive timeline */}
-        <InteractiveTimeline sessions={sessions} />
-
-        {/* Time range stats with slider */}
-        <div className="mb-10">
-          <p className="font-serif text-sm text-ink/50 tracking-wide mb-5">
-            History
-          </p>
-
-          {/* Time range slider */}
-          <TimeRangeSlider
-            value={selectedDays}
-            onChange={setSelectedDays}
-            maxDays={maxDays}
-          />
-
-          {/* Trend chart */}
-          <div className="mt-6 mb-4">
-            <TrendChart sessions={sessions} days={selectedDays} />
+        {/* Loading state for additional data */}
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <div className="w-5 h-5 border-2 border-ink/10 border-t-ink/40 rounded-full animate-spin" />
           </div>
+        ) : (
+          <>
+            {/* ============================================ */}
+            {/* SECTION 4: Practice Shape */}
+            {/* ============================================ */}
+            <PracticeShape shape={practiceShape} />
 
-          {/* Stats for selected range */}
-          <div className="mt-6 space-y-3">
-            <div className="flex justify-between">
-              <span className="text-sm text-ink/50">Total</span>
-              <span className="text-sm text-ink tabular-nums">
-                {formatDuration(windowStats.totalSeconds)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-ink/50">Sessions</span>
-              <span className="text-sm text-ink tabular-nums">
-                {windowStats.sessionCount}
-              </span>
-            </div>
-            {windowStats.sessionCount > 0 && (
-              <>
-                <div className="flex justify-between">
-                  <span className="text-sm text-ink/50">Avg session</span>
-                  <span className="text-sm text-ink tabular-nums">
-                    {formatDuration(windowStats.avgSessionMinutes * 60)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-ink/50">Daily avg</span>
-                  <span className="text-sm text-ink tabular-nums">
-                    {formatDuration(windowStats.dailyAverageMinutes * 60)}
-                  </span>
-                </div>
-              </>
-            )}
-          </div>
+            {/* ============================================ */}
+            {/* SECTION 5: Commitment */}
+            {/* ============================================ */}
+            <CommitmentCard stats={commitmentStats} />
+
+            {/* ============================================ */}
+            {/* SECTION 6: Growth Trajectory */}
+            {/* ============================================ */}
+            <GrowthBars trajectory={growthTrajectory} />
+
+            {/* ============================================ */}
+            {/* SECTION 7: Suggested Actions */}
+            {/* ============================================ */}
+            <SuggestedActions actions={suggestedActions} />
+          </>
+        )}
+
+        {/* ============================================ */}
+        {/* SECTION 8: All Time Summary (minimal) */}
+        {/* ============================================ */}
+        {sessionCount > 0 && (
+          <AllTimeSummary sessions={sessions} />
+        )}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Minimal all-time summary - just the essentials
+ */
+function AllTimeSummary({ sessions }: { sessions: Session[] }) {
+  const firstSessionDate = sessions.length > 0
+    ? new Date(Math.min(...sessions.map(s => s.startTime)))
+    : null
+
+  const totalSeconds = sessions.reduce((sum, s) => sum + s.durationSeconds, 0)
+  const avgMinutes = sessions.length > 0
+    ? Math.round(totalSeconds / sessions.length / 60)
+    : 0
+
+  const longestSeconds = sessions.length > 0
+    ? Math.max(...sessions.map(s => s.durationSeconds))
+    : 0
+  const longestMinutes = Math.round(longestSeconds / 60)
+
+  if (!firstSessionDate) return null
+
+  return (
+    <div className="pt-8 border-t border-ink/5">
+      <p className="font-serif text-sm text-ink/30 tracking-wide mb-4">
+        All Time
+      </p>
+
+      <div className="grid grid-cols-3 gap-4 text-center">
+        <div>
+          <p className="text-lg text-ink tabular-nums">{sessions.length}</p>
+          <p className="text-xs text-ink/40">sessions</p>
         </div>
-
-        {/* All time summary */}
-        <div className="mb-10">
-          <p className="font-serif text-sm text-ink/50 tracking-wide mb-5">
-            All Time
-          </p>
-
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-sm text-ink/50">Sessions</span>
-              <span className="text-sm text-ink tabular-nums">
-                {allTimeStats.sessionCount}
-              </span>
-            </div>
-            {allTimeStats.sessionCount > 0 && (
-              <>
-                <div className="flex justify-between">
-                  <span className="text-sm text-ink/50">Avg session</span>
-                  <span className="text-sm text-ink tabular-nums">
-                    {formatDuration(allTimeStats.avgSessionMinutes * 60)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-ink/50">Longest</span>
-                  <span className="text-sm text-ink tabular-nums">
-                    {formatDuration(allTimeStats.longestSessionMinutes * 60)}
-                  </span>
-                </div>
-              </>
-            )}
-            {firstSessionDate && (
-              <div className="flex justify-between">
-                <span className="text-sm text-ink/50">Since</span>
-                <span className="text-sm text-ink">
-                  {formatShortMonthYear(firstSessionDate)}
-                </span>
-              </div>
-            )}
-          </div>
+        <div>
+          <p className="text-lg text-ink tabular-nums">{avgMinutes}m</p>
+          <p className="text-xs text-ink/40">avg session</p>
+        </div>
+        <div>
+          <p className="text-lg text-ink tabular-nums">{longestMinutes}m</p>
+          <p className="text-xs text-ink/40">longest</p>
         </div>
       </div>
+
+      <p className="text-xs text-ink/30 text-center mt-4">
+        Since {firstSessionDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+      </p>
     </div>
   )
 }
