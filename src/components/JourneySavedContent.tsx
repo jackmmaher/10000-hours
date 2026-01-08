@@ -9,7 +9,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigationStore } from '../stores/useNavigationStore'
 import { useAuthStore } from '../stores/useAuthStore'
-import { Card } from './Card'
+import { Card, CardHeader, CardBody, CardTitle, CardDescription, AccentBar } from './Card'
 import type { SessionTemplate } from './SessionDetailModal'
 
 // Lazy-load SessionDetailModal wrapper
@@ -186,7 +186,7 @@ export function JourneySavedContent({ onCreateNew }: SavedContentProps) {
     )
   }
 
-  // Meditation card component for consistent rendering
+  // Meditation card component using unified Card system
   const MeditationCard = ({
     session,
     variant = 'saved'
@@ -198,43 +198,34 @@ export function JourneySavedContent({ onCreateNew }: SavedContentProps) {
       ? getIntentionGradient(session.intention)
       : 'from-[#9DB4A0] to-[#5C7C5E]'
 
+    const actionIcon = variant === 'created' ? (
+      // Edit pencil for user-created
+      <svg className="w-4 h-4 text-ink-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+      </svg>
+    ) : (
+      // Bookmark for saved
+      <svg className="w-4 h-4 text-ink-soft" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+      </svg>
+    )
+
     return (
-      <button
+      <Card
+        variant="default"
         onClick={() => setSelectedSession(session)}
-        className="w-full text-left group relative overflow-hidden rounded-2xl bg-cream transition-all hover:shadow-md active:scale-[0.99]"
       >
-        {/* Gradient accent bar */}
-        <div className={`absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b ${gradient}`} />
-
-        <div className="p-4 pl-5">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-xs text-ink/40 font-medium">{session.discipline}</span>
-                <span className="text-ink/20">·</span>
-                <span className="text-xs text-ink/40">{session.durationGuidance}</span>
-              </div>
-              <p className="font-serif text-ink mb-1 leading-snug">{session.title}</p>
-              <p className="text-sm text-ink/50 line-clamp-1 italic">"{session.tagline}"</p>
-            </div>
-
-            {/* Indicator icon */}
-            <div className="flex-shrink-0 mt-1">
-              {variant === 'created' ? (
-                // Edit pencil for user-created
-                <svg className="w-4 h-4 text-moss/40 group-hover:text-moss/60 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              ) : (
-                // Bookmark for saved
-                <svg className="w-4 h-4 text-ink/20 group-hover:text-ink/40 transition-colors" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                </svg>
-              )}
-            </div>
-          </div>
-        </div>
-      </button>
+        <CardHeader
+          indicator={<AccentBar gradient={`bg-gradient-to-b ${gradient}`} />}
+          label={session.discipline}
+          sublabel={session.durationGuidance}
+          action={actionIcon}
+        />
+        <CardBody compact>
+          <CardTitle>{session.title}</CardTitle>
+          <CardDescription>"{session.tagline}"</CardDescription>
+        </CardBody>
+      </Card>
     )
   }
 
