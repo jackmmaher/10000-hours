@@ -425,7 +425,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
         </div>
 
         {/* Form */}
-        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 py-5 space-y-5">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 py-5 space-y-5 w-full max-w-full">
           {isLoading ? (
             <div className="flex justify-center py-8">
               <div className="w-5 h-5 border-2 border-indigo-deep/20 border-t-indigo-deep rounded-full animate-spin" />
@@ -478,11 +478,11 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
 
               {/* Plan mode: Show editable date picker */}
               {!isSessionMode && (
-                <div>
+                <div className="w-full">
                   <label className="text-xs text-ink-soft block mb-2">
                     Date
                   </label>
-                  <div className="relative overflow-hidden rounded-xl">
+                  <div className="relative w-full">
                     <input
                       type="date"
                       value={formatDateForInput(selectedDate)}
@@ -499,7 +499,8 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                         setDiscipline('')
                         setNotes('')
                       }}
-                      className="w-full px-4 py-4 pr-12 rounded-xl bg-elevated text-ink text-lg font-medium focus:outline-none focus:ring-2 focus:ring-accent/30 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                      style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
+                      className="block w-full max-w-full box-border px-4 py-4 rounded-xl bg-elevated text-ink text-lg font-medium text-center focus:outline-none focus:ring-2 focus:ring-accent/30 appearance-none"
                     />
                     <svg
                       className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink-soft pointer-events-none"
@@ -533,16 +534,17 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
               {!isSessionMode && (
                 <>
                   {/* Time */}
-                  <div>
+                  <div className="w-full">
                     <label className="text-xs text-ink-soft block mb-2">
                       Time
                     </label>
-                    <div className="relative overflow-hidden rounded-xl">
+                    <div className="relative w-full">
                       <input
                         type="time"
                         value={plannedTime}
                         onChange={(e) => setPlannedTime(e.target.value)}
-                        className="w-full px-4 py-4 pr-12 rounded-xl bg-elevated text-ink text-lg font-medium focus:outline-none focus:ring-2 focus:ring-accent/30 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                        style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
+                        className="block w-full max-w-full box-border px-4 py-4 rounded-xl bg-elevated text-ink text-lg font-medium text-center focus:outline-none focus:ring-2 focus:ring-accent/30 appearance-none"
                       />
                       <svg
                         className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink-soft pointer-events-none"
@@ -553,7 +555,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       {!plannedTime && (
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-soft font-medium pointer-events-none">
+                        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-ink-soft font-medium pointer-events-none">
                           Tap to set time
                         </span>
                       )}
