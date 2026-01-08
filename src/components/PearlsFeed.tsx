@@ -137,6 +137,7 @@ function PearlCard({ pearl, onVote, onSave, onRequireAuth, isAuthenticated }: Pe
               flex items-center gap-1.5 text-sm transition-colors
               ${localSaved ? 'text-indigo-deep' : 'text-ink/40 hover:text-ink/60'}
             `}
+            aria-label={localSaved ? 'Unsave pearl' : 'Save pearl'}
           >
             <svg
               className="w-4 h-4"

@@ -125,6 +125,7 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
         <button
           onClick={onBack}
           className="flex items-center text-sm text-ink/40 mb-10 hover:text-ink/60 transition-colors active:scale-[0.98]"
+          aria-label="Go back to profile"
         >
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />

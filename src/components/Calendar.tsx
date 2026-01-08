@@ -295,6 +295,7 @@ export function Calendar({ embedded = false, onDateClick, refreshKey, onEditSess
                 onClick={goToPrevMonth}
                 className="p-2 transition-colors active:scale-[0.95]"
                 style={{ color: 'var(--text-muted)' }}
+                aria-label="Previous month"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
@@ -313,6 +314,7 @@ export function Calendar({ embedded = false, onDateClick, refreshKey, onEditSess
                 onClick={goToNextMonth}
                 className="p-2 transition-colors active:scale-[0.95]"
                 style={{ color: 'var(--text-muted)' }}
+                aria-label="Next month"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />

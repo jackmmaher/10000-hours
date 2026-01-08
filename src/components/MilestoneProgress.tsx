@@ -133,6 +133,7 @@ export function MilestoneProgress({
             <button
               onClick={onClose}
               className="p-2 -mr-2 text-ink/40 hover:text-ink/60 transition-colors"
+              aria-label="Close modal"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />

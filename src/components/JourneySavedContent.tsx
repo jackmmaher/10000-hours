@@ -1,12 +1,14 @@
 /**
- * JourneySavedContent - Displays saved meditation templates
+ * JourneySavedContent - Displays user's created and saved meditation templates
  *
- * Shows user's saved meditation sessions with gradient accents,
- * and provides option to create new templates.
+ * Shows two sections (like JourneyMyPearls):
+ * - My Meditations: Templates created by the user
+ * - Saved Meditations: Templates saved from the community
  */
 
 import { useState, useEffect } from 'react'
 import { useNavigationStore } from '../stores/useNavigationStore'
+import { useAuthStore } from '../stores/useAuthStore'
 import { Card } from './Card'
 import type { SessionTemplate } from './SessionDetailModal'
 
@@ -49,7 +51,9 @@ interface SavedContentProps {
 }
 
 export function JourneySavedContent({ onCreateNew }: SavedContentProps) {
-  const [savedSessions, setSavedSessions] = useState<SessionTemplate[]>([])
+  const { user } = useAuthStore()
+  const [createdMeditations, setCreatedMeditations] = useState<SessionTemplate[]>([])
+  const [savedMeditations, setSavedMeditations] = useState<SessionTemplate[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedSession, setSelectedSession] = useState<SessionTemplate | null>(null)
   const [getIntentionGradient, setGetIntentionGradient] = useState<((intention: string) => string) | null>(null)
@@ -62,13 +66,22 @@ export function JourneySavedContent({ onCreateNew }: SavedContentProps) {
   }, [])
 
   useEffect(() => {
-    const loadSaved = async () => {
+    const loadMeditations = async () => {
       try {
+        // Load user-created meditations if authenticated
+        let userCreated: SessionTemplate[] = []
+        if (user) {
+          const { getMyTemplates } = await import('../lib/templates')
+          userCreated = await getMyTemplates(user.id)
+        }
+        setCreatedMeditations(userCreated)
+
+        // Load saved templates (from local IndexedDB)
         const { getSavedTemplates } = await import('../lib/db')
         const savedTemplates = await getSavedTemplates()
 
         if (savedTemplates.length === 0) {
-          setSavedSessions([])
+          setSavedMeditations([])
           setIsLoading(false)
           return
         }
@@ -118,15 +131,15 @@ export function JourneySavedContent({ onCreateNew }: SavedContentProps) {
             creatorHours: s.creator_hours
           }))
 
-        setSavedSessions(matched)
+        setSavedMeditations(matched)
       } catch (err) {
-        console.error('Failed to load saved sessions:', err)
+        console.error('Failed to load meditations:', err)
       } finally {
         setIsLoading(false)
       }
     }
-    loadSaved()
-  }, [])
+    loadMeditations()
+  }, [user])
 
   if (isLoading) {
     return (
@@ -136,8 +149,10 @@ export function JourneySavedContent({ onCreateNew }: SavedContentProps) {
     )
   }
 
+  const hasNoMeditations = createdMeditations.length === 0 && savedMeditations.length === 0
+
   // Empty state with create invitation
-  if (savedSessions.length === 0) {
+  if (hasNoMeditations) {
     return (
       <div className="space-y-4">
         {/* Create invitation card - uses unified Card system */}
@@ -158,7 +173,7 @@ export function JourneySavedContent({ onCreateNew }: SavedContentProps) {
         {/* Browse prompt */}
         <div className="text-center py-8">
           <p className="text-ink/40 text-sm mb-2">
-            No saved meditations yet
+            No meditations yet
           </p>
           <button
             onClick={() => useNavigationStore.getState().setView('explore')}
@@ -171,10 +186,62 @@ export function JourneySavedContent({ onCreateNew }: SavedContentProps) {
     )
   }
 
+  // Meditation card component for consistent rendering
+  const MeditationCard = ({
+    session,
+    variant = 'saved'
+  }: {
+    session: SessionTemplate
+    variant?: 'created' | 'saved'
+  }) => {
+    const gradient = getIntentionGradient
+      ? getIntentionGradient(session.intention)
+      : 'from-[#9DB4A0] to-[#5C7C5E]'
+
+    return (
+      <button
+        onClick={() => setSelectedSession(session)}
+        className="w-full text-left group relative overflow-hidden rounded-2xl bg-cream transition-all hover:shadow-md active:scale-[0.99]"
+      >
+        {/* Gradient accent bar */}
+        <div className={`absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b ${gradient}`} />
+
+        <div className="p-4 pl-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-xs text-ink/40 font-medium">{session.discipline}</span>
+                <span className="text-ink/20">·</span>
+                <span className="text-xs text-ink/40">{session.durationGuidance}</span>
+              </div>
+              <p className="font-serif text-ink mb-1 leading-snug">{session.title}</p>
+              <p className="text-sm text-ink/50 line-clamp-1 italic">"{session.tagline}"</p>
+            </div>
+
+            {/* Indicator icon */}
+            <div className="flex-shrink-0 mt-1">
+              {variant === 'created' ? (
+                // Edit pencil for user-created
+                <svg className="w-4 h-4 text-moss/40 group-hover:text-moss/60 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              ) : (
+                // Bookmark for saved
+                <svg className="w-4 h-4 text-ink/20 group-hover:text-ink/40 transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                </svg>
+              )}
+            </div>
+          </div>
+        </div>
+      </button>
+    )
+  }
+
   return (
     <>
-      <div className="space-y-3">
-        {/* Create invitation card - first in list, uses unified Card system */}
+      <div className="space-y-8">
+        {/* Create invitation card - first in list */}
         {onCreateNew && (
           <Card variant="subtle" onClick={onCreateNew} className="group">
             <div className="p-5 flex items-center gap-4">
@@ -191,41 +258,33 @@ export function JourneySavedContent({ onCreateNew }: SavedContentProps) {
           </Card>
         )}
 
-        {/* Saved meditation cards with gradient accent */}
-        {savedSessions.map((session) => {
-          const gradient = getIntentionGradient ? getIntentionGradient(session.intention) : 'from-[#9DB4A0] to-[#5C7C5E]'
-          return (
-            <button
-              key={session.id}
-              onClick={() => setSelectedSession(session)}
-              className="w-full text-left group relative overflow-hidden rounded-2xl bg-cream transition-all hover:shadow-md active:scale-[0.99]"
-            >
-              {/* Gradient accent bar */}
-              <div className={`absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b ${gradient}`} />
+        {/* User-created meditations section */}
+        {createdMeditations.length > 0 && (
+          <div>
+            <p className="text-xs text-ink-soft font-medium tracking-wide mb-4">
+              My Meditations
+            </p>
+            <div className="space-y-3">
+              {createdMeditations.map((session) => (
+                <MeditationCard key={session.id} session={session} variant="created" />
+              ))}
+            </div>
+          </div>
+        )}
 
-              <div className="p-4 pl-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span className="text-xs text-ink/40 font-medium">{session.discipline}</span>
-                      <span className="text-ink/20">·</span>
-                      <span className="text-xs text-ink/40">{session.durationGuidance}</span>
-                    </div>
-                    <p className="font-serif text-ink mb-1 leading-snug">{session.title}</p>
-                    <p className="text-sm text-ink/50 line-clamp-1 italic">"{session.tagline}"</p>
-                  </div>
-
-                  {/* Bookmark indicator */}
-                  <div className="flex-shrink-0 mt-1">
-                    <svg className="w-4 h-4 text-ink/20 group-hover:text-ink/40 transition-colors" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-            </button>
-          )
-        })}
+        {/* Saved from community section */}
+        {savedMeditations.length > 0 && (
+          <div>
+            <p className="text-xs text-ink-soft font-medium tracking-wide mb-4">
+              Saved Meditations
+            </p>
+            <div className="space-y-3">
+              {savedMeditations.map((session) => (
+                <MeditationCard key={session.id} session={session} variant="saved" />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Session detail modal */}
