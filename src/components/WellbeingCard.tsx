@@ -1,31 +1,34 @@
 /**
- * WellbeingCard - Wellbeing tracking card for Profile
+ * WellbeingCard - Inline wellbeing tracking
  *
- * Shows tracked dimensions with scores, improvement indicators,
- * and check-in controls. Allows adding new dimensions and
- * triggering check-in flow.
+ * Fully inline UX:
+ * - Tap "+ Add" to see dimension chips
+ * - Tap a chip → inline slider to set initial value
+ * - Tap tracked item → inline slider to update value
+ * - Swipe left to delete
+ * - Shows progress: baseline vs current with % change
  */
 
-import { useState } from 'react'
+import { useState, useRef, TouchEvent } from 'react'
 import {
   WellbeingDimension,
   WellbeingCheckIn,
   WellbeingSettings,
   addWellbeingDimension,
-  updateWellbeingSettings,
-  getImprovementForDimension
+  addWellbeingCheckIn,
+  archiveWellbeingDimension,
+  getCheckInHistory
 } from '../lib/db'
-import { WellbeingCheckInModal } from './WellbeingCheckInModal'
 
-// Suggested dimensions with accessible language
+// Suggested dimensions - framed as "how much is this affecting you"
 const SUGGESTED_DIMENSIONS = [
-  { name: 'anxiety', label: 'Anxiety', description: 'Racing thoughts, worry, unease' },
-  { name: 'stress', label: 'Stress', description: 'Feeling overwhelmed, pressure' },
-  { name: 'low-mood', label: 'Low Mood', description: 'Heaviness, lack of joy' },
-  { name: 'sleep', label: 'Sleep', description: 'Quality of rest' },
-  { name: 'focus', label: 'Focus', description: 'Clarity, concentration' },
-  { name: 'energy', label: 'Energy', description: 'Vitality, motivation' },
-  { name: 'inner-calm', label: 'Inner Calm', description: 'Peace, groundedness' }
+  { name: 'anxiety', label: 'Anxiety' },
+  { name: 'stress', label: 'Stress' },
+  { name: 'low-mood', label: 'Low Mood' },
+  { name: 'sleep', label: 'Sleep Issues' },
+  { name: 'focus', label: 'Focus Issues' },
+  { name: 'energy', label: 'Low Energy' },
+  { name: 'restlessness', label: 'Restlessness' }
 ]
 
 interface WellbeingCardProps {
@@ -35,307 +38,408 @@ interface WellbeingCardProps {
   onRefresh: () => void
 }
 
+interface DimensionProgress {
+  baseline: number
+  current: number
+  percentChange: number
+}
+
 export function WellbeingCard({
   dimensions,
   latestCheckIns,
-  settings,
   onRefresh
 }: WellbeingCardProps) {
-  const [showSetup, setShowSetup] = useState(false)
-  const [showCheckIn, setShowCheckIn] = useState(false)
+  const [showAddPicker, setShowAddPicker] = useState(false)
+  const [expandedAdd, setExpandedAdd] = useState<string | null>(null)
+  const [expandedEdit, setExpandedEdit] = useState<string | null>(null)
+  const [sliderValue, setSliderValue] = useState(5)
   const [customLabel, setCustomLabel] = useState('')
-  const [frequency, setFrequency] = useState(settings?.checkInFrequencyDays || 14)
-  const [improvements, setImprovements] = useState<Map<string, number>>(new Map())
+  const [showCustomInput, setShowCustomInput] = useState(false)
+  const [progress, setProgress] = useState<Map<string, DimensionProgress>>(new Map())
+  const [swipingId, setSwipingId] = useState<string | null>(null)
+  const [swipeOffset, setSwipeOffset] = useState(0)
+  const touchStartX = useRef(0)
 
-  // Load improvement data
-  const loadImprovements = async () => {
-    const improvementMap = new Map<string, number>()
-    for (const dim of dimensions) {
-      const improvement = await getImprovementForDimension(dim.id)
-      if (improvement) {
-        improvementMap.set(dim.id, improvement.percentChange)
-      }
-    }
-    setImprovements(improvementMap)
+  // Load progress data for a dimension
+  const loadProgress = async (dimensionId: string): Promise<DimensionProgress | null> => {
+    const history = await getCheckInHistory(dimensionId, 100)
+    if (history.length === 0) return null
+
+    const baseline = history[history.length - 1].score // First check-in
+    const current = history[0].score // Latest check-in
+    const percentChange = baseline > 0
+      ? Math.round(((baseline - current) / baseline) * 100)
+      : 0
+
+    return { baseline, current, percentChange }
   }
 
-  // Add a suggested dimension
-  const handleAddDimension = async (name: string, label: string, description: string) => {
-    await addWellbeingDimension({
+  // Load all progress on mount and when dimensions change
+  const loadAllProgress = async () => {
+    const progressMap = new Map<string, DimensionProgress>()
+    for (const dim of dimensions) {
+      const p = await loadProgress(dim.id)
+      if (p) progressMap.set(dim.id, p)
+    }
+    setProgress(progressMap)
+  }
+
+  // Add a new dimension with initial score
+  const handleAddWithScore = async (name: string, label: string) => {
+    const dim = await addWellbeingDimension({
       name,
       label,
-      description,
-      isCustom: false
+      isCustom: !SUGGESTED_DIMENSIONS.some(s => s.name === name)
     })
-    onRefresh()
-  }
 
-  // Add custom dimension
-  const handleAddCustom = async () => {
-    if (!customLabel.trim()) return
-    await addWellbeingDimension({
-      name: customLabel.toLowerCase().replace(/\s+/g, '-'),
-      label: customLabel.trim(),
-      isCustom: true
+    // Add initial check-in
+    await addWellbeingCheckIn({
+      dimensionId: dim.id,
+      score: sliderValue
     })
+
+    // Reset state
+    setExpandedAdd(null)
+    setShowAddPicker(false)
+    setSliderValue(5)
     setCustomLabel('')
+    setShowCustomInput(false)
     onRefresh()
   }
 
-  // Update frequency
-  const handleFrequencyChange = async (days: number) => {
-    setFrequency(days)
-    await updateWellbeingSettings({
-      checkInFrequencyDays: days,
-      isEnabled: true,
-      nextCheckInDue: Date.now() + days * 24 * 60 * 60 * 1000
+  // Update score for existing dimension
+  const handleUpdateScore = async (dimensionId: string) => {
+    await addWellbeingCheckIn({
+      dimensionId,
+      score: sliderValue
     })
+
+    setExpandedEdit(null)
+    await loadAllProgress()
+    onRefresh()
   }
 
-  // Check if check-in is due
-  const isCheckInDue = settings?.nextCheckInDue && Date.now() >= settings.nextCheckInDue
-
-  // Format next check-in date
-  const formatNextCheckIn = (): string => {
-    if (!settings?.nextCheckInDue) return 'Not scheduled'
-    const date = new Date(settings.nextCheckInDue)
-    const today = new Date()
-    const diffDays = Math.ceil((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-
-    if (diffDays <= 0) return 'Due now'
-    if (diffDays === 1) return 'Tomorrow'
-    if (diffDays <= 7) return `In ${diffDays} days`
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  // Archive (delete) a dimension
+  const handleDelete = async (dimensionId: string) => {
+    await archiveWellbeingDimension(dimensionId)
+    setSwipingId(null)
+    setSwipeOffset(0)
+    onRefresh()
   }
 
-  // Get dimensions not yet added
+  // Swipe handlers
+  const handleTouchStart = (e: TouchEvent, id: string) => {
+    touchStartX.current = e.touches[0].clientX
+    setSwipingId(id)
+  }
+
+  const handleTouchMove = (e: TouchEvent) => {
+    if (!swipingId) return
+    const diff = touchStartX.current - e.touches[0].clientX
+    // Only allow left swipe, max 80px
+    setSwipeOffset(Math.min(Math.max(0, diff), 80))
+  }
+
+  const handleTouchEnd = () => {
+    if (swipeOffset > 60) {
+      // Keep showing delete button
+      setSwipeOffset(80)
+    } else {
+      setSwipeOffset(0)
+      setSwipingId(null)
+    }
+  }
+
+  // Get available dimensions (not yet added)
   const availableDimensions = SUGGESTED_DIMENSIONS.filter(
     s => !dimensions.some(d => d.name === s.name)
   )
 
-  // No dimensions yet - show setup prompt
-  if (dimensions.length === 0 && !showSetup) {
-    return (
-      <div className="p-5 bg-cream-warm rounded-xl">
-        <div className="text-center">
-          <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-gradient-to-br from-moss/20 to-amber-500/20 flex items-center justify-center">
-            <svg className="w-6 h-6 text-moss/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-          </div>
-          <h3 className="font-serif text-lg text-ink mb-2">Track Your Wellbeing</h3>
-          <p className="text-sm text-ink/50 mb-4 leading-relaxed">
-            Monitor how meditation affects your mental health over time.
-            Choose what matters to you and check in at your own pace.
-          </p>
-          <button
-            onClick={() => setShowSetup(true)}
-            className="px-4 py-2 bg-moss text-cream text-sm rounded-lg hover:bg-moss/90 transition-colors"
-          >
-            Get Started
-          </button>
-        </div>
-      </div>
-    )
+  // Expand an item for editing
+  const handleExpandEdit = async (dim: WellbeingDimension) => {
+    const checkIn = latestCheckIns.get(dim.id)
+    setSliderValue(checkIn?.score || 5)
+    setExpandedEdit(dim.id)
+
+    // Load fresh progress
+    const p = await loadProgress(dim.id)
+    if (p) {
+      setProgress(prev => new Map(prev).set(dim.id, p))
+    }
   }
 
-  // Setup mode - selecting dimensions
-  if (showSetup) {
-    return (
-      <div className="p-5 bg-cream-warm rounded-xl">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-serif text-lg text-ink">What would you like to track?</h3>
-          {dimensions.length > 0 && (
+  return (
+    <div className="bg-cream-warm rounded-xl overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between p-5 pb-3">
+        <h3 className="font-serif text-lg text-ink">Wellbeing</h3>
+        <button
+          onClick={() => {
+            setShowAddPicker(!showAddPicker)
+            setExpandedAdd(null)
+            setShowCustomInput(false)
+          }}
+          className="flex items-center gap-1 text-xs text-moss hover:text-moss/80 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Add
+        </button>
+      </div>
+
+      {/* Add Picker */}
+      {showAddPicker && (
+        <div className="px-5 pb-4">
+          <p className="text-xs text-ink/50 mb-3">What would you like to track?</p>
+
+          {/* Dimension chips */}
+          <div className="flex flex-wrap gap-2 mb-3">
+            {availableDimensions.map(dim => (
+              <button
+                key={dim.name}
+                onClick={() => {
+                  setExpandedAdd(dim.name)
+                  setSliderValue(5)
+                }}
+                className={`px-3 py-1.5 text-xs rounded-full transition-colors ${
+                  expandedAdd === dim.name
+                    ? 'bg-moss text-cream'
+                    : 'bg-cream text-ink/70 hover:bg-cream-deep'
+                }`}
+              >
+                {dim.label}
+              </button>
+            ))}
             <button
-              onClick={() => setShowSetup(false)}
-              className="text-sm text-ink/40 hover:text-ink/60"
+              onClick={() => {
+                setShowCustomInput(true)
+                setExpandedAdd(null)
+              }}
+              className={`px-3 py-1.5 text-xs rounded-full transition-colors ${
+                showCustomInput
+                  ? 'bg-moss text-cream'
+                  : 'bg-cream text-ink/70 hover:bg-cream-deep'
+              }`}
             >
-              Done
+              + Custom
             </button>
+          </div>
+
+          {/* Custom input */}
+          {showCustomInput && !expandedAdd && (
+            <div className="mb-3">
+              <input
+                type="text"
+                value={customLabel}
+                onChange={e => setCustomLabel(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && customLabel.trim()) {
+                    setExpandedAdd(`custom:${customLabel.trim()}`)
+                  }
+                }}
+                placeholder="Enter custom issue..."
+                autoFocus
+                className="w-full px-3 py-2 text-sm bg-cream border border-ink/10 rounded-lg focus:outline-none focus:border-moss/50"
+              />
+              {customLabel.trim() && (
+                <button
+                  onClick={() => setExpandedAdd(`custom:${customLabel.trim()}`)}
+                  className="mt-2 text-xs text-moss"
+                >
+                  Set initial value for "{customLabel.trim()}"
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Inline slider for new dimension */}
+          {expandedAdd && (
+            <div className="p-4 bg-cream rounded-xl">
+              <p className="text-sm text-ink font-medium mb-1">
+                {expandedAdd.startsWith('custom:')
+                  ? expandedAdd.replace('custom:', '')
+                  : SUGGESTED_DIMENSIONS.find(d => d.name === expandedAdd)?.label}
+              </p>
+              <p className="text-xs text-ink/50 mb-4">How much is this affecting you?</p>
+
+              <div className="mb-4">
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={sliderValue}
+                  onChange={e => setSliderValue(parseInt(e.target.value))}
+                  className="w-full h-2 bg-ink/10 rounded-full appearance-none cursor-pointer accent-moss"
+                />
+                <div className="flex justify-between text-xs text-ink/40 mt-1">
+                  <span>Barely</span>
+                  <span className="text-ink font-medium">{sliderValue}/10</span>
+                  <span>Severely</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  if (expandedAdd.startsWith('custom:')) {
+                    const label = expandedAdd.replace('custom:', '')
+                    handleAddWithScore(label.toLowerCase().replace(/\s+/g, '-'), label)
+                  } else {
+                    const dim = SUGGESTED_DIMENSIONS.find(d => d.name === expandedAdd)
+                    if (dim) handleAddWithScore(dim.name, dim.label)
+                  }
+                }}
+                className="w-full py-2 bg-moss text-cream text-sm rounded-lg hover:bg-moss/90 transition-colors"
+              >
+                Add to tracking
+              </button>
+            </div>
           )}
         </div>
-
-        {/* Suggested dimensions */}
-        <div className="space-y-2 mb-4">
-          {availableDimensions.map(dim => (
-            <button
-              key={dim.name}
-              onClick={() => handleAddDimension(dim.name, dim.label, dim.description)}
-              className="w-full flex items-center justify-between p-3 bg-cream rounded-lg hover:bg-cream-deep transition-colors text-left"
-            >
-              <div>
-                <p className="text-sm text-ink font-medium">{dim.label}</p>
-                <p className="text-xs text-ink/40">{dim.description}</p>
-              </div>
-              <svg className="w-5 h-5 text-ink/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
-              </svg>
-            </button>
-          ))}
-        </div>
-
-        {/* Added dimensions */}
-        {dimensions.length > 0 && (
-          <div className="mb-4">
-            <p className="text-xs text-ink/40 mb-2">Tracking:</p>
-            <div className="flex flex-wrap gap-2">
-              {dimensions.map(dim => (
-                <span
-                  key={dim.id}
-                  className="px-3 py-1 bg-moss/10 text-moss text-xs rounded-full"
-                >
-                  {dim.label}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Custom dimension */}
-        <div className="pt-4 border-t border-ink/5">
-          <p className="text-xs text-ink/40 mb-2">Add your own:</p>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={customLabel}
-              onChange={e => setCustomLabel(e.target.value)}
-              placeholder="e.g., Work stress, Grief..."
-              className="flex-1 px-3 py-2 text-sm bg-cream border border-ink/10 rounded-lg focus:outline-none focus:border-moss/50"
-            />
-            <button
-              onClick={handleAddCustom}
-              disabled={!customLabel.trim()}
-              className="px-3 py-2 bg-ink text-cream text-sm rounded-lg disabled:opacity-50"
-            >
-              Add
-            </button>
-          </div>
-        </div>
-
-        {/* Check-in frequency */}
-        {dimensions.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-ink/5">
-            <p className="text-xs text-ink/40 mb-3">Check-in frequency</p>
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-ink/40">7 days</span>
-              <input
-                type="range"
-                min="7"
-                max="30"
-                value={frequency}
-                onChange={e => handleFrequencyChange(parseInt(e.target.value))}
-                className="flex-1 h-1 bg-ink/10 rounded-full appearance-none cursor-pointer accent-moss"
-              />
-              <span className="text-xs text-ink/40">30 days</span>
-            </div>
-            <p className="text-center text-sm text-ink/60 mt-2">
-              Every {frequency} days
-            </p>
-          </div>
-        )}
-
-        {dimensions.length > 0 && (
-          <button
-            onClick={() => {
-              setShowSetup(false)
-              setShowCheckIn(true)
-            }}
-            className="w-full mt-4 py-2.5 bg-moss text-cream text-sm rounded-lg hover:bg-moss/90 transition-colors"
-          >
-            Start First Check-in
-          </button>
-        )}
-      </div>
-    )
-  }
-
-  // Main view - showing tracked dimensions
-  return (
-    <>
-      <div className="p-5 bg-cream-warm rounded-xl">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-serif text-lg text-ink">Wellbeing</h3>
-          <button
-            onClick={() => setShowSetup(true)}
-            className="text-xs text-ink/40 hover:text-ink/60"
-          >
-            Edit
-          </button>
-        </div>
-
-        {/* Tracked dimensions with scores */}
-        <div className="space-y-3 mb-4">
-          {dimensions.map(dim => {
-            const checkIn = latestCheckIns.get(dim.id)
-            const improvement = improvements.get(dim.id)
-
-            return (
-              <div key={dim.id} className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-sm text-ink">{dim.label}</p>
-                  {checkIn && (
-                    <div className="flex items-center gap-2 mt-1">
-                      {/* Score visualization */}
-                      <div className="flex-1 h-1.5 bg-ink/5 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-moss to-amber-500 rounded-full transition-all"
-                          style={{ width: `${(checkIn.score / 10) * 100}%` }}
-                        />
-                      </div>
-                      <span className="text-xs text-ink/40 tabular-nums w-6">
-                        {checkIn.score}/10
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Improvement indicator */}
-                {improvement !== undefined && improvement !== 0 && (
-                  <div className={`ml-3 text-xs ${improvement > 0 ? 'text-moss' : 'text-amber-600'}`}>
-                    {improvement > 0 ? '↓' : '↑'} {Math.abs(improvement)}%
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Next check-in indicator */}
-        <div className="flex items-center justify-between pt-3 border-t border-ink/5">
-          <div>
-            <p className="text-xs text-ink/40">Next check-in</p>
-            <p className={`text-sm ${isCheckInDue ? 'text-moss font-medium' : 'text-ink/60'}`}>
-              {formatNextCheckIn()}
-            </p>
-          </div>
-
-          <button
-            onClick={() => {
-              loadImprovements()
-              setShowCheckIn(true)
-            }}
-            className={`px-4 py-2 text-sm rounded-lg transition-colors ${
-              isCheckInDue
-                ? 'bg-moss text-cream hover:bg-moss/90'
-                : 'bg-cream text-ink/60 hover:bg-cream-deep'
-            }`}
-          >
-            Check In
-          </button>
-        </div>
-      </div>
-
-      {/* Check-in modal */}
-      {showCheckIn && (
-        <WellbeingCheckInModal
-          dimensions={dimensions}
-          onClose={() => setShowCheckIn(false)}
-          onComplete={() => {
-            setShowCheckIn(false)
-            onRefresh()
-          }}
-        />
       )}
-    </>
+
+      {/* Tracked Dimensions */}
+      {dimensions.length > 0 && (
+        <div className="px-5 pb-5">
+          {!showAddPicker && dimensions.length > 0 && (
+            <p className="text-xs text-ink/40 mb-3">Tap to update, swipe to remove</p>
+          )}
+
+          <div className="space-y-2">
+            {dimensions.map(dim => {
+              const checkIn = latestCheckIns.get(dim.id)
+              const prog = progress.get(dim.id)
+              const isExpanded = expandedEdit === dim.id
+              const isSwiping = swipingId === dim.id
+
+              return (
+                <div key={dim.id} className="relative overflow-hidden rounded-xl">
+                  {/* Delete button (revealed on swipe) */}
+                  <div className="absolute inset-y-0 right-0 w-20 bg-red-500 flex items-center justify-center">
+                    <button
+                      onClick={() => handleDelete(dim.id)}
+                      className="text-white text-xs font-medium"
+                    >
+                      Delete
+                    </button>
+                  </div>
+
+                  {/* Main content */}
+                  <div
+                    className="relative bg-cream rounded-xl transition-transform"
+                    style={{ transform: `translateX(-${isSwiping ? swipeOffset : 0}px)` }}
+                    onTouchStart={e => handleTouchStart(e, dim.id)}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                  >
+                    {isExpanded ? (
+                      /* Expanded edit view */
+                      <div className="p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <p className="text-sm text-ink font-medium">{dim.label}</p>
+                          <button
+                            onClick={() => setExpandedEdit(null)}
+                            className="text-ink/40 hover:text-ink/60"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+
+                        <p className="text-xs text-ink/50 mb-3">How much is this affecting you now?</p>
+
+                        <div className="mb-4">
+                          <input
+                            type="range"
+                            min="1"
+                            max="10"
+                            value={sliderValue}
+                            onChange={e => setSliderValue(parseInt(e.target.value))}
+                            className="w-full h-2 bg-ink/10 rounded-full appearance-none cursor-pointer accent-moss"
+                          />
+                          <div className="flex justify-between text-xs text-ink/40 mt-1">
+                            <span>Barely</span>
+                            <span className="text-ink font-medium">{sliderValue}/10</span>
+                            <span>Severely</span>
+                          </div>
+                        </div>
+
+                        {prog && prog.baseline !== sliderValue && (
+                          <p className="text-xs text-ink/50 mb-3">
+                            Started at {prog.baseline}/10
+                            {sliderValue < prog.baseline && (
+                              <span className="text-moss ml-1">
+                                ({Math.round(((prog.baseline - sliderValue) / prog.baseline) * 100)}% improvement)
+                              </span>
+                            )}
+                          </p>
+                        )}
+
+                        <button
+                          onClick={() => handleUpdateScore(dim.id)}
+                          className="w-full py-2 bg-moss text-cream text-sm rounded-lg hover:bg-moss/90 transition-colors"
+                        >
+                          Update
+                        </button>
+                      </div>
+                    ) : (
+                      /* Collapsed view */
+                      <button
+                        onClick={() => handleExpandEdit(dim)}
+                        className="w-full p-4 text-left"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-sm text-ink">{dim.label}</p>
+                          <div className="flex items-center gap-2">
+                            {prog && prog.percentChange > 0 && (
+                              <span className="text-xs text-moss">
+                                ↓{prog.percentChange}%
+                              </span>
+                            )}
+                            {prog && prog.percentChange < 0 && (
+                              <span className="text-xs text-amber-600">
+                                ↑{Math.abs(prog.percentChange)}%
+                              </span>
+                            )}
+                            <span className="text-xs text-ink/50 tabular-nums">
+                              {checkIn?.score || '—'}/10
+                            </span>
+                          </div>
+                        </div>
+
+                        {checkIn && (
+                          <div className="h-1.5 bg-ink/5 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-moss to-moss/60 rounded-full transition-all"
+                              style={{ width: `${(checkIn.score / 10) * 100}%` }}
+                            />
+                          </div>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {dimensions.length === 0 && !showAddPicker && (
+        <div className="px-5 pb-5 text-center">
+          <p className="text-sm text-ink/50 mb-3">
+            Track how meditation affects your wellbeing over time
+          </p>
+          <button
+            onClick={() => setShowAddPicker(true)}
+            className="px-4 py-2 bg-moss text-cream text-sm rounded-lg hover:bg-moss/90 transition-colors"
+          >
+            Start Tracking
+          </button>
+        </div>
+      )}
+    </div>
   )
 }
