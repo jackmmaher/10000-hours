@@ -18,7 +18,7 @@ import {
   trackPaywallConverted
 } from '../lib/analytics'
 
-type PaywallSource = 'settings' | 'stats' | 'calendar'
+type PaywallSource = 'settings' | 'progress' | 'calendar'
 
 interface PaywallPremiumProps {
   source: PaywallSource
@@ -146,7 +146,7 @@ function getContent(source: PaywallSource, achievements: number) {
           : 'Take your practice to the next level.',
         dismissText: 'Maybe later',
       }
-    case 'stats':
+    case 'progress':
       return {
         title: 'Premium Features',
         subtitle: 'Share insights and track your impact.',

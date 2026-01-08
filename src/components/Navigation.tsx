@@ -83,7 +83,7 @@ export function Navigation() {
         {navItems.map((item) => {
           const isActive = view === item.view ||
             // Legacy view mappings for backwards compatibility during transition
-            (item.view === 'progress' && (view === 'stats' || view === 'calendar')) ||
+            (item.view === 'progress' && view === 'calendar') ||
             (item.view === 'explore' && (view === 'pearls' || view === 'saved-pearls')) ||
             (item.view === 'journey' && view === 'insights') ||
             (item.view === 'profile' && view === 'settings')

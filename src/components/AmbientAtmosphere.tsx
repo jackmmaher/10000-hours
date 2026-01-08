@@ -152,6 +152,9 @@ export function AmbientAtmosphere({ timeOfDay, season, mode, expressive = false 
       {mode === 'immersive' && timeOfDay === 'night' && (
         <CelestialElements season={season} expressive={expressive} />
       )}
+
+      {/* Wind gust visual - visible across ALL themes when wind triggers */}
+      <WindGust active={windActive} season={season} />
     </div>
   )
 }
@@ -1189,6 +1192,112 @@ function Aurora() {
           75% {
             transform: translateX(3%) scaleY(1.1);
             opacity: 0.7;
+          }
+        }
+      `}</style>
+    </div>
+  )
+}
+
+// ============================================================================
+// WIND GUST (Universal wind visual - works across all themes)
+// ============================================================================
+
+/**
+ * WindGust - A subtle visual sweep that shows when wind triggers
+ * Works across all season/time combinations unlike the old wind-affected classes
+ */
+function WindGust({ active, season }: { active: boolean; season: Season }) {
+  if (!active) return null
+
+  // Season-appropriate wind color
+  const windColors: Record<Season, { primary: string; secondary: string }> = {
+    spring: { primary: 'rgba(192, 132, 252, 0.08)', secondary: 'rgba(134, 239, 172, 0.06)' },
+    summer: { primary: 'rgba(251, 191, 36, 0.08)', secondary: 'rgba(253, 186, 116, 0.06)' },
+    autumn: { primary: 'rgba(217, 119, 6, 0.1)', secondary: 'rgba(180, 83, 9, 0.06)' },
+    winter: { primary: 'rgba(125, 211, 252, 0.08)', secondary: 'rgba(226, 232, 240, 0.06)' }
+  }
+
+  const { primary, secondary } = windColors[season]
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Primary wind sweep - diagonal light band */}
+      <div
+        className="absolute"
+        style={{
+          top: '-20%',
+          left: '-100%',
+          width: '60%',
+          height: '140%',
+          background: `linear-gradient(105deg, transparent 0%, ${primary} 40%, ${secondary} 60%, transparent 100%)`,
+          transform: 'skewX(-15deg)',
+          animation: 'windSweep 3s ease-out forwards',
+          filter: 'blur(40px)'
+        }}
+      />
+
+      {/* Secondary, faster streak */}
+      <div
+        className="absolute"
+        style={{
+          top: '-10%',
+          left: '-80%',
+          width: '30%',
+          height: '120%',
+          background: `linear-gradient(105deg, transparent 0%, ${secondary} 50%, transparent 100%)`,
+          transform: 'skewX(-20deg)',
+          animation: 'windSweep 2.5s ease-out 0.3s forwards',
+          filter: 'blur(30px)'
+        }}
+      />
+
+      {/* Subtle floating particles during wind */}
+      {[...Array(5)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute rounded-full"
+          style={{
+            left: `${10 + i * 18}%`,
+            top: `${20 + (i % 3) * 25}%`,
+            width: '4px',
+            height: '4px',
+            background: primary.replace('0.08', '0.4').replace('0.1', '0.5'),
+            animation: `windParticleDrift 3s ease-out ${i * 0.15}s forwards`,
+            filter: 'blur(1px)'
+          }}
+        />
+      ))}
+
+      <style>{`
+        @keyframes windSweep {
+          0% {
+            transform: skewX(-15deg) translateX(0);
+            opacity: 0;
+          }
+          20% {
+            opacity: 1;
+          }
+          80% {
+            opacity: 0.6;
+          }
+          100% {
+            transform: skewX(-15deg) translateX(350%);
+            opacity: 0;
+          }
+        }
+
+        @keyframes windParticleDrift {
+          0% {
+            transform: translate(0, 0) scale(1);
+            opacity: 0;
+          }
+          15% {
+            opacity: 0.8;
+          }
+          100% {
+            transform: translate(150px, -30px) scale(0.5);
+            opacity: 0;
           }
         }
       `}</style>

@@ -53,14 +53,14 @@ export function trackDay31Trigger(daysSinceFirstSession: number): void {
 /**
  * Track paywall dismissed without purchase
  */
-export function trackPaywallDismissed(source: 'day31' | 'settings' | 'stats' | 'calendar'): void {
+export function trackPaywallDismissed(source: 'day31' | 'settings' | 'progress' | 'calendar'): void {
   trackEvent('PaywallDismissed', { source })
 }
 
 /**
  * Track successful purchase
  */
-export function trackPaywallConverted(source: 'day31' | 'settings' | 'stats' | 'calendar'): void {
+export function trackPaywallConverted(source: 'day31' | 'settings' | 'progress' | 'calendar'): void {
   trackEvent('PaywallConverted', { source })
 }
 

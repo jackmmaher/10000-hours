@@ -3,21 +3,19 @@ import { Session, Achievement, addSession, getAllSessions, initAppState, markEnl
 import { GOAL_SECONDS } from '../lib/constants'
 import { MILESTONES } from '../lib/tierLogic'
 
-// New navigation structure: Timer | Journey | Explore | Progress | Profile
-// Legacy views maintained for backwards compatibility during transition
+// Navigation structure: Timer | Journey | Explore | Progress | Profile
 type AppView =
   | 'timer'
-  | 'journey'           // New: Personal space - plans, sessions, insights
-  | 'explore'           // New: Community discovery - pearls + sessions + courses
-  | 'progress'          // New: Milestones, stats, insight-driven history
-  | 'profile'           // New: User identity, preferences, wellbeing tracking
+  | 'journey'           // Personal space - plans, sessions, insights
+  | 'explore'           // Community discovery - pearls + sessions + courses
+  | 'progress'          // Milestones, stats, insight-driven history
+  | 'profile'           // User identity, preferences, wellbeing tracking
   | 'settings'          // Sub-page: Theme, display options, legal
-  // Legacy views (mapped to new structure)
-  | 'stats'             // -> progress
-  | 'calendar'          // -> progress
-  | 'insights'          // -> journey
-  | 'pearls'            // -> explore
-  | 'saved-pearls'      // -> explore
+  // Legacy views (still accessible via internal links)
+  | 'calendar'          // -> accessed from progress
+  | 'insights'          // -> accessed from journey
+  | 'pearls'            // -> accessed from explore
+  | 'saved-pearls'      // -> accessed from explore
 type TimerPhase = 'idle' | 'preparing' | 'running' | 'complete' | 'capture' | 'enlightenment'
 
 interface SessionState {

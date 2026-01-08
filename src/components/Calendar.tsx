@@ -162,7 +162,7 @@ export function Calendar({ embedded = false, onDateClick, refreshKey }: Calendar
   })
 
   const navSwipeHandlers = useSwipe({
-    onSwipeRight: () => setView('stats'),
+    onSwipeRight: () => setView('progress'),
     onSwipeDown: () => setView('timer')
   })
 
@@ -200,14 +200,14 @@ export function Calendar({ embedded = false, onDateClick, refreshKey }: Calendar
         {!embedded && (
           <div className="flex items-center justify-between mb-8">
             <button
-              onClick={() => setView('stats')}
+              onClick={() => setView('progress')}
               className="flex items-center text-sm transition-colors active:scale-[0.98]"
               style={{ color: 'var(--text-muted)' }}
             >
               <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
               </svg>
-              Stats
+              Progress
             </button>
 
             <button

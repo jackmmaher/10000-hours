@@ -332,13 +332,13 @@ export function Insights() {
         {/* Navigation */}
         <div className="flex justify-center gap-6 pt-8 mt-8 border-t border-ink/5">
           <button
-            onClick={() => setView('stats')}
+            onClick={() => setView('progress')}
             className="py-3 text-sm text-ink/40 hover:text-ink/60 transition-colors flex items-center active:scale-[0.98]"
           >
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
             </svg>
-            Stats
+            Progress
           </button>
           <button
             onClick={() => setView('pearls')}

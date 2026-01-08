@@ -57,7 +57,7 @@ export function Timer() {
   const swipeHandlers = useSwipe({
     onSwipeUp: () => {
       if (timerPhase === 'idle') {
-        setView('stats')
+        setView('progress')
       }
     }
   })
@@ -254,16 +254,16 @@ export function Timer() {
               <div className="w-1.5 h-1.5 rounded-full bg-ink/25 mb-6" />
             )}
 
-            {/* Stats hint - refined navigation */}
+            {/* Progress hint - refined navigation */}
             <button
               onClick={(e) => {
                 e.stopPropagation()
-                setView('stats')
+                setView('progress')
               }}
               className="flex flex-col items-center hover:opacity-60 transition-opacity active:scale-[0.95]"
             >
               <p className="text-xs text-ink/20 tracking-wide">
-                Stats
+                Progress
               </p>
               <svg
                 className="w-4 h-4 text-ink/15 mt-1"

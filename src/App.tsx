@@ -4,7 +4,6 @@ import { useSessionStore } from './stores/useSessionStore'
 import { usePremiumStore } from './stores/usePremiumStore'
 import { useSettingsStore } from './stores/useSettingsStore'
 import { Timer } from './components/Timer'
-import { Stats } from './components/Stats'
 import { Calendar } from './components/Calendar'
 import { Settings } from './components/Settings'
 import { Profile } from './components/Profile'
@@ -24,7 +23,7 @@ import { BreathingCanvas } from './components/BreathingCanvas'
 import { AmbientAtmosphere } from './components/AmbientAtmosphere'
 import { purchasePremium, restorePurchases } from './lib/purchases'
 
-type PaywallSource = 'settings' | 'stats' | 'calendar'
+type PaywallSource = 'settings' | 'progress' | 'calendar'
 
 function AppContent() {
   const { view, setView, isLoading, hydrate } = useSessionStore()
@@ -117,7 +116,7 @@ function AppContent() {
   }
 
   return (
-    <BreathingCanvas enabled intensity={0.015}> {/* Boosted from 0.008 for visibility - reduce later */}
+    <BreathingCanvas enabled intensity={0.025}> {/* Increased from 0.015 for better visibility */}
       {/* Global ambient atmosphere layer */}
       <AmbientAtmosphere
         timeOfDay={themeState.timeOfDay}
@@ -128,7 +127,6 @@ function AppContent() {
       <div className="h-full">
         {view === 'timer' && <Timer />}
         {view === 'journey' && <Journey />}
-        {view === 'stats' && <Stats />}
         {view === 'progress' && <Progress />}
         {view === 'calendar' && <Calendar />}
         {view === 'insights' && <Insights />}
