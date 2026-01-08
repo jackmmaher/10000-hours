@@ -15,6 +15,7 @@ import { useSettingsStore } from '../stores/useSettingsStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { usePremiumStore } from '../stores/usePremiumStore'
 import { useThemeInfo } from '../hooks/useTheme'
+import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import { trackHideTimeToggle } from '../lib/analytics'
 import { ThemeMode } from '../lib/db'
 import { getThemeName } from '../lib/themeEngine'
@@ -35,11 +36,21 @@ const THEME_OPTIONS: { value: ThemeMode; label: string; description: string }[] 
 
 export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsProps) {
   const { hideTimeDisplay, setHideTimeDisplay, themeMode, setThemeMode } = useSettingsStore()
-  const { user, isAuthenticated, signOut, isLoading: authLoading } = useAuthStore()
+  const { user, isAuthenticated, signOut, isLoading: authLoading, refreshProfile } = useAuthStore()
   const { tier, isPremium } = usePremiumStore()
   const { timeOfDay, season } = useThemeInfo()
   const [showThemeDetail, setShowThemeDetail] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
+
+  // Pull-to-refresh
+  const {
+    isPulling,
+    isRefreshing,
+    pullDistance,
+    handlers: pullHandlers
+  } = usePullToRefresh({
+    onRefresh: refreshProfile
+  })
 
   // Get current auto theme description
   const currentThemeName = getThemeName(timeOfDay, season)
@@ -51,7 +62,40 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
   }
 
   return (
-    <div className="h-full bg-cream overflow-y-auto flex flex-col">
+    <div
+      className="h-full bg-cream overflow-y-auto flex flex-col"
+      onTouchStart={pullHandlers.onTouchStart}
+      onTouchMove={pullHandlers.onTouchMove}
+      onTouchEnd={pullHandlers.onTouchEnd}
+    >
+      {/* Pull-to-refresh indicator */}
+      <div
+        className="flex justify-center overflow-hidden transition-all duration-200"
+        style={{
+          height: isPulling || isRefreshing ? Math.min(pullDistance, 80) : 0,
+          opacity: isPulling || isRefreshing ? 1 : 0
+        }}
+      >
+        <div className="flex items-center gap-2 py-2">
+          {isRefreshing ? (
+            <div className="w-5 h-5 border-2 border-moss/30 border-t-moss rounded-full animate-spin" />
+          ) : (
+            <svg
+              className="w-5 h-5 text-moss transition-transform duration-200"
+              style={{ transform: pullDistance >= 80 ? 'rotate(180deg)' : 'rotate(0deg)' }}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+          )}
+          <span className="text-sm text-moss">
+            {isRefreshing ? 'Refreshing...' : pullDistance >= 80 ? 'Release to refresh' : 'Pull to refresh'}
+          </span>
+        </div>
+      </div>
+
       <div className="px-6 py-8 max-w-lg mx-auto flex-1">
         {/* Header */}
         <button
