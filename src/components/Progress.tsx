@@ -240,12 +240,12 @@ export function Progress() {
             {/* ============================================ */}
             {/* SECTION 5: Commitment */}
             {/* ============================================ */}
-            <CommitmentCard stats={commitmentStats} />
+            <CommitmentCard stats={commitmentStats} totalSessions={sessionCount} />
 
             {/* ============================================ */}
             {/* SECTION 6: Growth Trajectory */}
             {/* ============================================ */}
-            <GrowthBars trajectory={growthTrajectory} />
+            <GrowthBars trajectory={growthTrajectory} totalSessions={sessionCount} />
 
             {/* ============================================ */}
             {/* SECTION 7: Suggested Actions */}
