@@ -66,7 +66,7 @@ export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
         </div>
 
         {/* Score breakdown */}
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
           {/* Component bars */}
           <div className="mb-6">
             <ComponentBar

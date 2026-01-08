@@ -183,7 +183,7 @@ export function MilestoneProgress({
         </div>
 
         {/* Sessions list */}
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
           <p className="text-xs text-ink/40 mb-3">
             Sessions contributing to this milestone
           </p>

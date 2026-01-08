@@ -152,7 +152,7 @@ export function SharePearl({ insightId, insightText, isAlreadyShared, onClose, o
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto px-6 pb-32">
+      <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-32">
         {/* Original insight - read only */}
         <div className="mb-6">
           <p className="text-xs text-ink/40 mb-3">Your original insight:</p>
