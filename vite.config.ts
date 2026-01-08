@@ -27,7 +27,13 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}']
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        // Force new service worker to activate immediately
+        skipWaiting: true,
+        // Take control of all clients immediately
+        clientsClaim: true,
+        // Don't cache-bust URLs with hashes (Vite already does this)
+        dontCacheBustURLsMatching: /\.[a-f0-9]{8}\./
       }
     })
   ]
