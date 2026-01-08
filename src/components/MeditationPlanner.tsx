@@ -427,7 +427,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
         </div>
 
         {/* Form */}
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5 space-y-5">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 py-5 space-y-5">
           {isLoading ? (
             <div className="flex justify-center py-8">
               <div className="w-5 h-5 border-2 border-indigo-deep/20 border-t-indigo-deep rounded-full animate-spin" />
