@@ -278,39 +278,26 @@ export function Journey() {
         </div>
 
         {/* Sub-tabs */}
-        <div className="flex gap-1 mb-4 bg-cream-deep rounded-lg p-1">
+        <div className="flex gap-1 mb-6 bg-cream-deep rounded-lg p-1">
           <TabButton
             active={subTab === 'sessions'}
             onClick={() => setSubTab('sessions')}
           >
-            My Insights
+            Insights
           </TabButton>
           <TabButton
             active={subTab === 'saved'}
             onClick={() => setSubTab('saved')}
           >
-            Guided Meditations
+            Meditations
           </TabButton>
           <TabButton
             active={subTab === 'pearls'}
             onClick={() => setSubTab('pearls')}
           >
-            My Pearls
+            Pearls
           </TabButton>
         </div>
-
-        {/* Create button - only show when logged in */}
-        {user && (
-          <button
-            onClick={() => setShowTemplateEditor(true)}
-            className="w-full mb-6 py-3 px-4 bg-cream-deep hover:bg-cream-deep/80 rounded-xl text-sm text-ink/60 hover:text-ink/80 transition-colors flex items-center justify-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
-            </svg>
-            Create Guided Meditation
-          </button>
-        )}
 
         {/* Tab Content */}
         {subTab === 'sessions' && (
@@ -323,7 +310,9 @@ export function Journey() {
           />
         )}
         {subTab === 'saved' && (
-          <SavedContent />
+          <SavedContent
+            onCreateNew={user ? () => setShowTemplateEditor(true) : undefined}
+          />
         )}
         {subTab === 'pearls' && (
           <MyPearlsContent />
@@ -498,10 +487,18 @@ function InsightCaptureWrapper({
 }
 
 // Saved content - shows saved session templates from Explore
-function SavedContent() {
+function SavedContent({ onCreateNew }: { onCreateNew?: () => void }) {
   const [savedSessions, setSavedSessions] = useState<SessionTemplate[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedSession, setSelectedSession] = useState<SessionTemplate | null>(null)
+  const [getIntentionGradient, setGetIntentionGradient] = useState<((intention: string) => string) | null>(null)
+
+  useEffect(() => {
+    // Load the gradient function
+    import('../lib/animations').then(module => {
+      setGetIntentionGradient(() => module.getIntentionGradient)
+    })
+  }, [])
 
   useEffect(() => {
     const loadSaved = async () => {
@@ -578,26 +575,40 @@ function SavedContent() {
     )
   }
 
+  // Empty state with create invitation
   if (savedSessions.length === 0) {
     return (
-      <div className="text-center py-12">
-        <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-cream-deep flex items-center justify-center">
-          <svg className="w-6 h-6 text-ink/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-          </svg>
+      <div className="space-y-4">
+        {/* Create invitation card - always first when available */}
+        {onCreateNew && (
+          <button
+            onClick={onCreateNew}
+            className="w-full group relative overflow-hidden rounded-2xl border-2 border-dashed border-ink/10 hover:border-ink/20 transition-all"
+          >
+            <div className="p-6 flex flex-col items-center justify-center min-h-[140px]">
+              <div className="w-10 h-10 rounded-full bg-cream-deep flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <svg className="w-5 h-5 text-ink/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+                </svg>
+              </div>
+              <p className="font-serif text-ink/70 mb-1">Create your own</p>
+              <p className="text-xs text-ink/40">Share your practice with others</p>
+            </div>
+          </button>
+        )}
+
+        {/* Browse prompt */}
+        <div className="text-center py-8">
+          <p className="text-ink/40 text-sm mb-2">
+            No saved meditations yet
+          </p>
+          <button
+            onClick={() => useSessionStore.getState().setView('explore')}
+            className="text-sm text-moss hover:text-moss/80 transition-colors"
+          >
+            Discover meditations
+          </button>
         </div>
-        <p className="text-ink/50 text-sm">
-          No saved sessions yet.
-        </p>
-        <p className="text-ink/30 text-xs mt-2">
-          Save sessions from Explore to find them here.
-        </p>
-        <button
-          onClick={() => useSessionStore.getState().setView('explore')}
-          className="mt-4 text-sm text-moss hover:text-moss/80 transition-colors"
-        >
-          Browse sessions →
-        </button>
       </div>
     )
   }
@@ -605,27 +616,61 @@ function SavedContent() {
   return (
     <>
       <div className="space-y-3">
-        {savedSessions.map((session) => (
+        {/* Create invitation card - first in list */}
+        {onCreateNew && (
           <button
-            key={session.id}
-            onClick={() => setSelectedSession(session)}
-            className="w-full text-left bg-cream-deep rounded-xl p-4 transition-all hover:bg-cream-deep/80 active:scale-[0.99]"
+            onClick={onCreateNew}
+            className="w-full group relative overflow-hidden rounded-2xl border-2 border-dashed border-ink/10 hover:border-ink/20 transition-all"
           >
-            <div className="flex items-center gap-2 mb-2">
-              <svg className="w-4 h-4 text-indigo-deep" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-              </svg>
-              <span className="text-xs text-ink/40">{session.discipline}</span>
-            </div>
-            <p className="font-serif text-ink mb-1">{session.title}</p>
-            <p className="text-sm text-ink/50 line-clamp-2">"{session.tagline}"</p>
-            <div className="flex gap-2 mt-2 text-xs text-ink/40">
-              <span>{session.durationGuidance}</span>
-              <span>·</span>
-              <span>{session.posture}</span>
+            <div className="p-5 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-cream-deep flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                <svg className="w-5 h-5 text-ink/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+                </svg>
+              </div>
+              <div className="text-left">
+                <p className="font-serif text-ink/70">Create your own meditation</p>
+                <p className="text-xs text-ink/40 mt-0.5">Share your practice with the community</p>
+              </div>
             </div>
           </button>
-        ))}
+        )}
+
+        {/* Saved meditation cards with gradient accent */}
+        {savedSessions.map((session) => {
+          const gradient = getIntentionGradient ? getIntentionGradient(session.intention) : 'from-[#9DB4A0] to-[#5C7C5E]'
+          return (
+            <button
+              key={session.id}
+              onClick={() => setSelectedSession(session)}
+              className="w-full text-left group relative overflow-hidden rounded-2xl bg-cream transition-all hover:shadow-md active:scale-[0.99]"
+            >
+              {/* Gradient accent bar */}
+              <div className={`absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b ${gradient}`} />
+
+              <div className="p-4 pl-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="text-xs text-ink/40 font-medium">{session.discipline}</span>
+                      <span className="text-ink/20">·</span>
+                      <span className="text-xs text-ink/40">{session.durationGuidance}</span>
+                    </div>
+                    <p className="font-serif text-ink mb-1 leading-snug">{session.title}</p>
+                    <p className="text-sm text-ink/50 line-clamp-1 italic">"{session.tagline}"</p>
+                  </div>
+
+                  {/* Bookmark indicator */}
+                  <div className="flex-shrink-0 mt-1">
+                    <svg className="w-4 h-4 text-ink/20 group-hover:text-ink/40 transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </button>
+          )
+        })}
       </div>
 
       {/* Session detail modal */}
@@ -733,11 +778,11 @@ function MyPearlsContent() {
   if (!user) {
     return (
       <div className="text-center py-12">
-        <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-cream-deep flex items-center justify-center">
-          <span className="text-2xl">✦</span>
+        <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-gradient-to-br from-cream-deep to-cream flex items-center justify-center shadow-inner">
+          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#E8E4DF] to-[#D4CFC8]" />
         </div>
         <p className="text-ink/50 text-sm">
-          Sign in to see your pearls.
+          Sign in to see your pearls
         </p>
       </div>
     )
@@ -748,47 +793,52 @@ function MyPearlsContent() {
   if (hasNoPearls) {
     return (
       <div className="text-center py-12">
-        <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-cream-deep flex items-center justify-center">
-          <span className="text-2xl">✦</span>
+        <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-gradient-to-br from-cream-deep to-cream flex items-center justify-center shadow-inner">
+          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#E8E4DF] to-[#D4CFC8]" />
         </div>
-        <p className="text-ink/50 text-sm">
-          No pearls yet.
+        <p className="text-ink/50 text-sm mb-1">
+          No pearls yet
         </p>
-        <p className="text-ink/30 text-xs mt-2">
-          Create pearls from insights or save from Explore.
+        <p className="text-ink/30 text-xs">
+          Distill insights into wisdom, or save pearls from Explore
         </p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Created by me section */}
       {createdPearls.length > 0 && (
         <div>
-          <p className="text-xs text-ink/40 font-medium uppercase tracking-wider mb-3">
-            Created by me
+          <p className="text-xs text-ink/40 font-medium uppercase tracking-wider mb-4">
+            My Wisdom
           </p>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {createdPearls.map((pearl) => (
-              <div key={pearl.id} className="bg-cream-deep rounded-xl p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-moss font-medium">✦ Pearl</span>
-                    <span className="text-xs text-ink/30">
+              <div
+                key={pearl.id}
+                className="relative bg-gradient-to-br from-cream to-[#F7F4F0] rounded-2xl p-5 shadow-sm"
+              >
+                {/* Polished pearl indicator - subtle shimmer line */}
+                <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent" />
+
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    {/* Small pearl orb */}
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#E8E4DF] to-[#C9C4BD] shadow-sm" />
+                    <span className="text-xs text-ink/40">
                       {new Date(pearl.createdAt).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric'
                       })}
+                      {pearl.editedAt && <span className="italic ml-1">· edited</span>}
                     </span>
-                    {pearl.editedAt && (
-                      <span className="text-xs text-ink/30 italic">· edited</span>
-                    )}
                   </div>
                   {editingPearlId !== pearl.id && (
                     <button
                       onClick={() => handleStartEdit(pearl)}
-                      className="text-xs text-ink/30 hover:text-ink/60 transition-colors"
+                      className="text-xs text-ink/30 hover:text-ink/60 transition-colors px-2 py-1 -mr-2"
                     >
                       Edit
                     </button>
@@ -800,7 +850,7 @@ function MyPearlsContent() {
                     <textarea
                       value={editText}
                       onChange={(e) => setEditText(e.target.value)}
-                      className="w-full h-24 px-3 py-2 rounded-lg bg-cream text-ink placeholder:text-ink/30 resize-none focus:outline-none focus:ring-2 focus:ring-moss/30 font-serif"
+                      className="w-full h-24 px-3 py-2 rounded-xl bg-white/50 text-ink placeholder:text-ink/30 resize-none focus:outline-none focus:ring-2 focus:ring-moss/20 font-serif"
                       maxLength={280}
                       autoFocus
                     />
@@ -811,14 +861,14 @@ function MyPearlsContent() {
                       <div className="flex gap-2">
                         <button
                           onClick={handleCancelEdit}
-                          className="text-xs text-ink/50 hover:text-ink/70 transition-colors px-3 py-1"
+                          className="text-xs text-ink/50 hover:text-ink/70 transition-colors px-3 py-1.5"
                         >
                           Cancel
                         </button>
                         <button
                           onClick={handleSaveEdit}
                           disabled={isSavingEdit || editText.length === 0 || editText.length > 280}
-                          className="text-xs text-moss font-medium hover:text-moss/80 transition-colors px-3 py-1 disabled:opacity-50"
+                          className="text-xs bg-ink text-cream font-medium hover:bg-ink/90 transition-colors px-3 py-1.5 rounded-lg disabled:opacity-50"
                         >
                           {isSavingEdit ? 'Saving...' : 'Save'}
                         </button>
@@ -826,19 +876,17 @@ function MyPearlsContent() {
                     </div>
                   </div>
                 ) : (
-                  <p className="font-serif text-ink leading-relaxed mb-4">
+                  <p className="font-serif text-ink leading-relaxed text-[15px]">
                     "{pearl.text}"
                   </p>
                 )}
 
                 {editingPearlId !== pearl.id && (
-                  <div className="flex items-center gap-4 text-sm text-ink/40">
-                    <span className="flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 15l7-7 7 7" />
-                      </svg>
-                      <span className="tabular-nums">{pearl.upvotes}</span>
-                    </span>
+                  <div className="flex items-center gap-1 mt-4 text-ink/30">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 15l7-7 7 7" />
+                    </svg>
+                    <span className="text-xs tabular-nums">{pearl.upvotes}</span>
                   </div>
                 )}
               </div>
@@ -850,36 +898,43 @@ function MyPearlsContent() {
       {/* Saved from community section */}
       {savedPearls.length > 0 && (
         <div>
-          <p className="text-xs text-ink/40 font-medium uppercase tracking-wider mb-3">
-            Saved from community
+          <p className="text-xs text-ink/40 font-medium uppercase tracking-wider mb-4">
+            Collected Wisdom
           </p>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {savedPearls.map((pearl) => (
-              <div key={pearl.id} className="bg-cream-deep rounded-xl p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-indigo-deep font-medium">✦ Saved</span>
+              <div
+                key={pearl.id}
+                className="relative bg-gradient-to-br from-[#F5F3F0] to-[#EDEAE6] rounded-2xl p-5"
+              >
+                {/* Subtle top highlight */}
+                <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    {/* Saved pearl orb - slightly different tone */}
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#D8D4CF] to-[#B8B4AF]" />
                     {pearl.isPreserved && (
-                      <span className="text-xs text-ink/30">(original removed)</span>
+                      <span className="text-xs text-ink/30 italic">preserved</span>
                     )}
                   </div>
                   <button
                     onClick={() => handleUnsave(pearl.id)}
-                    className="text-xs text-ink/30 hover:text-rose-500 transition-colors"
+                    className="text-xs text-ink/30 hover:text-rose-400 transition-colors px-2 py-1 -mr-2"
                   >
                     Remove
                   </button>
                 </div>
-                <p className="font-serif text-ink leading-relaxed mb-4">
+
+                <p className="font-serif text-ink/80 leading-relaxed text-[15px]">
                   "{pearl.text}"
                 </p>
-                <div className="flex items-center gap-4 text-sm text-ink/40">
-                  <span className="flex items-center gap-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 15l7-7 7 7" />
-                    </svg>
-                    <span className="tabular-nums">{pearl.upvotes}</span>
-                  </span>
+
+                <div className="flex items-center gap-1 mt-4 text-ink/25">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 15l7-7 7 7" />
+                  </svg>
+                  <span className="text-xs tabular-nums">{pearl.upvotes}</span>
                 </div>
               </div>
             ))}
