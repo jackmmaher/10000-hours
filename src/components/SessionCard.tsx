@@ -63,7 +63,7 @@ export function SessionCard({ session, gradient, onClick }: SessionCardProps) {
           </div>
 
           {/* Voice credibility badge */}
-          <VoiceBadgeWithHours score={voiceScore} hours={session.creatorHours} />
+          <VoiceBadgeWithHours score={voiceScore} />
         </div>
 
         {/* Title */}

@@ -461,12 +461,9 @@ function PearlCardExplore({
   const [localUpvotes, setLocalUpvotes] = useState(pearl.upvotes)
   const [localSaves, setLocalSaves] = useState(pearl.saves || 0)
 
-  // Get creator hours (use actual or generate consistent placeholder based on pearl id)
-  const creatorHours = (pearl as Pearl & { creatorHours?: number }).creatorHours
-    || (parseInt(pearl.id.slice(-4), 16) % 400) + 20 // Deterministic from id
-
-  // Calculate feed Voice score from available data
-  const voiceScore = calculateFeedVoice(creatorHours, localUpvotes, localSaves)
+  // Calculate feed Voice score from karma and saves only
+  // Pearls don't have creator hours - their credibility comes from community validation
+  const voiceScore = calculateFeedVoice(0, localUpvotes, localSaves)
 
   const handleVote = async () => {
     if (!isAuthenticated) {
@@ -524,8 +521,8 @@ function PearlCardExplore({
           <span className="text-xs text-ink/40">Community wisdom</span>
         </div>
 
-        {/* Voice credibility badge with hours */}
-        <VoiceBadgeWithHours score={voiceScore} hours={creatorHours} />
+        {/* Voice credibility badge */}
+        <VoiceBadgeWithHours score={voiceScore} />
       </div>
 
       {/* Pearl text */}

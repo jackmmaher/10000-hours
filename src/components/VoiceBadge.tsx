@@ -70,15 +70,14 @@ export function VoiceBadge({ score, showScore = false, compact = false }: VoiceB
 }
 
 /**
- * VoiceBadgeWithHours - Badge variant that shows hours context
- * For Explore feed where hours still matter as raw signal
+ * VoiceBadgeWithScore - Badge variant that shows Voice score prominently
+ * For Explore feed cards
  */
-interface VoiceBadgeWithHoursProps {
+interface VoiceBadgeWithScoreProps {
   score: number
-  hours: number
 }
 
-export function VoiceBadgeWithHours({ score, hours }: VoiceBadgeWithHoursProps) {
+export function VoiceBadgeWithHours({ score }: VoiceBadgeWithScoreProps) {
   const visual = getVoiceVisual(score)
 
   const glowStyles = {
@@ -112,12 +111,9 @@ export function VoiceBadgeWithHours({ score, hours }: VoiceBadgeWithHoursProps) 
         ))}
       </div>
 
-      {/* Separator */}
-      <span className={`text-[10px] ${visual.color} opacity-40`}>·</span>
-
-      {/* Hours display */}
-      <span className={`text-[10px] tabular-nums ${visual.color} opacity-80`}>
-        {hours.toLocaleString()} hrs
+      {/* Voice score display */}
+      <span className={`text-[10px] tabular-nums font-medium ${visual.color}`}>
+        {score}
       </span>
     </div>
   )
