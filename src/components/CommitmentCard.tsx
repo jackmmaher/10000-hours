@@ -9,7 +9,7 @@
  */
 
 import { CommitmentStats } from '../lib/progressInsights'
-import { useSessionStore } from '../stores/useSessionStore'
+import { useNavigationStore } from '../stores/useNavigationStore'
 
 interface CommitmentCardProps {
   stats: CommitmentStats
@@ -17,7 +17,7 @@ interface CommitmentCardProps {
 }
 
 export function CommitmentCard({ stats, totalSessions }: CommitmentCardProps) {
-  const { setView } = useSessionStore()
+  const { setView } = useNavigationStore()
 
   // If user has sessions but no plans, invite them to try planning
   if (stats.plansCreated === 0 && totalSessions >= 3) {

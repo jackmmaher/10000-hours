@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useSessionStore } from './stores/useSessionStore'
+import { useNavigationStore } from './stores/useNavigationStore'
 import { usePremiumStore } from './stores/usePremiumStore'
 import { useSettingsStore } from './stores/useSettingsStore'
 import { Timer } from './components/Timer'
@@ -13,6 +14,7 @@ import { Navigation } from './components/Navigation'
 import { Journey } from './components/Journey'
 import { Explore } from './components/Explore'
 import { Progress } from './components/Progress'
+import { SessionEditModal } from './components/SessionEditModal'
 import { useAuthStore } from './stores/useAuthStore'
 import { Onboarding, hasSeenOnboarding, markOnboardingSeen } from './components/Onboarding'
 import { PaywallPremium } from './components/PaywallPremium'
@@ -21,11 +23,13 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import { LivingTheme } from './components/LivingTheme'
 import { PWAInstallPrompt } from './components/PWAInstallPrompt'
 import { purchasePremium, restorePurchases } from './lib/purchases'
+import type { Session } from './lib/db'
 
 type PaywallSource = 'settings' | 'progress' | 'calendar'
 
 function AppContent() {
-  const { view, setView, isLoading, hydrate } = useSessionStore()
+  const { view, setView } = useNavigationStore()
+  const { isLoading, hydrate } = useSessionStore()
   const premiumStore = usePremiumStore()
   const settingsStore = useSettingsStore()
   const authStore = useAuthStore()
@@ -33,6 +37,8 @@ function AppContent() {
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showPaywall, setShowPaywall] = useState(false)
   const [paywallSource, setPaywallSource] = useState<PaywallSource>('settings')
+  const [editingSession, setEditingSession] = useState<Session | null>(null)
+  const [calendarRefreshKey, setCalendarRefreshKey] = useState(0)
   const hasInitialized = useRef(false)
 
   // Hydrate all stores on mount (runs once)
@@ -94,6 +100,29 @@ function AppContent() {
     }
   }, [premiumStore])
 
+  // Session editing handlers
+  const handleEditSession = useCallback((session: Session) => {
+    setEditingSession(session)
+  }, [])
+
+  const handleSessionEditClose = useCallback(() => {
+    setEditingSession(null)
+  }, [])
+
+  const handleSessionEditSave = useCallback(async () => {
+    setEditingSession(null)
+    // Refresh sessions from DB
+    await hydrate()
+    setCalendarRefreshKey(k => k + 1)
+  }, [hydrate])
+
+  const handleSessionEditDelete = useCallback(async () => {
+    setEditingSession(null)
+    // Refresh sessions from DB
+    await hydrate()
+    setCalendarRefreshKey(k => k + 1)
+  }, [hydrate])
+
   // Loading state
   if (isLoading || premiumStore.isLoading || settingsStore.isLoading) {
     return (
@@ -114,7 +143,12 @@ function AppContent() {
         {view === 'timer' && <Timer />}
         {view === 'journey' && <Journey />}
         {view === 'progress' && <Progress />}
-        {view === 'calendar' && <Calendar />}
+        {view === 'calendar' && (
+          <Calendar
+            refreshKey={calendarRefreshKey}
+            onEditSession={handleEditSession}
+          />
+        )}
         {view === 'insights' && <Insights />}
         {view === 'pearls' && <PearlsFeed />}
         {view === 'explore' && <Explore />}
@@ -129,6 +163,16 @@ function AppContent() {
             onBack={() => setView('profile')}
             onShowPaywall={() => handleShowPaywall('settings')}
             onRestorePurchase={handleRestore}
+          />
+        )}
+
+        {/* Session edit modal */}
+        {editingSession && (
+          <SessionEditModal
+            session={editingSession}
+            onClose={handleSessionEditClose}
+            onSave={handleSessionEditSave}
+            onDelete={handleSessionEditDelete}
           />
         )}
 

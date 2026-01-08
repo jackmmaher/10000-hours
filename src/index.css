@@ -123,16 +123,6 @@
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
 
-  /* === LEGACY ALIASES (backward compatibility) === */
-  --color-cream: var(--bg-base);
-  --color-cream-warm: var(--bg-elevated);
-  --color-cream-deep: var(--bg-deep);
-  --color-cream-dark: var(--bg-elevated);
-  --color-ink: var(--text-primary);
-  --color-ink-soft: var(--text-secondary);
-  --color-indigo: var(--text-primary);
-  --color-moss: var(--accent);
-  --color-bark: var(--accent-hover);
 }
 
 /* Theme transitions - smooth color changes */

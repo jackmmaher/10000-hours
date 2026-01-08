@@ -45,6 +45,7 @@ export type TimeOverride = 'morning' | 'daytime' | 'evening' | 'night'
 export interface UserSettings {
   id: 1
   hideTimeDisplay: boolean
+  skipInsightCapture: boolean  // Skip post-session insight recording prompt
   themeMode: ThemeMode
   visualEffects: VisualEffects
   // Manual theme overrides (only used when themeMode === 'manual')
@@ -369,6 +370,23 @@ export async function getSessionByUuid(uuid: string): Promise<Session | undefine
   return db.sessions.where('uuid').equals(uuid).first()
 }
 
+export async function deleteSession(uuid: string): Promise<void> {
+  const session = await db.sessions.where('uuid').equals(uuid).first()
+  if (session && session.id) {
+    await db.sessions.delete(session.id)
+  }
+}
+
+export async function updateSessionFull(
+  uuid: string,
+  updates: Partial<Pick<Session, 'startTime' | 'endTime' | 'durationSeconds' | 'pose' | 'discipline' | 'notes'>>
+): Promise<void> {
+  const session = await db.sessions.where('uuid').equals(uuid).first()
+  if (session && session.id) {
+    await db.sessions.update(session.id, updates)
+  }
+}
+
 export async function getTotalSeconds(): Promise<number> {
   const sessions = await db.sessions.toArray()
   return sessions.reduce((sum, s) => sum + s.durationSeconds, 0)
@@ -409,6 +427,7 @@ export async function getSettings(): Promise<UserSettings> {
     settings = {
       id: 1,
       hideTimeDisplay: false,
+      skipInsightCapture: false,
       themeMode: 'auto',
       visualEffects: 'calm'
     }
@@ -422,6 +441,11 @@ export async function getSettings(): Promise<UserSettings> {
   // Backfill visualEffects for existing users
   if (!settings.visualEffects) {
     settings.visualEffects = 'calm'
+    await db.settings.put(settings)
+  }
+  // Backfill skipInsightCapture for existing users
+  if (settings.skipInsightCapture === undefined) {
+    settings.skipInsightCapture = false
     await db.settings.put(settings)
   }
   return settings

@@ -119,7 +119,7 @@ export function TimeRangeSlider({
           onChange={handleSliderChange}
           className="w-full h-1.5 bg-indigo-deep/10 rounded-full appearance-none cursor-pointer slider-thumb"
           style={{
-            background: `linear-gradient(to right, var(--color-ink) 0%, var(--color-ink) ${sliderPosition}%, rgba(45, 52, 54, 0.1) ${sliderPosition}%, rgba(45, 52, 54, 0.1) 100%)`
+            background: `linear-gradient(to right, var(--text-primary) 0%, var(--text-primary) ${sliderPosition}%, rgba(45, 52, 54, 0.1) ${sliderPosition}%, rgba(45, 52, 54, 0.1) 100%)`
           }}
         />
       </div>

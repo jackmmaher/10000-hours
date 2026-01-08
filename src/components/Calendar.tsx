@@ -6,6 +6,7 @@
 
 import { useMemo, useState, useEffect } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
+import { useNavigationStore } from '../stores/useNavigationStore'
 import { useSwipe } from '../hooks/useSwipe'
 import {
   getMonthlyData,
@@ -31,10 +32,12 @@ interface CalendarProps {
   embedded?: boolean
   onDateClick?: (date: Date) => void
   refreshKey?: number
+  onEditSession?: (session: ReturnType<typeof getSessionsForDate>[number]) => void
 }
 
-export function Calendar({ embedded = false, onDateClick, refreshKey }: CalendarProps) {
-  const { sessions, setView } = useSessionStore()
+export function Calendar({ embedded = false, onDateClick, refreshKey, onEditSession }: CalendarProps) {
+  const { sessions } = useSessionStore()
+  const { setView } = useNavigationStore()
 
   const today = new Date()
   const [viewType, setViewType] = useState<CalendarView>('month')
@@ -485,11 +488,22 @@ export function Calendar({ embedded = false, onDateClick, refreshKey }: Calendar
                         {selectedSessions.map((session, i) => (
                           <div
                             key={session.id || i}
-                            className="flex justify-between text-sm"
+                            className="flex items-center justify-between text-sm"
                             style={{ color: 'var(--text-secondary)' }}
                           >
                             <span>{formatTime(new Date(session.startTime))}</span>
-                            <span className="tabular-nums">{formatDuration(session.durationSeconds)}</span>
+                            <div className="flex items-center gap-3">
+                              <span className="tabular-nums">{formatDuration(session.durationSeconds)}</span>
+                              {onEditSession && (
+                                <button
+                                  onClick={() => onEditSession(session)}
+                                  className="text-xs transition-colors"
+                                  style={{ color: 'var(--text-muted)' }}
+                                >
+                                  Edit
+                                </button>
+                              )}
+                            </div>
                           </div>
                         ))}
                       </div>

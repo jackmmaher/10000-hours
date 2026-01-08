@@ -7,7 +7,7 @@
  * Each failing test represents a real user pain point.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 
 // ============================================================================
 // SECTION 1: FUNDAMENTAL UX FAILURES
@@ -24,7 +24,6 @@ describe('Basic Timer Functionality That Should Be Trivial', () => {
     // to your "zen message" animation is 0.3% of my session. Over 10,000 hours,
     // that's 30 hours of watching your animations.
 
-    const startTimestamp = performance.now()
     // Simulate: tap to start
     // Current: timerPhase goes idle → preparing → (wait for ZenMessage) → running
     // This delay is FORCED. There's no skip option.

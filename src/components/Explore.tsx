@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useTapFeedback } from '../hooks/useTapFeedback'
-import { useSessionStore } from '../stores/useSessionStore'
+import { useNavigationStore } from '../stores/useNavigationStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSwipe } from '../hooks/useSwipe'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
@@ -93,7 +93,7 @@ type FilterType = 'all' | 'pearls' | 'sessions'
 type SortType = 'rising' | 'new' | 'top' | 'saved'
 
 export function Explore() {
-  const { setView } = useSessionStore()
+  const { setView } = useNavigationStore()
   const { user, isAuthenticated, refreshProfile } = useAuthStore()
   const [pearls, setPearls] = useState<Pearl[]>([])
   const [communityTemplates, setCommunityTemplates] = useState<SessionTemplate[]>([])

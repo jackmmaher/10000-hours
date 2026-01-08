@@ -12,6 +12,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
+import { useNavigationStore } from '../stores/useNavigationStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useVoice } from '../hooks/useVoice'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
@@ -68,7 +69,8 @@ interface ProfileProps {
 }
 
 export function Profile({ onNavigateToSettings }: ProfileProps) {
-  const { setView, sessions } = useSessionStore()
+  const { sessions } = useSessionStore()
+  const { setView } = useNavigationStore()
   const { user, isAuthenticated } = useAuthStore()
   const { voice, isLoading: voiceLoading } = useVoice()
 

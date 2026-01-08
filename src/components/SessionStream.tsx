@@ -18,6 +18,8 @@ interface SessionStreamProps {
   onCreatePearl?: (session: SessionWithDetails) => void
   /** Called when a session card is clicked (for Calendar sync) */
   onSessionClick?: (session: Session) => void
+  /** Called when user wants to edit a session */
+  onEditSession?: (session: Session) => void
 }
 
 export interface SessionWithDetails extends Session {
@@ -61,7 +63,7 @@ function formatSessionTime(timestamp: number): string {
   })
 }
 
-export function SessionStream({ sessions, onAddInsight, onCreatePearl, onSessionClick }: SessionStreamProps) {
+export function SessionStream({ sessions, onAddInsight, onCreatePearl, onSessionClick, onEditSession }: SessionStreamProps) {
   const [sessionsWithDetails, setSessionsWithDetails] = useState<SessionWithDetails[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -167,6 +169,7 @@ export function SessionStream({ sessions, onAddInsight, onCreatePearl, onSession
                 onAddInsight={onAddInsight}
                 onCreatePearl={onCreatePearl}
                 onSessionClick={onSessionClick}
+                onEditSession={onEditSession}
               />
             ))}
           </div>
@@ -181,12 +184,14 @@ function SessionCard({
   session,
   onAddInsight,
   onCreatePearl,
-  onSessionClick
+  onSessionClick,
+  onEditSession
 }: {
   session: SessionWithDetails
   onAddInsight?: (session: Session) => void
   onCreatePearl?: (session: SessionWithDetails) => void
   onSessionClick?: (session: Session) => void
+  onEditSession?: (session: Session) => void
 }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const hasInsight = !!session.insight
@@ -206,6 +211,11 @@ function SessionCard({
   const handleCreatePearl = (e: React.MouseEvent) => {
     e.stopPropagation() // Don't trigger card expand
     onCreatePearl?.(session)
+  }
+
+  const handleEditSession = (e: React.MouseEvent) => {
+    e.stopPropagation() // Don't trigger card expand
+    onEditSession?.(session)
   }
 
   return (
@@ -292,26 +302,39 @@ function SessionCard({
             </div>
           )}
 
-          {/* Actions based on insight state */}
-          {!hasInsight ? (
+          {/* Actions row */}
+          <div className="flex items-center justify-between">
+            {/* Actions based on insight state */}
+            <div>
+              {!hasInsight ? (
+                <button
+                  onClick={handleAddInsight}
+                  className="text-sm text-indigo-deep hover:text-indigo-deep/80 transition-colors font-medium"
+                >
+                  Add insight →
+                </button>
+              ) : hasSharedPearl ? (
+                <span className="text-xs text-moss font-medium">
+                  ✦ Pearl shared
+                </span>
+              ) : (
+                <button
+                  onClick={handleCreatePearl}
+                  className="text-sm text-moss hover:text-moss/80 transition-colors font-medium"
+                >
+                  Create Pearl →
+                </button>
+              )}
+            </div>
+
+            {/* Edit button */}
             <button
-              onClick={handleAddInsight}
-              className="text-sm text-indigo-deep hover:text-indigo-deep/80 transition-colors font-medium"
+              onClick={handleEditSession}
+              className="text-xs text-ink/40 hover:text-ink/60 transition-colors"
             >
-              Add insight →
+              Edit
             </button>
-          ) : hasSharedPearl ? (
-            <span className="text-xs text-moss font-medium">
-              ✦ Pearl shared
-            </span>
-          ) : (
-            <button
-              onClick={handleCreatePearl}
-              className="text-sm text-moss hover:text-moss/80 transition-colors font-medium"
-            >
-              Create Pearl →
-            </button>
-          )}
+          </div>
         </div>
       )}
 

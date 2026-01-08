@@ -8,14 +8,14 @@
  */
 
 import { SuggestedAction } from '../lib/progressInsights'
-import { useSessionStore } from '../stores/useSessionStore'
+import { useNavigationStore } from '../stores/useNavigationStore'
 
 interface SuggestedActionsProps {
   actions: SuggestedAction[]
 }
 
 export function SuggestedActions({ actions }: SuggestedActionsProps) {
-  const { setView } = useSessionStore()
+  const { setView } = useNavigationStore()
 
   if (actions.length === 0) {
     return null

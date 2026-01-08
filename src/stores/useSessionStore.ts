@@ -3,26 +3,12 @@ import { Session, Achievement, addSession, getAllSessions, initAppState, markEnl
 import { GOAL_SECONDS } from '../lib/constants'
 import { MILESTONES } from '../lib/tierLogic'
 
-// Navigation structure: Timer | Journey | Explore | Progress | Profile
-type AppView =
-  | 'timer'
-  | 'journey'           // Personal space - plans, sessions, insights
-  | 'explore'           // Community discovery - pearls + sessions + courses
-  | 'progress'          // Milestones, stats, insight-driven history
-  | 'profile'           // User identity, preferences, wellbeing tracking
-  | 'settings'          // Sub-page: Theme, display options, legal
-  // Legacy views (still accessible via internal links)
-  | 'calendar'          // -> accessed from progress
-  | 'insights'          // -> accessed from journey
-  | 'pearls'            // -> accessed from explore
-  | 'saved-pearls'      // -> accessed from explore
+// Re-export AppView from navigation store for backwards compatibility during migration
+export type { AppView } from './useNavigationStore'
+
 type TimerPhase = 'idle' | 'preparing' | 'running' | 'complete' | 'capture' | 'enlightenment'
 
 interface SessionState {
-  // App state
-  view: AppView
-  setView: (view: AppView) => void
-
   // Sessions
   sessions: Session[]
   totalSeconds: number
@@ -58,7 +44,6 @@ interface SessionState {
 
 export const useSessionStore = create<SessionState>((set, get) => ({
   // Initial state
-  view: 'timer',
   sessions: [],
   totalSeconds: 0,
   isLoading: true,
@@ -70,8 +55,6 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   justReachedEnlightenment: false,
   justAchievedMilestone: null,
   lastSessionUuid: null,
-
-  setView: (view) => set({ view }),
 
   hydrate: async () => {
     const [sessions, appState] = await Promise.all([

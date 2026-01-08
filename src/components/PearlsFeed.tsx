@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
-import { useSessionStore } from '../stores/useSessionStore'
+import { useNavigationStore } from '../stores/useNavigationStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSwipe } from '../hooks/useSwipe'
 import {
@@ -164,7 +164,7 @@ function PearlCard({ pearl, onVote, onSave, onRequireAuth, isAuthenticated }: Pe
 }
 
 export function PearlsFeed() {
-  const { setView } = useSessionStore()
+  const { setView } = useNavigationStore()
   const { user, isAuthenticated, refreshProfile } = useAuthStore()
   const [pearls, setPearls] = useState<Pearl[]>([])
   const [filter, setFilter] = useState<PearlFilter>('new')

@@ -7,7 +7,7 @@
 
 import { useMemo } from 'react'
 import { PlannedSession } from '../lib/db'
-import { useSessionStore } from '../stores/useSessionStore'
+import { useNavigationStore } from '../stores/useNavigationStore'
 import { ORB_COLORS, ANIMATION_BREATHE_DURATION } from '../lib/animations'
 
 interface JourneyNextSessionProps {
@@ -19,7 +19,7 @@ export function JourneyNextSession({
   plannedSession,
   onPlanClick
 }: JourneyNextSessionProps) {
-  const { setView } = useSessionStore()
+  const { setView } = useNavigationStore()
 
   // Format the date for display
   const dateDisplay = useMemo(() => {

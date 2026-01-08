@@ -14,6 +14,7 @@ import { getSettings, updateSettings, ThemeMode, VisualEffects, SeasonOverride, 
 interface SettingsState {
   // State
   hideTimeDisplay: boolean
+  skipInsightCapture: boolean
   themeMode: ThemeMode
   visualEffects: VisualEffects
   manualSeason: SeasonOverride
@@ -23,6 +24,7 @@ interface SettingsState {
   // Actions
   hydrate: () => Promise<void>
   setHideTimeDisplay: (value: boolean) => Promise<void>
+  setSkipInsightCapture: (value: boolean) => Promise<void>
   setThemeMode: (value: ThemeMode) => Promise<void>
   setVisualEffects: (value: VisualEffects) => Promise<void>
   setManualTheme: (season: SeasonOverride, time: TimeOverride) => Promise<void>
@@ -31,6 +33,7 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>((set) => ({
   // Initial state
   hideTimeDisplay: false,
+  skipInsightCapture: false,
   themeMode: 'auto',
   visualEffects: 'calm',
   manualSeason: 'winter',
@@ -41,6 +44,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     const settings = await getSettings()
     set({
       hideTimeDisplay: settings.hideTimeDisplay,
+      skipInsightCapture: settings.skipInsightCapture,
       themeMode: settings.themeMode,
       visualEffects: settings.visualEffects,
       manualSeason: settings.manualSeason ?? 'winter',
@@ -52,6 +56,11 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   setHideTimeDisplay: async (value) => {
     await updateSettings({ hideTimeDisplay: value })
     set({ hideTimeDisplay: value })
+  },
+
+  setSkipInsightCapture: async (value) => {
+    await updateSettings({ skipInsightCapture: value })
+    set({ skipInsightCapture: value })
   },
 
   setThemeMode: async (value) => {

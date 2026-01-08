@@ -7,7 +7,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react'
-import { useSessionStore } from '../stores/useSessionStore'
+import { useNavigationStore } from '../stores/useNavigationStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSwipe } from '../hooks/useSwipe'
 import { getInsights, deleteInsight, markInsightAsShared, Insight } from '../lib/db'
@@ -41,7 +41,7 @@ function formatPearlDate(dateStr: string): string {
 }
 
 export function Insights() {
-  const { setView } = useSessionStore()
+  const { setView } = useNavigationStore()
   const { user, isAuthenticated, refreshProfile } = useAuthStore()
   const [activeTab, setActiveTab] = useState<Tab>('notes')
   const [insights, setInsights] = useState<Insight[]>([])

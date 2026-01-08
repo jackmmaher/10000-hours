@@ -19,6 +19,7 @@ import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import { trackHideTimeToggle } from '../lib/analytics'
 import { SeasonOverride, TimeOverride } from '../lib/db'
 import { getThemeName } from '../lib/themeEngine'
+import { downloadJSON, downloadCSV } from '../lib/export'
 import { AuthModal } from './AuthModal'
 
 interface SettingsProps {
@@ -54,6 +55,7 @@ const QUICK_PRESETS: { label: string; season: SeasonOverride; time: TimeOverride
 export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsProps) {
   const {
     hideTimeDisplay, setHideTimeDisplay,
+    skipInsightCapture, setSkipInsightCapture,
     themeMode, setThemeMode,
     visualEffects, setVisualEffects,
     manualSeason, manualTime, setManualTheme
@@ -184,6 +186,33 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
                   absolute top-1 w-5 h-5 rounded-full shadow-sm
                   transition-transform duration-300
                   ${hideTimeDisplay ? 'translate-x-6' : 'translate-x-1'}
+                `}
+                style={{ background: 'var(--toggle-thumb)' }}
+              />
+            </div>
+          </button>
+
+          {/* Skip Insight Capture */}
+          <button
+            onClick={() => setSkipInsightCapture(!skipInsightCapture)}
+            className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform"
+          >
+            <div className="text-left">
+              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Skip insight capture</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                Go straight to timer after sessions
+              </p>
+            </div>
+            {/* Custom organic toggle - theme aware */}
+            <div
+              className="relative w-12 h-7 rounded-full transition-colors duration-300"
+              style={{ background: skipInsightCapture ? 'var(--toggle-on)' : 'var(--toggle-off)' }}
+            >
+              <div
+                className={`
+                  absolute top-1 w-5 h-5 rounded-full shadow-sm
+                  transition-transform duration-300
+                  ${skipInsightCapture ? 'translate-x-6' : 'translate-x-1'}
                 `}
                 style={{ background: 'var(--toggle-thumb)' }}
               />
@@ -362,6 +391,31 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
               </div>
             </div>
           )}
+        </div>
+
+        {/* Data */}
+        <div className="mb-8">
+          <p className="font-serif text-sm text-ink/50 tracking-wide mb-4">Your Data</p>
+          <div className="space-y-2">
+            <button
+              onClick={downloadJSON}
+              className="w-full p-4 bg-cream-warm rounded-xl text-left hover:bg-cream-deep transition-colors active:scale-[0.99]"
+            >
+              <p className="text-sm text-ink font-medium">Export as JSON</p>
+              <p className="text-xs text-ink/40 mt-1">
+                Full data backup including insights
+              </p>
+            </button>
+            <button
+              onClick={downloadCSV}
+              className="w-full p-4 bg-cream-warm rounded-xl text-left hover:bg-cream-deep transition-colors active:scale-[0.99]"
+            >
+              <p className="text-sm text-ink font-medium">Export sessions as CSV</p>
+              <p className="text-xs text-ink/40 mt-1">
+                Spreadsheet-compatible format
+              </p>
+            </button>
+          </div>
         </div>
 
         {/* Account */}

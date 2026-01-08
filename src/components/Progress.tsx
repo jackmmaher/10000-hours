@@ -14,6 +14,7 @@
 
 import { useMemo, useState, useRef, useEffect } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
+import { useNavigationStore } from '../stores/useNavigationStore'
 import { useSwipe } from '../hooks/useSwipe'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import { useVoice } from '../hooks/useVoice'
@@ -47,7 +48,8 @@ import { SuggestedActions } from './SuggestedActions'
 import { VoiceDetailModal } from './VoiceDetailModal'
 
 export function Progress() {
-  const { sessions, totalSeconds, setView } = useSessionStore()
+  const { sessions, totalSeconds } = useSessionStore()
+  const { setView } = useNavigationStore()
   const { voice } = useVoice()
 
   // Load additional data from IndexedDB

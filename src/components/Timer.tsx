@@ -1,5 +1,6 @@
 import { useEffect, useCallback } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
+import { useNavigationStore } from '../stores/useNavigationStore'
 import { useSettingsStore } from '../stores/useSettingsStore'
 import { useTimer, useWakeLock } from '../hooks/useTimer'
 import { useSwipe } from '../hooks/useSwipe'
@@ -22,11 +23,11 @@ export function Timer() {
     stopTimer,
     acknowledgeEnlightenment,
     startInsightCapture,
-    skipInsightCapture,
-    setView
+    skipInsightCapture
   } = useSessionStore()
+  const { setView } = useNavigationStore()
 
-  const { hideTimeDisplay } = useSettingsStore()
+  const { hideTimeDisplay, skipInsightCapture: skipInsightSetting } = useSettingsStore()
   const haptic = useTapFeedback()
 
   const { elapsed, isRunning } = useTimer()
@@ -49,13 +50,15 @@ export function Timer() {
     // Don't handle tap during 'complete' - let it transition to capture
   }, [timerPhase, startPreparing, stopTimer, haptic])
 
-  // After session complete, transition to insight capture
+  // After session complete, transition to insight capture (or skip if preference set)
+  // Brief delay (800ms) for user to register completion, not a forced wait
   useEffect(() => {
     if (timerPhase === 'complete') {
-      const timer = setTimeout(startInsightCapture, 3000)
+      const handler = skipInsightSetting ? skipInsightCapture : startInsightCapture
+      const timer = setTimeout(handler, 800)
       return () => clearTimeout(timer)
     }
-  }, [timerPhase, startInsightCapture])
+  }, [timerPhase, startInsightCapture, skipInsightCapture, skipInsightSetting])
 
   // Swipe handlers
   const swipeHandlers = useSwipe({

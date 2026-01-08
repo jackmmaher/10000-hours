@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
-import { useSessionStore } from '../stores/useSessionStore'
+import { useNavigationStore } from '../stores/useNavigationStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSwipe } from '../hooks/useSwipe'
 import { getSavedPearls, unsavePearl, Pearl } from '../lib/pearls'
@@ -27,7 +27,7 @@ function formatTimeAgo(dateStr: string): string {
 }
 
 export function SavedPearls() {
-  const { setView } = useSessionStore()
+  const { setView } = useNavigationStore()
   const { user, isAuthenticated } = useAuthStore()
   const [pearls, setPearls] = useState<Pearl[]>([])
   const [isLoading, setIsLoading] = useState(true)

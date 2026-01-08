@@ -7,6 +7,7 @@
  */
 
 import { useSessionStore } from '../stores/useSessionStore'
+import { useNavigationStore } from '../stores/useNavigationStore'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 
 type NavItem = {
@@ -65,7 +66,8 @@ const navItems: NavItem[] = [
 ]
 
 export function Navigation() {
-  const { view, timerPhase, setView } = useSessionStore()
+  const { view, setView } = useNavigationStore()
+  const { timerPhase } = useSessionStore()
   const haptic = useTapFeedback()
 
   // Hide during active meditation phases
