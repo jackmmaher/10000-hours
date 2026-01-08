@@ -3,6 +3,7 @@
  *
  * River stones representing days of the week.
  * Used in both Journey tab and Progress tab.
+ * Now fully theme-aware using CSS variables.
  *
  * States:
  * - completed: Session done (any session, planned or not)
@@ -15,7 +16,6 @@
 
 import { useMemo } from 'react'
 import { DayStatus } from '../lib/calculations'
-import { ANIMATION_BREATHE_DURATION, ORB_COLORS } from '../lib/animations'
 
 const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
@@ -28,7 +28,7 @@ interface WeekStoneProps {
   size?: 'sm' | 'md' | 'lg'
 }
 
-// Individual stone component
+// Individual stone component - now using CSS variables
 export function WeekStone({ status, onClick, size = 'sm' }: WeekStoneProps) {
   const sizeClasses = {
     sm: 'w-3 h-3',
@@ -37,11 +37,10 @@ export function WeekStone({ status, onClick, size = 'sm' }: WeekStoneProps) {
   }
 
   // Animated sizes must be slightly larger than base for breathing effect
-  // Using Tailwind arbitrary values since w-4.5/w-5.5 don't exist
   const animatedSizeClasses = {
-    sm: 'w-3.5 h-3.5',           // 0.875rem - valid Tailwind class
-    md: 'w-[1.125rem] h-[1.125rem]', // 18px - between w-4 (16px) and w-5 (20px)
-    lg: 'w-[1.375rem] h-[1.375rem]'  // 22px - between w-5 (20px) and w-6 (24px)
+    sm: 'w-3.5 h-3.5',
+    md: 'w-[1.125rem] h-[1.125rem]',
+    lg: 'w-[1.375rem] h-[1.375rem]'
   }
 
   const baseSize = sizeClasses[size]
@@ -51,9 +50,10 @@ export function WeekStone({ status, onClick, size = 'sm' }: WeekStoneProps) {
   if (status === 'completed') {
     return (
       <div
-        className={`${baseSize} rounded-full shadow-sm cursor-default`}
+        className={`${baseSize} rounded-full cursor-default`}
         style={{
-          background: `radial-gradient(circle at 30% 30%, ${ORB_COLORS.slate}, ${ORB_COLORS.indigo})`
+          background: `radial-gradient(circle at 30% 30%, var(--stone-completed-inner), var(--stone-completed))`,
+          boxShadow: 'var(--shadow-elevation-1)'
         }}
         onClick={onClick}
       />
@@ -64,15 +64,19 @@ export function WeekStone({ status, onClick, size = 'sm' }: WeekStoneProps) {
   if (status === 'fulfilled') {
     return (
       <div
-        className={`${baseSize} rounded-full shadow-sm cursor-pointer relative`}
+        className={`${baseSize} rounded-full cursor-pointer relative`}
         style={{
-          background: `radial-gradient(circle at 30% 30%, ${ORB_COLORS.moss}, ${ORB_COLORS.slate})`
+          background: `radial-gradient(circle at 30% 30%, var(--accent), var(--stone-completed))`,
+          boxShadow: 'var(--shadow-elevation-1)'
         }}
         onClick={onClick}
       >
         {/* Small checkmark indicator */}
-        <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-moss rounded-full flex items-center justify-center">
-          <svg className="w-1.5 h-1.5 text-cream" fill="currentColor" viewBox="0 0 20 20">
+        <div
+          className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full flex items-center justify-center"
+          style={{ background: 'var(--accent)' }}
+        >
+          <svg className="w-1.5 h-1.5" style={{ color: 'var(--text-on-accent)' }} fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
           </svg>
         </div>
@@ -84,22 +88,23 @@ export function WeekStone({ status, onClick, size = 'sm' }: WeekStoneProps) {
   if (status === 'next') {
     return (
       <div
-        className={`${animatedSize} rounded-full animate-breathe ring-2 ring-ink/15 ring-offset-2 ring-offset-cream cursor-pointer`}
+        className={`${animatedSize} rounded-full animate-breathe cursor-pointer`}
         style={{
-          background: `radial-gradient(circle at 30% 30%, ${ORB_COLORS.moss}, ${ORB_COLORS.slate})`,
-          animationDuration: `${ANIMATION_BREATHE_DURATION}ms`
+          background: `radial-gradient(circle at 30% 30%, var(--accent), var(--stone-completed))`,
+          boxShadow: `0 0 0 2px var(--bg-base), 0 0 0 4px var(--border)`,
+          animationDuration: '3000ms'
         }}
         onClick={onClick}
       />
     )
   }
 
-  // Today without a session - render as cream orb (same as future)
-  // The day has arrived; no special visual needed if no plan exists
+  // Today without a session - render as neutral
   if (status === 'today') {
     return (
       <div
-        className={`${baseSize} rounded-full bg-cream-deep cursor-pointer hover:bg-ink/10 transition-colors`}
+        className={`${baseSize} rounded-full cursor-pointer transition-colors`}
+        style={{ background: 'var(--stone-today)' }}
         onClick={onClick}
       />
     )
@@ -109,9 +114,10 @@ export function WeekStone({ status, onClick, size = 'sm' }: WeekStoneProps) {
   if (status === 'planned') {
     return (
       <div
-        className={`${baseSize} rounded-full cursor-pointer border-2 border-moss/50`}
+        className={`${baseSize} rounded-full cursor-pointer`}
         style={{
-          background: `radial-gradient(circle at 30% 30%, ${ORB_COLORS.moss}20, ${ORB_COLORS.slate}20)`
+          background: 'var(--stone-planned)',
+          border: '2px solid var(--stone-planned-border)'
         }}
         onClick={onClick}
       />
@@ -121,7 +127,8 @@ export function WeekStone({ status, onClick, size = 'sm' }: WeekStoneProps) {
   // Future or empty - just a subtle dot
   return (
     <div
-      className={`${baseSize} rounded-full bg-cream-deep cursor-pointer hover:bg-ink/10 transition-colors`}
+      className={`${baseSize} rounded-full cursor-pointer transition-colors`}
+      style={{ background: 'var(--stone-empty)' }}
       onClick={onClick}
     />
   )
@@ -163,18 +170,12 @@ export function WeekStonesRow({
     }
   }
 
-  // Determine if a day is clickable
-  const isClickable = (_status: ExtendedDayStatus) => {
-    // All days are clickable for viewing details or planning
-    return true
-  }
-
   return (
     <div className="flex justify-between items-end px-1">
       {days.map((status, i) => (
         <button
           key={i}
-          onClick={() => isClickable(status) && handleDayClick(i)}
+          onClick={() => handleDayClick(i)}
           className="flex flex-col items-center gap-2 cursor-pointer active:scale-90 transition-transform"
         >
           <WeekStone
@@ -182,7 +183,10 @@ export function WeekStonesRow({
             size={size}
           />
           {showLabels && (
-            <span className="text-[10px] text-ink/30">
+            <span
+              className="text-[10px]"
+              style={{ color: 'var(--text-muted)' }}
+            >
               {DAY_LABELS[i]}
             </span>
           )}
@@ -205,8 +209,8 @@ export function getDayStatusWithPlan(
   if (hasSession) return 'completed'
   if (isPast && !hasSession) return 'missed'
   if (isNextPlannable) return 'next'
-  if (hasPlan && (isFuture || isToday)) return 'planned'  // Today or future with plan
-  if (isToday) return 'today'  // Today without plan (renders as cream)
+  if (hasPlan && (isFuture || isToday)) return 'planned'
+  if (isToday) return 'today'
   if (isFuture) return 'future'
-  return 'missed' // Past days without sessions
+  return 'missed'
 }

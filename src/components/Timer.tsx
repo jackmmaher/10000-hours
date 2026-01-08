@@ -130,26 +130,26 @@ export function Timer() {
           ) : isRunning ? (
             // Running
             shouldHideTime ? (
-              // Hide time mode - luminous, living meditation orb (Miyazaki spirit)
+              // Hide time mode - luminous, living meditation orb (theme-aware)
               <div className="relative flex items-center justify-center" style={{ width: '200px', height: '200px' }}>
-                {/* Layer 1: Ambient atmosphere - largest, more visible */}
+                {/* Layer 1: Ambient atmosphere - largest, most subtle */}
                 <div
                   className="absolute rounded-full"
                   style={{
                     width: '180px',
                     height: '180px',
-                    background: 'radial-gradient(circle, rgba(135, 168, 120, 0.25) 0%, rgba(250, 248, 243, 0) 70%)',
+                    background: `radial-gradient(circle, var(--orb-atmosphere) 0%, transparent 70%)`,
                     animation: 'atmosphereBreathe 6s ease-in-out infinite',
                   }}
                 />
 
-                {/* Layer 2: Soft outer glow - stronger moss-tinted light */}
+                {/* Layer 2: Soft outer glow */}
                 <div
                   className="absolute rounded-full"
                   style={{
                     width: '140px',
                     height: '140px',
-                    background: 'radial-gradient(circle, rgba(135, 168, 120, 0.3) 0%, transparent 60%)',
+                    background: `radial-gradient(circle, var(--orb-glow) 0%, transparent 60%)`,
                     filter: 'blur(16px)',
                     animation: 'glowPulse 4s ease-in-out infinite',
                   }}
@@ -161,23 +161,23 @@ export function Timer() {
                   style={{
                     width: '110px',
                     height: '110px',
-                    background: 'radial-gradient(circle, transparent 40%, rgba(135, 168, 120, 0.2) 70%, transparent 85%)',
+                    background: `radial-gradient(circle, transparent 40%, var(--orb-glow) 70%, transparent 85%)`,
                     animation: 'orbPulseRing 4s ease-in-out infinite',
                   }}
                 />
 
-                {/* Layer 4: Core orb - more visible with moss tint */}
+                {/* Layer 4: Core orb - the main sphere */}
                 <div
                   className="absolute rounded-full animate-orb-breathe"
                   style={{
                     width: '80px',
                     height: '80px',
-                    background: 'radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 1) 0%, rgba(220, 235, 210, 0.95) 30%, rgba(180, 200, 170, 0.9) 60%, rgba(135, 168, 120, 0.8) 100%)',
+                    background: `radial-gradient(circle at 35% 35%, var(--orb-core) 0%, var(--orb-mid) 40%, var(--orb-edge) 100%)`,
                     boxShadow: `
-                      inset 0 0 30px rgba(255, 255, 255, 0.8),
-                      inset 0 -8px 20px rgba(135, 168, 120, 0.3),
-                      0 0 60px rgba(135, 168, 120, 0.4),
-                      0 8px 32px rgba(44, 62, 80, 0.2)
+                      inset 0 0 30px rgba(255, 255, 255, 0.6),
+                      inset 0 -8px 20px var(--orb-glow),
+                      0 0 60px var(--orb-glow),
+                      0 8px 32px var(--shadow-color)
                     `,
                   }}
                 />
@@ -188,7 +188,7 @@ export function Timer() {
                   style={{
                     width: '50px',
                     height: '50px',
-                    background: 'radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.2) 40%, transparent 70%)',
+                    background: `radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.2) 40%, transparent 70%)`,
                     animation: 'orbInnerGlow 5s ease-in-out infinite',
                   }}
                 />

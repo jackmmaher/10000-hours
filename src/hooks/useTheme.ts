@@ -1,53 +1,54 @@
 /**
- * useTheme - React hook for dynamic theming
+ * useTheme - React hook for the Living Theme System
  *
- * Provides current theme values and applies CSS custom properties.
+ * Provides current theme tokens and applies CSS custom properties.
  * Updates automatically based on time of day and season.
  * Respects user's theme mode preference (auto/light/warm/dark).
  */
 
 import { useEffect, useState, useCallback } from 'react'
 import {
-  ThemeState,
-  ThemeValues,
+  ThemeTokens,
   TimeOfDay,
   getTimeOfDay,
   getSeason,
   calculateTheme,
+  calculateThemeWithTransition,
   isTransitionPeriod,
   themeToCSSProperties,
   detectSouthernHemisphere
 } from '../lib/themeEngine'
 import { useSettingsStore } from '../stores/useSettingsStore'
-import { ThemeMode } from '../lib/db'
+import type { Season } from '../lib/themeEngine'
 
-// Update interval (check every minute)
-const UPDATE_INTERVAL = 60 * 1000
+// Update intervals
+const UPDATE_INTERVAL = 60 * 1000          // Normal check: every minute
+const TRANSITION_UPDATE_INTERVAL = 5 * 1000 // During transitions: every 5 seconds for smooth interpolation
 
-// Map theme mode to time of day
-const MODE_TO_TIME: Record<Exclude<ThemeMode, 'auto'>, TimeOfDay> = {
-  light: 'daytime',
-  warm: 'evening',
-  dark: 'night'
+export interface ThemeState {
+  timeOfDay: TimeOfDay
+  season: ReturnType<typeof getSeason>
+  tokens: ThemeTokens
+  isTransitioning: boolean
 }
 
-export function useTheme() {
-  const { themeMode } = useSettingsStore()
+export function useTheme(): ThemeState {
+  const { themeMode, manualSeason, manualTime } = useSettingsStore()
 
   const [themeState, setThemeState] = useState<ThemeState>(() => {
-    const timeOfDay = themeMode === 'auto' ? getTimeOfDay() : MODE_TO_TIME[themeMode]
-    const season = getSeason(new Date(), detectSouthernHemisphere())
+    const season = themeMode === 'manual' ? manualSeason : getSeason(new Date(), detectSouthernHemisphere())
+    const timeOfDay = themeMode === 'manual' ? manualTime : getTimeOfDay(new Date(), season as Season)
     return {
       timeOfDay,
       season,
-      values: calculateTheme(timeOfDay, season),
+      tokens: calculateTheme(timeOfDay, season as Season),
       isTransitioning: themeMode === 'auto' && isTransitionPeriod()
     }
   })
 
   // Apply theme to document
-  const applyTheme = useCallback((values: ThemeValues, transitioning: boolean) => {
-    const properties = themeToCSSProperties(values)
+  const applyTheme = useCallback((tokens: ThemeTokens, transitioning: boolean) => {
+    const properties = themeToCSSProperties(tokens)
     const root = document.documentElement
 
     // Set transition for smooth changes
@@ -63,7 +64,7 @@ export function useTheme() {
     })
 
     // Toggle dark mode class for components that need it
-    if (values.isDark) {
+    if (tokens.isDark) {
       root.classList.add('dark')
     } else {
       root.classList.remove('dark')
@@ -73,27 +74,49 @@ export function useTheme() {
   // Update theme based on current time and mode
   const updateTheme = useCallback(() => {
     const now = new Date()
-    const timeOfDay = themeMode === 'auto' ? getTimeOfDay(now) : MODE_TO_TIME[themeMode]
+
+    // For manual mode, use user-selected season and time
+    if (themeMode === 'manual') {
+      const tokens = calculateTheme(manualTime, manualSeason as Season)
+
+      setThemeState(prev => {
+        if (prev.timeOfDay === manualTime && prev.season === manualSeason) {
+          return prev
+        }
+        return {
+          timeOfDay: manualTime,
+          season: manualSeason,
+          tokens,
+          isTransitioning: false
+        }
+      })
+
+      applyTheme(tokens, false)
+      return false
+    }
+
+    // For auto mode, use interpolation during transitions
     const season = getSeason(now, detectSouthernHemisphere())
-    const transitioning = themeMode === 'auto' && isTransitionPeriod(now)
-    const values = calculateTheme(timeOfDay, season)
+    const { tokens, isTransitioning } = calculateThemeWithTransition(now, season)
+    const timeOfDay = getTimeOfDay(now, season)
 
     setThemeState(prev => {
-      // Only update if something changed
-      if (prev.timeOfDay === timeOfDay && prev.season === season) {
-        return prev
+      // During transitions, always update (interpolated values change)
+      if (isTransitioning || prev.timeOfDay !== timeOfDay || prev.season !== season) {
+        return {
+          timeOfDay,
+          season,
+          tokens,
+          isTransitioning
+        }
       }
-
-      return {
-        timeOfDay,
-        season,
-        values,
-        isTransitioning: transitioning
-      }
+      return prev
     })
 
-    applyTheme(values, transitioning)
-  }, [applyTheme, themeMode])
+    // During interpolation, no CSS transition needed - we're handling it
+    applyTheme(tokens, false)
+    return isTransitioning
+  }, [applyTheme, themeMode, manualSeason, manualTime])
 
   // Re-apply theme when mode changes
   useEffect(() => {
@@ -103,13 +126,32 @@ export function useTheme() {
   // Initial application and periodic updates
   useEffect(() => {
     // Apply initial theme
-    applyTheme(themeState.values, themeState.isTransitioning)
+    applyTheme(themeState.tokens, themeState.isTransitioning)
 
-    // Set up interval for updates (only needed for auto mode, but harmless otherwise)
-    const interval = setInterval(updateTheme, UPDATE_INTERVAL)
+    // Use faster updates during transitions for smooth interpolation
+    let interval: ReturnType<typeof setInterval>
 
-    return () => clearInterval(interval)
-  }, [applyTheme, updateTheme, themeState.values, themeState.isTransitioning])
+    const setupInterval = () => {
+      const isTransitioning = updateTheme()
+      const nextInterval = isTransitioning ? TRANSITION_UPDATE_INTERVAL : UPDATE_INTERVAL
+
+      // Clear existing and set new interval
+      if (interval) clearInterval(interval)
+      interval = setInterval(() => {
+        const stillTransitioning = updateTheme()
+        // If transition state changed, update interval speed
+        if (stillTransitioning !== isTransitioning) {
+          setupInterval()
+        }
+      }, nextInterval)
+    }
+
+    setupInterval()
+
+    return () => {
+      if (interval) clearInterval(interval)
+    }
+  }, [applyTheme, updateTheme, themeState.tokens, themeState.isTransitioning])
 
   return themeState
 }
@@ -133,4 +175,12 @@ export function useThemeInfo() {
   }, [])
 
   return info
+}
+
+// Hook to get current theme tokens for components that need direct access
+export function useThemeTokens(): ThemeTokens {
+  const { themeMode, manualSeason, manualTime } = useSettingsStore()
+  const season = themeMode === 'manual' ? manualSeason : getSeason(new Date(), detectSouthernHemisphere())
+  const timeOfDay = themeMode === 'manual' ? manualTime : getTimeOfDay(new Date(), season as Season)
+  return calculateTheme(timeOfDay, season as Season)
 }

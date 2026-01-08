@@ -20,6 +20,8 @@ import { Onboarding, hasSeenOnboarding, markOnboardingSeen } from './components/
 import { PaywallPremium } from './components/PaywallPremium'
 import { MilestoneCelebration } from './components/MilestoneCelebration'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { BreathingCanvas } from './components/BreathingCanvas'
+import { AmbientAtmosphere } from './components/AmbientAtmosphere'
 import { purchasePremium, restorePurchases } from './lib/purchases'
 
 type PaywallSource = 'settings' | 'stats' | 'calendar'
@@ -31,7 +33,10 @@ function AppContent() {
   const authStore = useAuthStore()
 
   // Apply dynamic theme based on time of day and season
-  useTheme()
+  const themeState = useTheme()
+
+  // Get visual effects preference
+  const { visualEffects } = useSettingsStore()
 
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showPaywall, setShowPaywall] = useState(false)
@@ -112,45 +117,55 @@ function AppContent() {
   }
 
   return (
-    <div className="h-full">
-      {view === 'timer' && <Timer />}
-      {view === 'journey' && <Journey />}
-      {view === 'stats' && <Stats />}
-      {view === 'progress' && <Progress />}
-      {view === 'calendar' && <Calendar />}
-      {view === 'insights' && <Insights />}
-      {view === 'pearls' && <PearlsFeed />}
-      {view === 'explore' && <Explore />}
-      {view === 'saved-pearls' && <SavedPearls />}
-      {view === 'profile' && (
-        <Profile
-          onNavigateToSettings={() => setView('settings')}
-        />
-      )}
-      {view === 'settings' && (
-        <Settings
-          onBack={() => setView('profile')}
-          onShowPaywall={() => handleShowPaywall('settings')}
-          onRestorePurchase={handleRestore}
-        />
-      )}
+    <BreathingCanvas enabled intensity={0.015}> {/* Boosted from 0.008 for visibility - reduce later */}
+      {/* Global ambient atmosphere layer */}
+      <AmbientAtmosphere
+        timeOfDay={themeState.timeOfDay}
+        season={themeState.season}
+        mode="immersive"
+        expressive={visualEffects === 'expressive'}
+      />
+      <div className="h-full">
+        {view === 'timer' && <Timer />}
+        {view === 'journey' && <Journey />}
+        {view === 'stats' && <Stats />}
+        {view === 'progress' && <Progress />}
+        {view === 'calendar' && <Calendar />}
+        {view === 'insights' && <Insights />}
+        {view === 'pearls' && <PearlsFeed />}
+        {view === 'explore' && <Explore />}
+        {view === 'saved-pearls' && <SavedPearls />}
+        {view === 'profile' && (
+          <Profile
+            onNavigateToSettings={() => setView('settings')}
+          />
+        )}
+        {view === 'settings' && (
+          <Settings
+            onBack={() => setView('profile')}
+            onShowPaywall={() => handleShowPaywall('settings')}
+            onRestorePurchase={handleRestore}
+          />
+        )}
 
-      {/* Paywall overlay */}
-      {showPaywall && (
-        <PaywallPremium
-          source={paywallSource}
-          onDismiss={handlePaywallDismiss}
-          onPurchase={handlePurchase}
-          onRestore={handleRestore}
-        />
-      )}
+        {/* Paywall overlay */}
+        {showPaywall && (
+          <PaywallPremium
+            source={paywallSource}
+            onDismiss={handlePaywallDismiss}
+            onPurchase={handlePurchase}
+            onRestore={handleRestore}
+          />
+        )}
 
-      {/* Milestone celebration overlay */}
-      <MilestoneCelebration />
+        {/* Milestone celebration overlay */}
+        <MilestoneCelebration />
 
-      {/* Bottom navigation */}
-      <Navigation />
-    </div>
+        {/* Bottom navigation */}
+        <Navigation />
+
+      </div>
+    </BreathingCanvas>
   )
 }
 

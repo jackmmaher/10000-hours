@@ -3,6 +3,7 @@
  *
  * Minimal tab bar for main app sections.
  * Only visible when not in timer running state.
+ * Now fully theme-aware using CSS variables.
  */
 
 import { useSessionStore } from '../stores/useSessionStore'
@@ -71,7 +72,13 @@ export function Navigation() {
   if (isTimerActive) return null
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-cream/95 backdrop-blur-sm border-t border-ink/5 safe-area-bottom">
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-40 backdrop-blur-sm safe-area-bottom"
+      style={{
+        background: 'var(--nav-bg)',
+        borderTop: '1px solid var(--border-subtle)'
+      }}
+    >
       <div className="flex justify-around items-center h-16 max-w-lg mx-auto px-2">
         {navItems.map((item) => {
           const isActive = view === item.view ||
@@ -85,14 +92,10 @@ export function Navigation() {
             <button
               key={item.view}
               onClick={() => setView(item.view)}
-              className={`
-                flex flex-col items-center justify-center flex-1 py-2
-                transition-colors
-                ${isActive
-                  ? 'text-indigo-deep'
-                  : 'text-ink/30 hover:text-ink/50'
-                }
-              `}
+              className="flex flex-col items-center justify-center flex-1 py-2 transition-colors"
+              style={{
+                color: isActive ? 'var(--nav-active)' : 'var(--nav-inactive)'
+              }}
             >
               {item.icon}
               <span className="text-[10px] mt-1 font-medium">

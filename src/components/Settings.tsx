@@ -17,7 +17,7 @@ import { usePremiumStore } from '../stores/usePremiumStore'
 import { useThemeInfo } from '../hooks/useTheme'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import { trackHideTimeToggle } from '../lib/analytics'
-import { ThemeMode } from '../lib/db'
+import { SeasonOverride, TimeOverride } from '../lib/db'
 import { getThemeName } from '../lib/themeEngine'
 import { AuthModal } from './AuthModal'
 
@@ -27,15 +27,34 @@ interface SettingsProps {
   onRestorePurchase: () => void
 }
 
-const THEME_OPTIONS: { value: ThemeMode; label: string; description: string }[] = [
-  { value: 'auto', label: 'Auto', description: '16 variations across time and season' },
-  { value: 'light', label: 'Light', description: 'Bright, clear — daytime energy' },
-  { value: 'warm', label: 'Warm', description: 'Golden, soft — evening calm' },
-  { value: 'dark', label: 'Dark', description: 'Deep, restful — night stillness' }
+const SEASON_OPTIONS: { value: SeasonOverride; label: string; icon: string }[] = [
+  { value: 'spring', label: 'Spring', icon: '🌱' },
+  { value: 'summer', label: 'Summer', icon: '☀️' },
+  { value: 'autumn', label: 'Autumn', icon: '🍂' },
+  { value: 'winter', label: 'Winter', icon: '❄️' }
+]
+
+const TIME_OPTIONS: { value: TimeOverride; label: string }[] = [
+  { value: 'morning', label: 'Morning' },
+  { value: 'daytime', label: 'Daytime' },
+  { value: 'evening', label: 'Evening' },
+  { value: 'night', label: 'Night' }
+]
+
+const QUICK_PRESETS: { label: string; season: SeasonOverride; time: TimeOverride }[] = [
+  { label: 'Spring Dawn', season: 'spring', time: 'morning' },
+  { label: 'Summer Day', season: 'summer', time: 'daytime' },
+  { label: 'Autumn Evening', season: 'autumn', time: 'evening' },
+  { label: 'Winter Night', season: 'winter', time: 'night' }
 ]
 
 export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsProps) {
-  const { hideTimeDisplay, setHideTimeDisplay, themeMode, setThemeMode } = useSettingsStore()
+  const {
+    hideTimeDisplay, setHideTimeDisplay,
+    themeMode, setThemeMode,
+    visualEffects, setVisualEffects,
+    manualSeason, manualTime, setManualTheme
+  } = useSettingsStore()
   const { user, isAuthenticated, signOut, isLoading: authLoading, refreshProfile } = useAuthStore()
   const { tier, isPremium } = usePremiumStore()
   const { timeOfDay, season } = useThemeInfo()
@@ -147,17 +166,15 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
             className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform"
           >
             <div className="text-left">
-              <p className="text-sm text-ink">Hide time display</p>
-              <p className="text-xs text-ink/35 mt-1">
+              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Hide time display</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                 Meditate without watching numbers (orb mode)
               </p>
             </div>
-            {/* Custom organic toggle */}
+            {/* Custom organic toggle - theme aware */}
             <div
-              className={`
-                relative w-12 h-7 rounded-full transition-colors duration-300
-                ${hideTimeDisplay ? 'bg-moss' : 'bg-cream-deep'}
-              `}
+              className="relative w-12 h-7 rounded-full transition-colors duration-300"
+              style={{ background: hideTimeDisplay ? 'var(--toggle-on)' : 'var(--toggle-off)' }}
             >
               <div
                 className={`
@@ -165,32 +182,90 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
                   transition-transform duration-300
                   ${hideTimeDisplay ? 'translate-x-6' : 'translate-x-1'}
                 `}
-                style={{
-                  background: 'radial-gradient(circle at 30% 30%, #FFF, #F7F3EA)'
-                }}
+                style={{ background: 'var(--toggle-thumb)' }}
+              />
+            </div>
+          </button>
+
+          {/* Visual Effects - Calm vs Expressive */}
+          <button
+            onClick={() => setVisualEffects(visualEffects === 'calm' ? 'expressive' : 'calm')}
+            className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform"
+          >
+            <div className="text-left">
+              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Visual effects</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                {visualEffects === 'calm'
+                  ? 'Calm — subtle, minimal atmosphere'
+                  : 'Expressive — aurora, shooting stars, shimmer'}
+              </p>
+            </div>
+            {/* Custom organic toggle - theme aware */}
+            <div
+              className="relative w-12 h-7 rounded-full transition-colors duration-300"
+              style={{ background: visualEffects === 'expressive' ? 'var(--toggle-on)' : 'var(--toggle-off)' }}
+            >
+              <div
+                className={`
+                  absolute top-1 w-5 h-5 rounded-full shadow-sm
+                  transition-transform duration-300
+                  ${visualEffects === 'expressive' ? 'translate-x-6' : 'translate-x-1'}
+                `}
+                style={{ background: 'var(--toggle-thumb)' }}
               />
             </div>
           </button>
         </div>
 
-        {/* Theme */}
+        {/* Theme Personalization */}
         <div className="mb-8">
           <p className="font-serif text-sm text-ink/50 tracking-wide mb-4">Theme</p>
 
+          {/* Auto/Manual Toggle */}
+          <button
+            onClick={() => setThemeMode(themeMode === 'auto' ? 'manual' : 'auto')}
+            className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform"
+          >
+            <div className="text-left">
+              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Living theme</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                {themeMode === 'auto'
+                  ? `Adapts to time & season — ${currentThemeName}`
+                  : 'Fixed to your selection'}
+              </p>
+            </div>
+            {/* Custom organic toggle - theme aware */}
+            <div
+              className="relative w-12 h-7 rounded-full transition-colors duration-300"
+              style={{ background: themeMode === 'auto' ? 'var(--toggle-on)' : 'var(--toggle-off)' }}
+            >
+              <div
+                className={`
+                  absolute top-1 w-5 h-5 rounded-full shadow-sm
+                  transition-transform duration-300
+                  ${themeMode === 'auto' ? 'translate-x-6' : 'translate-x-1'}
+                `}
+                style={{ background: 'var(--toggle-thumb)' }}
+              />
+            </div>
+          </button>
+
+          {/* Expandable section header */}
           <button
             onClick={() => setShowThemeDetail(!showThemeDetail)}
             className="w-full flex items-center justify-between py-4"
           >
             <div className="text-left">
-              <p className="text-sm text-ink">Ambient theme</p>
-              <p className="text-xs text-ink/35 mt-1">
-                {themeMode === 'auto'
-                  ? `Currently: ${currentThemeName}`
-                  : `${THEME_OPTIONS.find(t => t.value === themeMode)?.label} mode`}
+              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Personalize</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                {themeMode === 'manual'
+                  ? `${manualSeason.charAt(0).toUpperCase() + manualSeason.slice(1)} ${manualTime}`
+                  : 'Choose a fixed theme'}
               </p>
             </div>
             <svg
-              className={`w-5 h-5 text-ink/30 transition-transform ${showThemeDetail ? 'rotate-180' : ''}`}
+              className={`w-5 h-5 transition-transform ${showThemeDetail ? 'rotate-180' : ''}`}
+              style={{ color: 'var(--text-muted)' }}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -200,32 +275,88 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
           </button>
 
           {showThemeDetail && (
-            <div className="mt-2 space-y-2">
-              {THEME_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => setThemeMode(option.value)}
-                  className={`
-                    w-full flex items-center justify-between p-4 rounded-xl transition-all duration-200
-                    ${themeMode === option.value
-                      ? 'bg-moss text-cream'
-                      : 'bg-cream-warm text-ink hover:bg-cream-deep'
-                    }
-                  `}
-                >
-                  <div className="text-left">
-                    <p className="text-sm font-medium">{option.label}</p>
-                    <p className={`text-xs mt-0.5 ${themeMode === option.value ? 'text-cream/70' : 'text-ink/40'}`}>
-                      {option.description}
-                    </p>
-                  </div>
-                  {themeMode === option.value && (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </button>
-              ))}
+            <div className="mt-2 space-y-4">
+              {/* Quick Presets */}
+              <div>
+                <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>Quick presets</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {QUICK_PRESETS.map((preset) => {
+                    const isActive = themeMode === 'manual' && manualSeason === preset.season && manualTime === preset.time
+                    return (
+                      <button
+                        key={preset.label}
+                        onClick={() => setManualTheme(preset.season, preset.time)}
+                        className={`
+                          p-3 rounded-xl text-left transition-all duration-200
+                          ${isActive
+                            ? 'bg-moss text-cream'
+                            : 'bg-cream-warm text-ink hover:bg-cream-deep'
+                          }
+                        `}
+                      >
+                        <p className={`text-xs font-medium ${isActive ? 'text-cream' : ''}`}>
+                          {preset.label}
+                        </p>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Season Picker */}
+              <div>
+                <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>Season</p>
+                <div className="flex gap-2">
+                  {SEASON_OPTIONS.map((option) => {
+                    const isActive = themeMode === 'manual' && manualSeason === option.value
+                    return (
+                      <button
+                        key={option.value}
+                        onClick={() => setManualTheme(option.value, manualTime)}
+                        className={`
+                          flex-1 py-2.5 px-1 rounded-xl text-center transition-all duration-200
+                          ${isActive
+                            ? 'bg-moss text-cream'
+                            : 'bg-cream-warm text-ink hover:bg-cream-deep'
+                          }
+                        `}
+                      >
+                        <span className="text-sm">{option.icon}</span>
+                        <p className={`text-xs mt-0.5 ${isActive ? 'text-cream' : 'text-ink/60'}`}>
+                          {option.label}
+                        </p>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Time of Day Picker */}
+              <div>
+                <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>Time of day</p>
+                <div className="flex gap-2">
+                  {TIME_OPTIONS.map((option) => {
+                    const isActive = themeMode === 'manual' && manualTime === option.value
+                    return (
+                      <button
+                        key={option.value}
+                        onClick={() => setManualTheme(manualSeason, option.value)}
+                        className={`
+                          flex-1 py-2.5 rounded-xl text-center transition-all duration-200
+                          ${isActive
+                            ? 'bg-moss text-cream'
+                            : 'bg-cream-warm text-ink hover:bg-cream-deep'
+                          }
+                        `}
+                      >
+                        <p className={`text-xs ${isActive ? 'text-cream' : 'text-ink/60'}`}>
+                          {option.label}
+                        </p>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
             </div>
           )}
         </div>

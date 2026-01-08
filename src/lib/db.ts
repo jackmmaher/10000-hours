@@ -37,12 +37,19 @@ export interface UserProfile {
   achievements?: Achievement[]      // Recorded milestone achievements
 }
 
-export type ThemeMode = 'auto' | 'light' | 'warm' | 'dark'
+export type ThemeMode = 'auto' | 'manual'
+export type VisualEffects = 'calm' | 'expressive'
+export type SeasonOverride = 'spring' | 'summer' | 'autumn' | 'winter'
+export type TimeOverride = 'morning' | 'daytime' | 'evening' | 'night'
 
 export interface UserSettings {
   id: 1
   hideTimeDisplay: boolean
   themeMode: ThemeMode
+  visualEffects: VisualEffects
+  // Manual theme overrides (only used when themeMode === 'manual')
+  manualSeason?: SeasonOverride
+  manualTime?: TimeOverride
 }
 
 export interface Insight {
@@ -402,13 +409,19 @@ export async function getSettings(): Promise<UserSettings> {
     settings = {
       id: 1,
       hideTimeDisplay: false,
-      themeMode: 'auto'
+      themeMode: 'auto',
+      visualEffects: 'calm'
     }
     await db.settings.put(settings)
   }
   // Backfill themeMode for existing users
   if (!settings.themeMode) {
     settings.themeMode = 'auto'
+    await db.settings.put(settings)
+  }
+  // Backfill visualEffects for existing users
+  if (!settings.visualEffects) {
+    settings.visualEffects = 'calm'
     await db.settings.put(settings)
   }
   return settings
