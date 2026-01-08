@@ -92,7 +92,9 @@ export function Navigation() {
             <button
               key={item.view}
               onClick={() => setView(item.view)}
-              className="flex flex-col items-center justify-center flex-1 py-2 transition-colors"
+              aria-label={`Navigate to ${item.label}`}
+              aria-current={isActive ? 'page' : undefined}
+              className="flex flex-col items-center justify-center flex-1 py-2 transition-colors active:scale-95"
               style={{
                 color: isActive ? 'var(--nav-active)' : 'var(--nav-inactive)'
               }}

@@ -160,11 +160,11 @@ export function InsightCard({ sessions }: InsightCardProps) {
 
   return (
     <div className="mb-8 bg-cream-deep rounded-xl p-5 relative overflow-hidden">
-      {/* Subtle decorative element */}
+      {/* Subtle decorative element - uses accent color from Living Theme */}
       <div
         className="absolute -top-4 -right-4 w-16 h-16 rounded-full opacity-20"
         style={{
-          background: 'radial-gradient(circle, #87A878 0%, transparent 70%)'
+          background: 'radial-gradient(circle, var(--accent) 0%, transparent 70%)'
         }}
       />
 

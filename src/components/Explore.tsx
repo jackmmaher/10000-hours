@@ -283,9 +283,10 @@ export function Explore() {
         {/* Back to timer */}
         <button
           onClick={() => setView('timer')}
+          aria-label="Return to timer"
           className="flex items-center text-sm text-ink/40 mb-8 hover:text-ink/60 transition-colors active:scale-[0.98]"
         >
-          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
           </svg>
           Timer
@@ -536,6 +537,8 @@ function PearlCardExplore({
         <button
           onClick={handleVote}
           disabled={isVoting}
+          aria-label={localVoted ? 'Remove upvote' : 'Upvote this pearl'}
+          aria-pressed={localVoted}
           className={`
             flex items-center gap-1.5 transition-all
             ${localVoted ? 'text-moss' : 'text-ink/30 hover:text-ink/50'}
@@ -546,6 +549,7 @@ function PearlCardExplore({
             fill={localVoted ? 'currentColor' : 'none'}
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 15l7-7 7 7" />
           </svg>
@@ -556,6 +560,8 @@ function PearlCardExplore({
         <button
           onClick={handleSave}
           disabled={isSaving}
+          aria-label={localSaved ? 'Remove from saved' : 'Save this pearl'}
+          aria-pressed={localSaved}
           className={`
             flex items-center gap-1.5 transition-all
             ${localSaved ? 'text-indigo-deep' : 'text-ink/30 hover:text-ink/50'}
@@ -566,6 +572,7 @@ function PearlCardExplore({
             fill={localSaved ? 'currentColor' : 'none'}
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
           </svg>

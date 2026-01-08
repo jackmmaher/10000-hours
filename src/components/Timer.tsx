@@ -260,6 +260,7 @@ export function Timer() {
                 e.stopPropagation()
                 setView('progress')
               }}
+              aria-label="View progress statistics"
               className="flex flex-col items-center hover:opacity-60 transition-opacity active:scale-[0.95]"
             >
               <p className="text-xs text-ink/20 tracking-wide">
@@ -270,6 +271,7 @@ export function Timer() {
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
