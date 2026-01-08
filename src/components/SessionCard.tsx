@@ -49,7 +49,7 @@ export function SessionCard({ session, gradient, onClick }: SessionCardProps) {
       className="w-full text-left group relative overflow-hidden rounded-2xl bg-cream transition-all hover:shadow-md active:scale-[0.99]"
     >
       {/* Gradient accent bar */}
-      <div className={`absolute left-0 top-0 bottom-0 w-2 bg-gradient-to-b ${gradient}`} />
+      <div className={`absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b ${gradient}`} />
 
       <div className="p-4 pl-5">
         {/* Header row with Voice badge */}
@@ -72,7 +72,7 @@ export function SessionCard({ session, gradient, onClick }: SessionCardProps) {
         </p>
 
         {/* Tagline */}
-        <p className="text-sm text-ink/50 italic line-clamp-2 mb-3">
+        <p className="text-sm text-ink/50 italic line-clamp-1 mb-3">
           "{session.tagline}"
         </p>
 
