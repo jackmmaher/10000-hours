@@ -1825,6 +1825,103 @@ export function calculateTheme(
   return getThemeTokens(timeOfDay, season)
 }
 
+// ============================================================================
+// SOLAR-AWARE THEME CALCULATION
+// ============================================================================
+
+/**
+ * Sun altitude thresholds for theme blending
+ *
+ * Based on astronomical definitions:
+ * - Civil twilight: 0° to -6° (still functional outdoor light)
+ * - Nautical twilight: -6° to -12° (horizon visible at sea)
+ * - Astronomical twilight: -12° to -18° (sky not fully dark)
+ * - Night: below -18° (full darkness)
+ *
+ * For theme purposes, we use simplified ranges that feel right visually.
+ */
+const SOLAR_THRESHOLDS = {
+  HIGH_SUN: 15,        // Above this: pure daytime
+  HORIZON: 0,          // Sunrise/sunset moment
+  CIVIL_TWILIGHT: -6,  // Below this: full night
+}
+
+/**
+ * Calculate theme by sun altitude - continuous blending based on actual sun position
+ *
+ * This replaces hard time boundaries with smooth solar-aware transitions.
+ * The existing 16 themes become "anchor points" that we blend between.
+ *
+ * @param altitude - Sun altitude in degrees (90 = overhead, 0 = horizon, negative = below horizon)
+ * @param isRising - Whether sun is rising (morning) or setting (evening)
+ * @param season - Current season for theme palette selection
+ */
+export function calculateThemeBySunPosition(
+  altitude: number,
+  isRising: boolean,
+  season: Season
+): ThemeTokens {
+  const themes = SEASON_THEMES[season]
+
+  // Full daytime - sun is high
+  if (altitude > SOLAR_THRESHOLDS.HIGH_SUN) {
+    return themes.daytime
+  }
+
+  // Full night - sun well below horizon
+  if (altitude < SOLAR_THRESHOLDS.CIVIL_TWILIGHT) {
+    return themes.night
+  }
+
+  // Golden hour / Blue hour - sun between horizon and high point
+  // This is where the magic happens - smooth blending
+  if (altitude >= SOLAR_THRESHOLDS.HORIZON && altitude <= SOLAR_THRESHOLDS.HIGH_SUN) {
+    // Progress: 0 at HIGH_SUN (15°), 1 at HORIZON (0°)
+    const progress = 1 - (altitude / SOLAR_THRESHOLDS.HIGH_SUN)
+
+    if (isRising) {
+      // Morning: blend from morning toward daytime as sun rises
+      return interpolateThemes(themes.morning, themes.daytime, 1 - progress)
+    } else {
+      // Evening: blend from daytime toward evening as sun lowers
+      return interpolateThemes(themes.daytime, themes.evening, progress)
+    }
+  }
+
+  // Twilight - sun below horizon but still some light
+  if (altitude >= SOLAR_THRESHOLDS.CIVIL_TWILIGHT && altitude < SOLAR_THRESHOLDS.HORIZON) {
+    // Progress: 0 at HORIZON (0°), 1 at CIVIL_TWILIGHT (-6°)
+    const progress = altitude / SOLAR_THRESHOLDS.CIVIL_TWILIGHT // Note: both negative, so this gives positive 0-1
+
+    if (isRising) {
+      // Dawn: blend from night toward morning
+      return interpolateThemes(themes.night, themes.morning, 1 - progress)
+    } else {
+      // Dusk: blend from evening toward night
+      return interpolateThemes(themes.evening, themes.night, progress)
+    }
+  }
+
+  // Fallback (shouldn't reach here)
+  return themes.night
+}
+
+/**
+ * Get the current time of day label based on sun position
+ * Used for display purposes and ambient effects selection
+ */
+export function getTimeOfDayFromSunPosition(altitude: number, isRising: boolean): TimeOfDay {
+  if (altitude > SOLAR_THRESHOLDS.HIGH_SUN) return 'daytime'
+  if (altitude < SOLAR_THRESHOLDS.CIVIL_TWILIGHT) return 'night'
+
+  if (altitude >= SOLAR_THRESHOLDS.HORIZON) {
+    return isRising ? 'morning' : 'evening'
+  }
+
+  // Twilight
+  return isRising ? 'morning' : 'night'
+}
+
 /**
  * Convert theme tokens to CSS custom properties
  */
