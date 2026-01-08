@@ -16,6 +16,7 @@ import { useMemo, useState, useRef } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useSwipe } from '../hooks/useSwipe'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
+import { useVoice } from '../hooks/useVoice'
 import { getStatsForWindow } from '../lib/calculations'
 import {
   formatTotalHours,
@@ -27,9 +28,11 @@ import { InsightCard } from './InsightCard'
 import { TimeRangeSlider } from './TimeRangeSlider'
 import { TrendChart } from './TrendChart'
 import { InteractiveTimeline } from './InteractiveTimeline'
+import { VoiceBadge } from './VoiceBadge'
 
 export function Progress() {
   const { sessions, totalSeconds, setView } = useSessionStore()
+  const { voice } = useVoice()
   const [selectedDays, setSelectedDays] = useState<number | null>(30)
   // Calculate max days based on first session
   const maxDays = useMemo(() => {
@@ -148,6 +151,14 @@ export function Progress() {
           <p className="text-sm text-ink/40 mt-1">
             {allTimeStats.sessionCount} session{allTimeStats.sessionCount !== 1 ? 's' : ''}
           </p>
+
+          {/* Voice score display */}
+          {voice && (
+            <div className="mt-4 flex items-center justify-center gap-3">
+              <VoiceBadge score={voice.total} showScore />
+              <span className="text-xs text-ink/30">Voice</span>
+            </div>
+          )}
         </div>
 
         {/* Milestone badges - horizontal scroll */}

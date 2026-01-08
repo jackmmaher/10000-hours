@@ -15,8 +15,10 @@ import { usePremiumStore } from '../stores/usePremiumStore'
 import { useSettingsStore } from '../stores/useSettingsStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSwipe } from '../hooks/useSwipe'
+import { useVoice } from '../hooks/useVoice'
 import { trackHideTimeToggle } from '../lib/analytics'
 import { AuthModal } from './AuthModal'
+import { VoiceBreakdown } from './VoiceBreakdown'
 import { ThemeMode } from '../lib/db'
 
 interface SettingsProps {
@@ -36,6 +38,7 @@ export function Settings({ onShowPaywall, onRestorePurchase }: SettingsProps) {
   const { tier, isPremium } = usePremiumStore()
   const { hideTimeDisplay, setHideTimeDisplay, themeMode, setThemeMode } = useSettingsStore()
   const { user, isAuthenticated, profile, signOut, isLoading: authLoading } = useAuthStore()
+  const { inputs, isLoading: voiceLoading } = useVoice()
   const [showAuthModal, setShowAuthModal] = useState(false)
 
   const swipeHandlers = useSwipe({
@@ -138,6 +141,13 @@ export function Settings({ onShowPaywall, onRestorePurchase }: SettingsProps) {
             </div>
           )}
         </div>
+
+        {/* Voice Score Breakdown */}
+        {!voiceLoading && inputs && (
+          <div className="mb-10">
+            <VoiceBreakdown inputs={inputs} />
+          </div>
+        )}
 
         {/* Settings Options */}
         <div className="mb-10 space-y-1">

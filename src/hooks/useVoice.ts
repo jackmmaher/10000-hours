@@ -1,0 +1,157 @@
+/**
+ * useVoice - Hook to calculate Voice score from local and remote data
+ *
+ * Gathers inputs from:
+ * - Local IndexedDB: sessions, insights with shared pearls
+ * - Supabase profile: karma received, saves received
+ * - Supabase templates: meditations created, completions
+ */
+
+import { useState, useEffect, useCallback } from 'react'
+import { useSessionStore } from '../stores/useSessionStore'
+import { useAuthStore } from '../stores/useAuthStore'
+import { getInsights } from '../lib/db'
+import { getMyTemplates } from '../lib/templates'
+import { calculateVoice, VoiceScore, VoiceInputs } from '../lib/voice'
+
+export interface UseVoiceResult {
+  voice: VoiceScore | null
+  inputs: VoiceInputs | null
+  isLoading: boolean
+  refresh: () => Promise<void>
+}
+
+export function useVoice(): UseVoiceResult {
+  const { sessions, totalSeconds } = useSessionStore()
+  const { user, profile, isAuthenticated } = useAuthStore()
+
+  const [voice, setVoice] = useState<VoiceScore | null>(null)
+  const [inputs, setInputs] = useState<VoiceInputs | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  const calculateVoiceData = useCallback(async () => {
+    setIsLoading(true)
+
+    try {
+      // ============================================
+      // PRACTICE SIGNALS (from local data)
+      // ============================================
+
+      // Total hours from sessions
+      const totalHours = totalSeconds / 3600
+
+      // Total sessions
+      const totalSessions = sessions.length
+
+      // Average session length in minutes
+      const avgSessionMinutes = totalSessions > 0
+        ? (totalSeconds / totalSessions) / 60
+        : 0
+
+      // Sessions per week (rolling 4-week average)
+      const fourWeeksAgo = Date.now() - (28 * 24 * 60 * 60 * 1000)
+      const recentSessions = sessions.filter(s => s.startTime >= fourWeeksAgo)
+      const sessionsPerWeekAvg = recentSessions.length / 4
+
+      // ============================================
+      // CONTRIBUTION SIGNALS
+      // ============================================
+
+      // Pearls shared (insights with sharedPearlId)
+      const allInsights = await getInsights()
+      const pearlsShared = allInsights.filter(i => i.sharedPearlId).length
+
+      // Meditations created (from Supabase if authenticated)
+      let meditationsCreated = 0
+      let meditationCompletions = 0
+
+      if (isAuthenticated && user) {
+        try {
+          const myTemplates = await getMyTemplates(user.id)
+          meditationsCreated = myTemplates.length
+          // Sum completions from all user's templates
+          meditationCompletions = myTemplates.reduce((sum, t) => sum + (t.completions || 0), 0)
+        } catch (err) {
+          console.warn('Failed to fetch user templates:', err)
+        }
+      }
+
+      // ============================================
+      // VALIDATION SIGNALS (from Supabase profile)
+      // ============================================
+
+      // Karma and saves from profile (or 0 if not authenticated)
+      const karmaReceived = profile?.totalKarma || 0
+      const contentSavedByOthers = profile?.totalSaves || 0
+
+      // ============================================
+      // BUILD INPUTS AND CALCULATE
+      // ============================================
+
+      const voiceInputs: VoiceInputs = {
+        totalHours,
+        totalSessions,
+        avgSessionMinutes,
+        sessionsPerWeekAvg,
+        pearlsShared,
+        meditationsCreated,
+        karmaReceived,
+        contentSavedByOthers,
+        meditationCompletions
+      }
+
+      const voiceScore = calculateVoice(voiceInputs)
+
+      setInputs(voiceInputs)
+      setVoice(voiceScore)
+    } catch (err) {
+      console.error('Failed to calculate Voice:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [sessions, totalSeconds, isAuthenticated, user, profile])
+
+  // Calculate on mount and when dependencies change
+  useEffect(() => {
+    calculateVoiceData()
+  }, [calculateVoiceData])
+
+  return {
+    voice,
+    inputs,
+    isLoading,
+    refresh: calculateVoiceData
+  }
+}
+
+/**
+ * Lightweight version that only uses local data (no async)
+ * For use in components that don't need full accuracy
+ */
+export function useVoiceLocal(): VoiceScore | null {
+  const { sessions, totalSeconds } = useSessionStore()
+
+  if (sessions.length === 0) return null
+
+  const totalHours = totalSeconds / 3600
+  const avgSessionMinutes = (totalSeconds / sessions.length) / 60
+
+  const fourWeeksAgo = Date.now() - (28 * 24 * 60 * 60 * 1000)
+  const recentSessions = sessions.filter(s => s.startTime >= fourWeeksAgo)
+  const sessionsPerWeekAvg = recentSessions.length / 4
+
+  // Simplified inputs (without async data)
+  const inputs: VoiceInputs = {
+    totalHours,
+    totalSessions: sessions.length,
+    avgSessionMinutes,
+    sessionsPerWeekAvg,
+    pearlsShared: 0,
+    meditationsCreated: 0,
+    karmaReceived: 0,
+    contentSavedByOthers: 0,
+    meditationCompletions: 0
+  }
+
+  return calculateVoice(inputs)
+}

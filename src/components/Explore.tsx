@@ -24,6 +24,7 @@ import { SessionCard } from './SessionCard'
 import { SessionDetailModal, SessionTemplate } from './SessionDetailModal'
 import { getIntentionGradient } from '../lib/animations'
 import { getPublishedTemplates } from '../lib/templates'
+import { VoiceBadgeWithHours } from './VoiceBadge'
 
 // Import extracted data
 import extractedSessions from '../data/sessions.json'
@@ -417,7 +418,29 @@ export function Explore() {
   )
 }
 
-// Pearl card variant for explore feed
+/**
+ * Calculate simplified feed Voice score from available data
+ * Full Voice algorithm requires more inputs; this approximates for feed display
+ *
+ * Factors:
+ * - Hours (log scaled): 0-40 points
+ * - Karma/upvotes (sqrt scaled): 0-30 points
+ * - Saves (sqrt scaled): 0-30 points
+ */
+function calculateFeedVoice(hours: number, karma: number, saves: number): number {
+  // Hours: log10(hours + 1) * 10, cap at 40
+  const hoursScore = Math.min(Math.log10(hours + 1) * 10, 40)
+
+  // Karma: sqrt(karma) * 3, cap at 30
+  const karmaScore = Math.min(Math.sqrt(karma) * 3, 30)
+
+  // Saves: sqrt(saves) * 4, cap at 30
+  const savesScore = Math.min(Math.sqrt(saves) * 4, 30)
+
+  return Math.round(hoursScore + karmaScore + savesScore)
+}
+
+// Pearl card variant for explore feed - polished stone aesthetic
 function PearlCardExplore({
   pearl,
   onVote,
@@ -436,6 +459,14 @@ function PearlCardExplore({
   const [localVoted, setLocalVoted] = useState(pearl.hasVoted || false)
   const [localSaved, setLocalSaved] = useState(pearl.hasSaved || false)
   const [localUpvotes, setLocalUpvotes] = useState(pearl.upvotes)
+  const [localSaves, setLocalSaves] = useState(pearl.saves || 0)
+
+  // Get creator hours (use actual or generate consistent placeholder based on pearl id)
+  const creatorHours = (pearl as Pearl & { creatorHours?: number }).creatorHours
+    || (parseInt(pearl.id.slice(-4), 16) % 400) + 20 // Deterministic from id
+
+  // Calculate feed Voice score from available data
+  const voiceScore = calculateFeedVoice(creatorHours, localUpvotes, localSaves)
 
   const handleVote = async () => {
     if (!isAuthenticated) {
@@ -469,75 +500,80 @@ function PearlCardExplore({
     setIsSaving(true)
     const newSaved = !localSaved
     setLocalSaved(newSaved)
+    setLocalSaves(prev => newSaved ? prev + 1 : prev - 1)
 
     try {
       await onSave(pearl.id, newSaved)
     } catch {
       setLocalSaved(!newSaved)
+      setLocalSaves(prev => newSaved ? prev - 1 : prev + 1)
     } finally {
       setIsSaving(false)
     }
   }
 
   return (
-    <div className="bg-cream-deep rounded-xl p-5">
-      {/* Type indicator */}
-      <div className="flex items-center gap-2 mb-3">
-        <span className="text-xs text-moss font-medium">✦ Pearl</span>
+    <div className="relative bg-gradient-to-br from-cream to-[#F7F4F0] rounded-2xl p-5 shadow-sm">
+      {/* Shimmer highlight */}
+      <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent" />
+
+      {/* Header with pearl orb and Voice badge */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#E8E4DF] to-[#C9C4BD] shadow-sm" />
+          <span className="text-xs text-ink/40">Community wisdom</span>
+        </div>
+
+        {/* Voice credibility badge with hours */}
+        <VoiceBadgeWithHours score={voiceScore} hours={creatorHours} />
       </div>
 
       {/* Pearl text */}
-      <p className="font-serif text-ink leading-relaxed mb-4">
+      <p className="font-serif text-ink leading-relaxed text-[15px] mb-4">
         "{pearl.text}"
       </p>
 
       {/* Actions row */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          {/* Vote button */}
-          <button
-            onClick={handleVote}
-            disabled={isVoting}
-            className={`
-              flex items-center gap-1.5 text-sm transition-colors
-              ${localVoted ? 'text-moss' : 'text-ink/40 hover:text-ink/60'}
-            `}
+      <div className="flex items-center gap-4">
+        {/* Vote button */}
+        <button
+          onClick={handleVote}
+          disabled={isVoting}
+          className={`
+            flex items-center gap-1.5 transition-all
+            ${localVoted ? 'text-moss' : 'text-ink/30 hover:text-ink/50'}
+          `}
+        >
+          <svg
+            className="w-4 h-4"
+            fill={localVoted ? 'currentColor' : 'none'}
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 15l7-7 7 7" />
-            </svg>
-            <span className="tabular-nums">{localUpvotes}</span>
-          </button>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 15l7-7 7 7" />
+          </svg>
+          <span className="text-xs tabular-nums">{localUpvotes}</span>
+        </button>
 
-          {/* Save button */}
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className={`
-              flex items-center gap-1.5 text-sm transition-colors
-              ${localSaved ? 'text-indigo-deep' : 'text-ink/40 hover:text-ink/60'}
-            `}
+        {/* Save button */}
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className={`
+            flex items-center gap-1.5 transition-all
+            ${localSaved ? 'text-indigo-deep' : 'text-ink/30 hover:text-ink/50'}
+          `}
+        >
+          <svg
+            className="w-4 h-4"
+            fill={localSaved ? 'currentColor' : 'none'}
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            <svg
-              className="w-4 h-4"
-              fill={localSaved ? 'currentColor' : 'none'}
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Creator hours (credibility) - randomized until backend supports it */}
-        <span className="text-xs text-ink/30">
-          {Math.floor(Math.random() * 200) + 50} hrs
-        </span>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+          </svg>
+          {localSaved && <span className="text-xs">Saved</span>}
+        </button>
       </div>
     </div>
   )
