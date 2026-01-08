@@ -7,21 +7,16 @@
  * Gen 2 Changes:
  * - Reduced particle counts (5-8 max, not 25-40)
  * - Wind breath events (random gusts that shiver and settle)
- * - "Expressive" mode for users who want aurora, shooting stars, etc.
+ * - "Expressive" toggle for users who want aurora, shooting stars, etc.
  * - Spring effects updated (no pink cherry blossoms - now mist/dew)
- *
- * Effects scale with mode: subtle → evocative → immersive
  */
 
 import { useEffect, useState, useMemo } from 'react'
 import { TimeOfDay, Season } from '../lib/themeEngine'
 
-export type AtmosphereMode = 'off' | 'subtle' | 'evocative' | 'immersive'
-
 interface AmbientAtmosphereProps {
   timeOfDay: TimeOfDay
   season: Season
-  mode: AtmosphereMode
   /** Enable expressive effects (aurora, shooting stars, etc.) - user opt-in */
   expressive?: boolean
 }
@@ -62,7 +57,7 @@ const RAIN_DROPS = generateParticles(12, 654)     // Was 50
 // MAIN COMPONENT
 // ============================================================================
 
-export function AmbientAtmosphere({ timeOfDay, season, mode, expressive = false }: AmbientAtmosphereProps) {
+export function AmbientAtmosphere({ timeOfDay, season, expressive = false }: AmbientAtmosphereProps) {
   const [mounted, setMounted] = useState(false)
   const [windActive, setWindActive] = useState(false)
 
@@ -72,8 +67,6 @@ export function AmbientAtmosphere({ timeOfDay, season, mode, expressive = false 
 
   // Wind breath events - random gusts every 45-90 seconds
   useEffect(() => {
-    if (mode === 'off') return
-
     const triggerWind = () => {
       setWindActive(true)
       // Wind lasts 3 seconds
@@ -95,9 +88,9 @@ export function AmbientAtmosphere({ timeOfDay, season, mode, expressive = false 
       clearTimeout(initialTimeout)
       clearInterval(interval)
     }
-  }, [mode])
+  }, [])
 
-  if (mode === 'off' || !mounted) return null
+  if (!mounted) return null
 
   return (
     <div
@@ -124,32 +117,26 @@ export function AmbientAtmosphere({ timeOfDay, season, mode, expressive = false 
         }
       `}</style>
 
-      {/* Base layer: Grain texture - ALL MODES */}
-      <GrainOverlay intensity={mode === 'subtle' ? 0.03 : 0.04} />
+      {/* Base layer: Grain texture */}
+      <GrainOverlay intensity={0.04} />
 
-      {/* Atmospheric gradient - ALL MODES */}
-      <AtmosphericGradient timeOfDay={timeOfDay} season={season} mode={mode} />
+      {/* Atmospheric gradient */}
+      <AtmosphericGradient timeOfDay={timeOfDay} season={season} />
 
-      {/* Directional light - ALL MODES */}
-      <DirectionalLight timeOfDay={timeOfDay} season={season} mode={mode} />
+      {/* Directional light */}
+      <DirectionalLight timeOfDay={timeOfDay} season={season} />
 
-      {/* Horizon glow - EVOCATIVE+ */}
-      {(mode === 'evocative' || mode === 'immersive') && (
-        <HorizonGlow timeOfDay={timeOfDay} season={season} />
-      )}
+      {/* Horizon glow */}
+      <HorizonGlow timeOfDay={timeOfDay} season={season} />
 
-      {/* Season-specific effects - EVOCATIVE+ */}
-      {(mode === 'evocative' || mode === 'immersive') && (
-        <SeasonalEffects timeOfDay={timeOfDay} season={season} mode={mode} expressive={expressive} />
-      )}
+      {/* Season-specific effects */}
+      <SeasonalEffects timeOfDay={timeOfDay} season={season} expressive={expressive} />
 
-      {/* Environmental particles - IMMERSIVE */}
-      {mode === 'immersive' && (
-        <EnvironmentalParticles timeOfDay={timeOfDay} season={season} />
-      )}
+      {/* Environmental particles */}
+      <EnvironmentalParticles timeOfDay={timeOfDay} season={season} />
 
-      {/* Celestial objects (moon, stars) - IMMERSIVE NIGHT */}
-      {mode === 'immersive' && timeOfDay === 'night' && (
+      {/* Celestial objects (moon, stars) - night only */}
+      {timeOfDay === 'night' && (
         <CelestialElements season={season} expressive={expressive} />
       )}
 
@@ -180,7 +167,7 @@ function GrainOverlay({ intensity }: { intensity: number }) {
 // ATMOSPHERIC GRADIENT (Season-aware)
 // ============================================================================
 
-function AtmosphericGradient({ timeOfDay, season, mode }: { timeOfDay: TimeOfDay; season: Season; mode: AtmosphereMode }) {
+function AtmosphericGradient({ timeOfDay, season }: { timeOfDay: TimeOfDay; season: Season }) {
   const gradients: Record<Season, Record<TimeOfDay, string>> = {
     winter: {
       morning: `
@@ -263,7 +250,7 @@ function AtmosphericGradient({ timeOfDay, season, mode }: { timeOfDay: TimeOfDay
     }
   }
 
-  const intensity = mode === 'subtle' ? 0.7 : mode === 'evocative' ? 1 : 1.3
+  const intensity = 1.3
 
   return (
     <div
@@ -280,7 +267,7 @@ function AtmosphericGradient({ timeOfDay, season, mode }: { timeOfDay: TimeOfDay
 // DIRECTIONAL LIGHT (Season-aware)
 // ============================================================================
 
-function DirectionalLight({ timeOfDay, season, mode }: { timeOfDay: TimeOfDay; season: Season; mode: AtmosphereMode }) {
+function DirectionalLight({ timeOfDay, season }: { timeOfDay: TimeOfDay; season: Season }) {
   const config: Record<Season, Record<TimeOfDay, { angle: string; color: string; opacity: number }>> = {
     winter: {
       morning: { angle: 'to bottom left', color: 'rgba(125, 211, 252, 0.18)', opacity: 0.8 },
@@ -309,7 +296,7 @@ function DirectionalLight({ timeOfDay, season, mode }: { timeOfDay: TimeOfDay; s
   }
 
   const { angle, color, opacity } = config[season][timeOfDay]
-  const finalOpacity = mode === 'subtle' ? opacity * 0.6 : opacity
+  const finalOpacity = opacity
 
   return (
     <div
@@ -371,45 +358,39 @@ function HorizonGlow({ timeOfDay, season }: { timeOfDay: TimeOfDay; season: Seas
 // SEASONAL EFFECTS (The distinctive elements)
 // ============================================================================
 
-function SeasonalEffects({ timeOfDay, season, mode, expressive }: { timeOfDay: TimeOfDay; season: Season; mode: AtmosphereMode; expressive: boolean }) {
+function SeasonalEffects({ timeOfDay, season, expressive }: { timeOfDay: TimeOfDay; season: Season; expressive: boolean }) {
   switch (season) {
     case 'spring':
-      return <SpringEffects timeOfDay={timeOfDay} mode={mode} expressive={expressive} />
+      return <SpringEffects timeOfDay={timeOfDay} expressive={expressive} />
     case 'summer':
-      return <SummerEffects timeOfDay={timeOfDay} mode={mode} expressive={expressive} />
+      return <SummerEffects timeOfDay={timeOfDay} expressive={expressive} />
     case 'autumn':
-      return <AutumnEffects timeOfDay={timeOfDay} mode={mode} expressive={expressive} />
+      return <AutumnEffects timeOfDay={timeOfDay} expressive={expressive} />
     case 'winter':
-      return <WinterEffects timeOfDay={timeOfDay} mode={mode} expressive={expressive} />
+      return <WinterEffects timeOfDay={timeOfDay} expressive={expressive} />
   }
 }
 
 // --- SPRING EFFECTS (Gen 2: Mist, dew, soft rain - no pink blossoms) ---
 
-function SpringEffects({ timeOfDay, mode, expressive }: { timeOfDay: TimeOfDay; mode: AtmosphereMode; expressive: boolean }) {
+function SpringEffects({ timeOfDay, expressive }: { timeOfDay: TimeOfDay; expressive: boolean }) {
   return (
     <>
       {/* Light rays for morning - using sage green tint */}
-      {(timeOfDay === 'morning') && <SoftLightRays color="rgba(124, 154, 110, 0.08)" fromRight />}
+      {timeOfDay === 'morning' && <SoftLightRays color="rgba(124, 154, 110, 0.08)" fromRight />}
 
       {/* Daytime - soft sunlight rays and floating pollen */}
       {timeOfDay === 'daytime' && <SoftLightRays color="rgba(134, 239, 172, 0.06)" fromRight={false} />}
-      {timeOfDay === 'daytime' && mode === 'immersive' && <FloatingPollen />}
+      {timeOfDay === 'daytime' && <FloatingPollen />}
 
       {/* Morning mist - subtle floating particles */}
-      {(timeOfDay === 'morning') && mode === 'immersive' && (
-        <MorningMist />
-      )}
+      {timeOfDay === 'morning' && <MorningMist />}
 
       {/* Soft rain effect - evening and night */}
-      {(timeOfDay === 'evening' || timeOfDay === 'night') && mode === 'immersive' && (
-        <SoftRain />
-      )}
+      {(timeOfDay === 'evening' || timeOfDay === 'night') && <SoftRain />}
 
       {/* Morning dew sparkles - only in expressive mode */}
-      {timeOfDay === 'morning' && mode === 'immersive' && expressive && (
-        <DewSparkles />
-      )}
+      {timeOfDay === 'morning' && expressive && <DewSparkles />}
     </>
   )
 }
@@ -565,33 +546,25 @@ function FloatingPollen() {
 
 // --- SUMMER EFFECTS ---
 
-function SummerEffects({ timeOfDay, mode, expressive }: { timeOfDay: TimeOfDay; mode: AtmosphereMode; expressive: boolean }) {
+function SummerEffects({ timeOfDay, expressive }: { timeOfDay: TimeOfDay; expressive: boolean }) {
   return (
     <>
-      {/* Soft golden rays for morning and evening - reduced intensity */}
+      {/* Soft golden rays for morning and evening */}
       {(timeOfDay === 'morning' || timeOfDay === 'evening') && (
-        <GoldenRays timeOfDay={timeOfDay} intense={expressive && mode === 'immersive'} />
+        <GoldenRays timeOfDay={timeOfDay} intense={expressive} />
       )}
 
-      {/* Daytime sun rays - always visible */}
-      {timeOfDay === 'daytime' && (
-        <SoftLightRays color="rgba(253, 186, 116, 0.08)" fromRight={false} />
-      )}
+      {/* Daytime sun rays */}
+      {timeOfDay === 'daytime' && <SoftLightRays color="rgba(253, 186, 116, 0.08)" fromRight={false} />}
 
-      {/* Heat shimmer for daytime - immersive mode */}
-      {timeOfDay === 'daytime' && mode === 'immersive' && (
-        <HeatShimmer />
-      )}
+      {/* Heat shimmer for daytime */}
+      {timeOfDay === 'daytime' && <HeatShimmer />}
 
       {/* Dust motes floating in sunlight - daytime expressive */}
-      {timeOfDay === 'daytime' && mode === 'immersive' && expressive && (
-        <SunlitDust />
-      )}
+      {timeOfDay === 'daytime' && expressive && <SunlitDust />}
 
-      {/* Fireflies for evening and night - reduced count */}
-      {(timeOfDay === 'evening' || timeOfDay === 'night') && mode === 'immersive' && (
-        <Fireflies />
-      )}
+      {/* Fireflies for evening and night */}
+      {(timeOfDay === 'evening' || timeOfDay === 'night') && <Fireflies />}
     </>
   )
 }
@@ -767,7 +740,7 @@ function SunlitDust() {
 
 // --- AUTUMN EFFECTS ---
 
-function AutumnEffects({ timeOfDay, mode, expressive }: { timeOfDay: TimeOfDay; mode: AtmosphereMode; expressive: boolean }) {
+function AutumnEffects({ timeOfDay, expressive }: { timeOfDay: TimeOfDay; expressive: boolean }) {
   return (
     <>
       {/* Copper light rays */}
@@ -779,29 +752,19 @@ function AutumnEffects({ timeOfDay, mode, expressive }: { timeOfDay: TimeOfDay; 
       )}
 
       {/* Daytime golden rays */}
-      {timeOfDay === 'daytime' && (
-        <SoftLightRays color="rgba(217, 119, 6, 0.06)" fromRight={false} />
-      )}
+      {timeOfDay === 'daytime' && <SoftLightRays color="rgba(217, 119, 6, 0.06)" fromRight={false} />}
 
       {/* Morning fog - subtle ground mist */}
-      {timeOfDay === 'morning' && mode === 'immersive' && (
-        <AutumnMist />
-      )}
+      {timeOfDay === 'morning' && <AutumnMist />}
 
-      {/* Falling leaves - reduced count */}
-      {mode === 'immersive' && (
-        <FallingLeaves />
-      )}
+      {/* Falling leaves */}
+      <FallingLeaves />
 
       {/* Woodsmoke haze for evening and night */}
-      {(timeOfDay === 'evening' || timeOfDay === 'night') && mode === 'immersive' && (
-        <WoodsmokeHaze />
-      )}
+      {(timeOfDay === 'evening' || timeOfDay === 'night') && <WoodsmokeHaze />}
 
       {/* Harvest moon glow for evening - only in expressive mode */}
-      {timeOfDay === 'evening' && mode === 'immersive' && expressive && (
-        <HarvestMoonGlow />
-      )}
+      {timeOfDay === 'evening' && expressive && <HarvestMoonGlow />}
     </>
   )
 }
@@ -979,43 +942,29 @@ function HarvestMoonGlow() {
 
 // --- WINTER EFFECTS ---
 
-function WinterEffects({ timeOfDay, mode, expressive }: { timeOfDay: TimeOfDay; mode: AtmosphereMode; expressive: boolean }) {
+function WinterEffects({ timeOfDay, expressive }: { timeOfDay: TimeOfDay; expressive: boolean }) {
   return (
     <>
       {/* Cool light rays for morning */}
-      {timeOfDay === 'morning' && (
-        <SoftLightRays color="rgba(122, 139, 139, 0.06)" fromRight />
-      )}
+      {timeOfDay === 'morning' && <SoftLightRays color="rgba(122, 139, 139, 0.06)" fromRight />}
 
       {/* Daytime pale winter sun rays */}
-      {timeOfDay === 'daytime' && (
-        <SoftLightRays color="rgba(186, 230, 253, 0.05)" fromRight={false} />
-      )}
+      {timeOfDay === 'daytime' && <SoftLightRays color="rgba(186, 230, 253, 0.05)" fromRight={false} />}
 
       {/* Warm rays for evening */}
-      {timeOfDay === 'evening' && (
-        <SoftLightRays color="rgba(154, 123, 90, 0.08)" fromRight={false} />
-      )}
+      {timeOfDay === 'evening' && <SoftLightRays color="rgba(154, 123, 90, 0.08)" fromRight={false} />}
 
-      {/* Gentle snowfall - always calm */}
-      {mode === 'immersive' && (
-        <Snowfall intensity={expressive && timeOfDay === 'night' ? 'heavy' : 'light'} />
-      )}
+      {/* Snowfall - heavy on expressive night, light otherwise */}
+      <Snowfall intensity={expressive && timeOfDay === 'night' ? 'heavy' : 'light'} />
 
       {/* Frost shimmer for morning - only in expressive mode */}
-      {timeOfDay === 'morning' && mode === 'immersive' && expressive && (
-        <FrostShimmer />
-      )}
+      {timeOfDay === 'morning' && expressive && <FrostShimmer />}
 
       {/* Cold breath mist for daytime and evening */}
-      {(timeOfDay === 'daytime' || timeOfDay === 'evening') && mode === 'immersive' && (
-        <ColdBreathMist />
-      )}
+      {(timeOfDay === 'daytime' || timeOfDay === 'evening') && <ColdBreathMist />}
 
       {/* Ice crystal sparkle for night expressive */}
-      {timeOfDay === 'night' && mode === 'immersive' && expressive && (
-        <IceCrystals />
-      )}
+      {timeOfDay === 'night' && expressive && <IceCrystals />}
     </>
   )
 }

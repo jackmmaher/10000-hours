@@ -121,7 +121,6 @@ function AppContent() {
       <AmbientAtmosphere
         timeOfDay={themeState.timeOfDay}
         season={themeState.season}
-        mode="immersive"
         expressive={visualEffects === 'expressive'}
       />
       <div className="h-full">
