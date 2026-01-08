@@ -13,7 +13,10 @@ import {
   ThemeTokens,
   TimeOfDay,
   Season,
-  getSeason
+  getSeason,
+  getThemeTokens,
+  NEUTRAL_LIGHT,
+  NEUTRAL_DARK
 } from './themeEngine'
 import {
   getLocation,
@@ -347,4 +350,174 @@ export function applyLivingTheme(state: LivingThemeState): void {
   } else {
     root.classList.remove('dark')
   }
+}
+
+// ============================================================================
+// MANUAL THEME CALCULATION
+// ============================================================================
+
+/**
+ * Extended season type that includes neutral option
+ */
+export type SeasonOption = Season | 'neutral'
+
+/**
+ * Calculate static effect intensities for manual themes
+ * Returns appropriate effects based on time of day without live solar calculations
+ */
+function calculateManualEffects(
+  timeOfDay: TimeOfDay,
+  isNeutral: boolean,
+  expressive: boolean
+): EffectIntensities {
+  // Neutral theme: minimal effects regardless of time
+  if (isNeutral) {
+    return {
+      stars: 0,
+      moon: 0,
+      shootingStars: 0,
+      atmosphericGradient: 0,
+      directionalLight: {
+        intensity: 0,
+        warmth: 0,
+        angle: 45
+      },
+      particles: 0,
+      grain: 0.02, // Just a subtle texture
+      ambientDarkness: 0
+    }
+  }
+
+  // Standard manual themes: static effects based on time of day
+  switch (timeOfDay) {
+    case 'morning':
+      return {
+        stars: 0,
+        moon: 0,
+        shootingStars: 0,
+        atmosphericGradient: 0.1,
+        directionalLight: {
+          intensity: 0.4,
+          warmth: 0.3,
+          angle: 15
+        },
+        particles: 0.3,
+        grain: 0.03,
+        ambientDarkness: 0.1
+      }
+    case 'daytime':
+      return {
+        stars: 0,
+        moon: 0,
+        shootingStars: 0,
+        atmosphericGradient: 0,
+        directionalLight: {
+          intensity: 0.3,
+          warmth: 0,
+          angle: 60
+        },
+        particles: 0.2,
+        grain: 0.03,
+        ambientDarkness: 0
+      }
+    case 'evening':
+      return {
+        stars: 0.3,
+        moon: 0.2,
+        shootingStars: 0,
+        atmosphericGradient: 0.5,
+        directionalLight: {
+          intensity: 0.6,
+          warmth: 0.8,
+          angle: 10
+        },
+        particles: 0.5,
+        grain: 0.04,
+        ambientDarkness: 0.4
+      }
+    case 'night':
+      return {
+        stars: 1,
+        moon: 0.9,
+        shootingStars: expressive ? 0.8 : 0,
+        atmosphericGradient: 1,
+        directionalLight: {
+          intensity: 0,
+          warmth: 0,
+          angle: 0
+        },
+        particles: 0.6,
+        grain: 0.05,
+        ambientDarkness: 1
+      }
+  }
+}
+
+/**
+ * Calculate complete living theme state for manual mode
+ * Uses static values based on user selection instead of solar position
+ */
+export function calculateManualTheme(
+  season: SeasonOption,
+  timeOfDay: TimeOfDay,
+  expressive: boolean = false,
+  breathingEnabled: boolean = true
+): LivingThemeState {
+  const isNeutral = season === 'neutral'
+
+  // Get color tokens
+  let colors: ThemeTokens
+  if (isNeutral) {
+    // Neutral uses light/dark based on time of day
+    colors = timeOfDay === 'night' ? NEUTRAL_DARK : NEUTRAL_LIGHT
+  } else {
+    colors = getThemeTokens(timeOfDay, season as Season)
+  }
+
+  // Calculate static effects
+  const effects = calculateManualEffects(timeOfDay, isNeutral, expressive)
+
+  // Simulate sun altitude based on time of day
+  const altitudeMap: Record<TimeOfDay, number> = {
+    morning: 10,
+    daytime: 45,
+    evening: 3,
+    night: -15
+  }
+
+  return {
+    location: null, // No location in manual mode
+    sunAltitude: altitudeMap[timeOfDay],
+    isRising: timeOfDay === 'morning',
+    season: isNeutral ? 'winter' : (season as Season), // Default to winter for neutral
+    timeOfDay,
+    expressive,
+    breathingEnabled,
+    colors,
+    effects
+  }
+}
+
+/**
+ * Get seasonal effects for manual mode
+ * Returns minimal effects for neutral, standard effects for seasonal themes
+ */
+export function getManualSeasonalEffects(
+  season: SeasonOption,
+  timeOfDay: TimeOfDay,
+  expressive: boolean
+): SeasonalEffects {
+  // Neutral: no seasonal effects
+  if (season === 'neutral') {
+    return {
+      particleType: 'none',
+      particleMultiplier: 0,
+      aurora: false,
+      harvestMoon: false,
+      rainPossible: false
+    }
+  }
+
+  // Use standard seasonal effects for seasonal themes
+  return getSeasonalEffects(season as Season, timeOfDay, expressive)
 }

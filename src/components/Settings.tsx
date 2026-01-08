@@ -31,7 +31,8 @@ const SEASON_OPTIONS: { value: SeasonOverride; label: string; icon: string }[] =
   { value: 'spring', label: 'Spring', icon: '🌱' },
   { value: 'summer', label: 'Summer', icon: '☀️' },
   { value: 'autumn', label: 'Autumn', icon: '🍂' },
-  { value: 'winter', label: 'Winter', icon: '❄️' }
+  { value: 'winter', label: 'Winter', icon: '❄️' },
+  { value: 'neutral', label: 'Neutral', icon: '○' }
 ]
 
 const TIME_OPTIONS: { value: TimeOverride; label: string }[] = [
@@ -42,6 +43,8 @@ const TIME_OPTIONS: { value: TimeOverride; label: string }[] = [
 ]
 
 const QUICK_PRESETS: { label: string; season: SeasonOverride; time: TimeOverride }[] = [
+  { label: 'Neutral Light', season: 'neutral', time: 'daytime' },
+  { label: 'Neutral Dark', season: 'neutral', time: 'night' },
   { label: 'Spring Dawn', season: 'spring', time: 'morning' },
   { label: 'Summer Day', season: 'summer', time: 'daytime' },
   { label: 'Autumn Evening', season: 'autumn', time: 'evening' },

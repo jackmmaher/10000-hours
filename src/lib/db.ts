@@ -39,7 +39,7 @@ export interface UserProfile {
 
 export type ThemeMode = 'auto' | 'manual'
 export type VisualEffects = 'calm' | 'expressive'
-export type SeasonOverride = 'spring' | 'summer' | 'autumn' | 'winter'
+export type SeasonOverride = 'spring' | 'summer' | 'autumn' | 'winter' | 'neutral'
 export type TimeOverride = 'morning' | 'daytime' | 'evening' | 'night'
 
 export interface UserSettings {

@@ -26,13 +26,16 @@ import {
   LivingThemeState,
   EffectIntensities,
   calculateLivingTheme,
+  calculateManualTheme,
   applyLivingTheme,
   getLocation,
   estimateLocationFromTimezone,
   getSeasonalEffects,
+  getManualSeasonalEffects,
   SeasonalEffects,
   TimeOfDay,
-  Season
+  Season,
+  SeasonOption
 } from '../lib/livingTheme'
 import { useSettingsStore } from '../stores/useSettingsStore'
 
@@ -81,10 +84,11 @@ export function LivingTheme({
   breathingIntensity = 0.015
 }: LivingThemeProps) {
   // User preferences from settings
-  const { visualEffects } = useSettingsStore()
+  const { visualEffects, themeMode, manualSeason, manualTime } = useSettingsStore()
   const expressive = visualEffects === 'expressive'
+  const isManualMode = themeMode === 'manual'
 
-  // Location state
+  // Location state (only used in auto mode)
   const [location, setLocation] = useState<{ lat: number; long: number } | null>(null)
   const locationFetched = useRef(false)
   const [lastUpdate, setLastUpdate] = useState(new Date())
@@ -96,8 +100,9 @@ export function LivingTheme({
     return calculateLivingTheme(fallback, new Date(), expressive, true)
   })
 
-  // Fetch location on mount (one-time)
+  // Fetch location on mount (one-time, only in auto mode)
   useEffect(() => {
+    if (isManualMode) return // Skip location fetch in manual mode
     if (locationFetched.current) return
     locationFetched.current = true
 
@@ -106,29 +111,44 @@ export function LivingTheme({
       .catch(() => {
         setLocation(estimateLocationFromTimezone())
       })
-  }, [])
+  }, [isManualMode])
 
-  // Update theme calculation
+  // Update theme calculation - handles both auto and manual modes
   const updateTheme = useCallback(() => {
     const now = new Date()
-    const currentLocation = location ?? estimateLocationFromTimezone()
-    const newState = calculateLivingTheme(currentLocation, now, expressive, true)
+
+    let newState: LivingThemeState
+    if (isManualMode) {
+      // Manual mode: use user's selected season and time
+      newState = calculateManualTheme(
+        manualSeason as SeasonOption,
+        manualTime,
+        expressive,
+        true
+      )
+    } else {
+      // Auto mode: calculate based on real sun position
+      const currentLocation = location ?? estimateLocationFromTimezone()
+      newState = calculateLivingTheme(currentLocation, now, expressive, true)
+    }
 
     setThemeState(newState)
     applyLivingTheme(newState)
     setLastUpdate(now)
-  }, [location, expressive])
+  }, [location, expressive, isManualMode, manualSeason, manualTime])
 
   // Initial theme application and updates when dependencies change
   useEffect(() => {
     updateTheme()
   }, [updateTheme])
 
-  // Periodic updates
+  // Periodic updates (only in auto mode)
   useEffect(() => {
+    if (isManualMode) return // No periodic updates in manual mode
+
     const interval = setInterval(updateTheme, UPDATE_INTERVAL)
     return () => clearInterval(interval)
-  }, [updateTheme])
+  }, [updateTheme, isManualMode])
 
   // Listen for theme reset events (from ThemePreview)
   useEffect(() => {
@@ -137,12 +157,10 @@ export function LivingTheme({
     return () => window.removeEventListener('themeReset', handleReset)
   }, [updateTheme])
 
-  // Calculate seasonal effects
-  const seasonalEffects = getSeasonalEffects(
-    themeState.season,
-    themeState.timeOfDay,
-    expressive
-  )
+  // Calculate seasonal effects based on mode
+  const seasonalEffects = isManualMode
+    ? getManualSeasonalEffects(manualSeason as SeasonOption, themeState.timeOfDay, expressive)
+    : getSeasonalEffects(themeState.season, themeState.timeOfDay, expressive)
 
   // Build context value
   const contextValue: LivingThemeContextValue = {
