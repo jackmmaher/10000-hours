@@ -35,6 +35,8 @@ export default {
         // Borders
         'border-theme': 'var(--border)',
         'border-subtle': 'var(--border-subtle)',
+        // Card backgrounds (glassmorphism-ready)
+        'card': 'var(--card-bg)',
       },
       fontFamily: {
         // Pair 1: Palatino + Raleway (from font-pairs.html)

@@ -24,6 +24,7 @@ import { WeekStonesRow, getDayStatusWithPlan, ExtendedDayStatus } from './WeekSt
 import { JourneyNextSession } from './JourneyNextSession'
 import { InsightStream } from './InsightStream'
 import { Calendar } from './Calendar'
+import { Card, CardBody, PearlOrb } from './Card'
 import {
   getPlannedSessionsForWeek,
   getNextPlannedSession,
@@ -580,22 +581,19 @@ function SavedContent({ onCreateNew }: { onCreateNew?: () => void }) {
   if (savedSessions.length === 0) {
     return (
       <div className="space-y-4">
-        {/* Create invitation card - always first when available */}
+        {/* Create invitation card - uses unified Card system */}
         {onCreateNew && (
-          <button
-            onClick={onCreateNew}
-            className="w-full group relative overflow-hidden rounded-2xl border-2 border-dashed border-ink/10 hover:border-ink/20 transition-all"
-          >
+          <Card variant="subtle" onClick={onCreateNew} className="group">
             <div className="p-6 flex flex-col items-center justify-center min-h-[140px]">
-              <div className="w-10 h-10 rounded-full bg-cream-deep flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                <svg className="w-5 h-5 text-ink/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 rounded-full bg-deep/50 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <svg className="w-5 h-5 text-ink-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
                 </svg>
               </div>
-              <p className="font-serif text-ink/70 mb-1">Create your own</p>
-              <p className="text-xs text-ink/40">Share your practice with others</p>
+              <p className="font-serif text-ink mb-1">Create your own</p>
+              <p className="text-xs text-ink-soft">Share your practice with others</p>
             </div>
-          </button>
+          </Card>
         )}
 
         {/* Browse prompt */}
@@ -617,24 +615,21 @@ function SavedContent({ onCreateNew }: { onCreateNew?: () => void }) {
   return (
     <>
       <div className="space-y-3">
-        {/* Create invitation card - first in list */}
+        {/* Create invitation card - first in list, uses unified Card system */}
         {onCreateNew && (
-          <button
-            onClick={onCreateNew}
-            className="w-full group relative overflow-hidden rounded-2xl border-2 border-dashed border-ink/10 hover:border-ink/20 transition-all"
-          >
+          <Card variant="subtle" onClick={onCreateNew} className="group">
             <div className="p-5 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-cream-deep flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                <svg className="w-5 h-5 text-ink/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 rounded-xl bg-deep/50 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                <svg className="w-5 h-5 text-ink-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
                 </svg>
               </div>
               <div className="text-left">
-                <p className="font-serif text-ink/70">Create your own meditation</p>
-                <p className="text-xs text-ink/40 mt-0.5">Share your practice with the community</p>
+                <p className="font-serif text-ink">Create your own meditation</p>
+                <p className="text-xs text-ink-soft mt-0.5">Share your practice with the community</p>
               </div>
             </div>
-          </button>
+          </Card>
         )}
 
         {/* Saved meditation cards with gradient accent */}
@@ -812,85 +807,83 @@ function MyPearlsContent() {
       {/* Created by me section */}
       {createdPearls.length > 0 && (
         <div>
-          <p className="text-xs text-ink/40 font-medium uppercase tracking-wider mb-4">
+          <p className="text-xs text-ink-soft font-medium tracking-wide mb-4">
             My Wisdom
           </p>
           <div className="space-y-4">
             {createdPearls.map((pearl) => (
-              <div
-                key={pearl.id}
-                className="relative bg-cream rounded-2xl p-5 shadow-sm border border-ink/5"
-              >
-                {/* Polished pearl indicator - subtle shimmer line */}
-                <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent" />
-
-                <div className="flex items-center justify-between mb-4">
+              <Card key={pearl.id} variant="default">
+                {/* Header */}
+                <div className="flex items-center justify-between px-5 pt-4 pb-2">
                   <div className="flex items-center gap-3">
-                    {/* Small pearl orb */}
-                    <div className="w-5 h-5 rounded-full bg-cream-deep shadow-sm" />
-                    <span className="text-xs text-ink/40">
+                    <PearlOrb variant="personal" />
+                    <span className="text-xs text-ink-soft">
                       {new Date(pearl.createdAt).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric'
                       })}
-                      {pearl.editedAt && <span className="italic ml-1">· edited</span>}
+                      {pearl.editedAt && <span className="italic text-ink/40 ml-1">· edited</span>}
                     </span>
                   </div>
                   {editingPearlId !== pearl.id && (
                     <button
                       onClick={() => handleStartEdit(pearl)}
-                      className="text-xs text-ink/30 hover:text-ink/60 transition-colors px-2 py-1 -mr-2"
+                      className="text-xs text-ink-soft hover:text-ink transition-colors px-2 py-1 -mr-2"
                     >
                       Edit
                     </button>
                   )}
                 </div>
 
-                {editingPearlId === pearl.id ? (
-                  <div className="space-y-3">
-                    <textarea
-                      value={editText}
-                      onChange={(e) => setEditText(e.target.value)}
-                      className="w-full h-24 px-3 py-2 rounded-xl bg-white/50 text-ink placeholder:text-ink/30 resize-none focus:outline-none focus:ring-2 focus:ring-moss/20 font-serif"
-                      maxLength={280}
-                      autoFocus
-                    />
-                    <div className="flex items-center justify-between">
-                      <span className={`text-xs ${editText.length > 280 ? 'text-rose-500' : 'text-ink/30'}`}>
-                        {editText.length}/280
-                      </span>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={handleCancelEdit}
-                          className="text-xs text-ink/50 hover:text-ink/70 transition-colors px-3 py-1.5"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={handleSaveEdit}
-                          disabled={isSavingEdit || editText.length === 0 || editText.length > 280}
-                          className="text-xs bg-ink text-cream font-medium hover:bg-ink/90 transition-colors px-3 py-1.5 rounded-lg disabled:opacity-50"
-                        >
-                          {isSavingEdit ? 'Saving...' : 'Save'}
-                        </button>
+                {/* Body */}
+                <CardBody>
+                  {editingPearlId === pearl.id ? (
+                    <div className="space-y-3">
+                      <textarea
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        className="w-full h-24 px-3 py-2 rounded-xl bg-deep/30 text-ink placeholder:text-ink/30 resize-none focus:outline-none focus:ring-2 focus:ring-accent/20 font-serif"
+                        maxLength={280}
+                        autoFocus
+                      />
+                      <div className="flex items-center justify-between">
+                        <span className={`text-xs ${editText.length > 280 ? 'text-rose-500' : 'text-ink/40'}`}>
+                          {editText.length}/280
+                        </span>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={handleCancelEdit}
+                            className="text-xs text-ink-soft hover:text-ink transition-colors px-3 py-1.5"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={handleSaveEdit}
+                            disabled={isSavingEdit || editText.length === 0 || editText.length > 280}
+                            className="text-xs bg-accent text-on-accent font-medium hover:opacity-90 transition-opacity px-3 py-1.5 rounded-lg disabled:opacity-50"
+                          >
+                            {isSavingEdit ? 'Saving...' : 'Save'}
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  <p className="font-serif text-ink leading-relaxed text-[15px]">
-                    "{pearl.text}"
-                  </p>
-                )}
+                  ) : (
+                    <p className="font-serif text-ink leading-relaxed text-[15px]">
+                      "{pearl.text}"
+                    </p>
+                  )}
+                </CardBody>
 
+                {/* Footer - Upvotes */}
                 {editingPearlId !== pearl.id && (
-                  <div className="flex items-center gap-1 mt-4 text-ink/30">
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 15l7-7 7 7" />
+                  <div className="flex items-center gap-1.5 px-5 pt-2 pb-4 text-ink-soft">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                     </svg>
-                    <span className="text-xs tabular-nums">{pearl.upvotes}</span>
+                    <span className="text-sm tabular-nums">{pearl.upvotes}</span>
                   </div>
                 )}
-              </div>
+              </Card>
             ))}
           </div>
         </div>
@@ -899,45 +892,43 @@ function MyPearlsContent() {
       {/* Saved from community section */}
       {savedPearls.length > 0 && (
         <div>
-          <p className="text-xs text-ink/40 font-medium uppercase tracking-wider mb-4">
+          <p className="text-xs text-ink-soft font-medium tracking-wide mb-4">
             Collected Wisdom
           </p>
           <div className="space-y-4">
             {savedPearls.map((pearl) => (
-              <div
-                key={pearl.id}
-                className="relative bg-cream-warm rounded-2xl p-5 border border-ink/5"
-              >
-                {/* Subtle top highlight */}
-                <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-
-                <div className="flex items-center justify-between mb-4">
+              <Card key={pearl.id} variant="subtle">
+                {/* Header */}
+                <div className="flex items-center justify-between px-5 pt-4 pb-2">
                   <div className="flex items-center gap-3">
-                    {/* Saved pearl orb - slightly different tone */}
-                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#D8D4CF] to-[#B8B4AF]" />
+                    <PearlOrb variant="collected" />
                     {pearl.isPreserved && (
-                      <span className="text-xs text-ink/30 italic">preserved</span>
+                      <span className="text-xs text-ink/40 italic">preserved</span>
                     )}
                   </div>
                   <button
                     onClick={() => handleUnsave(pearl.id)}
-                    className="text-xs text-ink/30 hover:text-rose-400 transition-colors px-2 py-1 -mr-2"
+                    className="text-xs text-ink-soft hover:text-rose-500 transition-colors px-2 py-1 -mr-2"
                   >
                     Remove
                   </button>
                 </div>
 
-                <p className="font-serif text-ink/80 leading-relaxed text-[15px]">
-                  "{pearl.text}"
-                </p>
+                {/* Body */}
+                <CardBody>
+                  <p className="font-serif text-ink leading-relaxed text-[15px]">
+                    "{pearl.text}"
+                  </p>
+                </CardBody>
 
-                <div className="flex items-center gap-1 mt-4 text-ink/25">
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 15l7-7 7 7" />
+                {/* Footer - Upvotes (read-only) */}
+                <div className="flex items-center gap-1.5 px-5 pt-2 pb-4 text-ink/40">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                   </svg>
-                  <span className="text-xs tabular-nums">{pearl.upvotes}</span>
+                  <span className="text-sm tabular-nums">{pearl.upvotes}</span>
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         </div>

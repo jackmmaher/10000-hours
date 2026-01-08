@@ -1,12 +1,12 @@
 /**
  * SessionCard - Community session template card for explore feed
  *
- * Shows a session template with gradient accent, title, tagline, and stats.
- * Matches the visual identity of Journey's saved meditation cards.
+ * Uses unified Card system with glassmorphism.
+ * Shows session with gradient accent, title, tagline, and engagement stats.
  */
 
 import { SessionTemplate } from './SessionDetailModal'
-import { VoiceBadgeWithHours } from './VoiceBadge'
+import { Card, CardHeader, CardBody, AccentBar, CardEngagement } from './Card'
 
 /**
  * Calculate simplified feed Voice score for sessions
@@ -44,62 +44,48 @@ export function SessionCard({ session, gradient, onClick }: SessionCardProps) {
   )
 
   return (
-    <button
-      onClick={onClick}
-      className="w-full text-left group relative overflow-hidden rounded-2xl bg-cream transition-all hover:shadow-md active:scale-[0.99]"
-    >
-      {/* Gradient accent bar */}
-      <div className={`absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b ${gradient}`} />
-
-      <div className="p-4 pl-5">
-        {/* Header row with Voice badge */}
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-ink/40 font-medium">{session.discipline}</span>
-            <span className="text-ink/20">·</span>
-            <span className="text-xs text-ink/40">{session.durationGuidance}</span>
-            <span className="text-ink/20">·</span>
-            <span className="text-xs text-ink/40">{session.posture}</span>
-          </div>
-
-          {/* Voice credibility badge */}
-          <VoiceBadgeWithHours score={voiceScore} />
+    <Card variant="default" onClick={onClick} className="group">
+      <div className="flex">
+        {/* Gradient accent bar */}
+        <div className="py-4 pl-4">
+          <AccentBar gradient={`bg-gradient-to-b ${gradient}`} />
         </div>
 
-        {/* Title */}
-        <p className="font-serif text-ink text-lg mb-1.5 leading-snug pr-8">
-          {session.title}
-        </p>
+        <div className="flex-1 min-w-0">
+          {/* Header */}
+          <CardHeader
+            label={session.discipline}
+            sublabel={`${session.durationGuidance} · ${session.posture}`}
+            voiceScore={voiceScore}
+            compact
+          />
 
-        {/* Tagline */}
-        <p className="text-sm text-ink/50 italic line-clamp-1 mb-3">
-          "{session.tagline}"
-        </p>
+          {/* Body */}
+          <CardBody compact>
+            <p className="font-serif text-ink text-lg leading-snug pr-6 mb-1">
+              {session.title}
+            </p>
+            <p className="text-sm text-ink-soft italic line-clamp-1">
+              "{session.tagline}"
+            </p>
+          </CardBody>
 
-        {/* Stats row */}
-        <div className="flex items-center gap-4 text-xs text-ink/30">
-          <span className="flex items-center gap-1">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 15l7-7 7 7" />
-            </svg>
-            <span className="tabular-nums">{session.karma}</span>
-          </span>
-          <span className="flex items-center gap-1">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-            </svg>
-            <span className="tabular-nums">{session.saves}</span>
-          </span>
-          <span className="tabular-nums">{session.completions.toLocaleString()} practiced</span>
+          {/* Stats */}
+          <CardEngagement
+            upvotes={session.karma}
+            saves={session.saves}
+            practiced={session.completions}
+            compact
+          />
+        </div>
+
+        {/* Subtle arrow indicator */}
+        <div className="flex items-center pr-4 text-ink/15 group-hover:text-ink/30 transition-colors">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+          </svg>
         </div>
       </div>
-
-      {/* Subtle arrow indicator */}
-      <div className="absolute right-4 top-1/2 -translate-y-1/2 text-ink/15 group-hover:text-ink/30 transition-colors">
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-        </svg>
-      </div>
-    </button>
+    </Card>
   )
 }

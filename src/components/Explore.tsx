@@ -25,7 +25,7 @@ import { SessionCard } from './SessionCard'
 import { SessionDetailModal, SessionTemplate } from './SessionDetailModal'
 import { getIntentionGradient } from '../lib/animations'
 import { getPublishedTemplates } from '../lib/templates'
-import { VoiceBadgeWithHours } from './VoiceBadge'
+import { Card, CardHeader, CardBody, CardEngagement, PearlOrb } from './Card'
 
 // Import extracted data
 import extractedSessions from '../data/sessions.json'
@@ -442,7 +442,7 @@ function calculateFeedVoice(hours: number, karma: number, saves: number): number
   return Math.round(hoursScore + karmaScore + savesScore)
 }
 
-// Pearl card variant for explore feed - polished stone aesthetic
+// Pearl card variant for explore feed - uses unified Card system
 function PearlCardExplore({
   pearl,
   onVote,
@@ -515,74 +515,30 @@ function PearlCardExplore({
   }
 
   return (
-    <div className="relative bg-cream rounded-2xl p-5 shadow-sm border border-ink/5">
-      {/* Shimmer highlight */}
-      <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent" />
-
+    <Card variant="default">
       {/* Header with pearl orb and Voice badge */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-5 h-5 rounded-full bg-cream-deep shadow-sm" />
-          <span className="text-xs text-ink/40">Community wisdom</span>
-        </div>
-
-        {/* Voice credibility badge */}
-        <VoiceBadgeWithHours score={voiceScore} />
-      </div>
+      <CardHeader
+        indicator={<PearlOrb variant="community" />}
+        label="Community wisdom"
+        voiceScore={voiceScore}
+      />
 
       {/* Pearl text */}
-      <p className="font-serif text-ink leading-relaxed text-[15px] mb-4">
-        "{pearl.text}"
-      </p>
+      <CardBody>
+        <p className="font-serif text-ink leading-relaxed text-[15px]">
+          "{pearl.text}"
+        </p>
+      </CardBody>
 
       {/* Actions row */}
-      <div className="flex items-center gap-4">
-        {/* Vote button */}
-        <button
-          onClick={handleVote}
-          disabled={isVoting}
-          aria-label={localVoted ? 'Remove upvote' : 'Upvote this pearl'}
-          aria-pressed={localVoted}
-          className={`
-            flex items-center gap-1.5 transition-all
-            ${localVoted ? 'text-moss' : 'text-ink/30 hover:text-ink/50'}
-          `}
-        >
-          <svg
-            className="w-4 h-4"
-            fill={localVoted ? 'currentColor' : 'none'}
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 15l7-7 7 7" />
-          </svg>
-          <span className="text-xs tabular-nums">{localUpvotes}</span>
-        </button>
-
-        {/* Save button */}
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          aria-label={localSaved ? 'Remove from saved' : 'Save this pearl'}
-          aria-pressed={localSaved}
-          className={`
-            flex items-center gap-1.5 transition-all
-            ${localSaved ? 'text-indigo-deep' : 'text-ink/30 hover:text-ink/50'}
-          `}
-        >
-          <svg
-            className="w-4 h-4"
-            fill={localSaved ? 'currentColor' : 'none'}
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-          </svg>
-          {localSaved && <span className="text-xs">Saved</span>}
-        </button>
-      </div>
-    </div>
+      <CardEngagement
+        upvotes={localUpvotes}
+        hasVoted={localVoted}
+        onVote={handleVote}
+        saves={localSaves}
+        hasSaved={localSaved}
+        onSave={handleSave}
+      />
+    </Card>
   )
 }

@@ -14,6 +14,7 @@ import {
   updateInsight,
   getPearlDraft
 } from '../lib/db'
+import { Card, CardBody, AccentBar } from './Card'
 
 interface InsightStreamProps {
   /** Called when user wants to create/edit a pearl from an insight */
@@ -189,95 +190,99 @@ function InsightCard({
   }
 
   return (
-    <div className="relative bg-cream rounded-xl overflow-hidden">
-      {/* Notebook margin line - left accent */}
-      <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-rose-200/60 via-rose-200/40 to-rose-200/20" />
+    <Card variant="default" className="flex">
+      {/* Left accent bar */}
+      <div className="py-4 pl-4">
+        <AccentBar gradient="bg-gradient-to-b from-accent/60 via-accent/40 to-accent/20" />
+      </div>
 
-      <div className="p-4 pl-5">
-        {/* Header row */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2 text-xs text-ink/40">
+      <div className="flex-1 min-w-0">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 pt-4 pb-2">
+          <div className="flex items-center gap-2 text-xs text-ink-soft">
             <span className="font-medium">{formatInsightDate(insightDate)}</span>
-            <span className="text-ink/20">·</span>
+            <span className="text-ink/30">·</span>
             <span>{formatTime(insightDate)}</span>
             {insight.updatedAt && (
-              <span className="italic text-ink/30">· edited</span>
+              <span className="italic text-ink/40">· edited</span>
             )}
           </div>
 
           {/* Status badges */}
           <div className="flex items-center gap-2">
             {insight.hasDraft && !hasSharedPearl && (
-              <span className="text-[10px] text-amber-700/70 bg-amber-100/50 px-2 py-0.5 rounded-full font-medium">
+              <span className="text-[10px] text-amber-700/80 bg-amber-500/15 px-2 py-0.5 rounded-full font-medium">
                 Draft
               </span>
             )}
             {hasSharedPearl && (
-              <span className="text-[10px] text-moss/70 bg-moss/10 px-2 py-0.5 rounded-full font-medium">
+              <span className="text-[10px] text-accent bg-accent/10 px-2 py-0.5 rounded-full font-medium">
                 Shared
               </span>
             )}
           </div>
         </div>
 
-        {/* Insight text - editable or display */}
-        {isEditing ? (
-          <div className="space-y-3">
-            <textarea
-              value={editText}
-              onChange={(e) => setEditText(e.target.value)}
-              className="w-full h-28 p-3 bg-white/50 rounded-lg text-ink text-sm leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-ink/10 font-serif"
-              autoFocus
-            />
-            <div className="flex gap-2 justify-end">
-              <button
-                onClick={handleCancel}
-                className="px-3 py-1.5 text-xs text-ink/50 hover:text-ink/70 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="px-3 py-1.5 text-xs bg-ink text-cream rounded-lg hover:bg-ink/90 transition-colors disabled:opacity-50"
-              >
-                {isSaving ? 'Saving...' : 'Save'}
-              </button>
+        {/* Body */}
+        <CardBody compact>
+          {isEditing ? (
+            <div className="space-y-3">
+              <textarea
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                className="w-full h-28 p-3 bg-deep/30 rounded-lg text-ink text-sm leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-accent/20 font-serif"
+                autoFocus
+              />
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={handleCancel}
+                  className="px-3 py-1.5 text-xs text-ink-soft hover:text-ink transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="px-3 py-1.5 text-xs bg-accent text-on-accent rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {isSaving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
             </div>
-          </div>
-        ) : (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="w-full text-left group"
-          >
-            <p className="text-ink/70 text-[15px] leading-relaxed font-serif">
-              "{insight.rawText}"
-            </p>
-            {/* Always-visible edit hint - pencil icon */}
-            <div className="flex items-center gap-1 mt-2 text-ink/25 group-hover:text-ink/40 transition-colors">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-              </svg>
-              <span className="text-xs">Edit</span>
-            </div>
-          </button>
-        )}
+          ) : (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="w-full text-left group"
+            >
+              <p className="text-ink text-[15px] leading-relaxed font-serif">
+                "{insight.rawText}"
+              </p>
+              {/* Edit hint */}
+              <div className="flex items-center gap-1 mt-2 text-ink/30 group-hover:text-ink-soft transition-colors">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+                <span className="text-xs">Edit</span>
+              </div>
+            </button>
+          )}
+        </CardBody>
 
-        {/* Actions - show when not editing */}
+        {/* Footer - Distill action */}
         {!isEditing && (
-          <div className="mt-4 pt-3 border-t border-ink/5 flex items-center justify-between">
+          <div className="px-4 pt-2 pb-4 border-t border-ink/5 flex items-center justify-between">
             {hasSharedPearl ? (
-              <span className="text-xs text-ink/30 italic">
+              <span className="text-xs text-ink/40 italic">
                 Wisdom shared
               </span>
             ) : (
               <>
-                <span className="text-xs text-ink/30">
-                  {insight.hasDraft ? 'Pearl in progress' : 'Raw insight'}
+                <span className="text-xs text-ink-soft">
+                  {insight.hasDraft ? 'Pearl in progress' : 'Capture'}
                 </span>
                 <button
                   onClick={() => onCreatePearl?.(insight, insight.session)}
-                  className="text-sm text-moss hover:text-moss/80 transition-colors font-medium"
+                  className="text-sm text-accent hover:text-accent-hover transition-colors font-medium"
                 >
                   {insight.hasDraft ? 'Continue' : 'Distill'} →
                 </button>
@@ -286,6 +291,6 @@ function InsightCard({
           </div>
         )}
       </div>
-    </div>
+    </Card>
   )
 }
