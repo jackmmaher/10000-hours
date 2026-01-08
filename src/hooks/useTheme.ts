@@ -54,13 +54,20 @@ export function useTheme() {
     if (transitioning) {
       root.style.setProperty('--theme-transition', '30s ease-in-out')
     } else {
-      root.style.setProperty('--theme-transition', '0.3s ease')
+      root.style.setProperty('--theme-transition', '0.5s ease')
     }
 
     // Apply all CSS custom properties
     Object.entries(properties).forEach(([key, value]) => {
       root.style.setProperty(key, value)
     })
+
+    // Toggle dark mode class for components that need it
+    if (values.isDark) {
+      root.classList.add('dark')
+    } else {
+      root.classList.remove('dark')
+    }
   }, [])
 
   // Update theme based on current time and mode

@@ -41,9 +41,18 @@
   --text-opacity-ghost: 0.15;
 }
 
-/* Theme transition on root element */
+/* Theme transitions - smooth color changes */
 html {
-  transition: background-color var(--theme-transition);
+  transition:
+    background-color var(--theme-transition),
+    color var(--theme-transition);
+}
+
+* {
+  transition:
+    background-color var(--theme-transition),
+    border-color var(--theme-transition),
+    color var(--theme-transition);
 }
 
 * {

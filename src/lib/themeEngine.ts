@@ -1,17 +1,19 @@
 /**
- * Theme Engine - Two-axis dynamic theming
+ * Theme Engine - Dramatic visual theming
  *
- * Axis 1: Time of Day (luminosity)
- * - Morning (5am-11am): Warm, soft, gentle contrast
- * - Daytime (11am-5pm): Bright, clear, full contrast
- * - Evening (5pm-9pm): Golden warmth, softening
- * - Night (9pm-5am): Deep, low contrast, cool
+ * 4 distinct visual modes × 4 seasonal accents = 16 variations
+ *
+ * Axis 1: Time of Day (DRAMATIC visual difference)
+ * - Morning (5am-11am): Soft warm cream, gentle awakening
+ * - Daytime (11am-5pm): Bright white, crisp and clear
+ * - Evening (5pm-9pm): Golden amber warmth, cozy
+ * - Night (9pm-5am): True dark mode, restful
  *
  * Axis 2: Season (accent colors)
- * - Spring (Mar-May): Fresh green, renewal
- * - Summer (Jun-Aug): Warm gold, vibrant
- * - Autumn (Sep-Nov): Amber/rust, grounded
- * - Winter (Dec-Feb): Cool silver/blue, still
+ * - Spring: Fresh green
+ * - Summer: Warm gold
+ * - Autumn: Rich amber
+ * - Winter: Cool silver-blue
  */
 
 export type TimeOfDay = 'morning' | 'daytime' | 'evening' | 'night'
@@ -41,6 +43,9 @@ export interface ThemeValues {
   luminosity: number // 0-100
   warmth: number // -10 to +10
   contrast: number // 0.8 to 1.2
+
+  // For CSS class switching
+  isDark: boolean
 }
 
 export interface ThemeState {
@@ -84,101 +89,95 @@ export function getSeason(date: Date = new Date(), southernHemisphere: boolean =
   return season
 }
 
-// Base theme values (daytime + no season modifier)
-const BASE_THEME: ThemeValues = {
-  bgBase: '#FAF8F5',
-  bgWarm: '#F7F3EA',
-  bgDeep: '#F5F0E8',
-  textPrimary: '#2C3E50',
-  textSecondary: '#5D6D7E',
-  textMuted: 'rgba(44, 62, 80, 0.4)',
-  accent: '#87A878',
-  accentWarm: '#A08060',
-  accentMuted: 'rgba(135, 168, 120, 0.4)',
-  orbPrimary: '#87A878',
-  orbSecondary: '#5D6D7E',
-  luminosity: 95,
-  warmth: 0,
-  contrast: 1.0
-}
-
-// Time of day modifiers - distinct luminosity and warmth for each
-const TIME_MODIFIERS: Record<TimeOfDay, Partial<ThemeValues>> = {
+// DRAMATIC time-of-day themes - visually distinct!
+const TIME_THEMES: Record<TimeOfDay, Omit<ThemeValues, 'accent' | 'accentWarm' | 'accentMuted' | 'orbPrimary' | 'orbSecondary'>> = {
   morning: {
-    // Soft, gentle awakening light - warm but not bright
-    bgBase: '#FBF9F6',
-    bgWarm: '#F9F5EE',
-    bgDeep: '#F5F0E8',
-    textSecondary: '#6B7D8E',
-    luminosity: 92,
-    warmth: 3,
-    contrast: 0.95
+    // Soft warm cream - gentle awakening
+    bgBase: '#FDF9F3',
+    bgWarm: '#FAF5EC',
+    bgDeep: '#F5EEE3',
+    textPrimary: '#3D4852',
+    textSecondary: '#6B7280',
+    textMuted: 'rgba(61, 72, 82, 0.4)',
+    luminosity: 94,
+    warmth: 4,
+    contrast: 0.95,
+    isDark: false
   },
   daytime: {
-    // Clear, bright, full energy
-    bgBase: '#FAF8F5',
-    bgWarm: '#F7F3EA',
-    bgDeep: '#F5F0E8',
-    luminosity: 95,
+    // Bright, crisp white - full energy
+    bgBase: '#FFFFFF',
+    bgWarm: '#F9FAFB',
+    bgDeep: '#F3F4F6',
+    textPrimary: '#1F2937',
+    textSecondary: '#4B5563',
+    textMuted: 'rgba(31, 41, 55, 0.4)',
+    luminosity: 100,
     warmth: 0,
-    contrast: 1.0
+    contrast: 1.0,
+    isDark: false
   },
   evening: {
-    // Golden hour warmth, softening light
-    bgBase: '#FAF7F2',
-    bgWarm: '#F7F2E8',
-    bgDeep: '#F5EFE5',
-    textSecondary: '#6B7D8E',
+    // Golden amber warmth - cozy wind-down
+    bgBase: '#FBF6ED',
+    bgWarm: '#F7EFE0',
+    bgDeep: '#EFE4D1',
+    textPrimary: '#44403C',
+    textSecondary: '#78716C',
+    textMuted: 'rgba(68, 64, 60, 0.4)',
     luminosity: 88,
-    warmth: 5,
-    contrast: 0.92
+    warmth: 8,
+    contrast: 0.92,
+    isDark: false
   },
   night: {
-    // Deep rest, cool and calm
-    bgBase: '#F5F3F0',
-    bgWarm: '#F2EFEA',
-    bgDeep: '#EDEAE5',
-    textPrimary: '#3A4A5C',
-    textSecondary: '#6B7D8E',
-    luminosity: 82,
+    // TRUE DARK MODE - restful, easy on eyes
+    bgBase: '#0F172A',
+    bgWarm: '#1E293B',
+    bgDeep: '#0D1321',
+    textPrimary: '#E2E8F0',
+    textSecondary: '#94A3B8',
+    textMuted: 'rgba(226, 232, 240, 0.4)',
+    luminosity: 15,
     warmth: -2,
-    contrast: 0.85
+    contrast: 0.9,
+    isDark: true
   }
 }
 
-// Seasonal accent modifiers - distinct palettes for each season
-const SEASON_MODIFIERS: Record<Season, Partial<ThemeValues>> = {
+// Seasonal accent colors - distinct palettes
+const SEASON_ACCENTS: Record<Season, Pick<ThemeValues, 'accent' | 'accentWarm' | 'accentMuted' | 'orbPrimary' | 'orbSecondary'>> = {
   spring: {
-    // Fresh green, renewal, new growth
-    accent: '#7FB069',
-    accentWarm: '#8FB87A',
-    accentMuted: 'rgba(127, 176, 105, 0.4)',
-    orbPrimary: '#7FB069',
-    orbSecondary: '#9EC08E'
+    // Fresh green - renewal, growth
+    accent: '#22C55E',
+    accentWarm: '#4ADE80',
+    accentMuted: 'rgba(34, 197, 94, 0.3)',
+    orbPrimary: '#22C55E',
+    orbSecondary: '#86EFAC'
   },
   summer: {
-    // Warm gold, vibrant energy, abundance
-    accent: '#D4A574',
-    accentWarm: '#C9A068',
-    accentMuted: 'rgba(212, 165, 116, 0.4)',
-    orbPrimary: '#C9A068',
-    orbSecondary: '#DDB88A'
+    // Warm gold - vibrant, abundant
+    accent: '#F59E0B',
+    accentWarm: '#FBBF24',
+    accentMuted: 'rgba(245, 158, 11, 0.3)',
+    orbPrimary: '#F59E0B',
+    orbSecondary: '#FCD34D'
   },
   autumn: {
-    // Amber/rust, grounding, harvest
-    accent: '#B8763E',
-    accentWarm: '#A67C52',
-    accentMuted: 'rgba(184, 118, 62, 0.4)',
-    orbPrimary: '#A67C52',
-    orbSecondary: '#C69463'
+    // Rich amber/rust - grounding, harvest
+    accent: '#EA580C',
+    accentWarm: '#F97316',
+    accentMuted: 'rgba(234, 88, 12, 0.3)',
+    orbPrimary: '#EA580C',
+    orbSecondary: '#FB923C'
   },
   winter: {
-    // Cool silver-blue, stillness, reflection
-    accent: '#7B9CAD',
-    accentWarm: '#8AA5B4',
-    accentMuted: 'rgba(123, 156, 173, 0.4)',
-    orbPrimary: '#7B9CAD',
-    orbSecondary: '#9AB4C2'
+    // Cool silver-blue - stillness, reflection
+    accent: '#0EA5E9',
+    accentWarm: '#38BDF8',
+    accentMuted: 'rgba(14, 165, 233, 0.3)',
+    orbPrimary: '#0EA5E9',
+    orbSecondary: '#7DD3FC'
   }
 }
 
@@ -187,13 +186,12 @@ export function calculateTheme(
   timeOfDay: TimeOfDay = getTimeOfDay(),
   season: Season = getSeason()
 ): ThemeValues {
-  const timeModifier = TIME_MODIFIERS[timeOfDay]
-  const seasonModifier = SEASON_MODIFIERS[season]
+  const timeTheme = TIME_THEMES[timeOfDay]
+  const seasonAccents = SEASON_ACCENTS[season]
 
   return {
-    ...BASE_THEME,
-    ...timeModifier,
-    ...seasonModifier
+    ...timeTheme,
+    ...seasonAccents
   }
 }
 
