@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { useTheme } from './hooks/useTheme'
 import { useSessionStore } from './stores/useSessionStore'
 import { usePremiumStore } from './stores/usePremiumStore'
 import { useSettingsStore } from './stores/useSettingsStore'
@@ -19,8 +18,7 @@ import { Onboarding, hasSeenOnboarding, markOnboardingSeen } from './components/
 import { PaywallPremium } from './components/PaywallPremium'
 import { MilestoneCelebration } from './components/MilestoneCelebration'
 import { ErrorBoundary } from './components/ErrorBoundary'
-import { BreathingCanvas } from './components/BreathingCanvas'
-import { AmbientAtmosphere } from './components/AmbientAtmosphere'
+import { LivingTheme } from './components/LivingTheme'
 import { purchasePremium, restorePurchases } from './lib/purchases'
 
 type PaywallSource = 'settings' | 'progress' | 'calendar'
@@ -30,12 +28,6 @@ function AppContent() {
   const premiumStore = usePremiumStore()
   const settingsStore = useSettingsStore()
   const authStore = useAuthStore()
-
-  // Apply dynamic theme based on time of day and season
-  const themeState = useTheme()
-
-  // Get visual effects preference
-  const { visualEffects } = useSettingsStore()
 
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showPaywall, setShowPaywall] = useState(false)
@@ -116,13 +108,7 @@ function AppContent() {
   }
 
   return (
-    <BreathingCanvas enabled intensity={0.025}> {/* Increased from 0.015 for better visibility */}
-      {/* Global ambient atmosphere layer */}
-      <AmbientAtmosphere
-        timeOfDay={themeState.timeOfDay}
-        season={themeState.season}
-        expressive={visualEffects === 'expressive'}
-      />
+    <LivingTheme breathingIntensity={0.02}>
       <div className="h-full">
         {view === 'timer' && <Timer />}
         {view === 'journey' && <Journey />}
@@ -162,7 +148,7 @@ function AppContent() {
         <Navigation />
 
       </div>
-    </BreathingCanvas>
+    </LivingTheme>
   )
 }
 
