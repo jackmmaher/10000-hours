@@ -392,6 +392,10 @@ function SpringEffects({ timeOfDay, mode, expressive }: { timeOfDay: TimeOfDay; 
       {/* Light rays for morning - using sage green tint */}
       {(timeOfDay === 'morning') && <SoftLightRays color="rgba(124, 154, 110, 0.08)" fromRight />}
 
+      {/* Daytime - soft sunlight rays and floating pollen */}
+      {timeOfDay === 'daytime' && <SoftLightRays color="rgba(134, 239, 172, 0.06)" fromRight={false} />}
+      {timeOfDay === 'daytime' && mode === 'immersive' && <FloatingPollen />}
+
       {/* Morning mist - subtle floating particles */}
       {(timeOfDay === 'morning') && mode === 'immersive' && (
         <MorningMist />
@@ -448,29 +452,46 @@ function MorningMist() {
 }
 
 function SoftRain() {
+  // Enhanced: Gradient streaks with varied heights and speeds
   return (
     <div className="absolute inset-0 overflow-hidden">
-      {RAIN_DROPS.slice(0, 30).map((drop, i) => (
-        <div
-          key={i}
-          className="absolute"
-          style={{
-            left: `${drop.x}%`,
-            top: '-5%',
-            width: '1px',
-            height: `${15 + drop.size * 5}px`,
-            background: 'linear-gradient(180deg, transparent 0%, rgba(192, 132, 252, 0.3) 50%, rgba(192, 132, 252, 0.1) 100%)',
-            animation: `rainFall ${0.8 + drop.duration * 0.05}s linear infinite`,
-            animationDelay: `${drop.delay * 0.1}s`
-          }}
-        />
-      ))}
+      {RAIN_DROPS.slice(0, 40).map((drop, i) => {
+        const height = 15 + drop.size * 8
+        const fallDuration = 0.5 + drop.duration * 0.03
+
+        return (
+          <div
+            key={i}
+            className="absolute"
+            style={{
+              left: `${drop.x}%`,
+              top: '-5%',
+              width: '1px',
+              height: `${height}px`,
+              background: `linear-gradient(180deg,
+                transparent 0%,
+                rgba(148, 163, 184, 0.4) 20%,
+                rgba(148, 163, 184, 0.6) 80%,
+                transparent 100%
+              )`,
+              animation: `enhancedRainFall ${fallDuration}s linear infinite`,
+              animationDelay: `${drop.delay * 0.1}s`
+            }}
+          />
+        )
+      })}
       <style>{`
-        @keyframes rainFall {
-          0% { transform: translateY(-20px); opacity: 0; }
-          10% { opacity: 0.6; }
-          90% { opacity: 0.4; }
-          100% { transform: translateY(100vh); opacity: 0; }
+        @keyframes enhancedRainFall {
+          0% {
+            transform: translateY(-20px);
+            opacity: 0;
+          }
+          10% { opacity: 0.8; }
+          90% { opacity: 0.6; }
+          100% {
+            transform: translateY(100vh);
+            opacity: 0;
+          }
         }
       `}</style>
     </div>
@@ -508,6 +529,40 @@ function DewSparkles() {
   )
 }
 
+/** Floating pollen particles for spring daytime */
+function FloatingPollen() {
+  const pollenParticles = useMemo(() => generateParticles(12, 555), [])
+
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      {pollenParticles.map((p, i) => (
+        <div
+          key={i}
+          className="absolute rounded-full"
+          style={{
+            left: `${p.x}%`,
+            top: `${20 + p.y * 0.6}%`,
+            width: `${2 + p.size * 0.5}px`,
+            height: `${2 + p.size * 0.5}px`,
+            background: 'rgba(253, 224, 71, 0.6)',
+            boxShadow: '0 0 4px rgba(253, 224, 71, 0.4)',
+            animation: `pollenFloat ${15 + p.duration}s ease-in-out infinite`,
+            animationDelay: `${p.delay}s`
+          }}
+        />
+      ))}
+      <style>{`
+        @keyframes pollenFloat {
+          0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+          25% { transform: translate(20px, -30px) scale(1.1); opacity: 0.7; }
+          50% { transform: translate(-15px, -50px) scale(0.9); opacity: 0.5; }
+          75% { transform: translate(25px, -20px) scale(1.05); opacity: 0.6; }
+        }
+      `}</style>
+    </div>
+  )
+}
+
 // --- SUMMER EFFECTS ---
 
 function SummerEffects({ timeOfDay, mode, expressive }: { timeOfDay: TimeOfDay; mode: AtmosphereMode; expressive: boolean }) {
@@ -518,9 +573,19 @@ function SummerEffects({ timeOfDay, mode, expressive }: { timeOfDay: TimeOfDay; 
         <GoldenRays timeOfDay={timeOfDay} intense={expressive && mode === 'immersive'} />
       )}
 
-      {/* Heat shimmer for daytime - only in expressive mode */}
-      {timeOfDay === 'daytime' && mode === 'immersive' && expressive && (
+      {/* Daytime sun rays - always visible */}
+      {timeOfDay === 'daytime' && (
+        <SoftLightRays color="rgba(253, 186, 116, 0.08)" fromRight={false} />
+      )}
+
+      {/* Heat shimmer for daytime - immersive mode */}
+      {timeOfDay === 'daytime' && mode === 'immersive' && (
         <HeatShimmer />
+      )}
+
+      {/* Dust motes floating in sunlight - daytime expressive */}
+      {timeOfDay === 'daytime' && mode === 'immersive' && expressive && (
+        <SunlitDust />
       )}
 
       {/* Fireflies for evening and night - reduced count */}
@@ -593,36 +658,107 @@ function HeatShimmer() {
 function Fireflies() {
   return (
     <div className="absolute inset-0 overflow-hidden">
-      {FIREFLIES.map((fly, i) => (
+      {FIREFLIES.map((fly, i) => {
+        const driftDuration = 10 + fly.duration
+        const glowDuration = 2.5 + fly.size * 0.5
+
+        return (
+          <div
+            key={i}
+            className="absolute"
+            style={{
+              left: `${fly.x}%`,
+              top: `${25 + fly.y * 0.55}%`,
+            }}
+          >
+            {/* Outer glow halo */}
+            <div
+              className="absolute rounded-full"
+              style={{
+                inset: '-8px',
+                background: 'radial-gradient(circle, rgba(250, 204, 21, 0.4) 0%, transparent 70%)',
+                animation: `fireflyGlow ${glowDuration}s ease-in-out infinite`,
+                animationDelay: `${fly.delay * 0.3}s`
+              }}
+            />
+            {/* Core firefly */}
+            <div
+              className="rounded-full"
+              style={{
+                width: '4px',
+                height: '4px',
+                background: '#fef08a',
+                animation: `
+                  fireflyDrift ${driftDuration}s ease-in-out infinite,
+                  fireflyGlow ${glowDuration}s ease-in-out infinite
+                `,
+                animationDelay: `${fly.delay}s, ${fly.delay * 0.3}s`
+              }}
+            />
+          </div>
+        )
+      })}
+      <style>{`
+        @keyframes fireflyDrift {
+          0%, 100% { transform: translate(0, 0); }
+          20% { transform: translate(25px, -35px); }
+          40% { transform: translate(-15px, -10px); }
+          60% { transform: translate(35px, 20px); }
+          80% { transform: translate(-10px, -25px); }
+        }
+        @keyframes fireflyGlow {
+          0%, 100% {
+            opacity: 0.1;
+            box-shadow: 0 0 4px rgba(250, 204, 21, 0.3);
+          }
+          15% {
+            opacity: 0.9;
+            box-shadow: 0 0 8px rgba(250, 204, 21, 0.8), 0 0 16px rgba(250, 204, 21, 0.4), 0 0 24px rgba(250, 204, 21, 0.2);
+          }
+          30% {
+            opacity: 0.2;
+            box-shadow: 0 0 4px rgba(250, 204, 21, 0.2);
+          }
+          50% {
+            opacity: 0.95;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.9), 0 0 20px rgba(250, 204, 21, 0.5), 0 0 30px rgba(250, 204, 21, 0.2);
+          }
+          65% { opacity: 0.15; }
+        }
+      `}</style>
+    </div>
+  )
+}
+
+/** Sunlit dust motes floating in summer afternoon light */
+function SunlitDust() {
+  const dustMotes = useMemo(() => generateParticles(15, 888), [])
+
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      {dustMotes.map((d, i) => (
         <div
           key={i}
           className="absolute rounded-full"
           style={{
-            left: `${fly.x}%`,
-            top: `${30 + fly.y * 0.6}%`,
-            width: `${3 + fly.size}px`,
-            height: `${3 + fly.size}px`,
-            background: 'rgba(251, 191, 36, 0.9)',
-            boxShadow: `
-              0 0 ${6 + fly.size * 2}px rgba(251, 191, 36, 0.8),
-              0 0 ${12 + fly.size * 4}px rgba(251, 191, 36, 0.4),
-              0 0 ${20 + fly.size * 6}px rgba(251, 191, 36, 0.2)
-            `,
-            animation: `fireflyFloat ${8 + fly.duration}s ease-in-out infinite, fireflyGlow ${2 + fly.size}s ease-in-out infinite`,
-            animationDelay: `${fly.delay}s`
+            left: `${d.x}%`,
+            top: `${10 + d.y * 0.7}%`,
+            width: `${1 + d.size * 0.3}px`,
+            height: `${1 + d.size * 0.3}px`,
+            background: 'rgba(255, 251, 235, 0.8)',
+            boxShadow: '0 0 3px rgba(253, 224, 71, 0.5)',
+            animation: `dustFloat ${20 + d.duration}s ease-in-out infinite`,
+            animationDelay: `${d.delay}s`
           }}
         />
       ))}
       <style>{`
-        @keyframes fireflyFloat {
-          0%, 100% { transform: translate(0, 0); }
-          25% { transform: translate(${10}px, -${20}px); }
-          50% { transform: translate(${-5}px, ${10}px); }
-          75% { transform: translate(${15}px, ${-10}px); }
-        }
-        @keyframes fireflyGlow {
-          0%, 100% { opacity: 0.3; }
-          50% { opacity: 1; }
+        @keyframes dustFloat {
+          0%, 100% { transform: translate(0, 0); opacity: 0.3; }
+          20% { transform: translate(15px, 10px); opacity: 0.7; }
+          40% { transform: translate(-10px, -5px); opacity: 0.5; }
+          60% { transform: translate(20px, 15px); opacity: 0.8; }
+          80% { transform: translate(-5px, -10px); opacity: 0.4; }
         }
       `}</style>
     </div>
@@ -640,6 +776,16 @@ function AutumnEffects({ timeOfDay, mode, expressive }: { timeOfDay: TimeOfDay; 
           color={timeOfDay === 'morning' ? 'rgba(139, 115, 85, 0.08)' : 'rgba(139, 90, 43, 0.1)'}
           fromRight={timeOfDay === 'morning'}
         />
+      )}
+
+      {/* Daytime golden rays */}
+      {timeOfDay === 'daytime' && (
+        <SoftLightRays color="rgba(217, 119, 6, 0.06)" fromRight={false} />
+      )}
+
+      {/* Morning fog - subtle ground mist */}
+      {timeOfDay === 'morning' && mode === 'immersive' && (
+        <AutumnMist />
       )}
 
       {/* Falling leaves - reduced count */}
@@ -660,46 +806,91 @@ function AutumnEffects({ timeOfDay, mode, expressive }: { timeOfDay: TimeOfDay; 
   )
 }
 
-function FallingLeaves() {
-  const leafColors = [
-    'rgba(234, 88, 12, 0.8)',   // Orange
-    'rgba(194, 65, 12, 0.8)',   // Burnt orange
-    'rgba(180, 83, 9, 0.75)',   // Copper
-    'rgba(202, 138, 4, 0.8)',   // Gold
-    'rgba(146, 64, 14, 0.7)'    // Brown
-  ]
-
+/** Autumn morning mist - low-lying ground fog */
+function AutumnMist() {
   return (
     <div className="absolute inset-0 overflow-hidden">
-      {LEAVES.map((leaf, i) => (
+      {[...Array(4)].map((_, i) => (
         <div
           key={i}
           className="absolute"
           style={{
-            left: `${leaf.x}%`,
-            top: '-5%',
-            width: `${10 + leaf.size * 3}px`,
-            height: `${8 + leaf.size * 2}px`,
-            background: leafColors[i % leafColors.length],
-            borderRadius: '50% 0 50% 50%',
-            transform: `rotate(${leaf.rotation}deg)`,
-            animation: `leafFall ${12 + leaf.duration}s ease-in-out infinite`,
-            animationDelay: `${leaf.delay}s`,
-            filter: 'blur(0.3px)'
+            left: `${i * 25}%`,
+            bottom: `${5 + i * 5}%`,
+            width: '100px',
+            height: '60px',
+            background: `radial-gradient(ellipse at center, rgba(168, 139, 112, 0.15) 0%, transparent 70%)`,
+            borderRadius: '50%',
+            filter: 'blur(25px)',
+            animation: `autumnMistDrift ${25 + i * 5}s ease-in-out infinite`,
+            animationDelay: `${i * 3}s`
           }}
         />
       ))}
       <style>{`
-        @keyframes leafFall {
+        @keyframes autumnMistDrift {
+          0%, 100% { transform: translateX(0) scale(1); opacity: 0.5; }
+          50% { transform: translateX(40px) scale(1.2); opacity: 0.7; }
+        }
+      `}</style>
+    </div>
+  )
+}
+
+function FallingLeaves() {
+  // Enhanced: 3 distinct leaf types with gradients
+  const leafTypes = [
+    { name: 'oak', gradient: 'linear-gradient(135deg, #b45309 0%, #92400e 100%)' },
+    { name: 'maple', gradient: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)' },
+    { name: 'birch', gradient: 'linear-gradient(135deg, #eab308 0%, #ca8a04 100%)' }
+  ]
+
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      {LEAVES.map((leaf, i) => {
+        const type = leafTypes[i % 3]
+        const fallDuration = 12 + leaf.duration
+        const width = 10 + leaf.size * 3
+        const height = 8 + leaf.size * 2
+
+        return (
+          <div
+            key={i}
+            className="absolute"
+            style={{
+              left: `${leaf.x}%`,
+              top: '-5%',
+              width: `${width}px`,
+              height: `${height}px`,
+              background: type.gradient,
+              borderRadius: '40% 0 40% 40%',
+              boxShadow: 'inset 1px 1px 2px rgba(255,255,255,0.15)',
+              transformOrigin: '30% 30%',
+              animation: `enhancedLeafFall ${fallDuration}s ease-in-out infinite`,
+              animationDelay: `${leaf.delay}s`
+            }}
+          />
+        )
+      })}
+      <style>{`
+        @keyframes enhancedLeafFall {
           0% {
-            transform: translateY(-20px) translateX(0) rotate(0deg);
+            transform: translateY(-30px) translateX(0) rotate(0deg) rotateY(0deg);
             opacity: 0;
           }
-          10% { opacity: 0.9; }
-          50% { transform: translateY(50vh) translateX(${40}px) rotate(180deg); }
-          90% { opacity: 0.7; }
+          5% { opacity: 0.9; }
+          25% {
+            transform: translateY(25vh) translateX(40px) rotate(90deg) rotateY(180deg);
+          }
+          50% {
+            transform: translateY(50vh) translateX(-20px) rotate(200deg) rotateY(0deg);
+          }
+          75% {
+            transform: translateY(75vh) translateX(30px) rotate(280deg) rotateY(180deg);
+          }
+          95% { opacity: 0.7; }
           100% {
-            transform: translateY(100vh) translateX(${-20}px) rotate(360deg);
+            transform: translateY(105vh) translateX(10px) rotate(400deg) rotateY(0deg);
             opacity: 0;
           }
         }
@@ -732,35 +923,56 @@ function WoodsmokeHaze() {
 }
 
 function HarvestMoonGlow() {
+  // Enhanced: Multi-layered atmospheric glow with subtle texture
   return (
     <div
       className="absolute"
       style={{
         top: '10%',
-        right: '15%',
-        width: '80px',
-        height: '80px'
+        right: '12%',
+        width: '70px',
+        height: '70px'
       }}
     >
+      {/* Outermost atmospheric glow */}
       <div
-        className="absolute inset-0 rounded-full animate-pulse"
+        className="absolute rounded-full"
         style={{
-          background: 'radial-gradient(circle, rgba(245, 158, 11, 0.2) 0%, transparent 70%)',
-          transform: 'scale(3)',
-          animationDuration: '6s'
+          inset: '-80px',
+          background: 'radial-gradient(circle, rgba(251, 146, 60, 0.1) 0%, transparent 60%)'
         }}
       />
+      {/* Middle glow layer */}
+      <div
+        className="absolute rounded-full animate-pulse"
+        style={{
+          inset: '-40px',
+          background: `radial-gradient(circle,
+            rgba(251, 191, 36, 0.25) 0%,
+            rgba(245, 158, 11, 0.15) 30%,
+            rgba(217, 119, 6, 0.08) 50%,
+            transparent 70%
+          )`,
+          animationDuration: '8s'
+        }}
+      />
+      {/* Moon surface with highlight */}
       <div
         className="absolute inset-0 rounded-full"
         style={{
-          background: 'radial-gradient(circle at 40% 40%, rgba(254, 243, 199, 0.95) 0%, rgba(251, 191, 36, 0.8) 100%)',
-          boxShadow: `
-            inset -6px -6px 15px rgba(217, 119, 6, 0.3),
-            0 0 60px rgba(245, 158, 11, 0.4),
-            0 0 100px rgba(245, 158, 11, 0.2)
-          `
+          background: `
+            radial-gradient(circle at 35% 35%, rgba(255,255,255,0.15) 0%, transparent 40%),
+            radial-gradient(circle at 30% 30%, #fef3c7 0%, #fbbf24 30%, #f59e0b 60%, #d97706 100%)
+          `,
+          animation: 'harvestPulse 10s ease-in-out infinite'
         }}
       />
+      <style>{`
+        @keyframes harvestPulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.02); }
+        }
+      `}</style>
     </div>
   )
 }
@@ -773,6 +985,11 @@ function WinterEffects({ timeOfDay, mode, expressive }: { timeOfDay: TimeOfDay; 
       {/* Cool light rays for morning */}
       {timeOfDay === 'morning' && (
         <SoftLightRays color="rgba(122, 139, 139, 0.06)" fromRight />
+      )}
+
+      {/* Daytime pale winter sun rays */}
+      {timeOfDay === 'daytime' && (
+        <SoftLightRays color="rgba(186, 230, 253, 0.05)" fromRight={false} />
       )}
 
       {/* Warm rays for evening */}
@@ -789,42 +1006,68 @@ function WinterEffects({ timeOfDay, mode, expressive }: { timeOfDay: TimeOfDay; 
       {timeOfDay === 'morning' && mode === 'immersive' && expressive && (
         <FrostShimmer />
       )}
+
+      {/* Cold breath mist for daytime and evening */}
+      {(timeOfDay === 'daytime' || timeOfDay === 'evening') && mode === 'immersive' && (
+        <ColdBreathMist />
+      )}
+
+      {/* Ice crystal sparkle for night expressive */}
+      {timeOfDay === 'night' && mode === 'immersive' && expressive && (
+        <IceCrystals />
+      )}
     </>
   )
 }
 
 function Snowfall({ intensity }: { intensity: 'light' | 'heavy' }) {
-  // Gen 2: Reduced counts (was 40/20, now 8/5)
-  const count = intensity === 'heavy' ? 8 : 5
+  // Enhanced: varied sizes with tumble and drift
+  const count = intensity === 'heavy' ? 12 : 8
 
   return (
     <div className="absolute inset-0 overflow-hidden">
-      {SNOWFLAKES.slice(0, count).map((flake, i) => (
-        <div
-          key={i}
-          className="absolute rounded-full"
-          style={{
-            left: `${flake.x}%`,
-            top: '-3%',
-            width: `${2 + flake.size}px`,
-            height: `${2 + flake.size}px`,
-            background: 'rgba(255, 255, 255, 0.9)',
-            boxShadow: '0 0 4px rgba(255, 255, 255, 0.5)',
-            animation: `snowFall ${10 + flake.duration}s linear infinite`,
-            animationDelay: `${flake.delay}s`
-          }}
-        />
-      ))}
+      {SNOWFLAKES.slice(0, count).map((flake, i) => {
+        const size = 2 + flake.size * 1.5
+        const isLarge = size > 4
+        const fallDuration = 10 + flake.duration
+        const driftX = -20 + (flake.drift + 0.5) * 40
+
+        return (
+          <div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              left: `${flake.x}%`,
+              top: '-3%',
+              width: `${size}px`,
+              height: `${size}px`,
+              background: '#fff',
+              boxShadow: isLarge
+                ? '0 0 3px rgba(255, 255, 255, 0.8), 0 0 6px rgba(186, 230, 253, 0.3)'
+                : '0 0 2px rgba(255, 255, 255, 0.5)',
+              opacity: isLarge ? 0.95 : 0.7,
+              animation: `enhancedSnowFall ${fallDuration}s linear infinite`,
+              animationDelay: `${flake.delay}s`,
+              // CSS custom properties for per-flake variation
+              ['--drift-x' as string]: `${driftX}px`,
+              ['--max-opacity' as string]: isLarge ? 0.95 : 0.7
+            }}
+          />
+        )
+      })}
       <style>{`
-        @keyframes snowFall {
+        @keyframes enhancedSnowFall {
           0% {
-            transform: translateY(-10px) translateX(0);
+            transform: translateY(-10px) translateX(0) rotate(0deg);
             opacity: 0;
           }
-          10% { opacity: 0.9; }
-          90% { opacity: 0.7; }
+          5% { opacity: var(--max-opacity, 0.9); }
+          50% {
+            transform: translateY(50vh) translateX(var(--drift-x, 15px)) rotate(180deg);
+          }
+          95% { opacity: calc(var(--max-opacity, 0.9) * 0.6); }
           100% {
-            transform: translateY(100vh) translateX(${20}px);
+            transform: translateY(100vh) translateX(calc(var(--drift-x, 15px) * -0.5)) rotate(360deg);
             opacity: 0;
           }
         }
@@ -859,6 +1102,70 @@ function FrostShimmer() {
         @keyframes frostSparkle {
           0%, 100% { opacity: 0.2; transform: scale(0.8) rotate(0deg); }
           50% { opacity: 1; transform: scale(1.2) rotate(45deg); }
+        }
+      `}</style>
+    </div>
+  )
+}
+
+/** Cold breath mist - subtle rising vapor effect */
+function ColdBreathMist() {
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      {[...Array(3)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute"
+          style={{
+            left: `${20 + i * 30}%`,
+            bottom: '10%',
+            width: '80px',
+            height: '50px',
+            background: 'radial-gradient(ellipse at center, rgba(226, 232, 240, 0.12) 0%, transparent 70%)',
+            borderRadius: '50%',
+            filter: 'blur(20px)',
+            animation: `coldBreath ${8 + i * 2}s ease-in-out infinite`,
+            animationDelay: `${i * 3}s`
+          }}
+        />
+      ))}
+      <style>{`
+        @keyframes coldBreath {
+          0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
+          50% { transform: translateY(-30px) scale(1.3); opacity: 0.6; }
+        }
+      `}</style>
+    </div>
+  )
+}
+
+/** Ice crystals sparkling in winter night */
+function IceCrystals() {
+  const crystalParticles = useMemo(() => generateParticles(20, 666), [])
+
+  return (
+    <div className="absolute inset-0">
+      {crystalParticles.map((c, i) => (
+        <div
+          key={i}
+          className="absolute"
+          style={{
+            left: `${c.x}%`,
+            top: `${c.y * 0.8}%`,
+            width: `${3 + c.size}px`,
+            height: `${3 + c.size}px`,
+            background: 'rgba(255, 255, 255, 0.9)',
+            boxShadow: '0 0 6px rgba(186, 230, 253, 0.8), 0 0 12px rgba(255, 255, 255, 0.4)',
+            clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
+            animation: `iceCrystalGlitter ${2 + c.duration * 0.3}s ease-in-out infinite`,
+            animationDelay: `${c.delay * 0.4}s`
+          }}
+        />
+      ))}
+      <style>{`
+        @keyframes iceCrystalGlitter {
+          0%, 100% { opacity: 0.2; transform: scale(0.9) rotate(0deg); }
+          50% { opacity: 1; transform: scale(1.1) rotate(30deg); }
         }
       `}</style>
     </div>
@@ -971,36 +1278,62 @@ function CelestialElements({ season, expressive }: { season: Season; expressive:
 }
 
 function StarField({ season }: { season: Season }) {
-  // Adjust star color based on season
-  const starColor: Record<Season, string> = {
-    winter: 'rgba(226, 232, 240, 0.9)',
-    spring: 'rgba(216, 180, 254, 0.85)',
-    summer: 'rgba(254, 240, 138, 0.8)',
-    autumn: 'rgba(253, 224, 71, 0.75)'
+  // Enhanced: 3 color temperature types for realistic star field
+  const starTypes: Record<Season, Array<{ bg: string; glow: string }>> = {
+    winter: [
+      { bg: '#fff', glow: 'rgba(147, 197, 253, 0.5)' },      // White-blue (hot)
+      { bg: '#bfdbfe', glow: 'rgba(147, 197, 253, 0.4)' },   // Cool blue
+      { bg: '#e2e8f0', glow: 'rgba(226, 232, 240, 0.4)' }    // White
+    ],
+    spring: [
+      { bg: '#fff', glow: 'rgba(216, 180, 254, 0.5)' },      // White with purple
+      { bg: '#e9d5ff', glow: 'rgba(216, 180, 254, 0.4)' },   // Soft purple
+      { bg: '#fef3c7', glow: 'rgba(253, 224, 71, 0.3)' }     // Warm
+    ],
+    summer: [
+      { bg: '#fff', glow: 'rgba(253, 224, 71, 0.4)' },       // White-gold
+      { bg: '#fef3c7', glow: 'rgba(253, 224, 71, 0.5)' },    // Warm yellow
+      { bg: '#fde68a', glow: 'rgba(251, 191, 36, 0.4)' }     // Golden
+    ],
+    autumn: [
+      { bg: '#fff', glow: 'rgba(251, 191, 36, 0.4)' },       // White-amber
+      { bg: '#fef3c7', glow: 'rgba(253, 224, 71, 0.5)' },    // Warm
+      { bg: '#fed7aa', glow: 'rgba(251, 146, 60, 0.4)' }     // Amber
+    ]
   }
+
+  const types = starTypes[season]
 
   return (
     <div className="absolute inset-0">
-      {STARS.map((star, i) => (
-        <div
-          key={i}
-          className="absolute rounded-full"
-          style={{
-            left: `${star.x}%`,
-            top: `${star.y * 0.6}%`,
-            width: `${star.size}px`,
-            height: `${star.size}px`,
-            background: starColor[season],
-            boxShadow: `0 0 ${star.size * 2}px ${starColor[season].replace('0.9', '0.5').replace('0.85', '0.5').replace('0.8', '0.4').replace('0.75', '0.4')}`,
-            animation: `twinkle ${star.duration}s ease-in-out infinite`,
-            animationDelay: `${star.delay}s`
-          }}
-        />
-      ))}
+      {STARS.map((star, i) => {
+        const type = types[i % 3]
+        const baseOpacity = 0.4 + (star.size / 4) * 0.4
+        const twinkleDuration = 3 + star.duration * 0.3
+        const shouldTwinkle = i % 2 === 0
+
+        return (
+          <div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              left: `${star.x}%`,
+              top: `${star.y * 0.6}%`,
+              width: `${star.size}px`,
+              height: `${star.size}px`,
+              background: type.bg,
+              boxShadow: `0 0 2px ${type.bg}, 0 0 4px ${type.glow}`,
+              animation: shouldTwinkle ? `enhancedTwinkle ${twinkleDuration}s ease-in-out infinite` : 'none',
+              animationDelay: `${star.delay * 0.5}s`,
+              opacity: shouldTwinkle ? undefined : baseOpacity
+            }}
+          />
+        )
+      })}
       <style>{`
-        @keyframes twinkle {
-          0%, 100% { opacity: 0.4; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.3); }
+        @keyframes enhancedTwinkle {
+          0%, 100% { opacity: 0.5; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.15); }
         }
       `}</style>
     </div>
@@ -1008,27 +1341,31 @@ function StarField({ season }: { season: Season }) {
 }
 
 function Moon({ season }: { season: Season }) {
-  // Moon color varies by season
-  const moonConfig: Record<Season, { glow: string; surface: string }> = {
+  // Enhanced: Moon with crater detail and layered glow halos
+  const moonConfig: Record<Season, { innerGlow: string; outerGlow: string; surface: string }> = {
     winter: {
-      glow: 'rgba(226, 232, 240, 0.15)',
-      surface: 'radial-gradient(circle at 35% 35%, rgba(248, 250, 252, 0.95) 0%, rgba(203, 213, 225, 0.8) 100%)'
+      innerGlow: 'rgba(254, 249, 195, 0.6)',
+      outerGlow: 'rgba(226, 232, 240, 0.2)',
+      surface: '#fefce8'
     },
     spring: {
-      glow: 'rgba(216, 180, 254, 0.12)',
-      surface: 'radial-gradient(circle at 35% 35%, rgba(245, 243, 255, 0.95) 0%, rgba(216, 180, 254, 0.7) 100%)'
+      innerGlow: 'rgba(243, 232, 255, 0.6)',
+      outerGlow: 'rgba(216, 180, 254, 0.15)',
+      surface: '#faf5ff'
     },
     summer: {
-      glow: 'rgba(254, 240, 138, 0.1)',
-      surface: 'radial-gradient(circle at 35% 35%, rgba(255, 251, 235, 0.95) 0%, rgba(254, 240, 138, 0.7) 100%)'
+      innerGlow: 'rgba(254, 249, 195, 0.5)',
+      outerGlow: 'rgba(254, 240, 138, 0.15)',
+      surface: '#fefce8'
     },
     autumn: {
-      glow: 'rgba(251, 191, 36, 0.12)',
-      surface: 'radial-gradient(circle at 35% 35%, rgba(254, 252, 232, 0.95) 0%, rgba(251, 191, 36, 0.7) 100%)'
+      innerGlow: 'rgba(254, 243, 199, 0.6)',
+      outerGlow: 'rgba(251, 191, 36, 0.2)',
+      surface: '#fef3c7'
     }
   }
 
-  const { glow, surface } = moonConfig[season]
+  const { innerGlow, outerGlow, surface } = moonConfig[season]
 
   return (
     <div
@@ -1036,26 +1373,42 @@ function Moon({ season }: { season: Season }) {
       style={{
         top: '8%',
         right: '15%',
-        width: '60px',
-        height: '60px'
+        width: '55px',
+        height: '55px'
       }}
     >
+      {/* Outer atmospheric glow */}
       <div
-        className="absolute inset-0 rounded-full animate-pulse"
+        className="absolute rounded-full"
         style={{
-          background: `radial-gradient(circle, ${glow} 0%, transparent 70%)`,
-          transform: 'scale(3)',
-          animationDuration: '6s'
+          inset: '-80px',
+          background: `radial-gradient(circle, ${outerGlow} 0%, transparent 60%)`
         }}
       />
+      {/* Inner glow halo */}
+      <div
+        className="absolute rounded-full animate-pulse"
+        style={{
+          inset: '-20px',
+          background: `radial-gradient(circle, ${innerGlow} 0%, transparent 70%)`,
+          animationDuration: '8s'
+        }}
+      />
+      {/* Moon surface with crater detail */}
       <div
         className="absolute inset-0 rounded-full"
         style={{
-          background: surface,
+          background: `
+            radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 30%),
+            radial-gradient(circle at 60% 70%, rgba(0,0,0,0.05) 0%, transparent 20%),
+            radial-gradient(circle at 40% 50%, rgba(0,0,0,0.03) 0%, transparent 15%),
+            radial-gradient(circle at 30% 30%, ${surface} 0%, #fef9c3 30%, #fde68a 70%, #fcd34d 100%)
+          `,
           boxShadow: `
-            inset -4px -4px 10px rgba(148, 163, 184, 0.3),
-            0 0 40px ${glow.replace('0.15', '0.3').replace('0.12', '0.25').replace('0.1', '0.2')},
-            0 0 80px ${glow}
+            0 0 20px ${innerGlow},
+            0 0 40px ${innerGlow.replace('0.6', '0.4').replace('0.5', '0.3')},
+            0 0 80px ${outerGlow},
+            inset -3px -3px 10px rgba(0,0,0,0.1)
           `
         }}
       />
@@ -1130,69 +1483,96 @@ function ShootingStars() {
 }
 
 function Aurora() {
+  // Enhanced: 3 layered bands moving independently with shimmer
   return (
     <div className="absolute inset-0 overflow-hidden">
+      {/* Green band - primary */}
       <div
         className="absolute"
         style={{
           top: '5%',
-          left: '10%',
-          width: '80%',
-          height: '40%',
-          background: `
-            linear-gradient(90deg,
-              transparent 0%,
-              rgba(34, 211, 238, 0.04) 20%,
-              rgba(56, 189, 248, 0.06) 40%,
-              rgba(34, 211, 238, 0.05) 60%,
-              rgba(14, 165, 233, 0.04) 80%,
-              transparent 100%
-            )
-          `,
-          filter: 'blur(30px)',
-          animation: 'aurora 20s ease-in-out infinite',
-          transformOrigin: 'center'
+          left: '-10%',
+          right: '-10%',
+          height: '30%',
+          background: `linear-gradient(90deg,
+            transparent 0%,
+            rgba(74, 222, 128, 0.15) 20%,
+            rgba(52, 211, 153, 0.2) 50%,
+            rgba(74, 222, 128, 0.12) 80%,
+            transparent 100%
+          )`,
+          filter: 'blur(40px)',
+          animation: 'auroraShift 20s ease-in-out infinite'
         }}
       />
+      {/* Blue band - secondary */}
+      <div
+        className="absolute"
+        style={{
+          top: '15%',
+          left: '-10%',
+          right: '-10%',
+          height: '25%',
+          background: `linear-gradient(90deg,
+            transparent 0%,
+            rgba(96, 165, 250, 0.12) 30%,
+            rgba(147, 197, 253, 0.18) 60%,
+            transparent 100%
+          )`,
+          filter: 'blur(40px)',
+          animation: 'auroraShift 25s ease-in-out infinite reverse',
+          animationDelay: '-5s'
+        }}
+      />
+      {/* Purple band - accent */}
       <div
         className="absolute"
         style={{
           top: '10%',
-          left: '20%',
-          width: '60%',
-          height: '30%',
-          background: `
-            linear-gradient(90deg,
-              transparent 0%,
-              rgba(167, 139, 250, 0.03) 30%,
-              rgba(34, 211, 238, 0.05) 50%,
-              rgba(167, 139, 250, 0.03) 70%,
-              transparent 100%
-            )
-          `,
+          left: '-10%',
+          right: '-10%',
+          height: '35%',
+          background: `linear-gradient(90deg,
+            transparent 0%,
+            rgba(167, 139, 250, 0.08) 40%,
+            rgba(192, 132, 252, 0.12) 70%,
+            transparent 100%
+          )`,
           filter: 'blur(40px)',
-          animation: 'aurora 25s ease-in-out infinite reverse',
-          animationDelay: '-5s'
+          animation: 'auroraShift 18s ease-in-out infinite',
+          animationDelay: '-10s'
+        }}
+      />
+      {/* Shimmer overlay */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.02) 50%, transparent 100%)',
+          animation: 'shimmerPulse 8s ease-in-out infinite'
         }}
       />
       <style>{`
-        @keyframes aurora {
+        @keyframes auroraShift {
           0%, 100% {
-            transform: translateX(-5%) scaleY(1);
-            opacity: 0.5;
+            transform: translateX(-10%) scaleY(1) skewX(-5deg);
+            opacity: 0.6;
           }
           25% {
-            transform: translateX(5%) scaleY(1.2);
+            transform: translateX(5%) scaleY(1.3) skewX(3deg);
             opacity: 0.8;
           }
           50% {
-            transform: translateX(-3%) scaleY(0.9);
-            opacity: 0.6;
+            transform: translateX(-5%) scaleY(0.8) skewX(-2deg);
+            opacity: 0.5;
           }
           75% {
-            transform: translateX(3%) scaleY(1.1);
+            transform: translateX(10%) scaleY(1.1) skewX(5deg);
             opacity: 0.7;
           }
+        }
+        @keyframes shimmerPulse {
+          0%, 100% { opacity: 0; }
+          50% { opacity: 1; }
         }
       `}</style>
     </div>
