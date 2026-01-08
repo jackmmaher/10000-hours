@@ -22,7 +22,19 @@ export default {
         // Legacy alias
         indigo: {
           deep: 'var(--text-primary, #2C3E50)',
-        }
+        },
+        // Direct theme token mappings
+        'accent': 'var(--accent)',
+        'accent-hover': 'var(--accent-hover)',
+        'accent-muted': 'var(--accent-muted)',
+        // Text on colored backgrounds
+        'on-accent': 'var(--text-on-accent)',
+        // Semantic backgrounds
+        'elevated': 'var(--bg-elevated)',
+        'deep': 'var(--bg-deep)',
+        // Borders
+        'border-theme': 'var(--border)',
+        'border-subtle': 'var(--border-subtle)',
       },
       fontFamily: {
         // Pair 1: Palatino + Raleway (from font-pairs.html)

@@ -70,3 +70,42 @@ export function parseDurationMin(guidance: string): number {
   }
   return 10 // default
 }
+
+// Pose groupings for UX presentation (horizontal scroll with semantic groups)
+export const POSE_GROUPS = [
+  {
+    label: 'seated',
+    poses: ['Seated (cushion)', 'Seated (chair)', 'Lotus', 'Half-lotus', 'Kneeling (seiza)']
+  },
+  {
+    label: 'movement',
+    poses: ['Standing', 'Walking', 'Lying down']
+  }
+]
+
+// Discipline groupings for UX presentation
+export const DISCIPLINE_GROUPS = [
+  {
+    label: 'awareness',
+    disciplines: ['Breath Awareness', 'Body Scan', 'Open Awareness']
+  },
+  {
+    label: 'heart',
+    disciplines: ['Loving-Kindness', 'Contemplative']
+  },
+  {
+    label: 'traditional',
+    disciplines: ['Vipassana', 'Zen/Zazen', 'Mantra']
+  },
+  {
+    label: 'movement',
+    disciplines: ['Walking Meditation']
+  }
+]
+
+// Duration categories for progressive disclosure
+export const DURATION_CATEGORIES = [
+  { label: 'Quick', range: '5-15', durations: [5, 10, 15] },
+  { label: 'Standard', range: '20-30', durations: [20, 25, 30] },
+  { label: 'Deep', range: '45+', durations: [45, 60] },
+]

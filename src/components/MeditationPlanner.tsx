@@ -23,7 +23,7 @@ import {
   getSessionByUuid
 } from '../lib/db'
 import { SessionDetailModal, SessionTemplate } from './SessionDetailModal'
-import { DISCIPLINES, POSES, DURATIONS_MINUTES } from '../lib/meditation-options'
+import { POSE_GROUPS, DISCIPLINE_GROUPS, DURATION_CATEGORIES } from '../lib/meditation-options'
 
 // Import extracted session data for template lookups
 import extractedSessions from '../data/sessions.json'
@@ -168,6 +168,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
   const [selectedDate, setSelectedDate] = useState<Date>(date)
   const [plannedTime, setPlannedTime] = useState('')
   const [duration, setDuration] = useState<number | null>(null)
+  const [durationCategory, setDurationCategory] = useState<string | null>(null)
   const [showCustomDuration, setShowCustomDuration] = useState(false)
   const [customDurationInput, setCustomDurationInput] = useState('')
 
@@ -276,10 +277,17 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
         setExistingPlan(existing)
         setPlannedTime(existing.plannedTime || '')
         setDuration(existing.duration || null)
-        // If duration exists but not in presets, show custom mode
-        if (existing.duration && !DURATIONS_MINUTES.includes(existing.duration)) {
-          setShowCustomDuration(true)
-          setCustomDurationInput(existing.duration.toString())
+        // Set duration category based on existing duration
+        if (existing.duration) {
+          const cat = DURATION_CATEGORIES.find(c => c.durations.includes(existing.duration!))
+          if (cat) {
+            setDurationCategory(cat.label)
+            setShowCustomDuration(false)
+          } else {
+            setDurationCategory('custom')
+            setShowCustomDuration(true)
+            setCustomDurationInput(existing.duration.toString())
+          }
         }
         // Only load pose/discipline/notes from plan in plan mode
         // In session mode, these come from the Session object (loaded in separate effect)
@@ -396,12 +404,12 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                 {isSessionMode ? 'Session Details' : (planTitle || 'Plan Meditation')}
               </h2>
               {isSessionMode && (
-                <p className="text-sm text-ink/50 mt-1">
+                <p className="text-sm text-ink-soft mt-1">
                   {formatDateForDisplay(date)}
                 </p>
               )}
               {!isSessionMode && planTitle && (
-                <p className="text-sm text-ink/50 mt-1">
+                <p className="text-sm text-ink-soft mt-1">
                   Guided meditation
                 </p>
               )}
@@ -429,7 +437,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
               {/* Session selector - show when multiple sessions on same day */}
               {isSessionMode && hasMultipleSessions && (
                 <div>
-                  <label className="text-xs text-ink/50 block mb-2">
+                  <label className="text-xs text-ink-soft block mb-2">
                     {sessions.length} sessions this day
                   </label>
                   <div className="flex gap-2 overflow-x-auto pb-1">
@@ -438,10 +446,10 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                         key={s.uuid}
                         onClick={() => setSelectedSessionIndex(index)}
                         className={`
-                          px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-all
+                          px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-all min-h-[44px]
                           ${selectedSessionIndex === index
-                            ? 'bg-indigo-deep text-cream'
-                            : 'bg-cream-dark text-ink/60 hover:bg-cream-dark/80'
+                            ? 'bg-accent text-on-accent'
+                            : 'bg-elevated text-ink/60 hover:bg-deep'
                           }
                         `}
                       >
@@ -456,13 +464,13 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
               {isSessionMode && session && (
                 <div className="bg-moss/10 rounded-xl p-4 space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs text-ink/50">Time</span>
+                    <span className="text-xs text-ink-soft">Time</span>
                     <span className="text-ink font-medium">
                       {formatTimeFromTimestamp(session.startTime)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs text-ink/50">Duration</span>
+                    <span className="text-xs text-ink-soft">Duration</span>
                     <span className="text-ink font-medium">
                       {formatDurationMinutes(session.durationSeconds)}
                     </span>
@@ -473,27 +481,38 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
               {/* Plan mode: Show editable date picker */}
               {!isSessionMode && (
                 <div>
-                  <label className="text-xs text-ink/50 block mb-2">
-                    What day?
+                  <label className="text-xs text-ink-soft block mb-2">
+                    Date
                   </label>
-                  <input
-                    type="date"
-                    value={formatDateForInput(selectedDate)}
-                    onChange={(e) => {
-                      const newDate = new Date(e.target.value + 'T00:00:00')
-                      setSelectedDate(newDate)
-                      // Reset form when date changes (will reload any existing plan)
-                      setExistingPlan(null)
-                      setPlannedTime('')
-                      setDuration(null)
-                      setShowCustomDuration(false)
-                      setCustomDurationInput('')
-                      setPose('')
-                      setDiscipline('')
-                      setNotes('')
-                    }}
-                    className="w-full px-4 py-4 rounded-xl bg-cream-dark text-ink text-lg font-medium focus:outline-none focus:ring-2 focus:ring-indigo-deep/30"
-                  />
+                  <div className="relative">
+                    <input
+                      type="date"
+                      value={formatDateForInput(selectedDate)}
+                      onChange={(e) => {
+                        const newDate = new Date(e.target.value + 'T00:00:00')
+                        setSelectedDate(newDate)
+                        // Reset form when date changes (will reload any existing plan)
+                        setExistingPlan(null)
+                        setPlannedTime('')
+                        setDuration(null)
+                        setDurationCategory(null)
+                        setShowCustomDuration(false)
+                        setCustomDurationInput('')
+                        setPose('')
+                        setDiscipline('')
+                        setNotes('')
+                      }}
+                      className="w-full px-4 py-4 pr-12 rounded-xl bg-elevated text-ink text-lg font-medium focus:outline-none focus:ring-2 focus:ring-accent/30"
+                    />
+                    <svg
+                      className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink-soft pointer-events-none"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
                 </div>
               )}
 
@@ -504,7 +523,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                     const template = getTemplateById(planSourceTemplateId)
                     if (template) setSourceTemplate(template)
                   }}
-                  className="flex items-center gap-2 text-sm text-indigo-deep hover:text-indigo-deep/80 transition-colors"
+                  className="flex items-center gap-2 text-sm text-accent hover:text-accent-hover transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
@@ -518,67 +537,107 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                 <>
                   {/* Time */}
                   <div>
-                    <label className="text-xs text-ink/50 block mb-2">
-                      What time?
+                    <label className="text-xs text-ink-soft block mb-2">
+                      Time
                     </label>
                     <div className="relative">
                       <input
                         type="time"
                         value={plannedTime}
                         onChange={(e) => setPlannedTime(e.target.value)}
-                        className="w-full px-4 py-4 rounded-xl bg-cream-dark text-ink text-lg font-medium focus:outline-none focus:ring-2 focus:ring-indigo-deep/30"
+                        className="w-full px-4 py-4 pr-12 rounded-xl bg-elevated text-ink text-lg font-medium focus:outline-none focus:ring-2 focus:ring-accent/30"
                       />
+                      <svg
+                        className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink-soft pointer-events-none"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
                       {!plannedTime && (
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/50 font-medium pointer-events-none">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-soft font-medium pointer-events-none">
                           Tap to set time
                         </span>
                       )}
                     </div>
                   </div>
 
-                  {/* Duration */}
+                  {/* Duration - Progressive disclosure */}
                   <div>
-                    <label className="text-xs text-ink/50 block mb-2">
-                      How long?
+                    <label className="text-xs text-ink-soft block mb-2">
+                      Duration
                     </label>
-                    <div className="flex flex-wrap gap-2">
-                      {DURATIONS_MINUTES.map((d) => (
+
+                    {/* Tier 1: Categories */}
+                    <div className="flex gap-2">
+                      {DURATION_CATEGORIES.map((cat) => (
                         <button
-                          key={d}
+                          key={cat.label}
                           onClick={() => {
-                            setDuration(duration === d ? null : d)
-                            setShowCustomDuration(false)
-                            setCustomDurationInput('')
+                            if (durationCategory === cat.label) {
+                              setDurationCategory(null)
+                              setDuration(null)
+                            } else {
+                              setDurationCategory(cat.label)
+                              setShowCustomDuration(false)
+                              setDuration(null)
+                            }
                           }}
-                          className={`px-3 py-1.5 rounded-full text-xs transition-colors ${
-                            duration === d && !showCustomDuration
-                              ? 'bg-indigo-deep text-cream'
-                              : 'bg-cream-dark/50 text-ink/70 hover:bg-cream-dark'
+                          className={`flex-1 py-2 px-3 rounded-xl text-sm transition-colors min-h-[44px] flex flex-col items-center justify-center ${
+                            durationCategory === cat.label
+                              ? 'bg-accent text-on-accent'
+                              : 'bg-deep/50 text-ink-soft hover:bg-deep'
                           }`}
                         >
-                          {d} min
+                          <span className="font-medium">{cat.label}</span>
+                          <span className="text-xs opacity-70">{cat.range}</span>
                         </button>
                       ))}
                       <button
                         onClick={() => {
-                          setShowCustomDuration(!showCustomDuration)
-                          if (!showCustomDuration) {
+                          if (durationCategory === 'custom') {
+                            setDurationCategory(null)
+                            setShowCustomDuration(false)
+                            setDuration(null)
+                          } else {
+                            setDurationCategory('custom')
+                            setShowCustomDuration(true)
                             setDuration(null)
                           }
                         }}
-                        className={`px-3 py-1.5 rounded-full text-xs transition-colors ${
-                          showCustomDuration
-                            ? 'bg-indigo-deep text-cream'
-                            : 'bg-cream-dark/50 text-ink/70 hover:bg-cream-dark'
+                        className={`flex-1 py-2 px-3 rounded-xl text-sm transition-colors min-h-[44px] flex items-center justify-center ${
+                          durationCategory === 'custom'
+                            ? 'bg-accent text-on-accent'
+                            : 'bg-deep/50 text-ink-soft hover:bg-deep'
                         }`}
                       >
-                        Other
+                        <span className="font-medium">Custom</span>
                       </button>
                     </div>
 
-                    {/* Custom duration input - only shown when Other is selected */}
+                    {/* Tier 2: Specific durations within category */}
+                    {durationCategory && durationCategory !== 'custom' && (
+                      <div className="flex gap-2 mt-3 animate-fade-in">
+                        {DURATION_CATEGORIES.find(c => c.label === durationCategory)?.durations.map((d) => (
+                          <button
+                            key={d}
+                            onClick={() => setDuration(duration === d ? null : d)}
+                            className={`px-4 py-2 rounded-full text-sm min-h-[44px] transition-colors ${
+                              duration === d
+                                ? 'bg-accent text-on-accent'
+                                : 'bg-deep/30 text-ink-soft hover:bg-deep/50'
+                            }`}
+                          >
+                            {d} min
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Custom duration input */}
                     {showCustomDuration && (
-                      <div className="mt-3">
+                      <div className="mt-3 animate-fade-in">
                         <div className="flex items-center gap-2">
                           <input
                             type="number"
@@ -590,10 +649,10 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                               setCustomDurationInput(e.target.value)
                               setDuration(e.target.value ? parseInt(e.target.value) : null)
                             }}
-                            className="flex-1 px-4 py-3 rounded-xl bg-cream-dark text-ink focus:outline-none focus:ring-2 focus:ring-indigo-deep/30"
+                            className="flex-1 px-4 py-3 rounded-xl bg-elevated text-ink focus:outline-none focus:ring-2 focus:ring-accent/30"
                             autoFocus
                           />
-                          <span className="text-sm text-ink/50">min</span>
+                          <span className="text-sm text-ink-soft">min</span>
                         </div>
                       </div>
                     )}
@@ -601,71 +660,85 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                 </>
               )}
 
-              {/* Pose - always editable */}
+              {/* Position - horizontal scroll with groups */}
               <div>
-                <label className="text-xs text-ink/50 block mb-2">
+                <label className="text-xs text-ink-soft block mb-2">
                   Position
                 </label>
-                <div className="flex flex-wrap gap-2">
-                  {POSES.map((p) => (
-                    <button
-                      key={p}
-                      onClick={() => setPose(pose === p ? '' : p)}
-                      className={`px-3 py-1.5 rounded-full text-xs transition-colors ${
-                        pose === p
-                          ? 'bg-indigo-deep text-cream'
-                          : 'bg-cream-dark/50 text-ink/70 hover:bg-cream-dark'
-                      }`}
-                    >
-                      {p}
-                    </button>
+                <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
+                  {POSE_GROUPS.map((group, groupIndex) => (
+                    <div key={group.label} className="flex gap-2 items-center">
+                      {group.poses.map((p) => (
+                        <button
+                          key={p}
+                          onClick={() => setPose(pose === p ? '' : p)}
+                          className={`px-3 py-2 rounded-full text-sm whitespace-nowrap transition-colors min-h-[44px] ${
+                            pose === p
+                              ? 'bg-accent text-on-accent'
+                              : 'bg-deep/50 text-ink-soft hover:bg-deep'
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                      {groupIndex < POSE_GROUPS.length - 1 && (
+                        <div className="w-px h-6 bg-ink/10 mx-1 flex-shrink-0" />
+                      )}
+                    </div>
                   ))}
                 </div>
               </div>
 
-              {/* Discipline */}
+              {/* Technique - horizontal scroll with groups */}
               <div>
-                <label className="text-xs text-ink/50 block mb-2">
+                <label className="text-xs text-ink-soft block mb-2">
                   Technique
                 </label>
-                <div className="flex flex-wrap gap-2">
-                  {DISCIPLINES.map((d) => (
-                    <button
-                      key={d}
-                      onClick={() => setDiscipline(discipline === d ? '' : d)}
-                      className={`px-3 py-1.5 rounded-full text-xs transition-colors ${
-                        discipline === d
-                          ? 'bg-indigo-deep text-cream'
-                          : 'bg-cream-dark/50 text-ink/70 hover:bg-cream-dark'
-                      }`}
-                    >
-                      {d}
-                    </button>
+                <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
+                  {DISCIPLINE_GROUPS.map((group, groupIndex) => (
+                    <div key={group.label} className="flex gap-2 items-center">
+                      {group.disciplines.map((d) => (
+                        <button
+                          key={d}
+                          onClick={() => setDiscipline(discipline === d ? '' : d)}
+                          className={`px-3 py-2 rounded-full text-sm whitespace-nowrap transition-colors min-h-[44px] ${
+                            discipline === d
+                              ? 'bg-accent text-on-accent'
+                              : 'bg-deep/50 text-ink-soft hover:bg-deep'
+                          }`}
+                        >
+                          {d}
+                        </button>
+                      ))}
+                      {groupIndex < DISCIPLINE_GROUPS.length - 1 && (
+                        <div className="w-px h-6 bg-ink/10 mx-1 flex-shrink-0" />
+                      )}
+                    </div>
                   ))}
                 </div>
               </div>
 
               {/* Notes / Intention */}
               <div>
-                <label className="text-xs text-ink/50 block mb-2">
+                <label className="text-xs text-ink-soft block mb-2">
                   {isSessionMode ? 'Intention' : 'Notes'}
                 </label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder={isSessionMode ? "What was your intention for this session?" : "Set your intention for this session..."}
-                  className="w-full h-24 px-4 py-3 rounded-xl bg-cream-dark/50 text-ink placeholder:text-ink/30 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-deep/20"
+                  className="w-full h-24 px-4 py-3 rounded-xl bg-deep/50 text-ink placeholder:text-ink/30 resize-none focus:outline-none focus:ring-2 focus:ring-accent/20"
                 />
               </div>
 
               {/* Insight display - show in session mode (with content or empty state) */}
               {isSessionMode && (
                 <div>
-                  <label className="text-xs text-ink/50 block mb-2">
+                  <label className="text-xs text-ink-soft block mb-2">
                     Insight captured
                   </label>
                   {insight ? (
-                    <div className="bg-indigo-deep/5 rounded-xl p-4 border border-indigo-deep/10">
+                    <div className="bg-accent/5 rounded-xl p-4 border border-accent/10">
                       <p className="text-ink text-sm whitespace-pre-wrap">
                         {insight.formattedText || insight.rawText}
                       </p>
@@ -679,7 +752,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                       </p>
                     </div>
                   ) : (
-                    <div className="bg-cream-dark/30 rounded-xl p-4">
+                    <div className="bg-deep/30 rounded-xl p-4">
                       <p className="text-ink/40 text-sm italic">
                         No insight captured for this session
                       </p>
@@ -696,7 +769,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
           <button
             onClick={handleSave}
             disabled={isSaving || isLoading}
-            className="w-full py-3 rounded-xl text-sm font-medium bg-indigo-deep text-cream hover:bg-indigo-deep/90 transition-colors active:scale-[0.98] disabled:opacity-50"
+            className="w-full py-3 rounded-xl text-sm font-medium bg-accent text-on-accent hover:opacity-90 transition-opacity active:scale-[0.98] disabled:opacity-50"
           >
             {isSaving ? 'Saving...' : isSessionMode ? 'Save Details' : existingPlan ? 'Update Plan' : 'Save Plan'}
           </button>
@@ -704,7 +777,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
           {existingPlan && !isSessionMode && (
             <button
               onClick={handleDelete}
-              className="w-full py-3 rounded-xl text-sm font-medium text-rose-500 hover:bg-rose-50 transition-colors active:scale-[0.98]"
+              className="w-full py-3 rounded-xl text-sm font-medium border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 transition-colors active:scale-[0.98]"
             >
               Delete Plan
             </button>
