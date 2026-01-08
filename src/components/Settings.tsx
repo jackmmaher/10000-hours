@@ -18,6 +18,7 @@ import { useThemeInfo } from '../hooks/useTheme'
 import { trackHideTimeToggle } from '../lib/analytics'
 import { ThemeMode } from '../lib/db'
 import { getThemeName } from '../lib/themeEngine'
+import { AuthModal } from './AuthModal'
 
 interface SettingsProps {
   onBack: () => void
@@ -38,6 +39,7 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
   const { tier, isPremium } = usePremiumStore()
   const { timeOfDay, season } = useThemeInfo()
   const [showThemeDetail, setShowThemeDetail] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
 
   // Get current auto theme description
   const currentThemeName = getThemeName(timeOfDay, season)
@@ -185,9 +187,9 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
         </div>
 
         {/* Account */}
-        {isAuthenticated && user && (
-          <div className="mb-8">
-            <p className="font-serif text-sm text-ink/50 tracking-wide mb-4">Account</p>
+        <div className="mb-8">
+          <p className="font-serif text-sm text-ink/50 tracking-wide mb-4">Account</p>
+          {isAuthenticated && user ? (
             <div className="p-4 bg-cream-warm rounded-xl">
               <p className="text-sm text-ink/60 mb-3">{user.email}</p>
               <button
@@ -198,8 +200,18 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
                 {authLoading ? 'Signing out...' : 'Sign out'}
               </button>
             </div>
-          </div>
-        )}
+          ) : (
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className="w-full p-4 bg-cream-warm rounded-xl text-left hover:bg-cream-deep transition-colors active:scale-[0.99]"
+            >
+              <p className="text-sm text-ink font-medium">Sign in</p>
+              <p className="text-xs text-ink/40 mt-1">
+                Sync your practice across devices
+              </p>
+            </button>
+          )}
+        </div>
 
         {/* Links */}
         <div className="space-y-1 mb-8">
@@ -230,6 +242,14 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
           10,000 Hours · v2.1.0
         </p>
       </footer>
+
+      {/* Auth modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        title="Sign in"
+        subtitle="Sync your practice across devices"
+      />
     </div>
   )
 }
