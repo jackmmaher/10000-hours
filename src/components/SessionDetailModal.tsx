@@ -150,27 +150,25 @@ export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailM
       onTouchMove={handleTouchEvent}
     >
       <div className="h-full overflow-y-auto">
-        {/* Hero section */}
-        <div className={`relative h-48 bg-gradient-to-br ${gradient}`}>
+        {/* Hero section - single unified header */}
+        <div className={`relative bg-gradient-to-br ${gradient} px-6 pt-14 pb-6`}>
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+            className="absolute top-4 right-4 w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors z-10"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
 
-          {/* Title overlay */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-ink/30 to-transparent">
-            <p className="font-serif text-2xl text-white drop-shadow-sm">
-              {session.title}
-            </p>
-            <p className="text-white/80 text-sm mt-1 italic">
-              "{session.tagline}"
-            </p>
-          </div>
+          {/* Title and tagline */}
+          <p className="font-serif text-2xl text-white drop-shadow-sm">
+            {session.title}
+          </p>
+          <p className="text-white/80 text-sm mt-2 italic">
+            "{session.tagline}"
+          </p>
         </div>
 
         {/* Content */}
