@@ -170,7 +170,6 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
   const [duration, setDuration] = useState<number | null>(null)
   const [durationCategory, setDurationCategory] = useState<string | null>(null)
   const [showCustomDuration, setShowCustomDuration] = useState(false)
-  const [customDurationInput, setCustomDurationInput] = useState('')
 
   // Multi-session edit tracking: Map<sessionUuid, edits>
   // This preserves edits when switching between sessions
@@ -286,7 +285,6 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
           } else {
             setDurationCategory('custom')
             setShowCustomDuration(true)
-            setCustomDurationInput(existing.duration.toString())
           }
         }
         // Only load pose/discipline/notes from plan in plan mode
@@ -484,7 +482,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                   <label className="text-xs text-ink-soft block mb-2">
                     Date
                   </label>
-                  <div className="relative">
+                  <div className="relative overflow-hidden rounded-xl">
                     <input
                       type="date"
                       value={formatDateForInput(selectedDate)}
@@ -497,12 +495,11 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                         setDuration(null)
                         setDurationCategory(null)
                         setShowCustomDuration(false)
-                        setCustomDurationInput('')
                         setPose('')
                         setDiscipline('')
                         setNotes('')
                       }}
-                      className="w-full px-4 py-4 pr-12 rounded-xl bg-elevated text-ink text-lg font-medium focus:outline-none focus:ring-2 focus:ring-accent/30"
+                      className="w-full px-4 py-4 pr-12 rounded-xl bg-elevated text-ink text-lg font-medium focus:outline-none focus:ring-2 focus:ring-accent/30 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                     />
                     <svg
                       className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink-soft pointer-events-none"
@@ -540,12 +537,12 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                     <label className="text-xs text-ink-soft block mb-2">
                       Time
                     </label>
-                    <div className="relative">
+                    <div className="relative overflow-hidden rounded-xl">
                       <input
                         type="time"
                         value={plannedTime}
                         onChange={(e) => setPlannedTime(e.target.value)}
-                        className="w-full px-4 py-4 pr-12 rounded-xl bg-elevated text-ink text-lg font-medium focus:outline-none focus:ring-2 focus:ring-accent/30"
+                        className="w-full px-4 py-4 pr-12 rounded-xl bg-elevated text-ink text-lg font-medium focus:outline-none focus:ring-2 focus:ring-accent/30 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                       />
                       <svg
                         className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink-soft pointer-events-none"
@@ -635,24 +632,24 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                       </div>
                     )}
 
-                    {/* Custom duration input */}
+                    {/* Custom duration - scrollable picker */}
                     {showCustomDuration && (
                       <div className="mt-3 animate-fade-in">
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="number"
-                            min="1"
-                            max="480"
-                            placeholder="Enter minutes"
-                            value={customDurationInput}
-                            onChange={(e) => {
-                              setCustomDurationInput(e.target.value)
-                              setDuration(e.target.value ? parseInt(e.target.value) : null)
-                            }}
-                            className="flex-1 px-4 py-3 rounded-xl bg-elevated text-ink focus:outline-none focus:ring-2 focus:ring-accent/30"
-                            autoFocus
-                          />
-                          <span className="text-sm text-ink-soft">min</span>
+                        <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
+                          {/* Common custom durations: 1-5, then increments of 5 up to 90, then longer options */}
+                          {[1, 2, 3, 4, 5, 7, 8, 12, 15, 18, 20, 22, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 120, 180].map((d) => (
+                            <button
+                              key={d}
+                              onClick={() => setDuration(duration === d ? null : d)}
+                              className={`px-4 py-2 rounded-full text-sm whitespace-nowrap min-h-[44px] transition-colors flex-shrink-0 ${
+                                duration === d
+                                  ? 'bg-accent text-on-accent'
+                                  : 'bg-deep/30 text-ink-soft hover:bg-deep/50'
+                              }`}
+                            >
+                              {d < 60 ? `${d} min` : d === 60 ? '1 hr' : d === 90 ? '1.5 hr' : d === 120 ? '2 hr' : '3 hr'}
+                            </button>
+                          ))}
                         </div>
                       </div>
                     )}
