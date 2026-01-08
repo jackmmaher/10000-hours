@@ -2048,15 +2048,6 @@ function interpolateColor(color1: string, color2: string, t: number): string {
 }
 
 /**
- * Get the next time of day in sequence
- */
-function getNextTimeOfDay(current: TimeOfDay): TimeOfDay {
-  const order: TimeOfDay[] = ['morning', 'daytime', 'evening', 'night']
-  const idx = order.indexOf(current)
-  return order[(idx + 1) % order.length]
-}
-
-/**
  * Get the previous time of day in sequence
  */
 function getPrevTimeOfDay(current: TimeOfDay): TimeOfDay {
