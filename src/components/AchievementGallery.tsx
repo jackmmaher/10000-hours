@@ -13,6 +13,7 @@ import { MILESTONES } from '../lib/tierLogic'
 import { getAdaptiveMilestone } from '../lib/calculations'
 import { formatShortDate } from '../lib/format'
 import { MilestoneSummary } from './MilestoneSummary'
+import { MilestoneProgress } from './MilestoneProgress'
 
 // Format milestone label (e.g., "2h", "5h", "1k")
 function formatMilestoneLabel(hours: number): string {
@@ -27,6 +28,7 @@ export function AchievementGallery() {
   const [achievements, setAchievements] = useState<Achievement[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null)
+  const [showCurrentProgress, setShowCurrentProgress] = useState(false)
 
   // Load achievements from database
   useEffect(() => {
@@ -91,9 +93,12 @@ export function AchievementGallery() {
           </button>
         ))}
 
-        {/* Next milestone (in progress) */}
+        {/* Next milestone (in progress) - clickable */}
         {displayMilestones.nextMilestone && (
-          <div className="flex flex-col items-center min-w-[48px]">
+          <button
+            onClick={() => setShowCurrentProgress(true)}
+            className="flex flex-col items-center min-w-[48px] active:scale-95 transition-transform"
+          >
             {/* Progress ring */}
             <div className="relative w-10 h-10 mb-1">
               <svg className="w-10 h-10 -rotate-90" viewBox="0 0 40 40">
@@ -117,7 +122,7 @@ export function AchievementGallery() {
                   strokeWidth="3"
                   strokeLinecap="round"
                   strokeDasharray={`${(milestone.progressPercent / 100) * 100.5} 100.5`}
-                  className="text-indigo-deep/40"
+                  className="text-moss/60"
                 />
               </svg>
               {/* Label */}
@@ -127,10 +132,10 @@ export function AchievementGallery() {
             </div>
 
             {/* Progress text */}
-            <span className="text-[10px] text-indigo-deep/30 whitespace-nowrap">
+            <span className="text-[10px] text-moss/70 whitespace-nowrap">
               {Math.round(milestone.progressPercent)}%
             </span>
-          </div>
+          </button>
         )}
       </div>
 
@@ -174,6 +179,18 @@ export function AchievementGallery() {
           }
           sessions={sessions}
           onClose={() => setSelectedAchievement(null)}
+        />
+      )}
+
+      {/* Current milestone progress modal */}
+      {showCurrentProgress && displayMilestones.nextMilestone && (
+        <MilestoneProgress
+          currentHours={currentHours}
+          targetHours={displayMilestones.nextMilestone}
+          previousHours={achievements.length > 0 ? achievements[achievements.length - 1].hours : 0}
+          progressPercent={milestone.progressPercent}
+          sessions={sessions}
+          onClose={() => setShowCurrentProgress(false)}
         />
       )}
     </div>

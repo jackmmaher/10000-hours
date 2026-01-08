@@ -44,6 +44,7 @@ import { PracticeShape } from './PracticeShape'
 import { CommitmentCard } from './CommitmentCard'
 import { GrowthBars } from './GrowthBars'
 import { SuggestedActions } from './SuggestedActions'
+import { VoiceDetailModal } from './VoiceDetailModal'
 
 export function Progress() {
   const { sessions, totalSeconds, setView } = useSessionStore()
@@ -55,6 +56,7 @@ export function Progress() {
   const [courseProgress, setCourseProgress] = useState<UserCourseProgress[]>([])
   const [insights, setInsights] = useState<Insight[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [showVoiceModal, setShowVoiceModal] = useState(false)
 
   useEffect(() => {
     async function loadData() {
@@ -106,7 +108,6 @@ export function Progress() {
   const scrollRef = useRef<HTMLDivElement>(null)
 
   // Pull-to-refresh
-  const [refreshKey, setRefreshKey] = useState(0)
   const {
     isPulling,
     isRefreshing,
@@ -114,7 +115,6 @@ export function Progress() {
     handlers: pullHandlers
   } = usePullToRefresh({
     onRefresh: async () => {
-      setRefreshKey(k => k + 1)
       // Reload data
       const [plans, templates, courses, insightData] = await Promise.all([
         getAllPlannedSessions(),
@@ -142,7 +142,6 @@ export function Progress() {
   return (
     <div
       ref={scrollRef}
-      key={refreshKey}
       className="h-full bg-cream overflow-y-auto pb-24"
       {...navSwipeHandlers}
       onTouchStart={(e) => {
@@ -206,12 +205,18 @@ export function Progress() {
             {sessionCount} session{sessionCount !== 1 ? 's' : ''}
           </p>
 
-          {/* Voice score display */}
+          {/* Voice score display - clickable CTA */}
           {voice && (
-            <div className="mt-4 flex items-center justify-center gap-3">
+            <button
+              onClick={() => setShowVoiceModal(true)}
+              className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cream-deep hover:bg-cream-warm transition-colors active:scale-[0.98]"
+            >
               <VoiceBadge score={voice.total} showScore />
-              <span className="text-xs text-ink/30">Voice</span>
-            </div>
+              <span className="text-xs text-ink/40">Voice</span>
+              <svg className="w-3 h-3 text-ink/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
           )}
         </div>
 
@@ -261,6 +266,11 @@ export function Progress() {
           <AllTimeSummary sessions={sessions} />
         )}
       </div>
+
+      {/* Voice detail modal */}
+      {showVoiceModal && voice && (
+        <VoiceDetailModal voice={voice} onClose={() => setShowVoiceModal(false)} />
+      )}
     </div>
   )
 }
