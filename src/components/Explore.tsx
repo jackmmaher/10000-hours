@@ -510,14 +510,14 @@ function PearlCardExplore({
   }
 
   return (
-    <div className="relative bg-gradient-to-br from-cream to-[#F7F4F0] rounded-2xl p-5 shadow-sm">
+    <div className="relative bg-cream rounded-2xl p-5 shadow-sm border border-ink/5">
       {/* Shimmer highlight */}
       <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent" />
 
       {/* Header with pearl orb and Voice badge */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#E8E4DF] to-[#C9C4BD] shadow-sm" />
+          <div className="w-5 h-5 rounded-full bg-cream-deep shadow-sm" />
           <span className="text-xs text-ink/40">Community wisdom</span>
         </div>
 

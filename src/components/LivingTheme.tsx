@@ -176,6 +176,7 @@ export function LivingTheme({
             animation: breathe 16s ease-in-out infinite;
             transform-origin: center center;
             will-change: transform;
+            overflow: hidden;
           }
 
           @media (prefers-reduced-motion: reduce) {

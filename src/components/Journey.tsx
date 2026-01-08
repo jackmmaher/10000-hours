@@ -779,7 +779,7 @@ function MyPearlsContent() {
     return (
       <div className="text-center py-12">
         <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-gradient-to-br from-cream-deep to-cream flex items-center justify-center shadow-inner">
-          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#E8E4DF] to-[#D4CFC8]" />
+          <div className="w-6 h-6 rounded-full bg-cream-deep" />
         </div>
         <p className="text-ink/50 text-sm">
           Sign in to see your pearls
@@ -794,7 +794,7 @@ function MyPearlsContent() {
     return (
       <div className="text-center py-12">
         <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-gradient-to-br from-cream-deep to-cream flex items-center justify-center shadow-inner">
-          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#E8E4DF] to-[#D4CFC8]" />
+          <div className="w-6 h-6 rounded-full bg-cream-deep" />
         </div>
         <p className="text-ink/50 text-sm mb-1">
           No pearls yet
@@ -818,7 +818,7 @@ function MyPearlsContent() {
             {createdPearls.map((pearl) => (
               <div
                 key={pearl.id}
-                className="relative bg-gradient-to-br from-cream to-[#F7F4F0] rounded-2xl p-5 shadow-sm"
+                className="relative bg-cream rounded-2xl p-5 shadow-sm border border-ink/5"
               >
                 {/* Polished pearl indicator - subtle shimmer line */}
                 <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent" />
@@ -826,7 +826,7 @@ function MyPearlsContent() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     {/* Small pearl orb */}
-                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#E8E4DF] to-[#C9C4BD] shadow-sm" />
+                    <div className="w-5 h-5 rounded-full bg-cream-deep shadow-sm" />
                     <span className="text-xs text-ink/40">
                       {new Date(pearl.createdAt).toLocaleDateString('en-US', {
                         month: 'short',
@@ -905,7 +905,7 @@ function MyPearlsContent() {
             {savedPearls.map((pearl) => (
               <div
                 key={pearl.id}
-                className="relative bg-gradient-to-br from-[#F5F3F0] to-[#EDEAE6] rounded-2xl p-5"
+                className="relative bg-cream-warm rounded-2xl p-5 border border-ink/5"
               >
                 {/* Subtle top highlight */}
                 <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
