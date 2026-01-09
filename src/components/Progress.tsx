@@ -51,7 +51,7 @@ import { VoiceDetailModal } from './VoiceDetailModal'
 
 export function Progress() {
   const { sessions, totalSeconds } = useSessionStore()
-  const { setView } = useNavigationStore()
+  const { setView, openVoiceModal, clearVoiceModalIntent } = useNavigationStore()
   const { voice } = useVoice()
   const haptic = useTapFeedback()
 
@@ -62,6 +62,14 @@ export function Progress() {
   const [insights, setInsights] = useState<Insight[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showVoiceModal, setShowVoiceModal] = useState(false)
+
+  // Handle navigation intent to open Voice modal (e.g., from Profile)
+  useEffect(() => {
+    if (openVoiceModal && voice) {
+      setShowVoiceModal(true)
+      clearVoiceModalIntent()
+    }
+  }, [openVoiceModal, voice, clearVoiceModalIntent])
 
   useEffect(() => {
     async function loadData() {

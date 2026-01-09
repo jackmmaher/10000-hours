@@ -4,9 +4,11 @@
  * Shows users how their credibility score is calculated and
  * what they can focus on to increase it (deliberate improvement).
  *
+ * Uses living theme colors with opacity variations for visual harmony.
+ *
  * Displays:
  * - Overall score with visual treatment
- * - Three component scores (Practice, Contribution, Validation)
+ * - Four component scores (Practice, Contribution, Validation Received/Given)
  * - Individual factor breakdown with progress bars
  * - Actionable suggestions for lowest-scoring areas
  */
@@ -19,10 +21,19 @@ interface VoiceBreakdownProps {
 }
 
 /**
- * Get CSS variable values for a voice level
+ * Get text color with appropriate styling for voice level
+ * Uses theme text colors for harmony
  */
-function getVoiceTextStyle(level: VoiceLevel) {
-  return `var(--voice-${level}-text)`
+function getVoiceTextStyle(level: VoiceLevel): string {
+  switch (level) {
+    case 'high':
+    case 'established':
+      return 'var(--text-primary, #1a1a1a)'
+    case 'growing':
+    case 'new':
+    default:
+      return 'var(--text-secondary, #6B7280)'
+  }
 }
 
 export function VoiceBreakdown({ inputs }: VoiceBreakdownProps) {
@@ -43,6 +54,11 @@ export function VoiceBreakdown({ inputs }: VoiceBreakdownProps) {
   // Generate suggestion based on lowest component
   const suggestion = getSuggestion(lowestComponent.name, voice)
 
+  // Glow for high scores
+  const scoreGlow = visual.glow !== 'none'
+    ? { textShadow: `0 0 ${visual.glow === 'strong' ? '8px' : '4px'} var(--accent-glow, rgba(0,0,0,0.1))` }
+    : {}
+
   return (
     <div className="bg-cream rounded-2xl p-6">
       {/* Header with score */}
@@ -56,7 +72,7 @@ export function VoiceBreakdown({ inputs }: VoiceBreakdownProps) {
         <div className="text-right">
           <div
             className="text-3xl font-serif mb-1"
-            style={{ color: getVoiceTextStyle(visual.level) }}
+            style={{ color: getVoiceTextStyle(visual.level), ...scoreGlow }}
           >
             {voice.total}
           </div>
@@ -64,35 +80,35 @@ export function VoiceBreakdown({ inputs }: VoiceBreakdownProps) {
         </div>
       </div>
 
-      {/* Component breakdown */}
+      {/* Component breakdown - all use accent color with varying opacity */}
       <div className="space-y-4 mb-6">
         <ComponentBar
           label="Practice Depth"
           sublabel="Hours, session length, consistency"
           score={voice.practice}
           max={30}
-          color="bg-moss/60"
+          opacity={1}
         />
         <ComponentBar
           label="Contribution"
           sublabel="Pearls shared, meditations created"
           score={voice.contribution}
           max={20}
-          color="bg-bark/60"
+          opacity={0.85}
         />
         <ComponentBar
           label="Validation Received"
           sublabel="Karma, saves, completions by others"
           score={voice.validationReceived}
           max={25}
-          color="bg-amber-600/60"
+          opacity={0.7}
         />
         <ComponentBar
           label="Validation Given"
           sublabel="Your upvotes, saves, completions"
           score={voice.validationGiven}
           max={25}
-          color="bg-indigo-deep/60"
+          opacity={0.55}
         />
       </div>
 
@@ -208,13 +224,13 @@ function ComponentBar({
   sublabel,
   score,
   max,
-  color
+  opacity
 }: {
   label: string
   sublabel: string
   score: number
   max: number
-  color: string
+  opacity: number
 }) {
   const percentage = (score / max) * 100
 
@@ -231,8 +247,11 @@ function ComponentBar({
       </div>
       <div className="h-2 bg-ink/5 rounded-full overflow-hidden">
         <div
-          className={`h-full ${color} rounded-full transition-all duration-500`}
-          style={{ width: `${percentage}%` }}
+          className="h-full rounded-full transition-all duration-500"
+          style={{
+            width: `${percentage}%`,
+            backgroundColor: `color-mix(in srgb, var(--accent) ${opacity * 100}%, transparent)`
+          }}
         />
       </div>
     </div>
@@ -262,8 +281,11 @@ function FactorRow({
         </div>
         <div className="h-1 bg-ink/5 rounded-full overflow-hidden">
           <div
-            className="h-full bg-ink/20 rounded-full"
-            style={{ width: `${percentage}%` }}
+            className="h-full rounded-full transition-all duration-500"
+            style={{
+              width: `${percentage}%`,
+              backgroundColor: 'color-mix(in srgb, var(--accent) 40%, transparent)'
+            }}
           />
         </div>
       </div>
@@ -331,11 +353,16 @@ export function VoiceCompact({ inputs }: { inputs: VoiceInputs }) {
   const voice = calculateVoice(inputs)
   const visual = getVoiceVisual(voice.total)
 
+  // Glow for high scores
+  const scoreGlow = visual.glow !== 'none'
+    ? { textShadow: `0 0 ${visual.glow === 'strong' ? '8px' : '4px'} var(--accent-glow, rgba(0,0,0,0.1))` }
+    : {}
+
   return (
     <div className="flex items-center gap-3">
       <div
         className="text-2xl font-serif"
-        style={{ color: getVoiceTextStyle(visual.level) }}
+        style={{ color: getVoiceTextStyle(visual.level), ...scoreGlow }}
       >
         {voice.total}
       </div>

@@ -73,7 +73,7 @@ interface ProfileProps {
 
 export function Profile({ onNavigateToSettings }: ProfileProps) {
   const { sessions } = useSessionStore()
-  const { setView } = useNavigationStore()
+  const { setView, setViewWithVoiceModal } = useNavigationStore()
   const { user, isAuthenticated } = useAuthStore()
   const { voice, isLoading: voiceLoading } = useVoice()
   const haptic = useTapFeedback()
@@ -282,12 +282,12 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
             )}
           </div>
 
-          {/* Voice badge - tappable to Progress */}
+          {/* Voice badge - tappable to open Voice modal on Progress */}
           {!voiceLoading && voice && (
             <button
               onClick={() => {
                 haptic.light()
-                setView('progress')
+                setViewWithVoiceModal()
               }}
               className="flex flex-col items-center active:scale-[0.97] transition-transform touch-manipulation"
             >

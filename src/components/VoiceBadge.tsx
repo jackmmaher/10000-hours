@@ -1,15 +1,17 @@
 /**
  * VoiceBadge - Visual indicator of meditation experience
  *
- * Integrated with the Living Theme system - colors shift naturally
- * with the sun position, using the same visual language as cards.
+ * Uses living theme accent color with opacity variations:
+ * - High (70+): Full opacity + glow (earned distinction)
+ * - Established (45-69): 85% opacity
+ * - Growing (20-44): 70% opacity
+ * - New (0-19): Muted/faded
  *
  * Design philosophy:
- * - Glassmorphic background (matches cards)
- * - Text color from theme (--text-secondary)
- * - Dots use theme accent color
- * - Progression through intensity, not distinct hues
- * - High scores earn a subtle glow (using --accent-glow)
+ * - Harmonizes with living theme (no jarring fixed colors)
+ * - Dot count is primary signal (1-5 dots)
+ * - Glow provides earned distinction for high scores
+ * - Color intensity reinforces level without fighting theme
  *
  * Level progression:
  * - 0-19: 1 dot (new practitioner)
@@ -18,7 +20,40 @@
  * - 70+: 5 dots + glow (high voice)
  */
 
-import { getVoiceVisual } from '../lib/voice'
+import { getVoiceVisual, VoiceLevel } from '../lib/voice'
+
+/**
+ * Get dot color with opacity based on voice level
+ * Uses --accent from living theme with varying intensity
+ */
+function getVoiceDotStyle(level: VoiceLevel): string {
+  switch (level) {
+    case 'high':
+      return 'var(--accent)'  // Full intensity + glow handles distinction
+    case 'established':
+      return 'color-mix(in srgb, var(--accent) 85%, transparent)'
+    case 'growing':
+      return 'color-mix(in srgb, var(--accent) 70%, transparent)'
+    case 'new':
+    default:
+      return 'var(--text-muted, rgba(0,0,0,0.3))'
+  }
+}
+
+/**
+ * Get text color with appropriate contrast for each level
+ */
+function getVoiceTextStyle(level: VoiceLevel): string {
+  switch (level) {
+    case 'high':
+    case 'established':
+      return 'var(--text-primary, #1a1a1a)'
+    case 'growing':
+    case 'new':
+    default:
+      return 'var(--text-secondary, #6B7280)'
+  }
+}
 
 interface VoiceBadgeProps {
   score: number
@@ -64,7 +99,7 @@ export function VoiceBadge({ score, showScore = false, compact = false }: VoiceB
             className={`${dotSize} rounded-full transition-all duration-500`}
             style={{
               backgroundColor: dot <= visual.dots
-                ? 'var(--accent, #7C9A6E)'
+                ? getVoiceDotStyle(visual.level)
                 : 'var(--border-subtle, rgba(0,0,0,0.1))'
             }}
           />
@@ -75,7 +110,7 @@ export function VoiceBadge({ score, showScore = false, compact = false }: VoiceB
       {showScore && (
         <span
           className="text-[10px] tabular-nums font-medium ml-1"
-          style={{ color: 'var(--text-secondary, #6B7280)' }}
+          style={{ color: getVoiceTextStyle(visual.level) }}
         >
           {score}
         </span>
@@ -124,7 +159,7 @@ export function VoiceBadgeWithHours({ score }: VoiceBadgeWithScoreProps) {
             className="w-1 h-1 rounded-full transition-all duration-500"
             style={{
               backgroundColor: dot <= visual.dots
-                ? 'var(--accent, #7C9A6E)'
+                ? getVoiceDotStyle(visual.level)
                 : 'var(--border-subtle, rgba(0,0,0,0.1))'
             }}
           />
@@ -134,7 +169,7 @@ export function VoiceBadgeWithHours({ score }: VoiceBadgeWithScoreProps) {
       {/* Voice score display */}
       <span
         className="text-[10px] tabular-nums font-medium"
-        style={{ color: 'var(--text-secondary, #6B7280)' }}
+        style={{ color: getVoiceTextStyle(visual.level) }}
       >
         {score}
       </span>

@@ -3,6 +3,8 @@
  *
  * Shows how the Voice score is calculated with all contributing factors.
  * Makes the algorithm transparent and helps users understand how to build credibility.
+ *
+ * Uses living theme colors with opacity variations for visual harmony.
  */
 
 import { VoiceScore, getVoiceVisual, VoiceLevel } from '../lib/voice'
@@ -13,14 +15,30 @@ interface VoiceDetailModalProps {
 }
 
 /**
- * Get CSS variable value for voice dot color
+ * Get dot color with opacity based on voice level
+ * Uses --accent from living theme with varying intensity
  */
-function getVoiceDotStyle(level: VoiceLevel) {
-  return `var(--voice-${level}-dot)`
+function getVoiceDotStyle(level: VoiceLevel): string {
+  switch (level) {
+    case 'high':
+      return 'var(--accent)'
+    case 'established':
+      return 'color-mix(in srgb, var(--accent) 85%, transparent)'
+    case 'growing':
+      return 'color-mix(in srgb, var(--accent) 70%, transparent)'
+    case 'new':
+    default:
+      return 'var(--text-muted, rgba(0,0,0,0.3))'
+  }
 }
 
 export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
   const visual = getVoiceVisual(voice.total)
+
+  // Glow for high scores
+  const scoreGlow = visual.glow !== 'none'
+    ? { textShadow: `0 0 ${visual.glow === 'strong' ? '8px' : '4px'} var(--accent-glow, rgba(0,0,0,0.1))` }
+    : {}
 
   return (
     <div
@@ -42,7 +60,10 @@ export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
             <div>
               <p className="text-sm text-ink/40 mb-1">Your meditation credibility</p>
               <div className="flex items-center gap-3">
-                <p className="font-serif text-3xl text-indigo-deep tabular-nums">
+                <p
+                  className="font-serif text-3xl tabular-nums"
+                  style={{ color: 'var(--text-primary)', ...scoreGlow }}
+                >
                   {voice.total}
                 </p>
                 <div className="flex items-center gap-1">
@@ -74,34 +95,34 @@ export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
 
         {/* Score breakdown */}
         <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
-          {/* Component bars */}
+          {/* Component bars - all use accent color with varying opacity */}
           <div className="mb-6">
             <ComponentBar
               label="Practice"
               score={voice.practice}
               max={30}
-              color="bg-moss"
+              opacity={1}
               description="Depth and consistency of your meditation"
             />
             <ComponentBar
               label="Contribution"
               score={voice.contribution}
               max={20}
-              color="bg-bark"
+              opacity={0.85}
               description="Sharing wisdom with the community"
             />
             <ComponentBar
               label="Validation Received"
               score={voice.validationReceived}
               max={25}
-              color="bg-amber-500"
+              opacity={0.7}
               description="Community recognition of your wisdom"
             />
             <ComponentBar
               label="Validation Given"
               score={voice.validationGiven}
               max={25}
-              color="bg-indigo-deep/70"
+              opacity={0.55}
               description="Your engagement with community content"
             />
           </div>
@@ -219,13 +240,13 @@ function ComponentBar({
   label,
   score,
   max,
-  color,
+  opacity,
   description
 }: {
   label: string
   score: number
   max: number
-  color: string
+  opacity: number
   description: string
 }) {
   const percent = (score / max) * 100
@@ -240,8 +261,11 @@ function ComponentBar({
       </div>
       <div className="h-2 w-full overflow-hidden rounded-full bg-cream-deep">
         <div
-          className={`h-full rounded-full ${color} transition-all duration-500`}
-          style={{ width: `${percent}%` }}
+          className="h-full rounded-full transition-all duration-500"
+          style={{
+            width: `${percent}%`,
+            backgroundColor: `color-mix(in srgb, var(--accent) ${opacity * 100}%, transparent)`
+          }}
         />
       </div>
       <p className="text-xs text-ink/40 mt-1">{description}</p>
@@ -291,8 +315,11 @@ function Factor({
         </div>
         <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-cream-deep">
           <div
-            className="h-full rounded-full bg-ink/20 transition-all duration-500"
-            style={{ width: `${percent}%` }}
+            className="h-full rounded-full transition-all duration-500"
+            style={{
+              width: `${percent}%`,
+              backgroundColor: 'color-mix(in srgb, var(--accent) 40%, transparent)'
+            }}
           />
         </div>
       </div>

@@ -24,10 +24,17 @@ export type AppView =
 
 interface NavigationState {
   view: AppView
+  // Intent flags - consumed by target views
+  openVoiceModal: boolean
   setView: (view: AppView) => void
+  setViewWithVoiceModal: () => void
+  clearVoiceModalIntent: () => void
 }
 
 export const useNavigationStore = create<NavigationState>((set) => ({
   view: 'timer',
-  setView: (view) => set({ view })
+  openVoiceModal: false,
+  setView: (view) => set({ view }),
+  setViewWithVoiceModal: () => set({ view: 'progress', openVoiceModal: true }),
+  clearVoiceModalIntent: () => set({ openVoiceModal: false })
 }))
