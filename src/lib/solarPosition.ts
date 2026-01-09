@@ -335,3 +335,44 @@ export function calculateSunriseSunset(
 
   return { sunrise, sunset, solarNoon }
 }
+
+/**
+ * Calculate maximum solar altitude for a given location and date
+ * This is the highest point the sun reaches on that day (at solar noon)
+ *
+ * Critical for latitude-aware theme scaling:
+ * - Dublin in January: max ~13-14° (never reaches fixed 15° threshold)
+ * - Sydney in January: max ~80° (easily exceeds threshold)
+ *
+ * By using relative position (current / max), all locations experience
+ * the full range of themes relative to THEIR sky.
+ */
+export function calculateMaxSolarAltitude(
+  lat: number,
+  date: Date = new Date()
+): number {
+  // Calculate sun declination for this date
+  const jd = toJulianDate(new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0))
+  const jc = (jd - 2451545) / 36525
+
+  const geomMeanLongSun = (280.46646 + jc * (36000.76983 + 0.0003032 * jc)) % 360
+  const geomMeanAnomSun = 357.52911 + jc * (35999.05029 - 0.0001537 * jc)
+
+  const sunEqOfCtr = Math.sin(toRadians(geomMeanAnomSun)) * (1.914602 - jc * (0.004817 + 0.000014 * jc)) +
+                     Math.sin(toRadians(2 * geomMeanAnomSun)) * (0.019993 - 0.000101 * jc) +
+                     Math.sin(toRadians(3 * geomMeanAnomSun)) * 0.000289
+
+  const sunTrueLong = geomMeanLongSun + sunEqOfCtr
+  const sunAppLong = sunTrueLong - 0.00569 - 0.00478 * Math.sin(toRadians(125.04 - 1934.136 * jc))
+
+  const meanObliqEcliptic = 23 + (26 + ((21.448 - jc * (46.815 + jc * (0.00059 - jc * 0.001813)))) / 60) / 60
+  const obliqCorr = meanObliqEcliptic + 0.00256 * Math.cos(toRadians(125.04 - 1934.136 * jc))
+
+  const sunDeclin = toDegrees(Math.asin(Math.sin(toRadians(obliqCorr)) * Math.sin(toRadians(sunAppLong))))
+
+  // Maximum altitude occurs at solar noon
+  // Formula: maxAlt = 90 - |latitude - declination|
+  const maxAltitude = 90 - Math.abs(lat - sunDeclin)
+
+  return maxAltitude
+}

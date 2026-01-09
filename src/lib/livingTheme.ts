@@ -21,12 +21,13 @@ import {
 import {
   getLocation,
   calculateSunPosition,
+  calculateMaxSolarAltitude,
   estimateLocationFromTimezone
 } from './solarPosition'
 
 // Re-export for convenience
 export type { ThemeTokens, TimeOfDay, Season }
-export { getSeason, getLocation, calculateSunPosition, estimateLocationFromTimezone }
+export { getSeason, getLocation, calculateSunPosition, calculateMaxSolarAltitude, estimateLocationFromTimezone }
 
 // ============================================================================
 // UNIFIED THRESHOLDS
@@ -225,8 +226,13 @@ export function calculateLivingTheme(
 ): LivingThemeState {
   const { altitude, isRising } = calculateSunPosition(location.lat, location.long, date)
   const season = getSeason(date, location.lat < 0)
-  const timeOfDay = getTimeOfDayFromSunPosition(altitude, isRising)
-  const colors = calculateThemeBySunPosition(altitude, isRising, season)
+
+  // Calculate max solar altitude for this location/date for relative positioning
+  // This ensures high-latitude locations experience the full theme range relative to THEIR sky
+  const maxAltitude = calculateMaxSolarAltitude(location.lat, date)
+
+  const timeOfDay = getTimeOfDayFromSunPosition(altitude, isRising, maxAltitude)
+  const colors = calculateThemeBySunPosition(altitude, isRising, season, maxAltitude)
   const effects = calculateEffectIntensities(altitude, isRising, season, expressive)
 
   return {

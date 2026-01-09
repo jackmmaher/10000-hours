@@ -2299,10 +2299,13 @@ export function calculateTheme(
  * For theme purposes, we use simplified ranges that feel right visually.
  */
 const SOLAR_THRESHOLDS = {
-  HIGH_SUN: 15,        // Above this: pure daytime
+  HIGH_SUN: 15,        // Above this: pure daytime (fallback for equatorial/summer)
   HORIZON: 0,          // Sunrise/sunset moment
   CIVIL_TWILIGHT: -6,  // Below this: full night
 }
+
+// Relative threshold for "daytime" - when sun is at 85% of its max altitude for that day
+const RELATIVE_DAYTIME_THRESHOLD = 0.85
 
 /**
  * Calculate theme by sun altitude - continuous blending based on actual sun position
@@ -2310,19 +2313,35 @@ const SOLAR_THRESHOLDS = {
  * This replaces hard time boundaries with smooth solar-aware transitions.
  * The existing 16 themes become "anchor points" that we blend between.
  *
+ * NEW: Latitude-aware relative positioning
+ * When maxSolarAltitude is provided, thresholds are calculated relative to the
+ * maximum possible sun height for that location/date. This ensures:
+ * - Dublin in January (max 13°) experiences full daytime theme at ~11°
+ * - Sydney in January (max 80°) experiences full daytime theme at ~68°
+ * - Everyone gets the full emotional range relative to THEIR sky
+ *
  * @param altitude - Sun altitude in degrees (90 = overhead, 0 = horizon, negative = below horizon)
  * @param isRising - Whether sun is rising (morning) or setting (evening)
  * @param season - Current season for theme palette selection
+ * @param maxSolarAltitude - Optional: Maximum sun altitude for this location/date (enables relative positioning)
  */
 export function calculateThemeBySunPosition(
   altitude: number,
   isRising: boolean,
-  season: Season
+  season: Season,
+  maxSolarAltitude?: number
 ): ThemeTokens {
   const themes = SEASON_THEMES[season]
 
-  // Full daytime - sun is high
-  if (altitude > SOLAR_THRESHOLDS.HIGH_SUN) {
+  // Calculate effective "high sun" threshold
+  // If maxSolarAltitude is provided, use relative positioning
+  // Otherwise fall back to fixed threshold (backward compatible)
+  const effectiveHighSun = maxSolarAltitude !== undefined
+    ? Math.max(maxSolarAltitude * RELATIVE_DAYTIME_THRESHOLD, 6) // At least 6° to avoid edge cases
+    : SOLAR_THRESHOLDS.HIGH_SUN
+
+  // Full daytime - sun is high (relative to this location's maximum)
+  if (altitude > effectiveHighSun) {
     return themes.daytime
   }
 
@@ -2333,9 +2352,9 @@ export function calculateThemeBySunPosition(
 
   // Golden hour / Blue hour - sun between horizon and high point
   // This is where the magic happens - smooth blending
-  if (altitude >= SOLAR_THRESHOLDS.HORIZON && altitude <= SOLAR_THRESHOLDS.HIGH_SUN) {
-    // Progress: 0 at HIGH_SUN (15°), 1 at HORIZON (0°)
-    const progress = 1 - (altitude / SOLAR_THRESHOLDS.HIGH_SUN)
+  if (altitude >= SOLAR_THRESHOLDS.HORIZON && altitude <= effectiveHighSun) {
+    // Progress: 0 at effectiveHighSun, 1 at HORIZON (0°)
+    const progress = 1 - (altitude / effectiveHighSun)
 
     if (isRising) {
       // Morning: blend from morning toward daytime as sun rises
@@ -2367,9 +2386,22 @@ export function calculateThemeBySunPosition(
 /**
  * Get the current time of day label based on sun position
  * Used for display purposes and ambient effects selection
+ *
+ * @param altitude - Current sun altitude in degrees
+ * @param isRising - Whether sun is rising
+ * @param maxSolarAltitude - Optional: Maximum sun altitude for relative positioning
  */
-export function getTimeOfDayFromSunPosition(altitude: number, isRising: boolean): TimeOfDay {
-  if (altitude > SOLAR_THRESHOLDS.HIGH_SUN) return 'daytime'
+export function getTimeOfDayFromSunPosition(
+  altitude: number,
+  isRising: boolean,
+  maxSolarAltitude?: number
+): TimeOfDay {
+  // Calculate effective threshold (same logic as calculateThemeBySunPosition)
+  const effectiveHighSun = maxSolarAltitude !== undefined
+    ? Math.max(maxSolarAltitude * RELATIVE_DAYTIME_THRESHOLD, 6)
+    : SOLAR_THRESHOLDS.HIGH_SUN
+
+  if (altitude > effectiveHighSun) return 'daytime'
   if (altitude < SOLAR_THRESHOLDS.CIVIL_TWILIGHT) return 'night'
 
   if (altitude >= SOLAR_THRESHOLDS.HORIZON) {
@@ -2562,6 +2594,77 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
 }
 
 /**
+ * Calculate relative luminance of a color (WCAG formula)
+ * Used for contrast ratio calculations
+ */
+function getRelativeLuminance(r: number, g: number, b: number): number {
+  const [rs, gs, bs] = [r, g, b].map(c => {
+    const s = c / 255
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4)
+  })
+  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs
+}
+
+/**
+ * Calculate contrast ratio between two colors (WCAG formula)
+ * Returns a value between 1 and 21
+ */
+function getContrastRatio(color1: string, color2: string): number {
+  const rgb1 = hexToRgb(color1) || parseRgba(color1)
+  const rgb2 = hexToRgb(color2) || parseRgba(color2)
+
+  if (!rgb1 || !rgb2) return 1 // Fallback if parsing fails
+
+  const l1 = getRelativeLuminance(rgb1.r, rgb1.g, rgb1.b)
+  const l2 = getRelativeLuminance(rgb2.r, rgb2.g, rgb2.b)
+
+  const lighter = Math.max(l1, l2)
+  const darker = Math.min(l1, l2)
+
+  return (lighter + 0.05) / (darker + 0.05)
+}
+
+/**
+ * Calculate HSL saturation of a color
+ * Returns a value between 0 and 1
+ */
+function getSaturation(color: string): number {
+  const rgb = hexToRgb(color) || parseRgba(color)
+  if (!rgb) return 0
+
+  const r = rgb.r / 255
+  const g = rgb.g / 255
+  const b = rgb.b / 255
+
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  const l = (max + min) / 2
+
+  if (max === min) return 0 // achromatic
+
+  const d = max - min
+  return l > 0.5 ? d / (2 - max - min) : d / (max + min)
+}
+
+/**
+ * Pick the text color that provides better contrast against the background
+ */
+function pickBetterContrastText(text1: string, text2: string, background: string): string {
+  const contrast1 = getContrastRatio(text1, background)
+  const contrast2 = getContrastRatio(text2, background)
+  return contrast1 >= contrast2 ? text1 : text2
+}
+
+/**
+ * Pick the more saturated accent color (preserves vibrancy)
+ */
+function pickMoreSaturatedColor(color1: string, color2: string): string {
+  const sat1 = getSaturation(color1)
+  const sat2 = getSaturation(color2)
+  return sat1 >= sat2 ? color1 : color2
+}
+
+/**
  * Convert RGB to hex
  */
 function rgbToHex(r: number, g: number, b: number): string {
@@ -2676,38 +2779,91 @@ export function getTransitionProgress(date: Date = new Date(), season?: Season):
 
 /**
  * Interpolate between two theme token sets
+ *
+ * CONTRAST-PRESERVING INTERPOLATION:
+ * Instead of linearly blending all tokens (which creates "visual mud"),
+ * we categorize tokens:
+ *
+ * - Structural tokens (backgrounds, borders, shadows): blend smoothly
+ *   These create the atmospheric feel and should fade cinematically
+ *
+ * - Functional tokens (text, accents): preserve legibility/vibrancy
+ *   Text: pick whichever has better contrast against blended background
+ *   Accents: pick the more saturated value (preserves punch)
+ *
+ * This ensures backgrounds fade like weather while text stays readable
+ * and accents stay punchy - no more muddy in-between states.
  */
 export function interpolateThemes(from: ThemeTokens, to: ThemeTokens, t: number): ThemeTokens {
-  // Helper to interpolate a color property
+  // Helper to interpolate a color property (structural tokens)
   const lerp = (a: string, b: string) => interpolateColor(a, b, t)
 
+  // === STEP 1: Calculate blended backgrounds first (needed for contrast checks) ===
+  const blendedBgBase = lerp(from.bgBase, to.bgBase)
+  const blendedBgElevated = lerp(from.bgElevated, to.bgElevated)
+  const blendedCardBg = lerp(from.cardBg, to.cardBg)
+
+  // === STEP 2: Pick text colors with better contrast against blended backgrounds ===
+  // For text on main background
+  const textPrimary = pickBetterContrastText(from.textPrimary, to.textPrimary, blendedBgBase)
+  const textSecondary = pickBetterContrastText(from.textSecondary, to.textSecondary, blendedBgBase)
+  const textMuted = pickBetterContrastText(from.textMuted, to.textMuted, blendedBgBase)
+
+  // Navigation text needs good contrast against nav background
+  const blendedNavBg = lerp(from.navBg, to.navBg)
+  const navActive = pickBetterContrastText(from.navActive, to.navActive, blendedNavBg)
+  const navInactive = pickBetterContrastText(from.navInactive, to.navInactive, blendedNavBg)
+
+  // Calendar text on calendar background
+  const blendedCalendarDayBg = lerp(from.calendarDayBg, to.calendarDayBg)
+  const calendarDayText = pickBetterContrastText(from.calendarDayText, to.calendarDayText, blendedCalendarDayBg)
+
+  // === STEP 3: Pick more saturated accent colors (preserves vibrancy) ===
+  const accent = pickMoreSaturatedColor(from.accent, to.accent)
+  const accentHover = pickMoreSaturatedColor(from.accentHover, to.accentHover)
+  const seasonalAccent = pickMoreSaturatedColor(from.seasonalAccent, to.seasonalAccent)
+
+  // Progress and toggles should stay vibrant
+  const progressFill = pickMoreSaturatedColor(from.progressFill, to.progressFill)
+  const toggleOn = pickMoreSaturatedColor(from.toggleOn, to.toggleOn)
+  const pullIndicator = pickMoreSaturatedColor(from.pullIndicator, to.pullIndicator)
+
+  // Orb edge and glow should stay vibrant
+  const orbEdge = pickMoreSaturatedColor(from.orbEdge, to.orbEdge)
+
   return {
-    // Backgrounds
-    bgBase: lerp(from.bgBase, to.bgBase),
-    bgElevated: lerp(from.bgElevated, to.bgElevated),
+    // === STRUCTURAL TOKENS (blend smoothly) ===
+
+    // Backgrounds - these create the atmosphere, blend cinematically
+    bgBase: blendedBgBase,
+    bgElevated: blendedBgElevated,
     bgDeep: lerp(from.bgDeep, to.bgDeep),
     bgOverlay: lerp(from.bgOverlay, to.bgOverlay),
 
-    // Text
-    textPrimary: lerp(from.textPrimary, to.textPrimary),
-    textSecondary: lerp(from.textSecondary, to.textSecondary),
-    textMuted: lerp(from.textMuted, to.textMuted),
-    textOnAccent: lerp(from.textOnAccent, to.textOnAccent),
+    // === FUNCTIONAL TOKENS (preserve contrast/saturation) ===
 
-    // Accent
-    accent: lerp(from.accent, to.accent),
-    accentHover: lerp(from.accentHover, to.accentHover),
-    accentMuted: lerp(from.accentMuted, to.accentMuted),
+    // Text - picked for better contrast
+    textPrimary,
+    textSecondary,
+    textMuted,
+    textOnAccent: lerp(from.textOnAccent, to.textOnAccent), // Usually white, fine to lerp
+
+    // Accent - picked for better saturation
+    accent,
+    accentHover,
+    accentMuted: lerp(from.accentMuted, to.accentMuted), // Muted can blend
     accentGlow: lerp(from.accentGlow, to.accentGlow),
 
-    // Orb
+    // === VISUAL ELEMENTS (mix of structural and accent) ===
+
+    // Orb - core/mid blend, edge stays vibrant
     orbCore: lerp(from.orbCore, to.orbCore),
     orbMid: lerp(from.orbMid, to.orbMid),
-    orbEdge: lerp(from.orbEdge, to.orbEdge),
+    orbEdge,
     orbGlow: lerp(from.orbGlow, to.orbGlow),
     orbAtmosphere: lerp(from.orbAtmosphere, to.orbAtmosphere),
 
-    // Stones
+    // Stones - blend smoothly (they're small, less critical)
     stoneCompleted: lerp(from.stoneCompleted, to.stoneCompleted),
     stoneCompletedInner: lerp(from.stoneCompletedInner, to.stoneCompletedInner),
     stonePlanned: lerp(from.stonePlanned, to.stonePlanned),
@@ -2715,57 +2871,57 @@ export function interpolateThemes(from: ThemeTokens, to: ThemeTokens, t: number)
     stoneEmpty: lerp(from.stoneEmpty, to.stoneEmpty),
     stoneToday: lerp(from.stoneToday, to.stoneToday),
 
-    // Cards
-    cardBg: lerp(from.cardBg, to.cardBg),
+    // Cards - blend smoothly
+    cardBg: blendedCardBg,
     cardBorder: lerp(from.cardBorder, to.cardBorder),
     cardShadow: lerp(from.cardShadow, to.cardShadow),
 
     // Calendar
-    calendarDayBg: lerp(from.calendarDayBg, to.calendarDayBg),
-    calendarDayText: lerp(from.calendarDayText, to.calendarDayText),
+    calendarDayBg: blendedCalendarDayBg,
+    calendarDayText,
     calendarIntensity1: lerp(from.calendarIntensity1, to.calendarIntensity1),
     calendarIntensity2: lerp(from.calendarIntensity2, to.calendarIntensity2),
     calendarIntensity3: lerp(from.calendarIntensity3, to.calendarIntensity3),
     calendarIntensity4: lerp(from.calendarIntensity4, to.calendarIntensity4),
 
-    // Progress
+    // Progress - track blends, fill stays vibrant
     progressTrack: lerp(from.progressTrack, to.progressTrack),
-    progressFill: lerp(from.progressFill, to.progressFill),
+    progressFill,
     progressGlow: lerp(from.progressGlow, to.progressGlow),
 
-    // Interactive
-    buttonPrimaryBg: lerp(from.buttonPrimaryBg, to.buttonPrimaryBg),
+    // Interactive - primary stays vibrant, secondary blends
+    buttonPrimaryBg: pickMoreSaturatedColor(from.buttonPrimaryBg, to.buttonPrimaryBg),
     buttonPrimaryText: lerp(from.buttonPrimaryText, to.buttonPrimaryText),
     buttonSecondaryBg: lerp(from.buttonSecondaryBg, to.buttonSecondaryBg),
-    buttonSecondaryText: lerp(from.buttonSecondaryText, to.buttonSecondaryText),
-    toggleOn: lerp(from.toggleOn, to.toggleOn),
+    buttonSecondaryText: pickBetterContrastText(from.buttonSecondaryText, to.buttonSecondaryText, lerp(from.buttonSecondaryBg, to.buttonSecondaryBg)),
+    toggleOn,
     toggleOff: lerp(from.toggleOff, to.toggleOff),
     toggleThumb: lerp(from.toggleThumb, to.toggleThumb),
 
-    // Borders
+    // Borders - blend smoothly
     border: lerp(from.border, to.border),
     borderSubtle: lerp(from.borderSubtle, to.borderSubtle),
     divider: lerp(from.divider, to.divider),
 
-    // Shadows - interpolate the color part
+    // Shadows - structural, blend or snap
     shadowColor: lerp(from.shadowColor, to.shadowColor),
     shadowElevation1: t < 0.5 ? from.shadowElevation1 : to.shadowElevation1,
     shadowElevation2: t < 0.5 ? from.shadowElevation2 : to.shadowElevation2,
     shadowElevation3: t < 0.5 ? from.shadowElevation3 : to.shadowElevation3,
 
-    // Pearls
+    // Pearls - blend smoothly
     pearlBg: lerp(from.pearlBg, to.pearlBg),
     pearlShimmer: lerp(from.pearlShimmer, to.pearlShimmer),
     pearlOrb: lerp(from.pearlOrb, to.pearlOrb),
     pearlOrbInner: lerp(from.pearlOrbInner, to.pearlOrbInner),
 
-    // Navigation
-    navBg: lerp(from.navBg, to.navBg),
-    navActive: lerp(from.navActive, to.navActive),
-    navInactive: lerp(from.navInactive, to.navInactive),
-    pullIndicator: lerp(from.pullIndicator, to.pullIndicator),
+    // Navigation - bg blends, text picked for contrast
+    navBg: blendedNavBg,
+    navActive,
+    navInactive,
+    pullIndicator,
 
-    // Voice Badge
+    // Voice Badge - blend smoothly (these are badge backgrounds, less critical)
     voiceHighBg: lerp(from.voiceHighBg, to.voiceHighBg),
     voiceHighText: lerp(from.voiceHighText, to.voiceHighText),
     voiceHighDot: lerp(from.voiceHighDot, to.voiceHighDot),
@@ -2781,7 +2937,7 @@ export function interpolateThemes(from: ThemeTokens, to: ThemeTokens, t: number)
 
     // Meta - use destination values past 50%
     isDark: t < 0.5 ? from.isDark : to.isDark,
-    seasonalAccent: lerp(from.seasonalAccent, to.seasonalAccent)
+    seasonalAccent
   }
 }
 
