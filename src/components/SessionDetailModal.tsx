@@ -8,29 +8,10 @@ import { useState, useEffect, useCallback } from 'react'
 import { getIntentionGradient } from '../lib/animations'
 import { saveTemplate, unsaveTemplate, isTemplateSaved, addPlannedSession } from '../lib/db'
 import { getTemplateStats } from '../lib/templates'
+import { SessionTemplate } from '../lib/types'
 
-export interface SessionTemplate {
-  id: string
-  title: string
-  tagline: string
-  heroImageUrl?: string
-  durationGuidance: string
-  discipline: string
-  posture: string
-  bestTime: string
-  environment?: string
-  guidanceNotes: string
-  intention: string
-  recommendedAfterHours: number
-  tags?: string[]
-  intentTags?: string[]
-  karma: number
-  saves: number
-  completions: number
-  creatorHours: number
-  courseId?: string
-  coursePosition?: number
-}
+// Re-export for backward compatibility with existing imports
+export type { SessionTemplate } from '../lib/types'
 
 interface SessionDetailModalProps {
   session: SessionTemplate & { hasVoted?: boolean; hasSaved?: boolean }

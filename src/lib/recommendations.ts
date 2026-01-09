@@ -16,7 +16,7 @@
  */
 
 import { getAllSessions, getSavedTemplates, Session } from './db'
-import type { SessionTemplate } from '../components/SessionDetailModal'
+import type { SessionTemplate } from './types'
 import type { Pearl } from './pearls'
 
 // Import session data for matching

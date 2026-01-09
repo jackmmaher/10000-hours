@@ -5,7 +5,7 @@
  */
 
 import { supabase, isSupabaseConfigured } from './supabase'
-import { SessionTemplate } from '../components/SessionDetailModal'
+import { SessionTemplate } from './types'
 
 // Template input type (without computed fields)
 export interface TemplateInput {
