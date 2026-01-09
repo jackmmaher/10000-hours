@@ -86,16 +86,23 @@ export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
             <ComponentBar
               label="Contribution"
               score={voice.contribution}
-              max={25}
+              max={20}
               color="bg-bark"
               description="Sharing wisdom with the community"
             />
             <ComponentBar
-              label="Validation"
-              score={voice.validation}
-              max={45}
+              label="Validation Received"
+              score={voice.validationReceived}
+              max={25}
               color="bg-amber-500"
               description="Community recognition of your wisdom"
+            />
+            <ComponentBar
+              label="Validation Given"
+              score={voice.validationGiven}
+              max={25}
+              color="bg-indigo-deep/70"
+              description="Your engagement with community content"
             />
           </div>
 
@@ -124,7 +131,7 @@ export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
             </FactorSection>
 
             {/* Contribution factors */}
-            <FactorSection title="Contribution" subtitle="25% of score">
+            <FactorSection title="Contribution" subtitle="20% of score">
               <Factor
                 label="Pearls shared"
                 value={voice.factors.pearlsShared.value.toString()}
@@ -139,8 +146,8 @@ export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
               />
             </FactorSection>
 
-            {/* Validation factors */}
-            <FactorSection title="Validation" subtitle="45% of score">
+            {/* Validation Received factors */}
+            <FactorSection title="Validation Received" subtitle="25% of score">
               <Factor
                 label="Karma received"
                 value={voice.factors.karmaReceived.value.toString()}
@@ -148,16 +155,38 @@ export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
                 max={voice.factors.karmaReceived.max}
               />
               <Factor
-                label="Content saved"
+                label="Content saved by others"
                 value={voice.factors.contentSaved.value.toString()}
                 score={voice.factors.contentSaved.score}
                 max={voice.factors.contentSaved.max}
               />
               <Factor
-                label="Completions"
-                value={voice.factors.completions.value.toString()}
-                score={voice.factors.completions.score}
-                max={voice.factors.completions.max}
+                label="Your meditations completed"
+                value={voice.factors.completionsReceived.value.toString()}
+                score={voice.factors.completionsReceived.score}
+                max={voice.factors.completionsReceived.max}
+              />
+            </FactorSection>
+
+            {/* Validation Given factors */}
+            <FactorSection title="Validation Given" subtitle="25% of score">
+              <Factor
+                label="Karma given"
+                value={voice.factors.karmaGiven.value.toString()}
+                score={voice.factors.karmaGiven.score}
+                max={voice.factors.karmaGiven.max}
+              />
+              <Factor
+                label="Content you saved"
+                value={voice.factors.savesMade.value.toString()}
+                score={voice.factors.savesMade.score}
+                max={voice.factors.savesMade.max}
+              />
+              <Factor
+                label="Meditations completed"
+                value={voice.factors.completionsPerformed.value.toString()}
+                score={voice.factors.completionsPerformed.score}
+                max={voice.factors.completionsPerformed.max}
               />
             </FactorSection>
           </div>
@@ -165,10 +194,9 @@ export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
           {/* Explanation */}
           <div className="mt-6 p-4 bg-cream-deep rounded-xl">
             <p className="text-xs text-ink/50 leading-relaxed">
-              Voice measures meditation credibility across practice depth, community contribution,
-              and peer validation. It uses diminishing returns to reward genuine engagement over
-              gaming any single factor. High scores are earned through sustained, authentic practice
-              and wisdom that resonates with others.
+              Voice measures meditation credibility across practice depth, contribution, and
+              two-way validation. It rewards both sharing wisdom AND engaging with others' content.
+              High scores require giving to the community as much as receiving recognition.
             </p>
           </div>
         </div>

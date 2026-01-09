@@ -2,15 +2,16 @@
  * useVoice - Hook to calculate Voice score from local and remote data
  *
  * Gathers inputs from:
- * - Local IndexedDB: sessions, insights with shared pearls
- * - Supabase profile: karma received, saves received
- * - Supabase templates: meditations created, completions
+ * - Local IndexedDB: sessions (practice data)
+ * - Supabase profile: karma/saves received, karma/saves given, pearls created
+ * - Supabase templates: meditations created, completions received
+ *
+ * Two-way validation: rewards both giving AND receiving community engagement
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useAuthStore } from '../stores/useAuthStore'
-import { getInsights } from '../lib/db'
 import { getMyTemplates } from '../lib/templates'
 import { calculateVoice, VoiceScore, VoiceInputs } from '../lib/voice'
 import { updateVoiceScore } from '../lib/supabase'
@@ -58,12 +59,11 @@ export function useVoice(): UseVoiceResult {
       const sessionsPerWeekAvg = recentSessions.length / 4
 
       // ============================================
-      // CONTRIBUTION SIGNALS
+      // CONTRIBUTION SIGNALS (from Supabase)
       // ============================================
 
-      // Pearls shared (insights with sharedPearlId)
-      const allInsights = await getInsights()
-      const pearlsShared = allInsights.filter(i => i.sharedPearlId).length
+      // Pearls shared - now from Supabase profile (accurate, not stale local data)
+      const pearlsShared = profile?.pearlsCreated || 0
 
       // Meditations created (from Supabase if authenticated)
       let meditationsCreated = 0
@@ -81,12 +81,19 @@ export function useVoice(): UseVoiceResult {
       }
 
       // ============================================
-      // VALIDATION SIGNALS (from Supabase profile)
+      // VALIDATION RECEIVED (from Supabase profile)
       // ============================================
 
-      // Karma and saves from profile (or 0 if not authenticated)
       const karmaReceived = profile?.totalKarma || 0
       const contentSavedByOthers = profile?.totalSaves || 0
+
+      // ============================================
+      // VALIDATION GIVEN (from Supabase profile - two-way)
+      // ============================================
+
+      const karmaGiven = profile?.karmaGiven || 0
+      const savesMade = profile?.savesMade || 0
+      const completionsPerformed = profile?.completionsPerformed || 0
 
       // ============================================
       // BUILD INPUTS AND CALCULATE
@@ -101,7 +108,10 @@ export function useVoice(): UseVoiceResult {
         meditationsCreated,
         karmaReceived,
         contentSavedByOthers,
-        meditationCompletions
+        meditationCompletions,
+        karmaGiven,
+        savesMade,
+        completionsPerformed
       }
 
       const voiceScore = calculateVoice(voiceInputs)
@@ -153,7 +163,7 @@ export function useVoiceLocal(): VoiceScore | null {
   const recentSessions = sessions.filter(s => s.startTime >= fourWeeksAgo)
   const sessionsPerWeekAvg = recentSessions.length / 4
 
-  // Simplified inputs (without async data)
+  // Simplified inputs (without async data - practice only)
   const inputs: VoiceInputs = {
     totalHours,
     totalSessions: sessions.length,
@@ -163,7 +173,10 @@ export function useVoiceLocal(): VoiceScore | null {
     meditationsCreated: 0,
     karmaReceived: 0,
     contentSavedByOthers: 0,
-    meditationCompletions: 0
+    meditationCompletions: 0,
+    karmaGiven: 0,
+    savesMade: 0,
+    completionsPerformed: 0
   }
 
   return calculateVoice(inputs)

@@ -13,10 +13,10 @@
  */
 
 // ============================================
-// ALGORITHM FORMULA
+// ALGORITHM FORMULA (Two-Way Validation)
 // ============================================
 //
-// Voice = (Practice × 0.30) + (Contribution × 0.25) + (Validation × 0.45)
+// Voice = Practice(30%) + Contribution(20%) + Received(25%) + Given(25%)
 //
 // Where each component uses diminishing returns (log/sqrt scaling)
 // to prevent gaming any single factor.
@@ -25,22 +25,30 @@
 //   Measures depth and consistency of personal practice
 //   - Hours: log10(hours + 1) × 10 [caps around 40 at 10,000 hrs]
 //   - Depth: avg_session_minutes / 20 [20min = 1.0, 40min = 2.0]
-//   - Consistency: sessions_per_week_avg × 0.5 [daily = 3.5]
-//   Practice = (hours_score + depth_bonus + consistency_bonus) / 3
+//   - Consistency: sessions_per_week_avg × 1.5 [daily = 10.5]
+//   Practice = normalized to 0-30
 //
-// CONTRIBUTION COMPONENT (25%):
+// CONTRIBUTION COMPONENT (20%):
 //   Measures willingness to share wisdom with community
-//   - Pearls shared: sqrt(count) × 3
+//   - Pearls shared: sqrt(count) × 3 [from Supabase, not local]
 //   - Meditations created: sqrt(count) × 5 [harder, worth more]
-//   Contribution = min(pearls_score + meditations_score, 25)
+//   Contribution = normalized to 0-20
 //
-// VALIDATION COMPONENT (45%):
+// VALIDATION RECEIVED (25%):
 //   Measures how community receives your contributions
 //   This is the "PageRank" - others vouching for your wisdom
 //   - Karma received: sqrt(total_karma) × 2
-//   - Content saved: sqrt(saves) × 3 [saves = lasting value]
-//   - Meditation completions: sqrt(completions) × 1.5
-//   Validation = karma_score + saves_score + completions_score
+//   - Content saved by others: sqrt(saves) × 3
+//   - Your meditations completed: sqrt(completions) × 1.5
+//   ValidationReceived = normalized to 0-25
+//
+// VALIDATION GIVEN (25%):
+//   Measures your engagement with community content
+//   Rewards active participation and reciprocity
+//   - Karma given: sqrt(votes) × 2
+//   - Saves made: sqrt(saves) × 3
+//   - Meditations completed: sqrt(completions) × 2
+//   ValidationGiven = normalized to 0-25
 //
 // Final score is 0-100 scale for easy comprehension.
 // ============================================
@@ -56,10 +64,15 @@ export interface VoiceInputs {
   pearlsShared: number
   meditationsCreated: number
 
-  // Validation signals (PageRank - others vouch for you)
-  karmaReceived: number       // Total upvotes on your pearls
+  // Validation RECEIVED (others vouch for you)
+  karmaReceived: number       // Total upvotes on your content
   contentSavedByOthers: number // Your pearls + meditations saved
   meditationCompletions: number // Times others completed your meditations
+
+  // Validation GIVEN (you vouch for others - reciprocity)
+  karmaGiven: number          // Upvotes you've given to others
+  savesMade: number           // Content you've bookmarked
+  completionsPerformed: number // Meditations you've practiced
 }
 
 export interface VoiceScore {
@@ -67,19 +80,27 @@ export interface VoiceScore {
 
   // Component scores (for breakdown display)
   practice: number           // 0-30
-  contribution: number       // 0-25
-  validation: number         // 0-45
+  contribution: number       // 0-20
+  validationReceived: number // 0-25
+  validationGiven: number    // 0-25
 
   // Individual factors (for detailed breakdown)
   factors: {
+    // Practice
     hours: { value: number; score: number; max: number }
     depth: { value: number; score: number; max: number }
     consistency: { value: number; score: number; max: number }
+    // Contribution
     pearlsShared: { value: number; score: number; max: number }
     meditationsCreated: { value: number; score: number; max: number }
+    // Validation Received
     karmaReceived: { value: number; score: number; max: number }
     contentSaved: { value: number; score: number; max: number }
-    completions: { value: number; score: number; max: number }
+    completionsReceived: { value: number; score: number; max: number }
+    // Validation Given
+    karmaGiven: { value: number; score: number; max: number }
+    savesMade: { value: number; score: number; max: number }
+    completionsPerformed: { value: number; score: number; max: number }
   }
 }
 
@@ -106,7 +127,7 @@ export function calculateVoice(inputs: VoiceInputs): VoiceScore {
   const depthMax = 20
 
   // Consistency: regularity of practice
-  // Daily practice (7/week) = 3.5 × 3 = 10.5, cap at 15
+  // Daily practice (7/week) = 10.5, cap at 15
   const consistencyRaw = inputs.sessionsPerWeekAvg * 1.5
   const consistencyScore = Math.min(consistencyRaw, 15)
   const consistencyMax = 15
@@ -117,64 +138,89 @@ export function calculateVoice(inputs: VoiceInputs): VoiceScore {
   const practice = (practiceTotal / practiceMax) * 30
 
   // ============================================
-  // CONTRIBUTION COMPONENT (25% max)
+  // CONTRIBUTION COMPONENT (20% max)
   // ============================================
 
   // Pearls shared: sqrt scaling rewards early shares, diminishes later
-  // sqrt(1) = 1, sqrt(4) = 2, sqrt(9) = 3, sqrt(25) = 5, sqrt(100) = 10
+  // Now uses actual Supabase count, not stale local data
   const pearlsRaw = Math.sqrt(inputs.pearlsShared) * 3
-  const pearlsScore = Math.min(pearlsRaw, 15)
-  const pearlsMax = 15
+  const pearlsScore = Math.min(pearlsRaw, 12)
+  const pearlsMax = 12
 
   // Meditations created: harder to do, worth more
-  // sqrt(1) = 1, sqrt(4) = 2, sqrt(9) = 3
   const meditationsRaw = Math.sqrt(inputs.meditationsCreated) * 5
-  const meditationsScore = Math.min(meditationsRaw, 15)
-  const meditationsMax = 15
+  const meditationsScore = Math.min(meditationsRaw, 12)
+  const meditationsMax = 12
 
-  // Combine contribution factors (normalize to 0-25)
+  // Combine contribution factors (normalize to 0-20)
   const contributionTotal = pearlsScore + meditationsScore
-  const contributionMax = pearlsMax + meditationsMax // 30
-  const contribution = (contributionTotal / contributionMax) * 25
+  const contributionMax = pearlsMax + meditationsMax // 24
+  const contribution = (contributionTotal / contributionMax) * 20
 
   // ============================================
-  // VALIDATION COMPONENT (45% max)
-  // This is the "PageRank" - community vouches for quality
+  // VALIDATION RECEIVED (25% max)
+  // Others vouching for your wisdom
   // ============================================
 
-  // Karma received: community upvotes on your wisdom
-  // sqrt(10) = 3.2, sqrt(100) = 10, sqrt(1000) = 31.6
-  const karmaRaw = Math.sqrt(inputs.karmaReceived) * 2
-  const karmaScore = Math.min(karmaRaw, 25)
-  const karmaMax = 25
+  // Karma received: community upvotes on your content
+  const karmaReceivedRaw = Math.sqrt(inputs.karmaReceived) * 2
+  const karmaReceivedScore = Math.min(karmaReceivedRaw, 20)
+  const karmaReceivedMax = 20
 
   // Content saved by others: lasting value indicator
-  // Someone bookmarking your content = strong signal
-  const savesRaw = Math.sqrt(inputs.contentSavedByOthers) * 3
-  const savesScore = Math.min(savesRaw, 20)
-  const savesMax = 20
+  const contentSavedRaw = Math.sqrt(inputs.contentSavedByOthers) * 3
+  const contentSavedScore = Math.min(contentSavedRaw, 15)
+  const contentSavedMax = 15
 
-  // Meditation completions: your teachings helped others practice
-  const completionsRaw = Math.sqrt(inputs.meditationCompletions) * 1.5
-  const completionsScore = Math.min(completionsRaw, 15)
-  const completionsMax = 15
+  // Your meditations completed by others
+  const completionsReceivedRaw = Math.sqrt(inputs.meditationCompletions) * 1.5
+  const completionsReceivedScore = Math.min(completionsReceivedRaw, 12)
+  const completionsReceivedMax = 12
 
-  // Combine validation factors (normalize to 0-45)
-  const validationTotal = karmaScore + savesScore + completionsScore
-  const validationMax = karmaMax + savesMax + completionsMax // 60
-  const validation = (validationTotal / validationMax) * 45
+  // Combine received factors (normalize to 0-25)
+  const receivedTotal = karmaReceivedScore + contentSavedScore + completionsReceivedScore
+  const receivedMax = karmaReceivedMax + contentSavedMax + completionsReceivedMax // 47
+  const validationReceived = (receivedTotal / receivedMax) * 25
+
+  // ============================================
+  // VALIDATION GIVEN (25% max)
+  // You engaging with community content - reciprocity
+  // ============================================
+
+  // Karma given: upvotes you've given to others
+  const karmaGivenRaw = Math.sqrt(inputs.karmaGiven) * 2
+  const karmaGivenScore = Math.min(karmaGivenRaw, 15)
+  const karmaGivenMax = 15
+
+  // Saves made: content you've bookmarked
+  const savesMadeRaw = Math.sqrt(inputs.savesMade) * 3
+  const savesMadeScore = Math.min(savesMadeRaw, 15)
+  const savesMadeMax = 15
+
+  // Completions performed: meditations you've practiced
+  // Higher weight - actually practicing is more meaningful than just saving
+  const completionsPerformedRaw = Math.sqrt(inputs.completionsPerformed) * 2.5
+  const completionsPerformedScore = Math.min(completionsPerformedRaw, 18)
+  const completionsPerformedMax = 18
+
+  // Combine given factors (normalize to 0-25)
+  const givenTotal = karmaGivenScore + savesMadeScore + completionsPerformedScore
+  const givenMax = karmaGivenMax + savesMadeMax + completionsPerformedMax // 48
+  const validationGiven = (givenTotal / givenMax) * 25
 
   // ============================================
   // FINAL COMPOSITE SCORE
   // ============================================
-  const total = Math.round(practice + contribution + validation)
+  const total = Math.round(practice + contribution + validationReceived + validationGiven)
 
   return {
     total: Math.min(total, 100),
     practice: Math.round(practice * 10) / 10,
     contribution: Math.round(contribution * 10) / 10,
-    validation: Math.round(validation * 10) / 10,
+    validationReceived: Math.round(validationReceived * 10) / 10,
+    validationGiven: Math.round(validationGiven * 10) / 10,
     factors: {
+      // Practice
       hours: {
         value: inputs.totalHours,
         score: Math.round(hoursScore * 10) / 10,
@@ -190,6 +236,7 @@ export function calculateVoice(inputs: VoiceInputs): VoiceScore {
         score: Math.round(consistencyScore * 10) / 10,
         max: consistencyMax
       },
+      // Contribution
       pearlsShared: {
         value: inputs.pearlsShared,
         score: Math.round(pearlsScore * 10) / 10,
@@ -200,20 +247,37 @@ export function calculateVoice(inputs: VoiceInputs): VoiceScore {
         score: Math.round(meditationsScore * 10) / 10,
         max: meditationsMax
       },
+      // Validation Received
       karmaReceived: {
         value: inputs.karmaReceived,
-        score: Math.round(karmaScore * 10) / 10,
-        max: karmaMax
+        score: Math.round(karmaReceivedScore * 10) / 10,
+        max: karmaReceivedMax
       },
       contentSaved: {
         value: inputs.contentSavedByOthers,
-        score: Math.round(savesScore * 10) / 10,
-        max: savesMax
+        score: Math.round(contentSavedScore * 10) / 10,
+        max: contentSavedMax
       },
-      completions: {
+      completionsReceived: {
         value: inputs.meditationCompletions,
-        score: Math.round(completionsScore * 10) / 10,
-        max: completionsMax
+        score: Math.round(completionsReceivedScore * 10) / 10,
+        max: completionsReceivedMax
+      },
+      // Validation Given
+      karmaGiven: {
+        value: inputs.karmaGiven,
+        score: Math.round(karmaGivenScore * 10) / 10,
+        max: karmaGivenMax
+      },
+      savesMade: {
+        value: inputs.savesMade,
+        score: Math.round(savesMadeScore * 10) / 10,
+        max: savesMadeMax
+      },
+      completionsPerformed: {
+        value: inputs.completionsPerformed,
+        score: Math.round(completionsPerformedScore * 10) / 10,
+        max: completionsPerformedMax
       }
     }
   }

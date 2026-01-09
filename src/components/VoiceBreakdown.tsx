@@ -32,8 +32,9 @@ export function VoiceBreakdown({ inputs }: VoiceBreakdownProps) {
   // Find lowest-scoring component for suggestion
   const components = [
     { name: 'practice', score: voice.practice, max: 30, label: 'Practice Depth' },
-    { name: 'contribution', score: voice.contribution, max: 25, label: 'Contribution' },
-    { name: 'validation', score: voice.validation, max: 45, label: 'Community Validation' }
+    { name: 'contribution', score: voice.contribution, max: 20, label: 'Contribution' },
+    { name: 'validationReceived', score: voice.validationReceived, max: 25, label: 'Validation Received' },
+    { name: 'validationGiven', score: voice.validationGiven, max: 25, label: 'Validation Given' }
   ]
   const lowestComponent = components.reduce((a, b) =>
     (a.score / a.max) < (b.score / b.max) ? a : b
@@ -70,21 +71,28 @@ export function VoiceBreakdown({ inputs }: VoiceBreakdownProps) {
           sublabel="Hours, session length, consistency"
           score={voice.practice}
           max={30}
-          color="bg-indigo-deep/60"
+          color="bg-moss/60"
         />
         <ComponentBar
           label="Contribution"
           sublabel="Pearls shared, meditations created"
           score={voice.contribution}
-          max={25}
-          color="bg-moss/60"
+          max={20}
+          color="bg-bark/60"
         />
         <ComponentBar
-          label="Community Validation"
+          label="Validation Received"
           sublabel="Karma, saves, completions by others"
-          score={voice.validation}
-          max={45}
+          score={voice.validationReceived}
+          max={25}
           color="bg-amber-600/60"
+        />
+        <ComponentBar
+          label="Validation Given"
+          sublabel="Your upvotes, saves, completions"
+          score={voice.validationGiven}
+          max={25}
+          color="bg-indigo-deep/60"
         />
       </div>
 
@@ -104,6 +112,8 @@ export function VoiceBreakdown({ inputs }: VoiceBreakdownProps) {
           View detailed breakdown
         </summary>
         <div className="mt-4 space-y-3 pt-4 border-t border-ink/5">
+          {/* Practice */}
+          <p className="text-xs text-ink/30 font-medium">Practice</p>
           <FactorRow
             label="Hours meditated"
             value={`${voice.factors.hours.value.toLocaleString()} hrs`}
@@ -112,7 +122,7 @@ export function VoiceBreakdown({ inputs }: VoiceBreakdownProps) {
           />
           <FactorRow
             label="Average session"
-            value={`${voice.factors.depth.value} min`}
+            value={`${Math.round(voice.factors.depth.value)} min`}
             score={voice.factors.depth.score}
             max={voice.factors.depth.max}
           />
@@ -122,7 +132,9 @@ export function VoiceBreakdown({ inputs }: VoiceBreakdownProps) {
             score={voice.factors.consistency.score}
             max={voice.factors.consistency.max}
           />
+          {/* Contribution */}
           <div className="h-2" />
+          <p className="text-xs text-ink/30 font-medium">Contribution</p>
           <FactorRow
             label="Pearls shared"
             value={voice.factors.pearlsShared.value.toString()}
@@ -135,7 +147,9 @@ export function VoiceBreakdown({ inputs }: VoiceBreakdownProps) {
             score={voice.factors.meditationsCreated.score}
             max={voice.factors.meditationsCreated.max}
           />
+          {/* Validation Received */}
           <div className="h-2" />
+          <p className="text-xs text-ink/30 font-medium">Validation Received</p>
           <FactorRow
             label="Karma received"
             value={voice.factors.karmaReceived.value.toLocaleString()}
@@ -149,19 +163,40 @@ export function VoiceBreakdown({ inputs }: VoiceBreakdownProps) {
             max={voice.factors.contentSaved.max}
           />
           <FactorRow
-            label="Meditation completions"
-            value={voice.factors.completions.value.toString()}
-            score={voice.factors.completions.score}
-            max={voice.factors.completions.max}
+            label="Your meditations completed"
+            value={voice.factors.completionsReceived.value.toString()}
+            score={voice.factors.completionsReceived.score}
+            max={voice.factors.completionsReceived.max}
+          />
+          {/* Validation Given */}
+          <div className="h-2" />
+          <p className="text-xs text-ink/30 font-medium">Validation Given</p>
+          <FactorRow
+            label="Karma given"
+            value={voice.factors.karmaGiven.value.toLocaleString()}
+            score={voice.factors.karmaGiven.score}
+            max={voice.factors.karmaGiven.max}
+          />
+          <FactorRow
+            label="Content you saved"
+            value={voice.factors.savesMade.value.toString()}
+            score={voice.factors.savesMade.score}
+            max={voice.factors.savesMade.max}
+          />
+          <FactorRow
+            label="Meditations completed"
+            value={voice.factors.completionsPerformed.value.toString()}
+            score={voice.factors.completionsPerformed.score}
+            max={voice.factors.completionsPerformed.max}
           />
         </div>
       </details>
 
       {/* Philosophy note */}
       <p className="mt-6 text-xs text-ink/30 italic text-center">
-        Voice rewards the full picture: practice, contribution, and community validation.
+        Voice rewards giving as much as receiving.
         <br />
-        Hours alone won't max your score. Wisdom that resonates will.
+        Support others' practice, and let your wisdom resonate.
       </p>
     </div>
   )
@@ -263,17 +298,29 @@ function getSuggestion(component: string, voice: VoiceScore): string {
       }
       return "You're contributing to the community. Each pearl or meditation you share helps others on their journey."
 
-    case 'validation':
+    case 'validationReceived':
       if (voice.factors.karmaReceived.score < 5) {
-        return "Community validation comes with time. Keep sharing authentic insights - wisdom that resonates will find its audience."
+        return "Community recognition comes with time. Keep sharing authentic insights - wisdom that resonates will find its audience."
       }
       if (voice.factors.contentSaved.score < 5) {
         return "When your content gets saved, it means lasting value. Focus on insights that others might return to."
       }
       return "Your contributions are resonating. The community is beginning to recognize your voice."
 
+    case 'validationGiven':
+      if (voice.factors.karmaGiven.score < 5) {
+        return "Explore the community feed and upvote content that resonates. Supporting others strengthens the whole community."
+      }
+      if (voice.factors.savesMade.score < 5) {
+        return "Save pearls and meditations that speak to you. Building your collection also supports the creators."
+      }
+      if (voice.factors.completionsPerformed.score < 5) {
+        return "Try practicing with community meditations. Plan one from your saved collection and complete it to deepen your engagement."
+      }
+      return "You're actively engaging with the community. Keep supporting others' practice alongside your own."
+
     default:
-      return "Keep practicing, contributing, and letting your wisdom find its audience. Voice grows organically."
+      return "Keep practicing, contributing, and engaging with the community. Voice grows through reciprocity."
   }
 }
 

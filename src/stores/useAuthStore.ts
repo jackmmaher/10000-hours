@@ -12,8 +12,16 @@ import type { User, Session } from '@supabase/supabase-js'
 export interface UserProfile {
   id: string
   tier: 'free' | 'premium'
+  // Validation received
   totalKarma: number
   totalSaves: number
+  // Validation given (two-way)
+  karmaGiven: number
+  savesMade: number
+  completionsPerformed: number
+  // Contribution
+  pearlsCreated: number
+  // Metadata
   createdAt: string
 }
 
@@ -73,8 +81,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           profile: profile ? {
             id: profile.id,
             tier: profile.tier,
-            totalKarma: profile.total_karma,
-            totalSaves: profile.total_saves,
+            totalKarma: profile.total_karma || 0,
+            totalSaves: profile.total_saves || 0,
+            karmaGiven: profile.karma_given || 0,
+            savesMade: profile.saves_made || 0,
+            completionsPerformed: profile.completions_performed || 0,
+            pearlsCreated: profile.pearls_created || 0,
             createdAt: profile.created_at
           } : null,
           isAuthenticated: true,
@@ -99,8 +111,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             profile: profile ? {
               id: profile.id,
               tier: profile.tier,
-              totalKarma: profile.total_karma,
-              totalSaves: profile.total_saves,
+              totalKarma: profile.total_karma || 0,
+              totalSaves: profile.total_saves || 0,
+              karmaGiven: profile.karma_given || 0,
+              savesMade: profile.saves_made || 0,
+              completionsPerformed: profile.completions_performed || 0,
+              pearlsCreated: profile.pearls_created || 0,
               createdAt: profile.created_at
             } : null,
             isAuthenticated: true
@@ -213,8 +229,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           profile: {
             id: profile.id,
             tier: profile.tier,
-            totalKarma: profile.total_karma,
-            totalSaves: profile.total_saves,
+            totalKarma: profile.total_karma || 0,
+            totalSaves: profile.total_saves || 0,
+            karmaGiven: profile.karma_given || 0,
+            savesMade: profile.saves_made || 0,
+            completionsPerformed: profile.completions_performed || 0,
+            pearlsCreated: profile.pearls_created || 0,
             createdAt: profile.created_at
           }
         })
