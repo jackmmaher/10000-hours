@@ -159,7 +159,7 @@ export function InsightCard({ sessions }: InsightCardProps) {
   if (!insight) return null
 
   return (
-    <div className="mb-8 bg-cream-deep rounded-xl p-5 relative overflow-hidden">
+    <div className="mb-8 bg-card/90 backdrop-blur-md border border-ink/5 shadow-sm rounded-xl p-5 relative overflow-hidden">
       {/* Subtle decorative element - uses accent color from Living Theme */}
       <div
         className="absolute -top-4 -right-4 w-16 h-16 rounded-full opacity-20"

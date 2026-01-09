@@ -18,6 +18,7 @@ import { useNavigationStore } from '../stores/useNavigationStore'
 import { useSwipe } from '../hooks/useSwipe'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import { useVoice } from '../hooks/useVoice'
+import { useTapFeedback } from '../hooks/useTapFeedback'
 import { formatTotalHours } from '../lib/format'
 import {
   getAllPlannedSessions,
@@ -51,6 +52,7 @@ export function Progress() {
   const { sessions, totalSeconds } = useSessionStore()
   const { setView } = useNavigationStore()
   const { voice } = useVoice()
+  const haptic = useTapFeedback()
 
   // Load additional data from IndexedDB
   const [plannedSessions, setPlannedSessions] = useState<PlannedSession[]>([])
@@ -188,9 +190,12 @@ export function Progress() {
       <div className="px-6 py-8 max-w-lg mx-auto">
         {/* Back to timer */}
         <button
-          onClick={() => setView('timer')}
+          onClick={() => {
+            haptic.light()
+            setView('timer')
+          }}
           aria-label="Return to timer"
-          className="flex items-center text-sm text-ink/40 mb-8 hover:text-ink/60 transition-colors active:scale-[0.98]"
+          className="flex items-center text-sm text-ink/40 mb-8 hover:text-ink/60 transition-colors active:scale-[0.98] touch-manipulation"
         >
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
@@ -209,11 +214,16 @@ export function Progress() {
             {sessionCount} session{sessionCount !== 1 ? 's' : ''}
           </p>
 
-          {/* Voice score display - clickable CTA */}
+          {/* Voice score display - glassmorphic CTA */}
           {voice && (
             <button
-              onClick={() => setShowVoiceModal(true)}
-              className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cream-deep hover:bg-cream-warm transition-colors active:scale-[0.98]"
+              onClick={() => {
+                haptic.light()
+                setShowVoiceModal(true)
+              }}
+              className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full
+                bg-card/60 backdrop-blur-sm border border-ink/5
+                hover:bg-card/80 transition-all active:scale-[0.98] touch-manipulation"
             >
               <VoiceBadge score={voice.total} showScore />
               <span className="text-xs text-ink/40">Voice</span>

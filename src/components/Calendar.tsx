@@ -8,6 +8,7 @@ import { useMemo, useState, useEffect } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useNavigationStore } from '../stores/useNavigationStore'
 import { useSwipe } from '../hooks/useSwipe'
+import { useTapFeedback } from '../hooks/useTapFeedback'
 import {
   getMonthlyData,
   getSessionDatesForMonth,
@@ -38,6 +39,7 @@ interface CalendarProps {
 export function Calendar({ embedded = false, onDateClick, refreshKey, onEditSession }: CalendarProps) {
   const { sessions } = useSessionStore()
   const { setView } = useNavigationStore()
+  const haptic = useTapFeedback()
 
   const today = new Date()
   const [viewType, setViewType] = useState<CalendarView>('month')
@@ -351,6 +353,7 @@ export function Calendar({ embedded = false, onDateClick, refreshKey, onEditSess
                 const isSelectedDate = isSelected(day)
 
                 const handleDayClick = () => {
+                  haptic.light()
                   const clickedDate = new Date(currentYear, currentMonth, day)
                   clickedDate.setHours(0, 0, 0, 0)
                   if (embedded && onDateClick) {

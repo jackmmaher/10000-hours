@@ -63,7 +63,7 @@ export function JourneyNextSession({
           Your Next Moment
         </p>
 
-        <div className="bg-cream-deep rounded-2xl p-5 relative overflow-hidden">
+        <div className="bg-card/90 backdrop-blur-md border border-ink/5 shadow-sm rounded-2xl p-5 relative overflow-hidden">
           {/* Subtle orb glow in corner */}
           <div
             className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-30 animate-breathe"
@@ -128,7 +128,8 @@ export function JourneyNextSession({
 
       <button
         onClick={onPlanClick}
-        className="w-full bg-cream-deep rounded-2xl p-5 text-left hover:bg-cream-deep/80 transition-colors group"
+        className="w-full bg-card/90 backdrop-blur-md border border-ink/5 shadow-sm rounded-2xl p-5 text-left
+          hover:bg-card/95 hover:shadow-md transition-all active:scale-[0.99] group touch-manipulation"
       >
         <div className="flex items-center gap-4">
           {/* Soft orb indicator */}
@@ -158,13 +159,19 @@ export function JourneyNextSession({
         </div>
       </button>
 
-      {/* Quick start option */}
+      {/* Quick start option - elevated secondary CTA */}
       <div className="text-center mt-4">
         <button
           onClick={() => setView('timer')}
-          className="text-sm text-moss hover:text-moss/80 transition-colors"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full
+            bg-card/60 backdrop-blur-sm border border-ink/5
+            text-sm text-moss hover:bg-card/80 hover:text-moss/90
+            transition-all active:scale-[0.98] touch-manipulation"
         >
-          Or just begin now →
+          Or just begin now
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+          </svg>
         </button>
       </div>
     </div>

@@ -14,6 +14,7 @@ import { getAdaptiveMilestone } from '../lib/calculations'
 import { formatShortDate } from '../lib/format'
 import { MilestoneSummary } from './MilestoneSummary'
 import { MilestoneProgress } from './MilestoneProgress'
+import { useTapFeedback } from '../hooks/useTapFeedback'
 
 // Format milestone label (e.g., "2h", "5h", "1k")
 function formatMilestoneLabel(hours: number): string {
@@ -29,6 +30,7 @@ export function AchievementGallery() {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null)
   const [showCurrentProgress, setShowCurrentProgress] = useState(false)
+  const haptic = useTapFeedback()
 
   // Load achievements from database
   useEffect(() => {
@@ -76,8 +78,11 @@ export function AchievementGallery() {
         {displayMilestones.achieved.map((achievement) => (
           <button
             key={achievement.hours}
-            onClick={() => setSelectedAchievement(achievement)}
-            className="flex flex-col items-center min-w-[48px] active:scale-95 transition-transform"
+            onClick={() => {
+              haptic.light()
+              setSelectedAchievement(achievement)
+            }}
+            className="flex flex-col items-center min-w-[48px] active:scale-95 transition-transform touch-manipulation"
           >
             {/* Badge */}
             <div className="w-10 h-10 rounded-full bg-indigo-deep flex items-center justify-center mb-1 hover:bg-indigo-deep/90 transition-colors">
@@ -96,8 +101,11 @@ export function AchievementGallery() {
         {/* Next milestone (in progress) - clickable */}
         {displayMilestones.nextMilestone && (
           <button
-            onClick={() => setShowCurrentProgress(true)}
-            className="flex flex-col items-center min-w-[48px] active:scale-95 transition-transform"
+            onClick={() => {
+              haptic.light()
+              setShowCurrentProgress(true)
+            }}
+            className="flex flex-col items-center min-w-[48px] active:scale-95 transition-transform touch-manipulation"
           >
             {/* Progress ring */}
             <div className="relative w-10 h-10 mb-1">

@@ -9,6 +9,7 @@
 
 import { SuggestedAction } from '../lib/progressInsights'
 import { useNavigationStore } from '../stores/useNavigationStore'
+import { useTapFeedback } from '../hooks/useTapFeedback'
 
 interface SuggestedActionsProps {
   actions: SuggestedAction[]
@@ -16,12 +17,14 @@ interface SuggestedActionsProps {
 
 export function SuggestedActions({ actions }: SuggestedActionsProps) {
   const { setView } = useNavigationStore()
+  const haptic = useTapFeedback()
 
   if (actions.length === 0) {
     return null
   }
 
   const handleActionClick = (action: SuggestedAction) => {
+    haptic.light()
     if (action.actionView) {
       setView(action.actionView)
     }
@@ -92,7 +95,8 @@ function ActionCard({
     return (
       <button
         onClick={onClick}
-        className="w-full text-left bg-cream-deep hover:bg-cream-warm rounded-xl p-4 transition-colors active:scale-[0.99]"
+        className="w-full text-left bg-card/90 backdrop-blur-md border border-ink/5 shadow-sm
+          rounded-xl p-4 hover:bg-card/95 hover:shadow-md transition-all active:scale-[0.99] touch-manipulation"
       >
         {content}
       </button>
@@ -100,7 +104,7 @@ function ActionCard({
   }
 
   return (
-    <div className="bg-cream-deep rounded-xl p-4">
+    <div className="bg-card/60 backdrop-blur-sm border border-ink/5 rounded-xl p-4">
       {content}
     </div>
   )

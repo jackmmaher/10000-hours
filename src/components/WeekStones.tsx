@@ -16,6 +16,7 @@
 
 import { useMemo } from 'react'
 import { DayStatus } from '../lib/calculations'
+import { useTapFeedback } from '../hooks/useTapFeedback'
 
 const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
@@ -148,6 +149,8 @@ export function WeekStonesRow({
   showLabels = true,
   size = 'sm'
 }: WeekStonesRowProps) {
+  const haptic = useTapFeedback()
+
   // Calculate dates for each day (Monday-based week)
   const dayDates = useMemo(() => {
     const today = new Date()
@@ -165,6 +168,7 @@ export function WeekStonesRow({
   }, [])
 
   const handleDayClick = (index: number) => {
+    haptic.light()
     if (onDayClick) {
       onDayClick(index, dayDates[index])
     }
@@ -176,7 +180,7 @@ export function WeekStonesRow({
         <button
           key={i}
           onClick={() => handleDayClick(i)}
-          className="flex flex-col items-center gap-2 cursor-pointer active:scale-90 transition-transform"
+          className="flex flex-col items-center gap-2 cursor-pointer active:scale-90 transition-transform touch-manipulation"
         >
           <WeekStone
             status={status}

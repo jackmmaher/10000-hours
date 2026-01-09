@@ -10,6 +10,7 @@
 
 import { CommitmentStats } from '../lib/progressInsights'
 import { useNavigationStore } from '../stores/useNavigationStore'
+import { useTapFeedback } from '../hooks/useTapFeedback'
 
 interface CommitmentCardProps {
   stats: CommitmentStats
@@ -18,6 +19,7 @@ interface CommitmentCardProps {
 
 export function CommitmentCard({ stats, totalSessions }: CommitmentCardProps) {
   const { setView } = useNavigationStore()
+  const haptic = useTapFeedback()
 
   // If user has sessions but no plans, invite them to try planning
   if (stats.plansCreated === 0 && totalSessions >= 3) {
@@ -28,8 +30,12 @@ export function CommitmentCard({ stats, totalSessions }: CommitmentCardProps) {
         </p>
 
         <button
-          onClick={() => setView('journey')}
-          className="w-full text-left bg-cream-deep hover:bg-cream-warm rounded-xl p-5 transition-colors active:scale-[0.99]"
+          onClick={() => {
+            haptic.light()
+            setView('journey')
+          }}
+          className="w-full text-left bg-card/90 backdrop-blur-md border border-ink/5 shadow-sm
+            rounded-xl p-5 hover:bg-card/95 hover:shadow-md transition-all active:scale-[0.99] touch-manipulation"
         >
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 rounded-full bg-cream flex items-center justify-center flex-shrink-0">
