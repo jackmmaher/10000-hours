@@ -16,6 +16,7 @@ import { useAuthStore } from '../stores/useAuthStore'
 import { usePremiumStore } from '../stores/usePremiumStore'
 import { useThemeInfo } from '../hooks/useTheme'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
+import { useTapFeedback } from '../hooks/useTapFeedback'
 import { trackHideTimeToggle } from '../lib/analytics'
 import { SeasonOverride, TimeOverride } from '../lib/db'
 import { getThemeName } from '../lib/themeEngine'
@@ -63,6 +64,7 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
   const { user, isAuthenticated, signOut, isLoading: authLoading, refreshProfile } = useAuthStore()
   const { tier, isPremium } = usePremiumStore()
   const { timeOfDay, season } = useThemeInfo()
+  const haptic = useTapFeedback()
   const [showThemeDetail, setShowThemeDetail] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
 
@@ -123,8 +125,11 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
       <div className="px-6 py-8 max-w-lg mx-auto flex-1">
         {/* Header */}
         <button
-          onClick={onBack}
-          className="flex items-center text-sm text-ink/40 mb-10 hover:text-ink/60 transition-colors active:scale-[0.98]"
+          onClick={() => {
+            haptic.light()
+            onBack()
+          }}
+          className="flex items-center text-sm text-ink/40 mb-10 hover:text-ink/60 transition-colors active:scale-[0.98] touch-manipulation"
           aria-label="Go back to profile"
         >
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,8 +143,12 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
         {/* Tier Status Banner */}
         {tier === 'free' && (
           <button
-            onClick={onShowPaywall}
-            className="w-full mb-8 p-5 bg-cream-warm rounded-xl text-left hover:bg-cream-deep transition-colors active:scale-[0.99]"
+            onClick={() => {
+              haptic.light()
+              onShowPaywall()
+            }}
+            className="w-full mb-8 p-5 bg-card/90 backdrop-blur-md border border-ink/5 shadow-sm
+              rounded-xl text-left hover:bg-card/95 hover:shadow-md transition-all active:scale-[0.99] touch-manipulation"
           >
             <p className="font-serif text-xs text-ink/40 tracking-wide mb-2">
               Your Plan
@@ -168,8 +177,11 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
 
           {/* Hide Time Display - with custom organic toggle */}
           <button
-            onClick={handleHideTimeToggle}
-            className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform"
+            onClick={() => {
+              haptic.light()
+              handleHideTimeToggle()
+            }}
+            className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform touch-manipulation"
           >
             <div className="text-left">
               <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Hide time display</p>
@@ -195,8 +207,11 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
 
           {/* Skip Insight Capture */}
           <button
-            onClick={() => setSkipInsightCapture(!skipInsightCapture)}
-            className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform"
+            onClick={() => {
+              haptic.light()
+              setSkipInsightCapture(!skipInsightCapture)
+            }}
+            className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform touch-manipulation"
           >
             <div className="text-left">
               <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Skip insight capture</p>
@@ -222,8 +237,11 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
 
           {/* Visual Effects - Calm vs Expressive */}
           <button
-            onClick={() => setVisualEffects(visualEffects === 'calm' ? 'expressive' : 'calm')}
-            className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform"
+            onClick={() => {
+              haptic.light()
+              setVisualEffects(visualEffects === 'calm' ? 'expressive' : 'calm')
+            }}
+            className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform touch-manipulation"
           >
             <div className="text-left">
               <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Visual effects</p>
@@ -256,8 +274,11 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
 
           {/* Auto/Manual Toggle */}
           <button
-            onClick={() => setThemeMode(themeMode === 'auto' ? 'manual' : 'auto')}
-            className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform"
+            onClick={() => {
+              haptic.light()
+              setThemeMode(themeMode === 'auto' ? 'manual' : 'auto')
+            }}
+            className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform touch-manipulation"
           >
             <div className="text-left">
               <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Living theme</p>
@@ -285,8 +306,11 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
 
           {/* Expandable section header */}
           <button
-            onClick={() => setShowThemeDetail(!showThemeDetail)}
-            className="w-full flex items-center justify-between py-4"
+            onClick={() => {
+              haptic.light()
+              setShowThemeDetail(!showThemeDetail)
+            }}
+            className="w-full flex items-center justify-between py-4 touch-manipulation"
           >
             <div className="text-left">
               <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Personalize</p>
@@ -318,9 +342,12 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
                     return (
                       <button
                         key={preset.label}
-                        onClick={() => setManualTheme(preset.season, preset.time)}
+                        onClick={() => {
+                          haptic.light()
+                          setManualTheme(preset.season, preset.time)
+                        }}
                         className={`
-                          p-3 rounded-xl text-left transition-all duration-200
+                          p-3 rounded-xl text-left transition-all duration-200 touch-manipulation active:scale-[0.97]
                           ${isActive
                             ? 'bg-moss text-cream'
                             : 'bg-cream-warm text-ink hover:bg-cream-deep'
@@ -345,9 +372,12 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
                     return (
                       <button
                         key={option.value}
-                        onClick={() => setManualTheme(option.value, manualTime)}
+                        onClick={() => {
+                          haptic.light()
+                          setManualTheme(option.value, manualTime)
+                        }}
                         className={`
-                          flex-1 py-2.5 px-1 rounded-xl text-center transition-all duration-200
+                          flex-1 py-2.5 px-1 rounded-xl text-center transition-all duration-200 touch-manipulation active:scale-[0.97]
                           ${isActive
                             ? 'bg-moss text-cream'
                             : 'bg-cream-warm text-ink hover:bg-cream-deep'
@@ -373,9 +403,12 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
                     return (
                       <button
                         key={option.value}
-                        onClick={() => setManualTheme(manualSeason, option.value)}
+                        onClick={() => {
+                          haptic.light()
+                          setManualTheme(manualSeason, option.value)
+                        }}
                         className={`
-                          flex-1 py-2.5 rounded-xl text-center transition-all duration-200
+                          flex-1 py-2.5 rounded-xl text-center transition-all duration-200 touch-manipulation active:scale-[0.97]
                           ${isActive
                             ? 'bg-moss text-cream'
                             : 'bg-cream-warm text-ink hover:bg-cream-deep'
@@ -399,8 +432,11 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
           <p className="font-serif text-sm text-ink/50 tracking-wide mb-4">Your Data</p>
           <div className="space-y-2">
             <button
-              onClick={downloadJSON}
-              className="w-full p-4 bg-cream-warm rounded-xl text-left hover:bg-cream-deep transition-colors active:scale-[0.99]"
+              onClick={() => {
+                haptic.light()
+                downloadJSON()
+              }}
+              className="w-full p-4 bg-cream-warm rounded-xl text-left hover:bg-cream-deep transition-colors active:scale-[0.99] touch-manipulation"
             >
               <p className="text-sm text-ink font-medium">Export as JSON</p>
               <p className="text-xs text-ink/40 mt-1">
@@ -408,8 +444,11 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
               </p>
             </button>
             <button
-              onClick={downloadCSV}
-              className="w-full p-4 bg-cream-warm rounded-xl text-left hover:bg-cream-deep transition-colors active:scale-[0.99]"
+              onClick={() => {
+                haptic.light()
+                downloadCSV()
+              }}
+              className="w-full p-4 bg-cream-warm rounded-xl text-left hover:bg-cream-deep transition-colors active:scale-[0.99] touch-manipulation"
             >
               <p className="text-sm text-ink font-medium">Export sessions as CSV</p>
               <p className="text-xs text-ink/40 mt-1">
@@ -426,17 +465,23 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
             <div className="p-4 bg-cream-warm rounded-xl">
               <p className="text-sm text-ink/60 mb-3">{user.email}</p>
               <button
-                onClick={signOut}
+                onClick={() => {
+                  haptic.light()
+                  signOut()
+                }}
                 disabled={authLoading}
-                className="text-sm text-ink/50 hover:text-ink/70 transition-colors"
+                className="text-sm text-ink/50 hover:text-ink/70 transition-colors touch-manipulation"
               >
                 {authLoading ? 'Signing out...' : 'Sign out'}
               </button>
             </div>
           ) : (
             <button
-              onClick={() => setShowAuthModal(true)}
-              className="w-full p-4 bg-cream-warm rounded-xl text-left hover:bg-cream-deep transition-colors active:scale-[0.99]"
+              onClick={() => {
+                haptic.light()
+                setShowAuthModal(true)
+              }}
+              className="w-full p-4 bg-cream-warm rounded-xl text-left hover:bg-cream-deep transition-colors active:scale-[0.99] touch-manipulation"
             >
               <p className="text-sm text-ink font-medium">Sign in</p>
               <p className="text-xs text-ink/40 mt-1">
@@ -450,19 +495,22 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
         <div className="space-y-1 mb-8">
           <a
             href="#"
-            className="block py-3 text-sm text-ink/50 hover:text-ink/70 transition-colors"
+            className="block py-3 text-sm text-ink/50 hover:text-ink/70 transition-colors touch-manipulation"
           >
             Privacy Policy
           </a>
           <a
             href="#"
-            className="block py-3 text-sm text-ink/50 hover:text-ink/70 transition-colors"
+            className="block py-3 text-sm text-ink/50 hover:text-ink/70 transition-colors touch-manipulation"
           >
             Terms of Service
           </a>
           <button
-            onClick={onRestorePurchase}
-            className="block w-full text-left py-3 text-sm text-ink/50 hover:text-ink/70 transition-colors"
+            onClick={() => {
+              haptic.light()
+              onRestorePurchase()
+            }}
+            className="block w-full text-left py-3 text-sm text-ink/50 hover:text-ink/70 transition-colors touch-manipulation"
           >
             Restore Purchase
           </button>
