@@ -16,7 +16,6 @@ export function Timer() {
     lastSessionDuration,
     hasReachedEnlightenment,
     justReachedEnlightenment,
-    sessions,
     lastSessionUuid,
     startPreparing,
     startTimer,
@@ -79,7 +78,6 @@ export function Timer() {
     acknowledgeEnlightenment()
   }, [acknowledgeEnlightenment])
 
-  const isFirstSession = sessions.length === 0
 
   return (
     <>
@@ -334,44 +332,6 @@ export function Timer() {
           )}
         </div>
 
-        {/* Minimal interaction hint */}
-        {timerPhase === 'idle' && (
-          <div className="absolute bottom-24 flex flex-col items-center">
-            {/* Single dot - the Jobs button */}
-            {isFirstSession && (
-              <div className="w-1.5 h-1.5 rounded-full bg-ink/25 mb-6" />
-            )}
-
-            {/* Progress hint - refined navigation */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                haptic.light()
-                setView('progress')
-              }}
-              aria-label="View progress statistics"
-              className="flex flex-col items-center hover:opacity-60 transition-opacity active:scale-[0.95] touch-manipulation"
-            >
-              <p className="text-xs text-ink/20 tracking-wide">
-                Progress
-              </p>
-              <svg
-                className="w-4 h-4 text-ink/15 mt-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M5 15l7-7 7 7"
-                />
-              </svg>
-            </button>
-          </div>
-        )}
 
         {/* Running state hint */}
         {isRunning && (

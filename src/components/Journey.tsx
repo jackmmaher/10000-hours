@@ -228,18 +228,6 @@ export function Journey() {
       </div>
 
       <div className="px-6 py-8 max-w-lg mx-auto">
-        {/* Back to timer */}
-        <button
-          onClick={() => setView('timer')}
-          aria-label="Return to timer"
-          className="flex items-center text-sm text-ink/40 mb-8 hover:text-ink/60 transition-colors active:scale-[0.98]"
-        >
-          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
-          </svg>
-          Timer
-        </button>
-
         {/* Your Next Moment */}
         <JourneyNextSession
           plannedSession={nextPlannedSession}

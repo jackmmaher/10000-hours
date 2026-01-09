@@ -54,6 +54,7 @@ interface ExtractedSession {
   intention: string
   recommended_after_hours: number
   tags?: string[]
+  intent_tags?: string[]
   seed_karma: number
   seed_saves: number
   seed_completions: number
@@ -77,6 +78,7 @@ function transformSession(raw: ExtractedSession): SessionTemplate {
     intention: raw.intention,
     recommendedAfterHours: raw.recommended_after_hours,
     tags: raw.tags,
+    intentTags: raw.intent_tags,
     karma: raw.seed_karma,
     saves: raw.seed_saves,
     completions: raw.seed_completions,
@@ -92,6 +94,20 @@ const SEEDED_SESSIONS: SessionTemplate[] = (extractedSessions as ExtractedSessio
 type FilterType = 'all' | 'pearls' | 'meditations'
 type SortType = 'rising' | 'new' | 'top' | 'saved'
 
+// Intent filter options - based on competitor analysis and auto-tagging results
+const INTENT_OPTIONS = [
+  'anxiety',
+  'stress',
+  'sleep',
+  'focus',
+  'racing-mind',
+  'grief',
+  'low-mood',
+  'self-compassion'
+] as const
+
+type IntentType = typeof INTENT_OPTIONS[number] | null
+
 export function Explore() {
   const { setView } = useNavigationStore()
   const { user, isAuthenticated, refreshProfile } = useAuthStore()
@@ -102,6 +118,7 @@ export function Explore() {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [filterType, setFilterType] = useState<FilterType>('all')
   const [sortType, setSortType] = useState<SortType>('rising')
+  const [intentFilter, setIntentFilter] = useState<IntentType>(null)
   const [selectedSession, setSelectedSession] = useState<SessionTemplate | null>(null)
 
   // Combine seeded sessions with community templates
@@ -137,12 +154,21 @@ export function Explore() {
   const feedItems = useMemo((): FeedItem[] => {
     const items: FeedItem[] = []
 
+    // Apply intent filter to content
+    let filteredPearls = pearls
+    let filteredSessions = allSessions
+
+    if (intentFilter) {
+      filteredPearls = pearls.filter(p => p.intentTags?.includes(intentFilter))
+      filteredSessions = allSessions.filter(s => s.intentTags?.includes(intentFilter))
+    }
+
     // If filtering to specific type, show only that type
     if (filterType === 'pearls') {
-      return pearls.map(p => ({ type: 'pearl' as FeedItemType, id: p.id, data: p }))
+      return filteredPearls.map(p => ({ type: 'pearl' as FeedItemType, id: p.id, data: p }))
     }
     if (filterType === 'meditations') {
-      return allSessions.map(s => ({ type: 'session' as FeedItemType, id: s.id, data: s }))
+      return filteredSessions.map(s => ({ type: 'session' as FeedItemType, id: s.id, data: s }))
     }
 
     // Mixed feed pattern: pearls → session → pearls → session
@@ -151,44 +177,44 @@ export function Explore() {
 
     // Add initial pearls (3-5)
     const initialPearls = 3 + Math.floor(Math.random() * 3)
-    for (let i = 0; i < initialPearls && pearlIndex < pearls.length; i++) {
-      items.push({ type: 'pearl', id: pearls[pearlIndex].id, data: pearls[pearlIndex] })
+    for (let i = 0; i < initialPearls && pearlIndex < filteredPearls.length; i++) {
+      items.push({ type: 'pearl', id: filteredPearls[pearlIndex].id, data: filteredPearls[pearlIndex] })
       pearlIndex++
     }
 
     // Add session
-    if (sessionIndex < allSessions.length) {
-      items.push({ type: 'session', id: allSessions[sessionIndex].id, data: allSessions[sessionIndex] })
+    if (sessionIndex < filteredSessions.length) {
+      items.push({ type: 'session', id: filteredSessions[sessionIndex].id, data: filteredSessions[sessionIndex] })
       sessionIndex++
     }
 
     // Add more pearls (2-3)
     const morePearls = 2 + Math.floor(Math.random() * 2)
-    for (let i = 0; i < morePearls && pearlIndex < pearls.length; i++) {
-      items.push({ type: 'pearl', id: pearls[pearlIndex].id, data: pearls[pearlIndex] })
+    for (let i = 0; i < morePearls && pearlIndex < filteredPearls.length; i++) {
+      items.push({ type: 'pearl', id: filteredPearls[pearlIndex].id, data: filteredPearls[pearlIndex] })
       pearlIndex++
     }
 
     // Add another session
-    if (sessionIndex < allSessions.length) {
-      items.push({ type: 'session', id: allSessions[sessionIndex].id, data: allSessions[sessionIndex] })
+    if (sessionIndex < filteredSessions.length) {
+      items.push({ type: 'session', id: filteredSessions[sessionIndex].id, data: filteredSessions[sessionIndex] })
       sessionIndex++
     }
 
     // Add remaining pearls with sessions interspersed
-    while (pearlIndex < pearls.length) {
-      items.push({ type: 'pearl', id: pearls[pearlIndex].id, data: pearls[pearlIndex] })
+    while (pearlIndex < filteredPearls.length) {
+      items.push({ type: 'pearl', id: filteredPearls[pearlIndex].id, data: filteredPearls[pearlIndex] })
       pearlIndex++
 
       // Insert remaining sessions periodically
-      if (pearlIndex % 4 === 0 && sessionIndex < allSessions.length) {
-        items.push({ type: 'session', id: allSessions[sessionIndex].id, data: allSessions[sessionIndex] })
+      if (pearlIndex % 4 === 0 && sessionIndex < filteredSessions.length) {
+        items.push({ type: 'session', id: filteredSessions[sessionIndex].id, data: filteredSessions[sessionIndex] })
         sessionIndex++
       }
     }
 
     return items
-  }, [pearls, filterType, allSessions])
+  }, [pearls, filterType, allSessions, intentFilter])
 
   // Handle vote
   const handleVote = async (pearlId: string, shouldVote: boolean) => {
@@ -282,21 +308,6 @@ export function Explore() {
         </div>
       </div>
       <div className="px-6 py-8 max-w-lg mx-auto">
-        {/* Back to timer */}
-        <button
-          onClick={() => {
-            haptic.light()
-            setView('timer')
-          }}
-          aria-label="Return to timer"
-          className="flex items-center text-sm text-ink/40 mb-8 hover:text-ink/60 transition-colors active:scale-[0.98] touch-manipulation"
-        >
-          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
-          </svg>
-          Timer
-        </button>
-
         {/* Header */}
         <header className="mb-6">
           <h1 className="font-serif text-2xl text-indigo-deep">
@@ -312,7 +323,10 @@ export function Explore() {
           {(['all', 'pearls', 'meditations'] as FilterType[]).map((f) => (
             <button
               key={f}
-              onClick={() => setFilterType(f)}
+              onClick={() => {
+                haptic.light()
+                setFilterType(f)
+              }}
               className={`
                 px-3 py-1.5 text-sm rounded-full whitespace-nowrap transition-all
                 ${filterType === f
@@ -324,6 +338,31 @@ export function Explore() {
               {f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1)}
             </button>
           ))}
+        </div>
+
+        {/* Intent filter */}
+        <div className="mb-4">
+          <p className="text-xs text-ink/40 mb-2">Working with:</p>
+          <div className="flex flex-wrap gap-1.5">
+            {INTENT_OPTIONS.map((intent) => (
+              <button
+                key={intent}
+                onClick={() => {
+                  haptic.light()
+                  setIntentFilter(intentFilter === intent ? null : intent)
+                }}
+                className={`
+                  px-2.5 py-1 text-xs rounded-full transition-all
+                  ${intentFilter === intent
+                    ? 'bg-ink text-cream'
+                    : 'bg-cream-deep text-ink/50 hover:text-ink/70'
+                  }
+                `}
+              >
+                {intent}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Sort selector */}
@@ -391,10 +430,22 @@ export function Explore() {
         {!isLoading && feedItems.length === 0 && (
           <div className="text-center py-16">
             <p className="font-serif text-lg text-ink/50 mb-2">
-              Nothing to explore yet
+              {intentFilter ? `No content for "${intentFilter}"` : 'Nothing to explore yet'}
             </p>
             <p className="text-sm text-ink/30">
-              Be the first to share wisdom
+              {intentFilter ? (
+                <button
+                  onClick={() => {
+                    haptic.light()
+                    setIntentFilter(null)
+                  }}
+                  className="underline hover:text-ink/50"
+                >
+                  Clear filter
+                </button>
+              ) : (
+                'Be the first to share wisdom'
+              )}
             </p>
           </div>
         )}

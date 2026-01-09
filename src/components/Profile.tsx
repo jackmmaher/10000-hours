@@ -226,22 +226,8 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
       </div>
 
       <div className="px-6 py-8 max-w-lg mx-auto">
-        {/* Header with settings gear */}
-        <div className="flex items-center justify-between mb-8">
-          <button
-            onClick={() => {
-              haptic.light()
-              setView('timer')
-            }}
-            className="flex items-center text-sm text-ink/40 hover:text-ink/60 transition-colors active:scale-[0.98] touch-manipulation"
-          >
-            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
-            </svg>
-            Timer
-          </button>
-
-          {/* Settings gear */}
+        {/* Settings gear */}
+        <div className="flex items-center justify-end mb-8">
           <button
             onClick={() => {
               haptic.light()
