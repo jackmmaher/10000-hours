@@ -289,16 +289,16 @@ export function Journey() {
             Insights
           </TabButton>
           <TabButton
-            active={subTab === 'saved'}
-            onClick={() => setSubTab('saved')}
-          >
-            Meditations
-          </TabButton>
-          <TabButton
             active={subTab === 'pearls'}
             onClick={() => setSubTab('pearls')}
           >
             Pearls
+          </TabButton>
+          <TabButton
+            active={subTab === 'saved'}
+            onClick={() => setSubTab('saved')}
+          >
+            Meditations
           </TabButton>
         </div>
 
@@ -312,13 +312,13 @@ export function Journey() {
             refreshKey={insightStreamKey}
           />
         )}
+        {subTab === 'pearls' && (
+          <JourneyMyPearls />
+        )}
         {subTab === 'saved' && (
           <JourneySavedContent
             onCreateNew={user ? () => setShowTemplateEditor(true) : undefined}
           />
-        )}
-        {subTab === 'pearls' && (
-          <JourneyMyPearls />
         )}
       </div>
 
@@ -377,7 +377,7 @@ export function Journey() {
   )
 }
 
-// Tab button component
+// Tab button component - with touch handling to prevent swipe interference
 function TabButton({
   active,
   onClick,
@@ -390,8 +390,12 @@ function TabButton({
   return (
     <button
       onClick={onClick}
+      onTouchEnd={(e) => {
+        // Stop propagation to prevent parent swipe handlers from interfering
+        e.stopPropagation()
+      }}
       className={`
-        flex-1 py-2 px-3 text-sm rounded-md transition-all
+        flex-1 py-2 px-3 text-sm rounded-md transition-all touch-manipulation
         ${active
           ? 'bg-cream text-ink shadow-sm'
           : 'text-ink/40 hover:text-ink/60'

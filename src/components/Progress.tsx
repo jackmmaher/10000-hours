@@ -138,6 +138,7 @@ export function Progress() {
         setView('timer')
       }
     },
+    onSwipeLeft: () => setView('profile'),
     onSwipeRight: () => setView('explore')
   })
 

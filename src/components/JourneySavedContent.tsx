@@ -1,9 +1,9 @@
 /**
- * JourneySavedContent - Displays user's created and saved meditation templates
+ * JourneySavedContent - Displays user's created and collected meditation templates
  *
  * Shows two sections (like JourneyMyPearls):
  * - My Meditations: Templates created by the user
- * - Saved Meditations: Templates saved from the community
+ * - Collected Meditations: Templates saved from the community
  */
 
 import { useState, useEffect } from 'react'
@@ -263,11 +263,11 @@ export function JourneySavedContent({ onCreateNew }: SavedContentProps) {
           </div>
         )}
 
-        {/* Saved from community section */}
+        {/* Collected from community section */}
         {savedMeditations.length > 0 && (
           <div>
             <p className="text-xs text-ink-soft font-medium tracking-wide mb-4">
-              Saved Meditations
+              Collected Meditations
             </p>
             <div className="space-y-3">
               {savedMeditations.map((session) => (

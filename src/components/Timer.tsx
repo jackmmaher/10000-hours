@@ -60,11 +60,11 @@ export function Timer() {
     }
   }, [timerPhase, startInsightCapture, skipInsightCapture, skipInsightSetting])
 
-  // Swipe handlers
+  // Swipe handlers - horizontal navigation between tabs
   const swipeHandlers = useSwipe({
-    onSwipeUp: () => {
+    onSwipeLeft: () => {
       if (timerPhase === 'idle') {
-        setView('progress')
+        setView('journey')
       }
     }
   })

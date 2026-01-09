@@ -13,8 +13,8 @@ interface SwipeState {
   startTime: number
 }
 
-const SWIPE_THRESHOLD = 150  // Higher threshold prevents accidental navigation while scrolling
-const SWIPE_TIMEOUT = 400
+const SWIPE_THRESHOLD = 50   // Distance in pixels to trigger a swipe
+const SWIPE_TIMEOUT = 300    // Max time in ms for the swipe gesture
 const SCROLL_TOLERANCE = 30  // If scrolled more than this, ignore swipe
 
 export function useSwipe(handlers: SwipeHandlers) {

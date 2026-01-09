@@ -39,10 +39,14 @@ export function Card({ children, className = '', onClick, variant = 'default' }:
         relative rounded-2xl overflow-hidden
         transition-all duration-200
         ${variantStyles[variant]}
-        ${onClick ? 'cursor-pointer hover:shadow-md active:scale-[0.99]' : ''}
+        ${onClick ? 'cursor-pointer hover:shadow-md active:scale-[0.99] touch-manipulation' : ''}
         ${className}
       `}
       onClick={onClick}
+      onTouchEnd={onClick ? (e) => {
+        // Stop propagation to prevent parent swipe handlers from interfering
+        e.stopPropagation()
+      } : undefined}
     >
       {/* Shimmer highlight - the polished look */}
       <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />

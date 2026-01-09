@@ -89,7 +89,7 @@ function transformSession(raw: ExtractedSession): SessionTemplate {
 // Load and transform sessions
 const SEEDED_SESSIONS: SessionTemplate[] = (extractedSessions as ExtractedSession[]).map(transformSession)
 
-type FilterType = 'all' | 'pearls' | 'sessions'
+type FilterType = 'all' | 'pearls' | 'meditations'
 type SortType = 'rising' | 'new' | 'top' | 'saved'
 
 export function Explore() {
@@ -140,7 +140,7 @@ export function Explore() {
     if (filterType === 'pearls') {
       return pearls.map(p => ({ type: 'pearl' as FeedItemType, id: p.id, data: p }))
     }
-    if (filterType === 'sessions') {
+    if (filterType === 'meditations') {
       return allSessions.map(s => ({ type: 'session' as FeedItemType, id: s.id, data: s }))
     }
 
@@ -305,7 +305,7 @@ export function Explore() {
 
         {/* Filter bar */}
         <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-          {(['all', 'pearls', 'sessions'] as FilterType[]).map((f) => (
+          {(['all', 'pearls', 'meditations'] as FilterType[]).map((f) => (
             <button
               key={f}
               onClick={() => setFilterType(f)}

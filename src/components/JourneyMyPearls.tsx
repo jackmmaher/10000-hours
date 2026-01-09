@@ -6,7 +6,7 @@
  * - Collected Wisdom: Pearls saved from community (removable)
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuthStore } from '../stores/useAuthStore'
 import { Card, CardBody, PearlOrb } from './Card'
 import type { Pearl } from '../lib/pearls'
@@ -20,11 +20,12 @@ export function JourneyMyPearls() {
   const [editText, setEditText] = useState('')
   const [isSavingEdit, setIsSavingEdit] = useState(false)
 
-  const loadPearls = async () => {
+  const loadPearls = useCallback(async () => {
     if (!user) {
       setIsLoading(false)
       return
     }
+    setIsLoading(true)
     try {
       const { getMyPearls, getSavedPearls } = await import('../lib/pearls')
       const [created, saved] = await Promise.all([
@@ -38,11 +39,11 @@ export function JourneyMyPearls() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [user])
 
   useEffect(() => {
     loadPearls()
-  }, [user])
+  }, [loadPearls])
 
   const handleUnsave = async (pearlId: string) => {
     if (!user) return

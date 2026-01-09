@@ -245,11 +245,6 @@ export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailM
             <span className="tabular-nums">{session.completions.toLocaleString()} completed</span>
           </div>
 
-          {/* Creator credibility */}
-          <div className="text-xs text-ink/30 mb-8">
-            Created by practitioner with {session.creatorHours} hours
-          </div>
-
           {/* Actions */}
           <div className="sticky bottom-0 bg-cream pt-4 pb-safe border-t border-ink/5 -mx-6 px-6 overflow-hidden">
             {!showDatePicker ? (

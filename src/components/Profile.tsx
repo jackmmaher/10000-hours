@@ -10,12 +10,13 @@
  * - Gear icon → Settings sub-page
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useNavigationStore } from '../stores/useNavigationStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useVoice } from '../hooks/useVoice'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
+import { useSwipe } from '../hooks/useSwipe'
 import {
   getUserPreferences,
   updateUserPreferences,
@@ -118,6 +119,9 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
     loadData()
   }, [loadData])
 
+  // Reference to scroll container
+  const scrollRef = useRef<HTMLDivElement>(null)
+
   // Pull-to-refresh
   const {
     isPulling,
@@ -126,6 +130,16 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
     handlers: pullHandlers
   } = usePullToRefresh({
     onRefresh: loadData
+  })
+
+  // Swipe navigation
+  const navSwipeHandlers = useSwipe({
+    onSwipeDown: () => {
+      if (scrollRef.current && scrollRef.current.scrollTop > 50) {
+        setView('timer')
+      }
+    },
+    onSwipeRight: () => setView('progress')
   })
 
   // Update preference
@@ -167,10 +181,18 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
 
   return (
     <div
+      ref={scrollRef}
       className="h-full bg-cream overflow-y-auto pb-24"
-      onTouchStart={pullHandlers.onTouchStart}
+      {...navSwipeHandlers}
+      onTouchStart={(e) => {
+        pullHandlers.onTouchStart(e)
+        navSwipeHandlers.onTouchStart?.(e)
+      }}
       onTouchMove={pullHandlers.onTouchMove}
-      onTouchEnd={pullHandlers.onTouchEnd}
+      onTouchEnd={(e) => {
+        pullHandlers.onTouchEnd()
+        navSwipeHandlers.onTouchEnd?.(e)
+      }}
     >
       {/* Pull-to-refresh indicator */}
       <div
