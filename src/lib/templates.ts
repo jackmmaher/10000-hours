@@ -19,7 +19,6 @@ export interface TemplateInput {
   guidanceNotes: string
   intention: string
   recommendedAfterHours?: number
-  tags?: string[]
   intentTags?: string[]
 }
 
@@ -64,7 +63,7 @@ export async function createTemplate(
           guidance_notes: template.guidanceNotes,
           intention: template.intention,
           recommended_after_hours: template.recommendedAfterHours || 0,
-          tags: template.tags || [],
+          tags: [],  // Deprecated - using intent_tags only
           intent_tags: template.intentTags || [],
           creator_hours: creatorHours
         })
@@ -159,7 +158,6 @@ export async function updateTemplate(
   if (updates.guidanceNotes !== undefined) dbUpdates.guidance_notes = updates.guidanceNotes
   if (updates.intention !== undefined) dbUpdates.intention = updates.intention
   if (updates.recommendedAfterHours !== undefined) dbUpdates.recommended_after_hours = updates.recommendedAfterHours
-  if (updates.tags !== undefined) dbUpdates.tags = updates.tags
   if (updates.intentTags !== undefined) dbUpdates.intent_tags = updates.intentTags
 
   const { error } = await supabase
@@ -222,5 +220,86 @@ function mapTemplateFromDb(row: Record<string, unknown>): SessionTemplate {
     creatorHours: (row.creator_hours as number) || 0,
     courseId: row.course_id as string | undefined,
     coursePosition: row.course_position as number | undefined
+  }
+}
+
+/**
+ * Check if a string is a valid UUID (community template) vs seeded session ID
+ */
+export function isUUID(id: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  return uuidRegex.test(id)
+}
+
+/**
+ * Record a template completion
+ * Only works for community templates (UUID IDs), not seeded sessions
+ */
+export async function recordTemplateCompletion(
+  templateId: string,
+  userId: string,
+  sessionUuid?: string
+): Promise<boolean> {
+  if (!isSupabaseConfigured() || !supabase) {
+    return false
+  }
+
+  // Only track completions for community templates (UUID IDs)
+  if (!isUUID(templateId)) {
+    console.log('Skipping completion tracking for seeded session:', templateId)
+    return false
+  }
+
+  const { error } = await supabase
+    .from('session_template_completions')
+    .insert({
+      template_id: templateId,
+      user_id: userId,
+      session_uuid: sessionUuid || null
+    })
+
+  if (error) {
+    // Might already be completed - that's fine
+    if (error.code === '23505') {
+      return true
+    }
+    console.error('Record completion error:', error)
+    return false
+  }
+
+  return true
+}
+
+/**
+ * Get live stats for a template from Supabase
+ * Returns null for seeded sessions (they use static values from JSON)
+ */
+export async function getTemplateStats(
+  templateId: string
+): Promise<{ karma: number; saves: number; completions: number } | null> {
+  if (!isSupabaseConfigured() || !supabase) {
+    return null
+  }
+
+  // Only fetch live stats for community templates
+  if (!isUUID(templateId)) {
+    return null
+  }
+
+  const { data, error } = await supabase
+    .from('session_templates')
+    .select('karma, saves, completions')
+    .eq('id', templateId)
+    .single()
+
+  if (error || !data) {
+    console.error('Get template stats error:', error)
+    return null
+  }
+
+  return {
+    karma: data.karma || 0,
+    saves: data.saves || 0,
+    completions: data.completions || 0
   }
 }

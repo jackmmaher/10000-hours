@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { getIntentionGradient } from '../lib/animations'
 import { saveTemplate, unsaveTemplate, isTemplateSaved, addPlannedSession } from '../lib/db'
+import { getTemplateStats, isUUID } from '../lib/templates'
 
 export interface SessionTemplate {
   id: string
@@ -84,13 +85,30 @@ export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailM
   const [plannedTime, setPlannedTime] = useState(() => getSuggestedTime(session.bestTime))
   const [isAdopting, setIsAdopting] = useState(false)
 
+  // Live stats for community templates (null for seeded sessions)
+  const [liveStats, setLiveStats] = useState<{ karma: number; saves: number; completions: number } | null>(null)
+
   // Get gradient based on intention or use fallback
   const gradient = getIntentionGradient(session.intention)
 
-  // Check if already saved on mount
+  // Check if already saved on mount, and fetch live stats for community templates
   useEffect(() => {
     isTemplateSaved(session.id).then(setIsSaved)
+
+    // Only fetch live stats for community templates (UUID IDs)
+    if (isUUID(session.id)) {
+      getTemplateStats(session.id).then(stats => {
+        if (stats) setLiveStats(stats)
+      })
+    }
   }, [session.id])
+
+  // Use live stats for community templates, fall back to session values for seeded sessions
+  const displayStats = liveStats ?? {
+    karma: session.karma,
+    saves: session.saves,
+    completions: session.completions
+  }
 
   const handleSave = useCallback(async () => {
     if (isSaving) return
@@ -216,17 +234,12 @@ export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailM
             </div>
           )}
 
-          {/* Tags */}
-          {((session.tags && session.tags.length > 0) || (session.intentTags && session.intentTags.length > 0)) && (
+          {/* Intent tags - for filtering */}
+          {session.intentTags && session.intentTags.length > 0 && (
             <div className="mb-8">
               <div className="flex flex-wrap gap-2">
-                {session.tags?.map(tag => (
-                  <span key={tag} className="text-sm text-moss">
-                    {tag.startsWith('#') ? tag : `#${tag}`}
-                  </span>
-                ))}
-                {session.intentTags?.map(tag => (
-                  <span key={`intent-${tag}`} className="text-sm text-ink/40">
+                {session.intentTags.map(tag => (
+                  <span key={tag} className="text-xs px-2 py-1 rounded-full bg-cream-deep text-ink/50">
                     {tag}
                   </span>
                 ))}
@@ -234,21 +247,21 @@ export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailM
             </div>
           )}
 
-          {/* Stats */}
+          {/* Stats - live for community templates, static for seeded sessions */}
           <div className="flex items-center gap-6 text-sm text-ink/50 mb-8">
             <span className="flex items-center gap-1">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 15l7-7 7 7" />
               </svg>
-              <span className="tabular-nums">{session.karma}</span> karma
+              <span className="tabular-nums">{displayStats.karma}</span> karma
             </span>
             <span className="flex items-center gap-1">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
               </svg>
-              <span className="tabular-nums">{session.saves}</span> saved
+              <span className="tabular-nums">{displayStats.saves}</span> saved
             </span>
-            <span className="tabular-nums">{session.completions.toLocaleString()} completed</span>
+            <span className="tabular-nums">{displayStats.completions.toLocaleString()} completed</span>
           </div>
 
           {/* Actions */}

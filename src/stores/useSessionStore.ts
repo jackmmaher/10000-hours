@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import { Session, Achievement, addSession, getAllSessions, initAppState, markEnlightenmentReached, recordMilestoneIfNew, linkSessionToPlan } from '../lib/db'
 import { GOAL_SECONDS } from '../lib/constants'
 import { MILESTONES } from '../lib/tierLogic'
+import { recordTemplateCompletion } from '../lib/templates'
+import { supabase } from '../lib/supabase'
 
 // Re-export AppView from navigation store for backwards compatibility during migration
 export type { AppView } from './useNavigationStore'
@@ -113,7 +115,19 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     // Silent session-plan linking: auto-link to any plan for this day
     const todayStart = new Date(sessionStartTime)
     todayStart.setHours(0, 0, 0, 0)
-    await linkSessionToPlan(sessionUuid, todayStart.getTime())
+    const linkedPlan = await linkSessionToPlan(sessionUuid, todayStart.getTime())
+
+    // Track community template completion if this session was linked to a community template
+    if (linkedPlan?.sourceTemplateId && supabase) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          await recordTemplateCompletion(linkedPlan.sourceTemplateId, user.id, sessionUuid)
+        }
+      } catch (err) {
+        console.warn('Failed to record template completion:', err)
+      }
+    }
 
     const newTotalSeconds = totalSeconds + durationSeconds
     // Use a hash of UUID for local ID (ensures uniqueness)

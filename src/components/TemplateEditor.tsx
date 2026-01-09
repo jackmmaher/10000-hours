@@ -9,9 +9,22 @@
 import { useState, useCallback, useEffect } from 'react'
 import { createTemplate, TemplateInput } from '../lib/templates'
 import { useAuthStore } from '../stores/useAuthStore'
+import { useTapFeedback } from '../hooks/useTapFeedback'
 import { INTENTION_TO_GRADIENT, INTENTIONS } from '../lib/animations'
 import { DISCIPLINES, POSES, BEST_TIMES } from '../lib/meditation-options'
 import { saveTemplateDraft, getTemplateDraft, deleteTemplateDraft } from '../lib/db'
+
+// Intent options for filtering - Pareto-aligned: covers ~80% of user intent
+const INTENT_OPTIONS = [
+  'anxiety',
+  'stress',
+  'sleep',
+  'focus',
+  'beginners',
+  'body-awareness',
+  'self-compassion',
+  'letting-go'
+] as const
 
 interface TemplateEditorProps {
   onClose: () => void
@@ -32,6 +45,7 @@ const EXPERIENCE_LEVELS = [
 
 export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateEditorProps) {
   const { user } = useAuthStore()
+  const haptic = useTapFeedback()
 
   // Form state
   const [title, setTitle] = useState('')
@@ -44,7 +58,7 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
   const [guidanceNotes, setGuidanceNotes] = useState('')
   const [intention, setIntention] = useState('Calm')
   const [recommendedHours, setRecommendedHours] = useState(0)
-  const [tags, setTags] = useState('')
+  const [intentTags, setIntentTags] = useState<string[]>([])
 
   const [isPublishing, setIsPublishing] = useState(false)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
@@ -70,7 +84,7 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
         setGuidanceNotes(draft.guidanceNotes)
         setIntention(draft.intention || 'Calm')
         setRecommendedHours(draft.recommendedAfterHours)
-        setTags(draft.tags)
+        setIntentTags(draft.intentTags || [])
         setHasDraft(true)
       }
     }
@@ -103,7 +117,7 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
         guidanceNotes,
         intention,
         recommendedAfterHours: recommendedHours,
-        tags
+        intentTags
       })
       setHasDraft(true)
       onClose()
@@ -113,7 +127,7 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
     } finally {
       setIsSavingDraft(false)
     }
-  }, [isSavingDraft, title, tagline, duration, discipline, posture, bestTime, environment, guidanceNotes, intention, recommendedHours, tags, onClose])
+  }, [isSavingDraft, title, tagline, duration, discipline, posture, bestTime, environment, guidanceNotes, intention, recommendedHours, intentTags, onClose])
 
   // Discard draft and clear form
   const handleDiscardDraft = useCallback(async () => {
@@ -128,7 +142,7 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
     setGuidanceNotes('')
     setIntention('Calm')
     setRecommendedHours(0)
-    setTags('')
+    setIntentTags([])
     setHasDraft(false)
   }, [])
 
@@ -150,7 +164,7 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
         guidanceNotes: guidanceNotes.trim(),
         intention: intention.trim(),
         recommendedAfterHours: recommendedHours,
-        tags: tags.split(',').map(t => t.trim()).filter(Boolean)
+        intentTags
       }
 
       const result = await createTemplate(template, user.id, creatorHours)
@@ -174,7 +188,7 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
     } finally {
       setIsPublishing(false)
     }
-  }, [user, isValid, isPublishing, title, tagline, duration, discipline, posture, bestTime, environment, guidanceNotes, intention, recommendedHours, tags, creatorHours, onPublished])
+  }, [user, isValid, isPublishing, title, tagline, duration, discipline, posture, bestTime, environment, guidanceNotes, intention, recommendedHours, intentTags, creatorHours, onPublished])
 
   // Block swipe navigation
   const handleTouchEvent = (e: React.TouchEvent) => {
@@ -420,16 +434,38 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
             </div>
           </div>
 
-          {/* Tags */}
+          {/* Intent Tags - for discoverability */}
           <div>
-            <label className="block text-xs text-ink/40 mb-2">Tags <span className="text-ink/30">(comma-separated)</span></label>
-            <input
-              type="text"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              placeholder="e.g., morning, beginner, stress"
-              className="w-full px-4 py-3 rounded-xl bg-cream-deep text-ink placeholder:text-ink/30 focus:outline-none focus:ring-2 focus:ring-moss/30"
-            />
+            <label className="block text-xs text-ink/40 mb-2">
+              What does this help with?
+              <span className="text-ink/30 ml-1">(select all that apply)</span>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {INTENT_OPTIONS.map((tag) => {
+                const isSelected = intentTags.includes(tag)
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => {
+                      haptic.light()
+                      if (isSelected) {
+                        setIntentTags(intentTags.filter(t => t !== tag))
+                      } else {
+                        setIntentTags([...intentTags, tag])
+                      }
+                    }}
+                    className={`px-3 py-2 rounded-xl text-sm transition-all ${
+                      isSelected
+                        ? 'bg-ink text-cream'
+                        : 'bg-cream-deep text-ink/70 hover:bg-cream-deep/80'
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           {/* Creator hours badge */}

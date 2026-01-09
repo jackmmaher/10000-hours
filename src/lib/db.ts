@@ -118,7 +118,7 @@ export interface TemplateDraft {
   guidanceNotes: string
   intention: string
   recommendedAfterHours: number
-  tags: string
+  intentTags: string[]            // Intent-based tags for filtering
   createdAt: number
   updatedAt: number
 }
@@ -656,7 +656,7 @@ export async function getLatestInsight(): Promise<Insight | undefined> {
 }
 
 // Session-Plan Linking helpers
-export async function linkSessionToPlan(sessionUuid: string, date: number): Promise<boolean> {
+export async function linkSessionToPlan(sessionUuid: string, date: number): Promise<PlannedSession | null> {
   // Find an unlinked plan for the given date and link it to the session
   const plan = await db.plannedSessions
     .where('date')
@@ -669,9 +669,10 @@ export async function linkSessionToPlan(sessionUuid: string, date: number): Prom
       completed: true,
       linkedSessionUuid: sessionUuid
     })
-    return true
+    // Return the linked plan for caller to handle additional side effects (e.g., template completion tracking)
+    return { ...plan, completed: true, linkedSessionUuid: sessionUuid }
   }
-  return false
+  return null
 }
 
 export async function getPlannedSessionByLinkedUuid(sessionUuid: string): Promise<PlannedSession | undefined> {
