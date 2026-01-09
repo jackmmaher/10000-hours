@@ -22,6 +22,7 @@ export interface SessionTemplate {
   intention: string
   recommendedAfterHours: number
   tags?: string[]
+  intentTags?: string[]
   karma: number
   saves: number
   completions: number
@@ -216,12 +217,17 @@ export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailM
           )}
 
           {/* Tags */}
-          {session.tags && session.tags.length > 0 && (
+          {((session.tags && session.tags.length > 0) || (session.intentTags && session.intentTags.length > 0)) && (
             <div className="mb-8">
               <div className="flex flex-wrap gap-2">
-                {session.tags.map(tag => (
+                {session.tags?.map(tag => (
                   <span key={tag} className="text-sm text-moss">
-                    #{tag}
+                    {tag.startsWith('#') ? tag : `#${tag}`}
+                  </span>
+                ))}
+                {session.intentTags?.map(tag => (
+                  <span key={`intent-${tag}`} className="text-sm text-ink/40">
+                    {tag}
                   </span>
                 ))}
               </div>

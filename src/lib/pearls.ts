@@ -15,6 +15,7 @@ export interface Pearl {
   saves: number
   createdAt: string
   editedAt?: string | null  // When the pearl was last edited
+  intentTags?: string[]  // Intent-based tags for filtering (anxiety, stress, focus, etc.)
   hasVoted?: boolean
   hasSaved?: boolean
   isPreserved?: boolean  // True if original pearl was deleted, this is a saved copy
@@ -97,6 +98,7 @@ export async function getPearls(
       upvotes: number
       saves: number
       created_at: string
+      intent_tags: string[] | null
       has_voted: boolean
       has_saved: boolean
     }) => ({
@@ -106,6 +108,7 @@ export async function getPearls(
       upvotes: p.upvotes,
       saves: p.saves,
       createdAt: p.created_at,
+      intentTags: p.intent_tags || [],
       hasVoted: p.has_voted,
       hasSaved: p.has_saved
     }))
@@ -141,6 +144,7 @@ export async function getPearls(
     upvotes: p.upvotes,
     saves: p.saves,
     createdAt: p.created_at,
+    intentTags: p.intent_tags || [],
     hasVoted: false,
     hasSaved: false
   }))

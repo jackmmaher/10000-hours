@@ -24,7 +24,17 @@
     "creator_hours": 342,
     "course_id": "course-001",
     "course_position": 1,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "focus",
+      "sleep",
+      "body-awareness",
+      "self-compassion",
+      "emotions",
+      "letting-go",
+      "morning",
+      "beginners"
+    ]
   },
   {
     "id": "session-002",
@@ -51,7 +61,14 @@
     "creator_hours": 456,
     "course_id": "course-002",
     "course_position": 1,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "focus",
+      "racing-mind",
+      "body-awareness",
+      "emotions",
+      "letting-go"
+    ]
   },
   {
     "id": "session-003",
@@ -78,7 +95,18 @@
     "creator_hours": 267,
     "course_id": "course-003",
     "course_position": 1,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "stress",
+      "low-mood",
+      "grief",
+      "focus",
+      "sleep",
+      "body-awareness",
+      "letting-go",
+      "morning",
+      "evening"
+    ]
   },
   {
     "id": "session-004",
@@ -105,7 +133,15 @@
     "creator_hours": 389,
     "course_id": "course-004",
     "course_position": 1,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anger",
+      "pain",
+      "self-compassion",
+      "emotions",
+      "letting-go",
+      "beginners"
+    ]
   },
   {
     "id": "session-005",
@@ -132,7 +168,16 @@
     "creator_hours": 456,
     "course_id": "course-005",
     "course_position": 1,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anger",
+      "focus",
+      "racing-mind",
+      "clarity",
+      "body-awareness",
+      "self-compassion",
+      "emotions"
+    ]
   },
   {
     "id": "session-006",
@@ -159,7 +204,16 @@
     "creator_hours": 289,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "low-mood",
+      "grief",
+      "focus",
+      "sleep",
+      "body-awareness",
+      "self-compassion",
+      "emotions"
+    ]
   },
   {
     "id": "session-007",
@@ -186,7 +240,15 @@
     "creator_hours": 234,
     "course_id": "course-001",
     "course_position": 2,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anger",
+      "focus",
+      "sleep",
+      "self-compassion",
+      "morning",
+      "beginners"
+    ]
   },
   {
     "id": "session-008",
@@ -213,7 +275,14 @@
     "creator_hours": 378,
     "course_id": "course-006",
     "course_position": 3,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anxiety",
+      "focus",
+      "sleep",
+      "body-awareness",
+      "beginners"
+    ]
   },
   {
     "id": "session-009",
@@ -240,7 +309,18 @@
     "creator_hours": 456,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anxiety",
+      "low-mood",
+      "focus",
+      "sleep",
+      "body-awareness",
+      "pain",
+      "self-compassion",
+      "emotions",
+      "letting-go"
+    ]
   },
   {
     "id": "session-010",
@@ -268,7 +348,17 @@
     "creator_hours": 178,
     "course_id": "course-007",
     "course_position": 3,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "stress",
+      "anger",
+      "focus",
+      "clarity",
+      "sleep",
+      "body-awareness",
+      "emotions",
+      "morning"
+    ]
   },
   {
     "id": "session-011",
@@ -295,7 +385,20 @@
     "creator_hours": 345,
     "course_id": "course-008",
     "course_position": 2,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "stress",
+      "low-mood",
+      "grief",
+      "anger",
+      "focus",
+      "sleep",
+      "body-awareness",
+      "self-compassion",
+      "emotions",
+      "letting-go",
+      "morning"
+    ]
   },
   {
     "id": "session-012",
@@ -322,7 +425,18 @@
     "creator_hours": 567,
     "course_id": "course-009",
     "course_position": 4,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "grief",
+      "anger",
+      "focus",
+      "racing-mind",
+      "sleep",
+      "pain",
+      "self-compassion",
+      "morning",
+      "beginners"
+    ]
   },
   {
     "id": "session-013",
@@ -349,7 +463,15 @@
     "creator_hours": 345,
     "course_id": "course-004",
     "course_position": 3,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anger",
+      "focus",
+      "clarity",
+      "pain",
+      "self-compassion",
+      "emotions"
+    ]
   },
   {
     "id": "session-014",
@@ -376,7 +498,18 @@
     "creator_hours": 456,
     "course_id": "course-005",
     "course_position": 2,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "low-mood",
+      "anger",
+      "focus",
+      "racing-mind",
+      "clarity",
+      "body-awareness",
+      "self-compassion",
+      "emotions",
+      "letting-go"
+    ]
   },
   {
     "id": "session-015",
@@ -403,7 +536,21 @@
     "creator_hours": 189,
     "course_id": "course-003",
     "course_position": 3,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anxiety",
+      "stress",
+      "low-mood",
+      "grief",
+      "focus",
+      "racing-mind",
+      "sleep",
+      "body-awareness",
+      "self-compassion",
+      "letting-go",
+      "morning",
+      "evening"
+    ]
   },
   {
     "id": "session-016",
@@ -430,7 +577,14 @@
     "creator_hours": 378,
     "course_id": "course-010",
     "course_position": 1,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anger",
+      "focus",
+      "racing-mind",
+      "clarity",
+      "sleep"
+    ]
   },
   {
     "id": "session-017",
@@ -457,7 +611,16 @@
     "creator_hours": 234,
     "course_id": "course-011",
     "course_position": 1,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anxiety",
+      "low-mood",
+      "anger",
+      "focus",
+      "racing-mind",
+      "body-awareness",
+      "emotions"
+    ]
   },
   {
     "id": "session-018",
@@ -484,7 +647,18 @@
     "creator_hours": 567,
     "course_id": "course-012",
     "course_position": 3,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "grief",
+      "focus",
+      "racing-mind",
+      "clarity",
+      "sleep",
+      "body-awareness",
+      "self-compassion",
+      "letting-go",
+      "beginners"
+    ]
   },
   {
     "id": "session-019",
@@ -511,7 +685,17 @@
     "creator_hours": 234,
     "course_id": "course-013",
     "course_position": 1,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anger",
+      "focus",
+      "sleep",
+      "body-awareness",
+      "self-compassion",
+      "emotions",
+      "morning",
+      "evening"
+    ]
   },
   {
     "id": "session-020",
@@ -538,7 +722,16 @@
     "creator_hours": 189,
     "course_id": "course-014",
     "course_position": 1,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anxiety",
+      "stress",
+      "grief",
+      "focus",
+      "clarity",
+      "body-awareness",
+      "letting-go"
+    ]
   },
   {
     "id": "session-021",
@@ -565,7 +758,17 @@
     "creator_hours": 345,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "grief",
+      "anger",
+      "focus",
+      "racing-mind",
+      "clarity",
+      "body-awareness",
+      "emotions",
+      "beginners"
+    ]
   },
   {
     "id": "session-022",
@@ -592,7 +795,17 @@
     "creator_hours": 378,
     "course_id": "course-004",
     "course_position": 5,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anger",
+      "racing-mind",
+      "body-awareness",
+      "pain",
+      "self-compassion",
+      "emotions",
+      "letting-go",
+      "beginners"
+    ]
   },
   {
     "id": "session-023",
@@ -619,7 +832,16 @@
     "creator_hours": 234,
     "course_id": "course-007",
     "course_position": 1,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "low-mood",
+      "focus",
+      "sleep",
+      "body-awareness",
+      "emotions",
+      "morning",
+      "beginners"
+    ]
   },
   {
     "id": "session-024",
@@ -646,7 +868,19 @@
     "creator_hours": 456,
     "course_id": "course-015",
     "course_position": 3,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "grief",
+      "anger",
+      "focus",
+      "racing-mind",
+      "clarity",
+      "sleep",
+      "body-awareness",
+      "pain",
+      "emotions",
+      "letting-go"
+    ]
   },
   {
     "id": "session-025",
@@ -673,7 +907,15 @@
     "creator_hours": 156,
     "course_id": "course-001",
     "course_position": 3,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "stress",
+      "focus",
+      "body-awareness",
+      "emotions",
+      "letting-go",
+      "beginners"
+    ]
   },
   {
     "id": "session-026",
@@ -700,7 +942,18 @@
     "creator_hours": 345,
     "course_id": "course-016",
     "course_position": 2,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "stress",
+      "low-mood",
+      "focus",
+      "clarity",
+      "sleep",
+      "body-awareness",
+      "pain",
+      "morning",
+      "beginners"
+    ]
   },
   {
     "id": "session-027",
@@ -727,7 +980,13 @@
     "creator_hours": 289,
     "course_id": "course-004",
     "course_position": 2,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "low-mood",
+      "clarity",
+      "body-awareness",
+      "emotions"
+    ]
   },
   {
     "id": "session-028",
@@ -754,7 +1013,19 @@
     "creator_hours": 378,
     "course_id": "course-016",
     "course_position": 1,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anxiety",
+      "low-mood",
+      "anger",
+      "focus",
+      "sleep",
+      "body-awareness",
+      "pain",
+      "emotions",
+      "letting-go",
+      "beginners"
+    ]
   },
   {
     "id": "session-029",
@@ -781,7 +1052,16 @@
     "creator_hours": 489,
     "course_id": "course-015",
     "course_position": 4,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anxiety",
+      "anger",
+      "focus",
+      "sleep",
+      "pain",
+      "self-compassion",
+      "letting-go"
+    ]
   },
   {
     "id": "session-030",
@@ -808,7 +1088,14 @@
     "creator_hours": 123,
     "course_id": "course-017",
     "course_position": 1,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "focus",
+      "body-awareness",
+      "emotions",
+      "letting-go",
+      "beginners"
+    ]
   },
   {
     "id": "session-031",
@@ -835,7 +1122,15 @@
     "creator_hours": 456,
     "course_id": "course-006",
     "course_position": 2,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "focus",
+      "clarity",
+      "sleep",
+      "body-awareness",
+      "letting-go",
+      "beginners"
+    ]
   },
   {
     "id": "session-032",
@@ -862,7 +1157,15 @@
     "creator_hours": 567,
     "course_id": "course-018",
     "course_position": 3,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "focus",
+      "racing-mind",
+      "sleep",
+      "body-awareness",
+      "self-compassion",
+      "beginners"
+    ]
   },
   {
     "id": "session-033",
@@ -889,7 +1192,17 @@
     "creator_hours": 456,
     "course_id": "course-004",
     "course_position": 6,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anger",
+      "focus",
+      "clarity",
+      "body-awareness",
+      "pain",
+      "self-compassion",
+      "emotions",
+      "beginners"
+    ]
   },
   {
     "id": "session-034",
@@ -916,7 +1229,11 @@
     "creator_hours": 267,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "emotions",
+      "beginners"
+    ]
   },
   {
     "id": "session-035",
@@ -943,7 +1260,16 @@
     "creator_hours": 378,
     "course_id": "course-019",
     "course_position": 2,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anxiety",
+      "low-mood",
+      "grief",
+      "clarity",
+      "body-awareness",
+      "emotions",
+      "letting-go"
+    ]
   },
   {
     "id": "session-036",
@@ -970,7 +1296,15 @@
     "creator_hours": 345,
     "course_id": "course-004",
     "course_position": 4,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anger",
+      "focus",
+      "body-awareness",
+      "self-compassion",
+      "emotions",
+      "letting-go"
+    ]
   },
   {
     "id": "session-037",
@@ -997,7 +1331,12 @@
     "creator_hours": 567,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "focus",
+      "body-awareness",
+      "self-compassion"
+    ]
   },
   {
     "id": "session-038",
@@ -1024,7 +1363,17 @@
     "creator_hours": 345,
     "course_id": "course-008",
     "course_position": 3,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "low-mood",
+      "racing-mind",
+      "clarity",
+      "sleep",
+      "body-awareness",
+      "self-compassion",
+      "emotions",
+      "letting-go"
+    ]
   },
   {
     "id": "session-039",
@@ -1051,7 +1400,14 @@
     "creator_hours": 234,
     "course_id": "course-020",
     "course_position": 1,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "low-mood",
+      "focus",
+      "body-awareness",
+      "emotions",
+      "letting-go"
+    ]
   },
   {
     "id": "session-040",
@@ -1078,7 +1434,19 @@
     "creator_hours": 489,
     "course_id": "course-015",
     "course_position": 5,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anxiety",
+      "stress",
+      "low-mood",
+      "grief",
+      "sleep",
+      "body-awareness",
+      "pain",
+      "self-compassion",
+      "emotions",
+      "morning"
+    ]
   },
   {
     "id": "session-041",
@@ -1105,7 +1473,17 @@
     "creator_hours": 234,
     "course_id": "course-007",
     "course_position": 2,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anger",
+      "focus",
+      "clarity",
+      "sleep",
+      "self-compassion",
+      "emotions",
+      "morning",
+      "evening"
+    ]
   },
   {
     "id": "session-042",
@@ -1132,7 +1510,19 @@
     "creator_hours": 389,
     "course_id": "course-006",
     "course_position": 4,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "grief",
+      "focus",
+      "racing-mind",
+      "clarity",
+      "sleep",
+      "body-awareness",
+      "self-compassion",
+      "emotions",
+      "letting-go",
+      "beginners"
+    ]
   },
   {
     "id": "session-043",
@@ -1159,7 +1549,16 @@
     "creator_hours": 389,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "stress",
+      "anger",
+      "focus",
+      "body-awareness",
+      "pain",
+      "emotions",
+      "letting-go"
+    ]
   },
   {
     "id": "session-044",
@@ -1186,7 +1585,18 @@
     "creator_hours": 378,
     "course_id": "course-005",
     "course_position": 3,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "grief",
+      "focus",
+      "racing-mind",
+      "clarity",
+      "sleep",
+      "body-awareness",
+      "letting-go",
+      "morning",
+      "beginners"
+    ]
   },
   {
     "id": "session-045",
@@ -1213,7 +1623,18 @@
     "creator_hours": 345,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anger",
+      "focus",
+      "racing-mind",
+      "sleep",
+      "body-awareness",
+      "self-compassion",
+      "letting-go",
+      "morning",
+      "beginners"
+    ]
   },
   {
     "id": "session-046",
@@ -1240,7 +1661,16 @@
     "creator_hours": 189,
     "course_id": "course-011",
     "course_position": 2,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anxiety",
+      "stress",
+      "focus",
+      "sleep",
+      "body-awareness",
+      "emotions",
+      "letting-go"
+    ]
   },
   {
     "id": "session-047",
@@ -1267,7 +1697,18 @@
     "creator_hours": 456,
     "course_id": "course-012",
     "course_position": 4,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "grief",
+      "anger",
+      "focus",
+      "racing-mind",
+      "clarity",
+      "sleep",
+      "body-awareness",
+      "self-compassion",
+      "beginners"
+    ]
   },
   {
     "id": "session-048",
@@ -1294,7 +1735,16 @@
     "creator_hours": 345,
     "course_id": "course-008",
     "course_position": 4,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "low-mood",
+      "grief",
+      "focus",
+      "sleep",
+      "body-awareness",
+      "emotions",
+      "letting-go"
+    ]
   },
   {
     "id": "session-049",
@@ -1321,7 +1771,18 @@
     "creator_hours": 289,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anxiety",
+      "stress",
+      "grief",
+      "anger",
+      "sleep",
+      "body-awareness",
+      "self-compassion",
+      "emotions",
+      "letting-go"
+    ]
   },
   {
     "id": "session-050",
@@ -1348,7 +1809,15 @@
     "creator_hours": 289,
     "course_id": "course-020",
     "course_position": 3,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anger",
+      "focus",
+      "body-awareness",
+      "self-compassion",
+      "emotions",
+      "beginners"
+    ]
   },
   {
     "id": "session-051",
@@ -1375,7 +1844,15 @@
     "creator_hours": 234,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "low-mood",
+      "grief",
+      "sleep",
+      "body-awareness",
+      "self-compassion",
+      "emotions"
+    ]
   },
   {
     "id": "session-052",
@@ -1402,7 +1879,13 @@
     "creator_hours": 289,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "clarity",
+      "sleep",
+      "self-compassion",
+      "emotions"
+    ]
   },
   {
     "id": "session-053",
@@ -1429,7 +1912,14 @@
     "creator_hours": 456,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "low-mood",
+      "body-awareness",
+      "pain",
+      "emotions",
+      "beginners"
+    ]
   },
   {
     "id": "session-054",
@@ -1456,7 +1946,14 @@
     "creator_hours": 178,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "sleep",
+      "body-awareness",
+      "emotions",
+      "letting-go",
+      "evening"
+    ]
   },
   {
     "id": "session-055",
@@ -1483,7 +1980,15 @@
     "creator_hours": 312,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "focus",
+      "racing-mind",
+      "sleep",
+      "body-awareness",
+      "emotions",
+      "beginners"
+    ]
   },
   {
     "id": "session-056",
@@ -1510,7 +2015,11 @@
     "creator_hours": 234,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "focus",
+      "beginners"
+    ]
   },
   {
     "id": "session-057",
@@ -1537,7 +2046,16 @@
     "creator_hours": 389,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "focus",
+      "clarity",
+      "sleep",
+      "body-awareness",
+      "self-compassion",
+      "emotions",
+      "letting-go"
+    ]
   },
   {
     "id": "session-058",
@@ -1564,7 +2082,14 @@
     "creator_hours": 256,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "sleep",
+      "body-awareness",
+      "emotions",
+      "letting-go",
+      "morning"
+    ]
   },
   {
     "id": "session-059",
@@ -1591,7 +2116,15 @@
     "creator_hours": 567,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "low-mood",
+      "racing-mind",
+      "sleep",
+      "body-awareness",
+      "emotions",
+      "beginners"
+    ]
   },
   {
     "id": "session-060",
@@ -1618,7 +2151,11 @@
     "creator_hours": 345,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "body-awareness",
+      "beginners"
+    ]
   },
   {
     "id": "session-061",
@@ -1645,7 +2182,15 @@
     "creator_hours": 278,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "low-mood",
+      "focus",
+      "sleep",
+      "self-compassion",
+      "morning",
+      "beginners"
+    ]
   },
   {
     "id": "session-062",
@@ -1672,7 +2217,11 @@
     "creator_hours": 678,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "racing-mind",
+      "self-compassion"
+    ]
   },
   {
     "id": "session-063",
@@ -1699,7 +2248,12 @@
     "creator_hours": 389,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "low-mood",
+      "focus",
+      "body-awareness"
+    ]
   },
   {
     "id": "session-064",
@@ -1726,7 +2280,14 @@
     "creator_hours": 312,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "low-mood",
+      "focus",
+      "emotions",
+      "letting-go",
+      "beginners"
+    ]
   },
   {
     "id": "session-065",
@@ -1753,7 +2314,13 @@
     "creator_hours": 789,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "focus",
+      "racing-mind",
+      "sleep",
+      "self-compassion"
+    ]
   },
   {
     "id": "session-066",
@@ -1780,7 +2347,15 @@
     "creator_hours": 234,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anxiety",
+      "stress",
+      "focus",
+      "sleep",
+      "body-awareness",
+      "emotions"
+    ]
   },
   {
     "id": "session-067",
@@ -1807,7 +2382,13 @@
     "creator_hours": 256,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "racing-mind",
+      "sleep",
+      "body-awareness",
+      "emotions"
+    ]
   },
   {
     "id": "session-068",
@@ -1834,7 +2415,13 @@
     "creator_hours": 234,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anxiety",
+      "focus",
+      "clarity",
+      "self-compassion"
+    ]
   },
   {
     "id": "session-069",
@@ -1861,7 +2448,15 @@
     "creator_hours": 345,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anger",
+      "focus",
+      "sleep",
+      "body-awareness",
+      "pain",
+      "beginners"
+    ]
   },
   {
     "id": "session-070",
@@ -1888,7 +2483,13 @@
     "creator_hours": 289,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "pain",
+      "self-compassion",
+      "emotions",
+      "beginners"
+    ]
   },
   {
     "id": "session-071",
@@ -1915,7 +2516,12 @@
     "creator_hours": 312,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "racing-mind",
+      "sleep",
+      "self-compassion"
+    ]
   },
   {
     "id": "session-072",
@@ -1942,7 +2548,16 @@
     "creator_hours": 345,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "stress",
+      "low-mood",
+      "focus",
+      "sleep",
+      "body-awareness",
+      "pain",
+      "emotions"
+    ]
   },
   {
     "id": "session-073",
@@ -1969,7 +2584,14 @@
     "creator_hours": 189,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anxiety",
+      "sleep",
+      "self-compassion",
+      "emotions",
+      "morning"
+    ]
   },
   {
     "id": "session-074",
@@ -1996,7 +2618,12 @@
     "creator_hours": 456,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "focus",
+      "body-awareness",
+      "emotions"
+    ]
   },
   {
     "id": "session-075",
@@ -2023,7 +2650,16 @@
     "creator_hours": 234,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "stress",
+      "low-mood",
+      "focus",
+      "body-awareness",
+      "emotions",
+      "letting-go",
+      "beginners"
+    ]
   },
   {
     "id": "session-076",
@@ -2050,7 +2686,14 @@
     "creator_hours": 156,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anxiety",
+      "stress",
+      "body-awareness",
+      "emotions",
+      "letting-go"
+    ]
   },
   {
     "id": "session-077",
@@ -2077,7 +2720,17 @@
     "creator_hours": 289,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "stress",
+      "low-mood",
+      "focus",
+      "sleep",
+      "body-awareness",
+      "emotions",
+      "letting-go",
+      "beginners"
+    ]
   },
   {
     "id": "session-078",
@@ -2104,7 +2757,17 @@
     "creator_hours": 234,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "grief",
+      "focus",
+      "sleep",
+      "body-awareness",
+      "self-compassion",
+      "emotions",
+      "morning",
+      "beginners"
+    ]
   },
   {
     "id": "session-079",
@@ -2131,7 +2794,17 @@
     "creator_hours": 189,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "grief",
+      "focus",
+      "racing-mind",
+      "sleep",
+      "body-awareness",
+      "emotions",
+      "letting-go",
+      "morning"
+    ]
   },
   {
     "id": "session-080",
@@ -2158,7 +2831,18 @@
     "creator_hours": 312,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "low-mood",
+      "anger",
+      "focus",
+      "sleep",
+      "body-awareness",
+      "pain",
+      "self-compassion",
+      "emotions",
+      "letting-go"
+    ]
   },
   {
     "id": "session-081",
@@ -2185,7 +2869,15 @@
     "creator_hours": 456,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anger",
+      "focus",
+      "pain",
+      "self-compassion",
+      "emotions",
+      "beginners"
+    ]
   },
   {
     "id": "session-082",
@@ -2212,7 +2904,14 @@
     "creator_hours": 312,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "grief",
+      "anger",
+      "pain",
+      "self-compassion",
+      "emotions"
+    ]
   },
   {
     "id": "session-083",
@@ -2239,7 +2938,13 @@
     "creator_hours": 234,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "stress",
+      "pain",
+      "self-compassion",
+      "emotions"
+    ]
   },
   {
     "id": "session-084",
@@ -2266,7 +2971,14 @@
     "creator_hours": 267,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anger",
+      "focus",
+      "pain",
+      "self-compassion",
+      "emotions"
+    ]
   },
   {
     "id": "session-085",
@@ -2293,7 +3005,15 @@
     "creator_hours": 345,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anger",
+      "focus",
+      "sleep",
+      "body-awareness",
+      "self-compassion",
+      "emotions"
+    ]
   },
   {
     "id": "session-086",
@@ -2320,7 +3040,14 @@
     "creator_hours": 567,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "low-mood",
+      "sleep",
+      "pain",
+      "self-compassion",
+      "emotions"
+    ]
   },
   {
     "id": "session-087",
@@ -2347,7 +3074,16 @@
     "creator_hours": 189,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anxiety",
+      "stress",
+      "low-mood",
+      "sleep",
+      "pain",
+      "emotions",
+      "beginners"
+    ]
   },
   {
     "id": "session-088",
@@ -2374,7 +3110,13 @@
     "creator_hours": 234,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anxiety",
+      "focus",
+      "emotions",
+      "beginners"
+    ]
   },
   {
     "id": "session-089",
@@ -2401,7 +3143,16 @@
     "creator_hours": 189,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anxiety",
+      "low-mood",
+      "sleep",
+      "body-awareness",
+      "self-compassion",
+      "emotions",
+      "letting-go"
+    ]
   },
   {
     "id": "session-090",
@@ -2428,7 +3179,14 @@
     "creator_hours": 345,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "grief",
+      "anger",
+      "focus",
+      "racing-mind",
+      "body-awareness"
+    ]
   },
   {
     "id": "session-091",
@@ -2455,7 +3213,14 @@
     "creator_hours": 389,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "stress",
+      "low-mood",
+      "body-awareness",
+      "emotions",
+      "letting-go"
+    ]
   },
   {
     "id": "session-092",
@@ -2482,7 +3247,18 @@
     "creator_hours": 345,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anxiety",
+      "focus",
+      "racing-mind",
+      "clarity",
+      "sleep",
+      "body-awareness",
+      "pain",
+      "emotions",
+      "letting-go"
+    ]
   },
   {
     "id": "session-093",
@@ -2509,7 +3285,18 @@
     "creator_hours": 456,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "stress",
+      "grief",
+      "racing-mind",
+      "clarity",
+      "body-awareness",
+      "pain",
+      "self-compassion",
+      "emotions",
+      "letting-go"
+    ]
   },
   {
     "id": "session-094",
@@ -2536,7 +3323,15 @@
     "creator_hours": 389,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "racing-mind",
+      "clarity",
+      "body-awareness",
+      "self-compassion",
+      "emotions",
+      "beginners"
+    ]
   },
   {
     "id": "session-095",
@@ -2563,7 +3358,18 @@
     "creator_hours": 567,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "grief",
+      "focus",
+      "racing-mind",
+      "sleep",
+      "body-awareness",
+      "self-compassion",
+      "emotions",
+      "letting-go",
+      "beginners"
+    ]
   },
   {
     "id": "session-096",
@@ -2590,7 +3396,16 @@
     "creator_hours": 456,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "stress",
+      "anger",
+      "focus",
+      "clarity",
+      "body-awareness",
+      "emotions",
+      "letting-go"
+    ]
   },
   {
     "id": "session-097",
@@ -2617,7 +3432,15 @@
     "creator_hours": 312,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "low-mood",
+      "racing-mind",
+      "clarity",
+      "sleep",
+      "self-compassion",
+      "letting-go"
+    ]
   },
   {
     "id": "session-098",
@@ -2644,7 +3467,13 @@
     "creator_hours": 267,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anger",
+      "focus",
+      "pain",
+      "emotions"
+    ]
   },
   {
     "id": "session-099",
@@ -2671,7 +3500,16 @@
     "creator_hours": 234,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "sleep",
+      "body-awareness",
+      "self-compassion",
+      "emotions",
+      "letting-go",
+      "morning",
+      "beginners"
+    ]
   },
   {
     "id": "session-100",
@@ -2698,7 +3536,16 @@
     "creator_hours": 456,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "racing-mind",
+      "clarity",
+      "sleep",
+      "body-awareness",
+      "emotions",
+      "letting-go",
+      "beginners"
+    ]
   },
   {
     "id": "session-101",
@@ -2725,7 +3572,18 @@
     "creator_hours": 234,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "low-mood",
+      "anger",
+      "racing-mind",
+      "sleep",
+      "body-awareness",
+      "self-compassion",
+      "emotions",
+      "letting-go",
+      "morning"
+    ]
   },
   {
     "id": "session-102",
@@ -2752,7 +3610,16 @@
     "creator_hours": 389,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anger",
+      "focus",
+      "body-awareness",
+      "pain",
+      "self-compassion",
+      "emotions",
+      "letting-go"
+    ]
   },
   {
     "id": "session-103",
@@ -2779,7 +3646,12 @@
     "creator_hours": 289,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "sleep",
+      "pain",
+      "emotions"
+    ]
   },
   {
     "id": "session-104",
@@ -2806,7 +3678,19 @@
     "creator_hours": 312,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "low-mood",
+      "grief",
+      "racing-mind",
+      "sleep",
+      "body-awareness",
+      "self-compassion",
+      "emotions",
+      "letting-go",
+      "morning",
+      "evening"
+    ]
   },
   {
     "id": "session-105",
@@ -2833,7 +3717,15 @@
     "creator_hours": 256,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anxiety",
+      "racing-mind",
+      "clarity",
+      "self-compassion",
+      "emotions",
+      "beginners"
+    ]
   },
   {
     "id": "session-106",
@@ -2860,7 +3752,17 @@
     "creator_hours": 456,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "low-mood",
+      "anger",
+      "clarity",
+      "sleep",
+      "body-awareness",
+      "self-compassion",
+      "emotions",
+      "beginners"
+    ]
   },
   {
     "id": "session-107",
@@ -2887,7 +3789,15 @@
     "creator_hours": 189,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anxiety",
+      "focus",
+      "sleep",
+      "emotions",
+      "letting-go",
+      "beginners"
+    ]
   },
   {
     "id": "session-108",
@@ -2914,7 +3824,16 @@
     "creator_hours": 234,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anxiety",
+      "stress",
+      "low-mood",
+      "anger",
+      "sleep",
+      "emotions",
+      "evening"
+    ]
   },
   {
     "id": "session-109",
@@ -2941,7 +3860,14 @@
     "creator_hours": 189,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anxiety",
+      "stress",
+      "racing-mind",
+      "emotions",
+      "beginners"
+    ]
   },
   {
     "id": "session-110",
@@ -2968,6 +3894,17 @@
     "creator_hours": 267,
     "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted"
+    "source_reddit_id": "redacted",
+    "intent_tags": [
+      "anxiety",
+      "anger",
+      "sleep",
+      "body-awareness",
+      "pain",
+      "self-compassion",
+      "letting-go",
+      "morning",
+      "evening"
+    ]
   }
 ]

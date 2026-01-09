@@ -20,6 +20,7 @@ export interface TemplateInput {
   intention: string
   recommendedAfterHours?: number
   tags?: string[]
+  intentTags?: string[]
 }
 
 // Timeout wrapper for Supabase calls
@@ -64,6 +65,7 @@ export async function createTemplate(
           intention: template.intention,
           recommended_after_hours: template.recommendedAfterHours || 0,
           tags: template.tags || [],
+          intent_tags: template.intentTags || [],
           creator_hours: creatorHours
         })
         .select()
@@ -158,6 +160,7 @@ export async function updateTemplate(
   if (updates.intention !== undefined) dbUpdates.intention = updates.intention
   if (updates.recommendedAfterHours !== undefined) dbUpdates.recommended_after_hours = updates.recommendedAfterHours
   if (updates.tags !== undefined) dbUpdates.tags = updates.tags
+  if (updates.intentTags !== undefined) dbUpdates.intent_tags = updates.intentTags
 
   const { error } = await supabase
     .from('session_templates')
@@ -212,6 +215,7 @@ function mapTemplateFromDb(row: Record<string, unknown>): SessionTemplate {
     intention: row.intention as string,
     recommendedAfterHours: (row.recommended_after_hours as number) || 0,
     tags: (row.tags as string[]) || [],
+    intentTags: (row.intent_tags as string[]) || [],
     karma: (row.karma as number) || 0,
     saves: (row.saves as number) || 0,
     completions: (row.completions as number) || 0,

@@ -94,16 +94,16 @@ const SEEDED_SESSIONS: SessionTemplate[] = (extractedSessions as ExtractedSessio
 type FilterType = 'all' | 'pearls' | 'meditations'
 type SortType = 'rising' | 'new' | 'top' | 'saved'
 
-// Intent filter options - based on competitor analysis and auto-tagging results
+// Intent filter options - Pareto-aligned: 8 filters covering ~80% of user intent
 const INTENT_OPTIONS = [
   'anxiety',
   'stress',
   'sleep',
   'focus',
-  'racing-mind',
-  'grief',
-  'low-mood',
-  'self-compassion'
+  'beginners',
+  'body-awareness',
+  'self-compassion',
+  'letting-go'
 ] as const
 
 type IntentType = typeof INTENT_OPTIONS[number] | null
@@ -314,7 +314,10 @@ export function Explore() {
             Explore
           </h1>
           <p className="text-sm text-ink/40 mt-1">
-            Wisdom and meditations from the community
+            {intentFilter
+              ? `Content for ${intentFilter}`
+              : 'Wisdom and meditations from the community'
+            }
           </p>
         </header>
 
@@ -340,9 +343,27 @@ export function Explore() {
           ))}
         </div>
 
-        {/* Intent filter */}
+        {/* Intent filter - collapsible to reduce cognitive load */}
         <div className="mb-4">
-          <p className="text-xs text-ink/40 mb-2">Working with:</p>
+          <button
+            onClick={() => {
+              haptic.light()
+              if (intentFilter) {
+                setIntentFilter(null)
+              }
+            }}
+            className="flex items-center gap-2 text-xs text-ink/40 mb-2"
+          >
+            <span>Feeling:</span>
+            {intentFilter && (
+              <span className="flex items-center gap-1 bg-ink text-cream px-2 py-0.5 rounded-full">
+                {intentFilter}
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </span>
+            )}
+          </button>
           <div className="flex flex-wrap gap-1.5">
             {INTENT_OPTIONS.map((intent) => (
               <button
@@ -370,7 +391,10 @@ export function Explore() {
           {(['rising', 'new', 'top'] as SortType[]).map((s) => (
             <button
               key={s}
-              onClick={() => setSortType(s)}
+              onClick={() => {
+                haptic.light()
+                setSortType(s)
+              }}
               className={`
                 flex-1 py-2 px-3 text-sm rounded-md transition-all capitalize
                 ${sortType === s
@@ -447,6 +471,24 @@ export function Explore() {
                 'Be the first to share wisdom'
               )}
             </p>
+          </div>
+        )}
+
+        {/* Wellbeing tracking hint - shown when filter active and has results */}
+        {!isLoading && intentFilter && feedItems.length > 0 && (
+          <div className="mt-8 pt-6 border-t border-ink/5">
+            <button
+              onClick={() => {
+                haptic.light()
+                setView('settings')
+              }}
+              className="w-full text-left bg-cream-deep/50 rounded-xl p-4 hover:bg-cream-deep transition-colors"
+            >
+              <p className="text-xs text-ink/40 mb-1">Track your journey</p>
+              <p className="text-sm text-ink/70">
+                Monitor your {intentFilter} over time in Settings
+              </p>
+            </button>
           </div>
         )}
       </div>
