@@ -6,8 +6,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { getIntentionGradient } from '../lib/animations'
-import { saveTemplate, unsaveTemplate, isTemplateSaved, addPlannedSession } from '../lib/db'
-import { getTemplateStats } from '../lib/templates'
+import { saveTemplate as saveTemplateLocal, unsaveTemplate as unsaveTemplateLocal, isTemplateSaved, addPlannedSession } from '../lib/db'
+import { getTemplateStats, saveTemplate as saveTemplateRemote, unsaveTemplate as unsaveTemplateRemote } from '../lib/templates'
 import { SessionTemplate } from '../lib/types'
 
 // Re-export for backward compatibility with existing imports
@@ -22,6 +22,7 @@ interface SessionDetailModalProps {
   onSaveChange?: (sessionId: string, shouldSave: boolean) => void
   isAuthenticated?: boolean
   onRequireAuth?: () => void
+  currentUserId?: string  // For detecting own content
 }
 
 // Parse duration from string like "5-10 mins" → 10 (take max)
@@ -65,8 +66,12 @@ export function SessionDetailModal({
   onVote,
   onSaveChange,
   isAuthenticated = true,
-  onRequireAuth
+  onRequireAuth,
+  currentUserId
 }: SessionDetailModalProps) {
+  // Check if this is the user's own content (can't vote/save own content)
+  const isOwnContent = !!(currentUserId && session.userId === currentUserId)
+
   // Initialize from props if available (Supabase)
   const [hasVoted, setHasVoted] = useState(session.hasVoted ?? false)
   const [isSaved, setIsSaved] = useState(session.hasSaved ?? false)
@@ -119,7 +124,8 @@ export function SessionDetailModal({
       onRequireAuth()
       return
     }
-    if (isVoting) return
+    // Prevent self-voting
+    if (isOwnContent || isVoting) return
     setIsVoting(true)
 
     const newVoted = !hasVoted
@@ -145,29 +151,52 @@ export function SessionDetailModal({
     } finally {
       setIsVoting(false)
     }
-  }, [hasVoted, isVoting, onVote, session.id, isAuthenticated, onRequireAuth])
+  }, [hasVoted, isVoting, onVote, session.id, isAuthenticated, onRequireAuth, isOwnContent])
 
-  // Handle save with notification to parent
+  // Handle save with notification to parent (local + Supabase for community count)
   const handleSave = useCallback(async () => {
-    if (isSaving) return
+    // Prevent self-saving (own content is already in "My Meditations")
+    if (isOwnContent || isSaving) return
     setIsSaving(true)
     const newSaved = !isSaved
 
+    // Optimistic update for saves count
+    setIsSaved(newSaved)
+    setLiveStats(prev => prev ? {
+      ...prev,
+      saves: prev.saves + (newSaved ? 1 : -1)
+    } : null)
+
     try {
       if (newSaved) {
-        await saveTemplate(session.id)
+        // Save locally (for Journey tab)
+        await saveTemplateLocal(session.id)
+        // Save to Supabase (for community saves count) - requires auth
+        if (currentUserId) {
+          await saveTemplateRemote(session.id, currentUserId)
+        }
       } else {
-        await unsaveTemplate(session.id)
+        // Unsave locally
+        await unsaveTemplateLocal(session.id)
+        // Unsave from Supabase
+        if (currentUserId) {
+          await unsaveTemplateRemote(session.id, currentUserId)
+        }
       }
-      setIsSaved(newSaved)
       // Notify parent of save change
       onSaveChange?.(session.id, newSaved)
     } catch (err) {
+      // Rollback on error
+      setIsSaved(!newSaved)
+      setLiveStats(prev => prev ? {
+        ...prev,
+        saves: prev.saves + (newSaved ? -1 : 1)
+      } : null)
       console.error('Failed to save template:', err)
     } finally {
       setIsSaving(false)
     }
-  }, [isSaved, isSaving, session.id, onSaveChange])
+  }, [isSaved, isSaving, session.id, onSaveChange, isOwnContent, currentUserId])
 
   const handleAdopt = () => {
     setShowDatePicker(true)
@@ -288,22 +317,23 @@ export function SessionDetailModal({
             </div>
           )}
 
-          {/* Interactive Stats */}
+          {/* Interactive Stats - disabled for own content */}
           <div className="flex items-center gap-4 text-sm mb-8">
             {/* Vote button */}
             <button
-              onClick={handleVote}
-              disabled={isVoting}
+              onClick={isOwnContent ? undefined : handleVote}
+              disabled={isOwnContent || isVoting}
               className={`
                 flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all
-                ${hasVoted
+                ${(isOwnContent || hasVoted)
                   ? 'bg-indigo-deep text-cream'
                   : 'bg-cream-deep text-ink/50 hover:text-ink/70 hover:bg-cream-deep/80'
                 }
                 ${isVoting ? 'opacity-50' : ''}
+                ${isOwnContent ? 'cursor-default' : ''}
               `}
             >
-              <svg className="w-4 h-4" fill={hasVoted ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill={(isOwnContent || hasVoted) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 15l7-7 7 7" />
               </svg>
               <span className="tabular-nums">{displayStats.karma}</span>
@@ -311,18 +341,19 @@ export function SessionDetailModal({
 
             {/* Save button */}
             <button
-              onClick={handleSave}
-              disabled={isSaving}
+              onClick={isOwnContent ? undefined : handleSave}
+              disabled={isOwnContent || isSaving}
               className={`
                 flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all
-                ${isSaved
+                ${(isOwnContent || isSaved)
                   ? 'bg-indigo-deep text-cream'
                   : 'bg-cream-deep text-ink/50 hover:text-ink/70 hover:bg-cream-deep/80'
                 }
                 ${isSaving ? 'opacity-50' : ''}
+                ${isOwnContent ? 'cursor-default' : ''}
               `}
             >
-              <svg className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill={(isOwnContent || isSaved) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
               </svg>
               <span className="tabular-nums">{displayStats.saves}</span>
@@ -342,19 +373,21 @@ export function SessionDetailModal({
             {!showDatePicker ? (
               <div className="flex gap-3">
                 <button
-                  onClick={handleSave}
+                  onClick={isOwnContent ? undefined : handleSave}
+                  disabled={isOwnContent}
                   className={`
                     flex-none w-12 h-12 rounded-xl flex items-center justify-center transition-colors
-                    ${isSaved
+                    ${(isOwnContent || isSaved)
                       ? 'bg-indigo-deep text-cream'
                       : 'bg-cream-deep text-ink/50 hover:text-ink/70'
                     }
+                    ${isOwnContent ? 'cursor-default' : ''}
                   `}
-                  aria-label={isSaved ? 'Unsave meditation' : 'Save meditation'}
+                  aria-label={isOwnContent ? 'Your meditation' : (isSaved ? 'Unsave meditation' : 'Save meditation')}
                 >
                   <svg
                     className="w-5 h-5"
-                    fill={isSaved ? 'currentColor' : 'none'}
+                    fill={(isOwnContent || isSaved) ? 'currentColor' : 'none'}
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >

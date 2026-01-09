@@ -9,14 +9,15 @@ import { useState, useEffect, useCallback } from 'react'
 import { SessionTemplate } from './SessionDetailModal'
 import { Card, CardHeader, CardBody, AccentBar, CardEngagement } from './Card'
 import { VoiceBadgeWithHours } from './VoiceBadge'
-import { saveTemplate, unsaveTemplate, isTemplateSaved } from '../lib/db'
+import { saveTemplate as saveTemplateLocal, unsaveTemplate as unsaveTemplateLocal, isTemplateSaved } from '../lib/db'
+import { saveTemplate as saveTemplateRemote, unsaveTemplate as unsaveTemplateRemote } from '../lib/templates'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 
 /**
- * Calculate simplified feed Voice score for sessions
- * Uses hours, karma, saves, and completions
+ * Fallback Voice calculation for sessions without stored creatorVoiceScore
+ * Uses hours, karma, saves, and completions as a content-specific estimate
  */
-function calculateSessionVoice(hours: number, karma: number, saves: number, completions: number): number {
+function calculateFallbackVoice(hours: number, karma: number, saves: number, completions: number): number {
   // Hours: log10(hours + 1) * 10, cap at 40
   const hoursScore = Math.min(Math.log10(hours + 1) * 10, 40)
 
@@ -40,6 +41,7 @@ interface SessionCardProps {
   onVote?: (sessionId: string, shouldVote: boolean) => Promise<void>
   onRequireAuth?: () => void
   isAuthenticated?: boolean
+  currentUserId?: string  // For detecting own content
 }
 
 export function SessionCard({
@@ -48,7 +50,8 @@ export function SessionCard({
   onClick,
   onVote,
   onRequireAuth,
-  isAuthenticated = true
+  isAuthenticated = true,
+  currentUserId
 }: SessionCardProps) {
   const [isVoting, setIsVoting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -56,7 +59,11 @@ export function SessionCard({
   const [localVoted, setLocalVoted] = useState(session.hasVoted ?? false)
   const [localSaved, setLocalSaved] = useState(session.hasSaved ?? false)
   const [localUpvotes, setLocalUpvotes] = useState(session.karma)
+  const [localSaves, setLocalSaves] = useState(session.saves)
   const haptic = useTapFeedback()
+
+  // Check if this is the user's own content (can't vote/save own content)
+  const isOwnContent = !!(currentUserId && session.userId === currentUserId)
 
   // Sync local state when props change (e.g., on refresh)
   useEffect(() => {
@@ -67,7 +74,8 @@ export function SessionCard({
       setLocalSaved(session.hasSaved)
     }
     setLocalUpvotes(session.karma)
-  }, [session.hasVoted, session.hasSaved, session.karma])
+    setLocalSaves(session.saves)
+  }, [session.hasVoted, session.hasSaved, session.karma, session.saves])
 
   // Check if template is already saved on mount (fallback to IndexedDB)
   useEffect(() => {
@@ -82,7 +90,8 @@ export function SessionCard({
       onRequireAuth()
       return
     }
-    if (isVoting) return
+    // Prevent self-voting
+    if (isOwnContent || isVoting) return
     haptic.light()
     setIsVoting(true)
     const newVoted = !localVoted
@@ -104,31 +113,48 @@ export function SessionCard({
     } finally {
       setIsVoting(false)
     }
-  }, [isVoting, localVoted, haptic, onVote, session.id, isAuthenticated, onRequireAuth])
+  }, [isVoting, localVoted, haptic, onVote, session.id, isAuthenticated, onRequireAuth, isOwnContent])
 
-  // Handle save (persists to local IndexedDB)
+  // Handle save (persists to local IndexedDB + Supabase for community count)
   const handleSave = useCallback(async () => {
-    if (isSaving) return
+    // Prevent self-saving (own content is already in "My Meditations")
+    if (isOwnContent || isSaving) return
     haptic.light()
     setIsSaving(true)
     const newSaved = !localSaved
 
+    // Optimistic update
+    setLocalSaved(newSaved)
+    setLocalSaves(prev => newSaved ? prev + 1 : prev - 1)
+
     try {
       if (newSaved) {
-        await saveTemplate(session.id)
+        // Save locally (for Journey tab)
+        await saveTemplateLocal(session.id)
+        // Save to Supabase (for community saves count) - requires auth
+        if (currentUserId) {
+          await saveTemplateRemote(session.id, currentUserId)
+        }
       } else {
-        await unsaveTemplate(session.id)
+        // Unsave locally
+        await unsaveTemplateLocal(session.id)
+        // Unsave from Supabase
+        if (currentUserId) {
+          await unsaveTemplateRemote(session.id, currentUserId)
+        }
       }
-      setLocalSaved(newSaved)
     } catch (err) {
+      // Rollback on error
+      setLocalSaved(!newSaved)
+      setLocalSaves(prev => newSaved ? prev - 1 : prev + 1)
       console.error('Failed to save/unsave template:', err)
     } finally {
       setIsSaving(false)
     }
-  }, [isSaving, localSaved, session.id, haptic])
+  }, [isSaving, localSaved, session.id, haptic, isOwnContent, currentUserId])
 
-  // Calculate Voice score from available session data
-  const voiceScore = calculateSessionVoice(
+  // Use creator's stored Voice score if available, otherwise fallback to content-based calculation
+  const voiceScore = session.creatorVoiceScore || calculateFallbackVoice(
     session.creatorHours,
     localUpvotes,
     session.saves,
@@ -161,14 +187,14 @@ export function SessionCard({
             </p>
           </CardBody>
 
-          {/* Stats */}
+          {/* Stats - disable interactions for own content */}
           <CardEngagement
             upvotes={localUpvotes}
-            hasVoted={localVoted}
-            onVote={handleVote}
-            saves={session.saves}
-            hasSaved={localSaved}
-            onSave={handleSave}
+            hasVoted={isOwnContent ? true : localVoted}
+            onVote={isOwnContent ? undefined : handleVote}
+            saves={localSaves}
+            hasSaved={isOwnContent ? true : localSaved}
+            onSave={isOwnContent ? undefined : handleSave}
             practiced={session.completions}
             compact
           />

@@ -7,12 +7,13 @@
  * - Supabase templates: meditations created, completions
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { getInsights } from '../lib/db'
 import { getMyTemplates } from '../lib/templates'
 import { calculateVoice, VoiceScore, VoiceInputs } from '../lib/voice'
+import { updateVoiceScore } from '../lib/supabase'
 
 export interface UseVoiceResult {
   voice: VoiceScore | null
@@ -28,6 +29,9 @@ export function useVoice(): UseVoiceResult {
   const [voice, setVoice] = useState<VoiceScore | null>(null)
   const [inputs, setInputs] = useState<VoiceInputs | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+
+  // Track last synced score to avoid unnecessary updates
+  const lastSyncedScore = useRef<number | null>(null)
 
   const calculateVoiceData = useCallback(async () => {
     setIsLoading(true)
@@ -104,6 +108,15 @@ export function useVoice(): UseVoiceResult {
 
       setInputs(voiceInputs)
       setVoice(voiceScore)
+
+      // Sync to Supabase if authenticated and score changed
+      if (isAuthenticated && user && voiceScore.total !== lastSyncedScore.current) {
+        lastSyncedScore.current = voiceScore.total
+        // Fire and forget - don't block on this
+        updateVoiceScore(user.id, voiceScore.total).catch(err => {
+          console.warn('Failed to sync Voice score to Supabase:', err)
+        })
+      }
     } catch (err) {
       console.error('Failed to calculate Voice:', err)
     } finally {

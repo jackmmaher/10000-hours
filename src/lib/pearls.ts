@@ -19,12 +19,14 @@ export interface Pearl {
   hasVoted?: boolean
   hasSaved?: boolean
   isPreserved?: boolean  // True if original pearl was deleted, this is a saved copy
+  creatorVoiceScore?: number  // Creator's global Voice score from Supabase
 }
 
 export type PearlFilter = 'new' | 'rising' | 'top'
 
 /**
  * Create a new pearl from an insight
+ * Automatically adds creator's vote and save (starts with karma=1, saves=1)
  */
 export async function createPearl(text: string, userId: string): Promise<Pearl> {
   if (!isSupabaseConfigured() || !supabase) {
@@ -50,15 +52,22 @@ export async function createPearl(text: string, userId: string): Promise<Pearl> 
     throw new Error('Failed to share pearl')
   }
 
+  // Auto-add creator's vote and save (triggers will update counts)
+  // These are fire-and-forget - don't fail creation if they fail
+  await Promise.all([
+    supabase.from('pearl_votes').insert({ pearl_id: data.id, user_id: userId }).then(() => {}),
+    supabase.from('pearl_saves').insert({ pearl_id: data.id, user_id: userId, text: data.text }).then(() => {})
+  ]).catch(err => console.warn('Auto-vote/save failed (non-critical):', err))
+
   return {
     id: data.id,
     userId: data.user_id,
     text: data.text,
-    upvotes: data.upvotes,
-    saves: data.saves,
+    upvotes: 1, // Creator's vote
+    saves: 1,   // Creator's save
     createdAt: data.created_at,
-    hasVoted: false,
-    hasSaved: false
+    hasVoted: true,  // Creator has voted
+    hasSaved: true   // Creator has saved
   }
 }
 
@@ -101,6 +110,7 @@ export async function getPearls(
       intent_tags: string[] | null
       has_voted: boolean
       has_saved: boolean
+      creator_voice_score: number
     }) => ({
       id: p.id,
       userId: p.user_id,
@@ -110,7 +120,8 @@ export async function getPearls(
       createdAt: p.created_at,
       intentTags: p.intent_tags || [],
       hasVoted: p.has_voted,
-      hasSaved: p.has_saved
+      hasSaved: p.has_saved,
+      creatorVoiceScore: p.creator_voice_score || 0
     }))
   }
 
@@ -262,7 +273,7 @@ export async function unsavePearl(pearlId: string, userId: string): Promise<bool
 }
 
 /**
- * Get user's saved pearls
+ * Get user's saved pearls (excluding their own created pearls to prevent duplicates)
  * Returns preserved text even if original pearl was deleted
  */
 export async function getSavedPearls(userId: string): Promise<Pearl[]> {
@@ -336,10 +347,13 @@ export async function getSavedPearls(userId: string): Promise<Pearl[]> {
         }
       }
     })
+    // Filter out user's own created pearls to prevent duplicates with "My Pearls"
+    .filter(pearl => pearl.userId !== userId)
 }
 
 /**
  * Get user's own shared pearls (pearls they created)
+ * Creator's own pearls are marked as already voted/saved since they auto-vote/save on creation
  */
 export async function getMyPearls(userId: string): Promise<Pearl[]> {
   if (!isSupabaseConfigured() || !supabase) {
@@ -365,8 +379,8 @@ export async function getMyPearls(userId: string): Promise<Pearl[]> {
     saves: p.saves,
     createdAt: p.created_at,
     editedAt: p.edited_at || null,
-    hasVoted: false,
-    hasSaved: false
+    hasVoted: true,  // Creator has auto-voted their own pearl
+    hasSaved: true   // Creator has auto-saved their own pearl
   }))
 }
 

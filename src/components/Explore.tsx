@@ -460,6 +460,7 @@ export function Explore() {
                     onSave={handleSave}
                     onRequireAuth={() => setShowAuthModal(true)}
                     isAuthenticated={isAuthenticated}
+                    currentUserId={user?.id}
                   />
                 )
               }
@@ -475,6 +476,7 @@ export function Explore() {
                     onVote={handleSessionVote}
                     onRequireAuth={() => setShowAuthModal(true)}
                     isAuthenticated={isAuthenticated}
+                    currentUserId={user?.id}
                   />
                 )
               }
@@ -547,6 +549,7 @@ export function Explore() {
           }}
           isAuthenticated={isAuthenticated}
           onRequireAuth={() => setShowAuthModal(true)}
+          currentUserId={user?.id}
         />
       )}
 
@@ -562,25 +565,17 @@ export function Explore() {
 }
 
 /**
- * Calculate simplified feed Voice score from available data
- * Full Voice algorithm requires more inputs; this approximates for feed display
- *
- * Factors:
- * - Hours (log scaled): 0-40 points
- * - Karma/upvotes (sqrt scaled): 0-30 points
- * - Saves (sqrt scaled): 0-30 points
+ * Fallback feed Voice score calculation when creatorVoiceScore is unavailable
+ * Uses karma and saves as a content-specific estimate
  */
-function calculateFeedVoice(hours: number, karma: number, saves: number): number {
-  // Hours: log10(hours + 1) * 10, cap at 40
-  const hoursScore = Math.min(Math.log10(hours + 1) * 10, 40)
-
+function calculateFallbackFeedVoice(karma: number, saves: number): number {
   // Karma: sqrt(karma) * 3, cap at 30
   const karmaScore = Math.min(Math.sqrt(karma) * 3, 30)
 
   // Saves: sqrt(saves) * 4, cap at 30
   const savesScore = Math.min(Math.sqrt(saves) * 4, 30)
 
-  return Math.round(hoursScore + karmaScore + savesScore)
+  return Math.round(karmaScore + savesScore)
 }
 
 // Pearl card variant for explore feed - uses unified Card system
@@ -589,13 +584,15 @@ function PearlCardExplore({
   onVote,
   onSave,
   onRequireAuth,
-  isAuthenticated
+  isAuthenticated,
+  currentUserId
 }: {
   pearl: Pearl
   onVote: (id: string, hasVoted: boolean) => void
   onSave: (id: string, hasSaved: boolean) => void
   onRequireAuth: () => void
   isAuthenticated: boolean
+  currentUserId?: string
 }) {
   const [isVoting, setIsVoting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -605,16 +602,19 @@ function PearlCardExplore({
   const [localSaves, setLocalSaves] = useState(pearl.saves || 0)
   const haptic = useTapFeedback()
 
-  // Calculate feed Voice score from karma and saves only
-  // Pearls don't have creator hours - their credibility comes from community validation
-  const voiceScore = calculateFeedVoice(0, localUpvotes, localSaves)
+  // Check if this is the user's own content (can't vote/save own content)
+  const isOwnContent = !!(currentUserId && pearl.userId === currentUserId)
+
+  // Use creator's stored Voice score if available, otherwise fallback to content-based calculation
+  const voiceScore = pearl.creatorVoiceScore || calculateFallbackFeedVoice(localUpvotes, localSaves)
 
   const handleVote = async () => {
     if (!isAuthenticated) {
       onRequireAuth()
       return
     }
-    if (isVoting) return
+    // Prevent self-voting
+    if (isOwnContent || isVoting) return
 
     haptic.light()
     setIsVoting(true)
@@ -637,7 +637,8 @@ function PearlCardExplore({
       onRequireAuth()
       return
     }
-    if (isSaving) return
+    // Prevent self-saving (own content is already in "My Pearls")
+    if (isOwnContent || isSaving) return
 
     haptic.light()
     setIsSaving(true)
@@ -659,8 +660,8 @@ function PearlCardExplore({
     <Card variant="default">
       {/* Header with pearl orb and Voice badge */}
       <CardHeader
-        indicator={<PearlOrb variant="community" />}
-        label="Community wisdom"
+        indicator={<PearlOrb variant={isOwnContent ? 'personal' : 'community'} />}
+        label={isOwnContent ? 'Your wisdom' : 'Community wisdom'}
         voiceScore={voiceScore}
       />
 
@@ -671,14 +672,14 @@ function PearlCardExplore({
         </p>
       </CardBody>
 
-      {/* Actions row */}
+      {/* Actions row - disable for own content */}
       <CardEngagement
         upvotes={localUpvotes}
-        hasVoted={localVoted}
-        onVote={handleVote}
+        hasVoted={isOwnContent ? true : localVoted}
+        onVote={isOwnContent ? undefined : handleVote}
         saves={localSaves}
-        hasSaved={localSaved}
-        onSave={handleSave}
+        hasSaved={isOwnContent ? true : localSaved}
+        onSave={isOwnContent ? undefined : handleSave}
       />
     </Card>
   )

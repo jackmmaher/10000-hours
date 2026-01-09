@@ -10,6 +10,7 @@
  */
 export interface SessionTemplate {
   id: string
+  userId?: string  // Creator's user ID (null/undefined for seeded content)
   title: string
   tagline: string
   heroImageUrl?: string
@@ -27,6 +28,7 @@ export interface SessionTemplate {
   saves: number
   completions: number
   creatorHours: number
+  creatorVoiceScore?: number  // Creator's global Voice score from Supabase
   courseId?: string
   coursePosition?: number
 }

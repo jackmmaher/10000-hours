@@ -34,6 +34,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 
 /**
  * Create a new session template
+ * Automatically adds creator's vote and save (starts with karma=1, saves=1)
  */
 export async function createTemplate(
   template: TemplateInput,
@@ -84,7 +85,21 @@ export async function createTemplate(
     }
 
     console.log('Template created successfully:', data.id)
-    return mapTemplateFromDb(data)
+
+    // Auto-add creator's vote and save (triggers will update counts)
+    // These are fire-and-forget - don't fail creation if they fail
+    await Promise.all([
+      supabase.from('session_template_votes').insert({ template_id: data.id, user_id: userId }).then(() => {}),
+      supabase.from('session_template_saves').insert({ template_id: data.id, user_id: userId }).then(() => {})
+    ]).catch(err => console.warn('Auto-vote/save failed (non-critical):', err))
+
+    const result = mapTemplateFromDb(data)
+    // Override with correct initial values since triggers will have run
+    return {
+      ...result,
+      karma: 1,  // Creator's vote
+      saves: 1   // Creator's save
+    }
   } catch (err) {
     console.error('Create template failed:', err)
     throw err
@@ -202,6 +217,7 @@ export async function deleteTemplate(templateId: string, userId: string): Promis
 function mapTemplateFromDb(row: Record<string, unknown>): SessionTemplate {
   return {
     id: row.id as string,
+    userId: row.user_id as string | undefined,
     title: row.title as string,
     tagline: row.tagline as string,
     durationGuidance: row.duration_guidance as string,
@@ -218,6 +234,7 @@ function mapTemplateFromDb(row: Record<string, unknown>): SessionTemplate {
     saves: (row.saves as number) || 0,
     completions: (row.completions as number) || 0,
     creatorHours: (row.creator_hours as number) || 0,
+    creatorVoiceScore: (row.creator_voice_score as number) || 0,
     courseId: row.course_id as string | undefined,
     coursePosition: row.course_position as number | undefined
   }
