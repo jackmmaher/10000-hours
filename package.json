@@ -1,7 +1,7 @@
 {
-  "name": "10000-hours",
+  "name": "still-hours",
   "private": true,
-  "version": "1.0.0",
+  "version": "3.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

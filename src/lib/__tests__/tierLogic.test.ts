@@ -5,7 +5,7 @@ import {
   getWeeklyRollingSeconds,
   getWeeklyRollingHours,
   getLastAchievedMilestone,
-  MILESTONES,
+  generateMilestones,
   PremiumFeatures
 } from '../tierLogic'
 import { Session } from '../db'
@@ -124,17 +124,25 @@ describe('tierLogic', () => {
     })
   })
 
-  describe('MILESTONES', () => {
-    it('should contain expected milestones', () => {
-      expect(MILESTONES).toContain(2)
-      expect(MILESTONES).toContain(100)
-      expect(MILESTONES).toContain(1000)
-      expect(MILESTONES).toContain(10000)
+  describe('generateMilestones', () => {
+    it('should contain expected milestones in infinite mode', () => {
+      const milestones = generateMilestones()
+      expect(milestones).toContain(2)
+      expect(milestones).toContain(100)
+      expect(milestones).toContain(1000)
+      expect(milestones).toContain(10000)
     })
 
     it('should be sorted in ascending order', () => {
-      const sorted = [...MILESTONES].sort((a, b) => a - b)
-      expect(MILESTONES).toEqual(sorted)
+      const milestones = generateMilestones()
+      const sorted = [...milestones].sort((a, b) => a - b)
+      expect(milestones).toEqual(sorted)
+    })
+
+    it('should respect user goal', () => {
+      const milestones = generateMilestones(50)
+      expect(milestones[milestones.length - 1]).toBe(50)
+      expect(milestones).not.toContain(100)
     })
   })
 

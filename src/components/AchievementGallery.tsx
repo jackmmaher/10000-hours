@@ -8,8 +8,8 @@
 
 import { useMemo, useEffect, useState } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
-import { getAchievements, Achievement } from '../lib/db'
-import { MILESTONES } from '../lib/tierLogic'
+import { getAchievements, Achievement, getUserPreferences } from '../lib/db'
+import { generateMilestones } from '../lib/milestones'
 import { getAdaptiveMilestone } from '../lib/calculations'
 import { formatShortDate } from '../lib/format'
 import { MilestoneSummary } from './MilestoneSummary'
@@ -30,33 +30,39 @@ export function AchievementGallery() {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null)
   const [showCurrentProgress, setShowCurrentProgress] = useState(false)
+  const [userGoalHours, setUserGoalHours] = useState<number | undefined>()
   const haptic = useTapFeedback()
 
-  // Load achievements from database
+  // Load achievements and user goal from database
   useEffect(() => {
-    async function loadAchievements() {
-      const loaded = await getAchievements()
+    async function loadData() {
+      const [loaded, prefs] = await Promise.all([
+        getAchievements(),
+        getUserPreferences()
+      ])
       setAchievements(loaded)
+      setUserGoalHours(prefs?.practiceGoalHours)
       setIsLoading(false)
     }
-    loadAchievements()
+    loadData()
   }, [totalSeconds])
 
-  // Get current milestone progress
+  // Get current milestone progress with user's goal
   const milestone = useMemo(
-    () => getAdaptiveMilestone(sessions),
-    [sessions]
+    () => getAdaptiveMilestone(sessions, userGoalHours),
+    [sessions, userGoalHours]
   )
 
   const currentHours = totalSeconds / 3600
 
-  // Get milestones to display (achieved + next)
+  // Get milestones to display (achieved + next) using user's goal
   const displayMilestones = useMemo(() => {
+    const milestones = generateMilestones(userGoalHours)
     const achieved = achievements.slice(-4) // Last 4 achieved
-    const nextIndex = MILESTONES.findIndex(m => m > currentHours)
-    const nextMilestone = nextIndex >= 0 ? MILESTONES[nextIndex] : null
+    const nextIndex = milestones.findIndex(m => m > currentHours)
+    const nextMilestone = nextIndex >= 0 ? milestones[nextIndex] : null
     return { achieved, nextMilestone, nextIndex }
-  }, [achievements, currentHours])
+  }, [achievements, currentHours, userGoalHours])
 
   if (isLoading) {
     return null

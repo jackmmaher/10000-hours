@@ -1,7 +1,6 @@
 import { create } from 'zustand'
-import { Session, Achievement, addSession, getAllSessions, initAppState, markEnlightenmentReached, recordMilestoneIfNew, linkSessionToPlan } from '../lib/db'
-import { GOAL_SECONDS } from '../lib/constants'
-import { MILESTONES } from '../lib/tierLogic'
+import { Session, Achievement, addSession, getAllSessions, initAppState, markEnlightenmentReached, recordMilestoneIfNew, linkSessionToPlan, getUserPreferences } from '../lib/db'
+import { generateMilestones } from '../lib/milestones'
 import { recordTemplateCompletion } from '../lib/templates'
 import { supabase } from '../lib/supabase'
 
@@ -134,12 +133,21 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     const localId = sessionUuid.split('-')[0]
     const newSessions = [...sessions, { ...session, id: parseInt(localId, 16) }]
 
-    // Check for milestone achievements
+    // Get user's practice goal for dynamic milestones
+    const userPrefs = await getUserPreferences()
+    const userGoalHours = userPrefs?.practiceGoalHours
+
+    // Check for milestone achievements with dynamic milestones
     const newTotalHours = newTotalSeconds / 3600
-    const achievedMilestone = await recordMilestoneIfNew(newTotalHours, MILESTONES)
+    const milestones = generateMilestones(userGoalHours)
+    const achievedMilestone = await recordMilestoneIfNew(newTotalHours, milestones)
 
     // Check if we just crossed the enlightenment threshold
-    const crossedThreshold = !hasReachedEnlightenment && newTotalSeconds >= GOAL_SECONDS
+    // Only trigger enlightenment if user has explicit goal AND reached it
+    const userGoalSeconds = userGoalHours ? userGoalHours * 3600 : null
+    const crossedThreshold = userGoalSeconds
+      && !hasReachedEnlightenment
+      && newTotalSeconds >= userGoalSeconds
 
     if (crossedThreshold) {
       await markEnlightenmentReached()

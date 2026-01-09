@@ -520,7 +520,7 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
       {/* Version */}
       <footer className="pb-20 text-center">
         <p className="font-serif text-xs text-ink/25 italic">
-          10,000 Hours · v2.1.0
+          Still Hours · v3.0.0
         </p>
       </footer>
 

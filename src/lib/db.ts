@@ -132,6 +132,12 @@ export interface UserPreferences {
   preferredDiscipline?: string     // 'open' | 'breath' | 'vipassana' | 'zen' | 'loving-kindness' | 'body-scan' | 'varies'
   preferredDuration?: string       // '5-10' | '15-20' | '30+' | 'varies'
   preferredTime?: string           // 'morning' | 'afternoon' | 'evening' | 'varies'
+  /**
+   * User's practice goal in hours.
+   * - undefined/null = infinite mode (no ceiling, milestones continue forever)
+   * - number = specific goal (25, 50, 100, etc.)
+   */
+  practiceGoalHours?: number
   updatedAt: number
 }
 

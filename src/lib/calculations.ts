@@ -1,5 +1,6 @@
 import { Session } from './db'
-import { GOAL_SECONDS } from './constants'
+import { DEFAULT_GOAL_SECONDS } from './constants'
+import { getNextMilestone, getPreviousMilestone } from './milestones'
 
 export interface WindowStats {
   totalSeconds: number
@@ -98,18 +99,6 @@ export function getStatsForWindow(
   }
 }
 
-// Adaptive milestone system
-// Early milestones (2h, 5h) added for quick wins - achievable in first 1-2 weeks
-// Research: Endowed Progress Effect, Variable reward schedules, Zeigarnik Effect
-const MILESTONE_HOURS = [
-  2, 5, 10, 25, 50, 100,     // Early: first win in ~1 week (2h = 4x30min sessions)
-  250, 500, 750, 1000,       // Building (100-1000h)
-  1500, 2000, 2500,          // Intermediate (1000-2500h)
-  3500, 5000,                // Advanced (2500-5000h)
-  6500, 7500,                // Near-end (5000-7500h)
-  8500, 10000                // Final (7500-10000h)
-]
-
 // Helper to format hours as Xh Ym
 function formatHoursCompact(hours: number): string {
   const h = Math.floor(hours)
@@ -126,21 +115,26 @@ function formatHoursCompact(hours: number): string {
   return `${h}h ${m}m`
 }
 
-export function getAdaptiveMilestone(sessions: Session[]): AdaptiveMilestone {
+export function getAdaptiveMilestone(
+  sessions: Session[],
+  goalHours?: number
+): AdaptiveMilestone {
   const totalSeconds = sessions.reduce((sum, s) => sum + s.durationSeconds, 0)
   const currentHours = totalSeconds / 3600
 
-  // Find the next milestone
-  let targetHours = MILESTONE_HOURS[MILESTONE_HOURS.length - 1]
-  let prevMilestone = 0
+  const targetHours = getNextMilestone(currentHours, goalHours)
+  const prevMilestone = getPreviousMilestone(currentHours, goalHours)
 
-  for (let i = 0; i < MILESTONE_HOURS.length; i++) {
-    if (currentHours < MILESTONE_HOURS[i]) {
-      targetHours = MILESTONE_HOURS[i]
-      prevMilestone = i > 0 ? MILESTONE_HOURS[i - 1] : 0
-      break
+  // Handle completion (no next milestone)
+  if (!targetHours) {
+    return {
+      currentHours: Math.round(currentHours * 10) / 10,
+      targetHours: goalHours || currentHours,
+      progressPercent: 100,
+      milestoneName: 'Complete',
+      currentFormatted: formatHoursCompact(currentHours),
+      targetFormatted: goalHours ? `${goalHours}h` : '∞'
     }
-    prevMilestone = MILESTONE_HOURS[i]
   }
 
   // Calculate progress within this milestone band
@@ -220,11 +214,23 @@ export function getWeeklyConsistency(sessions: Session[]): WeeklyConsistency {
   }
 }
 
-export function getProjection(sessions: Session[]): ProjectionInsight {
+export function getProjection(
+  sessions: Session[],
+  goalHours?: number
+): ProjectionInsight {
   const totalSeconds = sessions.reduce((sum, s) => sum + s.durationSeconds, 0)
-  const remainingSeconds = Math.max(0, GOAL_SECONDS - totalSeconds)
+
+  // Use user goal or default for calculations
+  const effectiveGoalSeconds = goalHours
+    ? goalHours * 3600
+    : DEFAULT_GOAL_SECONDS
+
+  const remainingSeconds = Math.max(0, effectiveGoalSeconds - totalSeconds)
   const remainingHours = remainingSeconds / 3600
-  const percentComplete = (totalSeconds / GOAL_SECONDS) * 100
+  // No percent in infinite mode (when no goal set)
+  const percentComplete = goalHours
+    ? (totalSeconds / effectiveGoalSeconds) * 100
+    : (totalSeconds / DEFAULT_GOAL_SECONDS) * 100
 
   // Determine maturity level
   const daysSinceStart = daysSinceFirst(sessions)

@@ -1,6 +1,7 @@
-// Main goal
-export const GOAL_HOURS = 10000
-export const GOAL_SECONDS = GOAL_HOURS * 3600
+// Default for projection calculations when no user goal set
+// NOT shown to users — internal fallback only
+export const DEFAULT_GOAL_HOURS = 10000
+export const DEFAULT_GOAL_SECONDS = DEFAULT_GOAL_HOURS * 3600
 
 // Time constants
 export const MS_PER_DAY = 24 * 60 * 60 * 1000

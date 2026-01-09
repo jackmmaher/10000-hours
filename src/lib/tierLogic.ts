@@ -17,6 +17,10 @@
 
 import { Session, TierType } from './db'
 import { MS_PER_DAY } from './constants'
+import { generateMilestones } from './milestones'
+
+// Re-export for backward compatibility
+export { generateMilestones, GOAL_PRESETS } from './milestones'
 
 /**
  * Determines if user has premium features
@@ -60,9 +64,11 @@ export function getWeeklyRollingHours(sessions: Session[]): number {
  * Gets the last achieved milestone
  */
 export function getLastAchievedMilestone(
-  totalHours: number
+  totalHours: number,
+  goalHours?: number
 ): { achieved: number; name: string } | null {
-  const achieved = MILESTONES.filter(m => totalHours >= m).pop()
+  const milestones = generateMilestones(goalHours)
+  const achieved = milestones.filter(m => totalHours >= m).pop()
 
   if (!achieved) return null
 
@@ -72,14 +78,6 @@ export function getLastAchievedMilestone(
 
   return { achieved, name }
 }
-
-/**
- * Milestone array for achievement tracking
- */
-export const MILESTONES = [
-  2, 5, 10, 25, 50, 100, 250, 500, 750,
-  1000, 1500, 2000, 2500, 3500, 5000, 6500, 7500, 8500, 10000
-]
 
 /**
  * Premium feature checks - used by components to gate features

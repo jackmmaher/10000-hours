@@ -320,14 +320,9 @@ export function Timer() {
               </div>
             ) : (
               // Normal mode - show total or weekly hours based on tier
-              <>
-                <p className="font-serif text-display text-indigo-deep tabular-nums">
-                  {formatTotalHours(totalSeconds)}
-                </p>
-                <p className="text-sm text-indigo-deep/40 mt-2">
-                  toward 10,000 hours
-                </p>
-              </>
+              <p className="font-serif text-display text-indigo-deep tabular-nums">
+                {formatTotalHours(totalSeconds)}
+              </p>
             )
           )}
         </div>
