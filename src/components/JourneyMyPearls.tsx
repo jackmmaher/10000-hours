@@ -8,17 +8,21 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useAuthStore } from '../stores/useAuthStore'
+import { useTapFeedback } from '../hooks/useTapFeedback'
 import { Card, CardBody, PearlOrb } from './Card'
 import type { Pearl } from '../lib/pearls'
 
 export function JourneyMyPearls() {
   const { user } = useAuthStore()
+  const haptic = useTapFeedback()
   const [createdPearls, setCreatedPearls] = useState<Pearl[]>([])
   const [savedPearls, setSavedPearls] = useState<Pearl[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [editingPearlId, setEditingPearlId] = useState<string | null>(null)
   const [editText, setEditText] = useState('')
   const [isSavingEdit, setIsSavingEdit] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<Pearl | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const loadPearls = useCallback(async () => {
     if (!user) {
@@ -91,6 +95,30 @@ export function JourneyMyPearls() {
     }
   }
 
+  const handleDelete = async () => {
+    if (!deleteTarget || !user || isDeleting) return
+
+    setIsDeleting(true)
+    haptic.medium()
+
+    try {
+      const { deletePearl } = await import('../lib/pearls')
+      const success = await deletePearl(deleteTarget.id, user.id)
+
+      if (success) {
+        haptic.success()
+        setCreatedPearls(prev => prev.filter(p => p.id !== deleteTarget.id))
+        setDeleteTarget(null)
+      } else {
+        console.error('Failed to delete pearl')
+      }
+    } catch (err) {
+      console.error('Error deleting pearl:', err)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-12">
@@ -154,12 +182,23 @@ export function JourneyMyPearls() {
                     </span>
                   </div>
                   {editingPearlId !== pearl.id && (
-                    <button
-                      onClick={() => handleStartEdit(pearl)}
-                      className="text-xs text-ink-soft hover:text-ink transition-colors px-2 py-1 -mr-2"
-                    >
-                      Edit
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleStartEdit(pearl)}
+                        className="text-xs text-ink-soft hover:text-ink transition-colors px-2 py-1"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => {
+                          haptic.light()
+                          setDeleteTarget(pearl)
+                        }}
+                        className="text-xs text-ink-soft hover:text-red-500 transition-colors px-2 py-1 -mr-2"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   )}
                 </div>
 
@@ -258,6 +297,52 @@ export function JourneyMyPearls() {
                 </div>
               </Card>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation modal */}
+      {deleteTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-6"
+          onClick={() => setDeleteTarget(null)}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" />
+
+          {/* Dialog */}
+          <div
+            className="relative bg-card rounded-2xl p-6 max-w-sm w-full shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="font-serif text-lg text-ink mb-2">
+              Delete pearl?
+            </h3>
+            <p className="text-sm text-ink/60 mb-2">
+              "{deleteTarget.text.slice(0, 60)}{deleteTarget.text.length > 60 ? '...' : ''}"
+            </p>
+            <p className="text-xs text-ink/40 mb-6">
+              Anyone who saved it will keep their copy.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="flex-1 py-3 px-4 rounded-xl text-sm font-medium text-ink/60
+                  hover:bg-ink/5 transition-colors touch-manipulation"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="flex-1 py-3 px-4 rounded-xl text-sm font-medium text-white
+                  bg-red-500 hover:bg-red-600 transition-colors touch-manipulation
+                  disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
           </div>
         </div>
       )}

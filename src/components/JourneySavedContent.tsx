@@ -6,9 +6,10 @@
  * - Collected Meditations: Templates saved from the community
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigationStore } from '../stores/useNavigationStore'
 import { useAuthStore } from '../stores/useAuthStore'
+import { useTapFeedback } from '../hooks/useTapFeedback'
 import { Card, CardHeader, CardBody, CardTitle, CardDescription, AccentBar } from './Card'
 import type { SessionTemplate } from './SessionDetailModal'
 
@@ -52,11 +53,14 @@ interface SavedContentProps {
 
 export function JourneySavedContent({ onCreateNew }: SavedContentProps) {
   const { user } = useAuthStore()
+  const haptic = useTapFeedback()
   const [createdMeditations, setCreatedMeditations] = useState<SessionTemplate[]>([])
   const [savedMeditations, setSavedMeditations] = useState<SessionTemplate[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedSession, setSelectedSession] = useState<SessionTemplate | null>(null)
   const [getIntentionGradient, setGetIntentionGradient] = useState<((intention: string) => string) | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<SessionTemplate | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     // Load the gradient function
@@ -141,6 +145,32 @@ export function JourneySavedContent({ onCreateNew }: SavedContentProps) {
     loadMeditations()
   }, [user])
 
+  // Handle delete meditation
+  const handleDelete = useCallback(async () => {
+    if (!deleteTarget || !user || isDeleting) return
+
+    setIsDeleting(true)
+    haptic.medium()
+
+    try {
+      const { deleteTemplate } = await import('../lib/templates')
+      const success = await deleteTemplate(deleteTarget.id, user.id)
+
+      if (success) {
+        haptic.success()
+        // Remove from local state
+        setCreatedMeditations(prev => prev.filter(m => m.id !== deleteTarget.id))
+        setDeleteTarget(null)
+      } else {
+        console.error('Failed to delete meditation')
+      }
+    } catch (err) {
+      console.error('Error deleting meditation:', err)
+    } finally {
+      setIsDeleting(false)
+    }
+  }, [deleteTarget, user, isDeleting, haptic])
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-12">
@@ -199,10 +229,20 @@ export function JourneySavedContent({ onCreateNew }: SavedContentProps) {
       : 'from-[#9DB4A0] to-[#5C7C5E]'
 
     const actionIcon = variant === 'created' ? (
-      // Edit pencil for user-created
-      <svg className="w-4 h-4 text-ink-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-      </svg>
+      // Delete button for user-created
+      <button
+        onClick={(e) => {
+          e.stopPropagation()
+          haptic.light()
+          setDeleteTarget(session)
+        }}
+        className="p-1.5 -m-1.5 rounded-lg hover:bg-ink/5 transition-colors touch-manipulation"
+        aria-label="Delete meditation"
+      >
+        <svg className="w-4 h-4 text-ink-soft hover:text-red-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      </button>
     ) : (
       // Bookmark for saved
       <svg className="w-4 h-4 text-ink-soft" fill="currentColor" viewBox="0 0 24 24">
@@ -287,6 +327,49 @@ export function JourneySavedContent({ onCreateNew }: SavedContentProps) {
             setSelectedSession(null)
           }}
         />
+      )}
+
+      {/* Delete confirmation modal */}
+      {deleteTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-6"
+          onClick={() => setDeleteTarget(null)}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" />
+
+          {/* Dialog */}
+          <div
+            className="relative bg-card rounded-2xl p-6 max-w-sm w-full shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="font-serif text-lg text-ink mb-2">
+              Delete meditation?
+            </h3>
+            <p className="text-sm text-ink/60 mb-6">
+              "{deleteTarget.title}" will be removed. Anyone who saved it will keep their copy.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="flex-1 py-3 px-4 rounded-xl text-sm font-medium text-ink/60
+                  hover:bg-ink/5 transition-colors touch-manipulation"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="flex-1 py-3 px-4 rounded-xl text-sm font-medium text-white
+                  bg-red-500 hover:bg-red-600 transition-colors touch-manipulation
+                  disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   )
