@@ -258,6 +258,42 @@ body {
   }
 }
 
+/* Orb settling - gentle release at meditation end */
+@keyframes orbSettle {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.92);
+    opacity: 0.7;
+  }
+}
+
+/* Orb breathing - dormant state, slower and subtler */
+@keyframes orbBreathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+/* Fade out animation */
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-out {
+  animation: fadeOut 3s ease-out forwards;
+}
+
 /* Progress River shimmer - gentle flow of light */
 @keyframes riverShimmer {
   0%, 100% {

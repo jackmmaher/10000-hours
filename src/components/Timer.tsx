@@ -118,10 +118,53 @@ export function Timer() {
             // Just completed
             <div className="animate-fade-in">
               {shouldHideTime ? (
-                // Hide time mode - just show completion message
-                <p className="font-serif text-2xl text-indigo-deep">
-                  Meditation complete
-                </p>
+                // Hide time mode - settling orb, gently releasing
+                <div className="flex flex-col items-center">
+                  <div className="relative flex items-center justify-center" style={{ width: '160px', height: '160px' }}>
+                    {/* Layer 1: Fading atmosphere */}
+                    <div
+                      className="absolute rounded-full animate-fade-out"
+                      style={{
+                        width: '140px',
+                        height: '140px',
+                        background: `radial-gradient(circle, var(--orb-atmosphere) 0%, transparent 60%)`,
+                        animationDuration: '3s',
+                        animationFillMode: 'forwards',
+                      }}
+                    />
+
+                    {/* Layer 2: Settling core - gentle fade */}
+                    <div
+                      className="absolute rounded-full"
+                      style={{
+                        width: '60px',
+                        height: '60px',
+                        background: `radial-gradient(circle at 35% 35%, var(--orb-core) 0%, var(--orb-mid) 40%, var(--orb-edge) 100%)`,
+                        boxShadow: `
+                          inset 0 0 25px rgba(255, 255, 255, 0.5),
+                          0 0 50px var(--orb-glow),
+                          0 6px 24px var(--shadow-color)
+                        `,
+                        animation: 'orbSettle 2s ease-out forwards',
+                      }}
+                    />
+
+                    {/* Layer 3: Inner light - final glow */}
+                    <div
+                      className="absolute rounded-full"
+                      style={{
+                        width: '35px',
+                        height: '35px',
+                        background: `radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.6) 0%, transparent 70%)`,
+                        animation: 'orbInnerGlow 4s ease-in-out infinite',
+                      }}
+                    />
+                  </div>
+
+                  <p className="font-serif text-lg text-indigo-deep/70 mt-2 animate-fade-in">
+                    Complete
+                  </p>
+                </div>
               ) : (
                 // Normal mode - show added time
                 <>
@@ -230,12 +273,50 @@ export function Timer() {
           ) : (
             // Idle
             shouldHideTime ? (
-              // Hide time mode - simple prompt with hint
+              // Hide time mode - dormant orb waiting to be awakened
               <div className="flex flex-col items-center">
-                <p className="font-serif text-2xl text-indigo-deep">
-                  Just start meditating
-                </p>
-                <p className="text-xs text-indigo-deep/30 mt-4">
+                <div className="relative flex items-center justify-center" style={{ width: '140px', height: '140px' }}>
+                  {/* Layer 1: Soft ambient presence */}
+                  <div
+                    className="absolute rounded-full"
+                    style={{
+                      width: '120px',
+                      height: '120px',
+                      background: `radial-gradient(circle, var(--orb-atmosphere) 0%, transparent 70%)`,
+                      animation: 'atmosphereBreathe 8s ease-in-out infinite',
+                    }}
+                  />
+
+                  {/* Layer 2: Dormant core - smaller, waiting */}
+                  <div
+                    className="absolute rounded-full"
+                    style={{
+                      width: '50px',
+                      height: '50px',
+                      background: `radial-gradient(circle at 35% 35%, var(--orb-core) 0%, var(--orb-mid) 50%, var(--orb-edge) 100%)`,
+                      boxShadow: `
+                        inset 0 0 20px rgba(255, 255, 255, 0.4),
+                        0 0 40px var(--orb-glow),
+                        0 4px 20px var(--shadow-color)
+                      `,
+                      animation: 'orbBreathe 6s ease-in-out infinite',
+                      opacity: 0.85,
+                    }}
+                  />
+
+                  {/* Layer 3: Inner light - gentle pulse */}
+                  <div
+                    className="absolute rounded-full"
+                    style={{
+                      width: '30px',
+                      height: '30px',
+                      background: `radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.5) 0%, transparent 70%)`,
+                      animation: 'orbInnerGlow 7s ease-in-out infinite',
+                    }}
+                  />
+                </div>
+
+                <p className="text-xs text-indigo-deep/30 mt-6">
                   tap to begin
                 </p>
               </div>
@@ -265,10 +346,11 @@ export function Timer() {
             <button
               onClick={(e) => {
                 e.stopPropagation()
+                haptic.light()
                 setView('progress')
               }}
               aria-label="View progress statistics"
-              className="flex flex-col items-center hover:opacity-60 transition-opacity active:scale-[0.95]"
+              className="flex flex-col items-center hover:opacity-60 transition-opacity active:scale-[0.95] touch-manipulation"
             >
               <p className="text-xs text-ink/20 tracking-wide">
                 Progress

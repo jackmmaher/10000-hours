@@ -8,6 +8,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useVoiceCapture } from '../hooks/useVoiceCapture'
 import { useAudioLevel } from '../hooks/useAudioLevel'
+import { useTapFeedback } from '../hooks/useTapFeedback'
 import { addInsight } from '../lib/db'
 import { formatDuration } from '../lib/format'
 
@@ -35,10 +36,11 @@ function AudioWaveform({ level }: { level: number }) {
         return (
           <div
             key={i}
-            className="w-1 bg-rose-500 rounded-full transition-all duration-75"
+            className="w-1 rounded-full transition-all duration-75"
             style={{
               height: `${height}%`,
               opacity: 0.6 + (level * sensitivity * 0.4),
+              background: 'var(--accent)',
             }}
           />
         )
@@ -62,6 +64,7 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
   } = useVoiceCapture()
 
   const { audioLevel, startAnalyzing, stopAnalyzing } = useAudioLevel()
+  const haptic = useTapFeedback()
   const [isSaving, setIsSaving] = useState(false)
 
   // Auto-start recording on mount (after brief delay for UI to settle)
@@ -97,6 +100,7 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
   const handleStopAndSave = useCallback(async () => {
     if (!isRecording) return
 
+    haptic.success() // Celebratory - you captured something meaningful
     stopAnalyzing()
     setIsSaving(true)
     try {
@@ -116,16 +120,17 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
     } finally {
       setIsSaving(false)
     }
-  }, [isRecording, stopCapture, sessionId, onComplete, displayText, stopAnalyzing])
+  }, [isRecording, stopCapture, sessionId, onComplete, displayText, stopAnalyzing, haptic])
 
   // Handle skip
   const handleSkip = useCallback(() => {
+    haptic.light() // Light touch for skip
     stopAnalyzing()
     if (isRecording) {
       cancelCapture()
     }
     onSkip()
-  }, [isRecording, cancelCapture, onSkip, stopAnalyzing])
+  }, [isRecording, cancelCapture, onSkip, stopAnalyzing, haptic])
 
   // Block swipe navigation when modal is open
   const handleTouchEvent = (e: React.TouchEvent) => {
@@ -148,8 +153,8 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
           Your browser doesn't support voice recording. Try Chrome or Safari.
         </p>
         <button
-          onClick={onSkip}
-          className="py-3 px-6 text-ink/60 hover:text-ink transition-colors"
+          onClick={handleSkip}
+          className="py-3 px-6 text-ink/60 hover:text-ink transition-colors touch-manipulation"
         >
           Continue
         </button>
@@ -173,8 +178,8 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
           {error}
         </p>
         <button
-          onClick={onSkip}
-          className="py-3 px-6 text-ink/60 hover:text-ink transition-colors"
+          onClick={handleSkip}
+          className="py-3 px-6 text-ink/60 hover:text-ink transition-colors touch-manipulation"
         >
           Skip
         </button>
@@ -193,7 +198,7 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
       <div className="flex-none px-6 pt-8 pb-4">
         <button
           onClick={handleSkip}
-          className="text-sm text-ink/40 hover:text-ink/60 transition-colors"
+          className="text-sm text-ink/40 hover:text-ink/60 transition-colors touch-manipulation"
         >
           Skip
         </button>
@@ -205,8 +210,11 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
         <div className="mb-8">
           {isRecording ? (
             <div className="flex flex-col items-center">
-              {/* Small recording dot */}
-              <div className="w-3 h-3 rounded-full bg-rose-500 mb-6 animate-pulse" />
+              {/* Small recording dot - theme-aware */}
+              <div
+                className="w-3 h-3 rounded-full mb-6 animate-pulse"
+                style={{ background: 'var(--accent)' }}
+              />
 
               {/* Claude-style waveform - the main visual */}
               <AudioWaveform level={audioLevel} />
@@ -265,7 +273,7 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
             onClick={handleStopAndSave}
             disabled={isSaving}
             className={`
-              w-full py-4 rounded-xl font-medium transition-all
+              w-full py-4 rounded-xl font-medium transition-all touch-manipulation
               ${isSaving
                 ? 'bg-ink/20 text-ink/40'
                 : 'bg-ink text-cream active:scale-[0.98]'
