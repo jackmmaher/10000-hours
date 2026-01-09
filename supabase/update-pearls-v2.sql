@@ -1,6 +1,11 @@
--- Seed 250 community pearls extracted from r/Meditation
--- Run this in Supabase SQL Editor
+-- Update pearls: Remove attribution issues, fix duplicates, improve sensitivity
+-- Run this ONE TIME in Supabase SQL Editor
+-- This will delete all seeded pearls and re-insert the updated versions
 
+-- Step 1: Delete all seeded pearls (those with NULL user_id)
+DELETE FROM pearls WHERE user_id IS NULL;
+
+-- Step 2: Insert updated pearls (17 pearls reworked for originality)
 INSERT INTO pearls (user_id, text, upvotes, saves, created_at) VALUES
   (NULL, 'Meditation is not about stopping thoughts. It''s about changing your relationship with them.', 156, 89, '2025-12-17T11:02:02.578Z'),
   (NULL, 'The breath doesn''t need your help. It''s been doing this longer than you''ve been watching.', 89, 45, '2025-12-05T11:02:02.578Z'),
@@ -252,4 +257,3 @@ INSERT INTO pearls (user_id, text, upvotes, saves, created_at) VALUES
   (NULL, 'In a world of noise, silence is a superpower.', 234, 167, '2025-10-10T11:02:02.579Z'),
   (NULL, 'The teacher is already within you. Meditation is just listening.', 178, 134, '2025-11-10T11:02:02.579Z'),
   (NULL, 'One breath at a time. One moment at a time. This is the practice.', 198, 156, '2025-12-08T11:02:02.579Z');
-
