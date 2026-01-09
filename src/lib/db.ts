@@ -634,6 +634,15 @@ export async function deletePlannedSession(id: number): Promise<void> {
   await db.plannedSessions.delete(id)
 }
 
+// Helper to check if two timestamps fall on the same calendar day
+function isSameDay(timestamp1: number, timestamp2: number): boolean {
+  const d1 = new Date(timestamp1)
+  const d2 = new Date(timestamp2)
+  return d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
+}
+
 // Get the next upcoming planned session (today or future, not completed)
 // Pass afterDate to skip plans on that date (useful when today already has a session)
 export async function getNextPlannedSession(afterDate?: number): Promise<PlannedSession | undefined> {
@@ -650,8 +659,8 @@ export async function getNextPlannedSession(afterDate?: number): Promise<Planned
   return plans
     .filter(p => {
       if (p.completed || p.linkedSessionUuid) return false
-      // If afterDate provided, skip plans on that exact date
-      if (afterDate !== undefined && p.date === afterDate) return false
+      // If afterDate provided, skip plans on that same calendar day
+      if (afterDate !== undefined && isSameDay(p.date, afterDate)) return false
       return true
     })
     .sort((a, b) => a.date - b.date)[0]
@@ -664,9 +673,15 @@ export async function getLatestInsight(): Promise<Insight | undefined> {
 // Session-Plan Linking helpers
 export async function linkSessionToPlan(sessionUuid: string, date: number): Promise<PlannedSession | null> {
   // Find an unlinked plan for the given date and link it to the session
+  // Use date range (same calendar day) to handle any timestamp discrepancies
+  const dayStart = new Date(date)
+  dayStart.setHours(0, 0, 0, 0)
+  const dayEnd = new Date(date)
+  dayEnd.setHours(23, 59, 59, 999)
+
   const plan = await db.plannedSessions
     .where('date')
-    .equals(date)
+    .between(dayStart.getTime(), dayEnd.getTime(), true, true)
     .filter(p => !p.linkedSessionUuid)
     .first()
 
@@ -687,6 +702,43 @@ export async function getPlannedSessionByLinkedUuid(sessionUuid: string): Promis
 
 export async function getAllPlannedSessions(): Promise<PlannedSession[]> {
   return db.plannedSessions.orderBy('date').reverse().toArray()
+}
+
+/**
+ * Retroactively link unlinked plans to sessions on the same day
+ * Useful for fixing plans that weren't auto-linked due to timestamp mismatches
+ */
+export async function relinkOrphanedPlans(sessions: Session[]): Promise<number> {
+  const unlinkedPlans = await db.plannedSessions
+    .filter(p => !p.completed && !p.linkedSessionUuid)
+    .toArray()
+
+  let linkedCount = 0
+
+  for (const plan of unlinkedPlans) {
+    // Find a session on the same day as this plan
+    const matchingSession = sessions.find(session => isSameDay(session.startTime, plan.date))
+
+    if (matchingSession && plan.id) {
+      await db.plannedSessions.update(plan.id, {
+        completed: true,
+        linkedSessionUuid: matchingSession.uuid
+      })
+      linkedCount++
+    }
+  }
+
+  return linkedCount
+}
+
+/**
+ * Mark a plan as completed without linking to a session
+ * Useful for clearing stuck plans
+ */
+export async function markPlanCompleted(planId: number): Promise<void> {
+  await db.plannedSessions.update(planId, {
+    completed: true
+  })
 }
 
 // Course Progress helpers

@@ -28,6 +28,7 @@ import { JourneyMyPearls } from './JourneyMyPearls'
 import {
   getPlannedSessionsForWeek,
   getNextPlannedSession,
+  relinkOrphanedPlans,
   PlannedSession,
   Session,
   Insight
@@ -85,6 +86,8 @@ export function Journey() {
     handlers: pullHandlers
   } = usePullToRefresh({
     onRefresh: async () => {
+      // Fix any orphaned plans that weren't auto-linked due to timestamp mismatches
+      await relinkOrphanedPlans(sessions)
       // Refresh all data
       refreshAllPlanData()
       setInsightStreamKey(k => k + 1)
@@ -107,8 +110,11 @@ export function Journey() {
 
   // Load planned sessions for the current week
   // Refreshes when: sessions change (auto-linking), plansRefreshKey changes (manual save)
+  // Also automatically relinks any orphaned plans that weren't auto-linked
   useEffect(() => {
     const loadWeekPlans = async () => {
+      // Fix any orphaned plans first (handles timestamp mismatch edge cases)
+      await relinkOrphanedPlans(sessions)
       const monday = getMondayOfWeek()
       const plans = await getPlannedSessionsForWeek(monday.getTime())
       setWeekPlans(plans)
