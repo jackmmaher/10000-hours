@@ -19,6 +19,7 @@ import {
   archiveWellbeingDimension,
   getCheckInHistory
 } from '../lib/db'
+import { useTapFeedback } from '../hooks/useTapFeedback'
 
 // Suggested dimensions - framed as "how much is this affecting you"
 const SUGGESTED_DIMENSIONS = [
@@ -49,6 +50,7 @@ export function WellbeingCard({
   latestCheckIns,
   onRefresh
 }: WellbeingCardProps) {
+  const haptic = useTapFeedback()
   const [showAddPicker, setShowAddPicker] = useState(false)
   const [expandedAdd, setExpandedAdd] = useState<string | null>(null)
   const [expandedEdit, setExpandedEdit] = useState<string | null>(null)
@@ -213,17 +215,18 @@ export function WellbeingCard({
   }
 
   return (
-    <div className="bg-cream-warm rounded-xl overflow-hidden">
+    <div className="bg-card/90 backdrop-blur-md border border-ink/5 shadow-sm rounded-xl overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between p-5 pb-3">
         <h3 className="font-serif text-lg text-ink">Wellbeing</h3>
         <button
           onClick={() => {
+            haptic.light()
             setShowAddPicker(!showAddPicker)
             setExpandedAdd(null)
             setShowCustomInput(false)
           }}
-          className="flex items-center gap-1 text-xs text-moss hover:text-moss/80 transition-colors"
+          className="flex items-center gap-1 text-xs text-moss hover:text-moss/80 transition-colors touch-manipulation active:scale-[0.97]"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -243,10 +246,11 @@ export function WellbeingCard({
               <button
                 key={dim.name}
                 onClick={() => {
+                  haptic.light()
                   setExpandedAdd(dim.name)
                   setSliderValue(5)
                 }}
-                className={`px-3 py-1.5 text-xs rounded-full transition-colors ${
+                className={`px-3 py-1.5 text-xs rounded-full transition-colors touch-manipulation active:scale-[0.97] ${
                   expandedAdd === dim.name
                     ? 'bg-moss text-cream'
                     : 'bg-cream text-ink/70 hover:bg-cream-deep'
@@ -257,10 +261,11 @@ export function WellbeingCard({
             ))}
             <button
               onClick={() => {
+                haptic.light()
                 setShowCustomInput(true)
                 setExpandedAdd(null)
               }}
-              className={`px-3 py-1.5 text-xs rounded-full transition-colors ${
+              className={`px-3 py-1.5 text-xs rounded-full transition-colors touch-manipulation active:scale-[0.97] ${
                 showCustomInput
                   ? 'bg-moss text-cream'
                   : 'bg-cream text-ink/70 hover:bg-cream-deep'
@@ -279,6 +284,7 @@ export function WellbeingCard({
                 onChange={e => setCustomLabel(e.target.value)}
                 onKeyDown={e => {
                   if (e.key === 'Enter' && customLabel.trim()) {
+                    haptic.light()
                     setExpandedAdd(`custom:${customLabel.trim()}`)
                   }
                 }}
@@ -288,8 +294,11 @@ export function WellbeingCard({
               />
               {customLabel.trim() && (
                 <button
-                  onClick={() => setExpandedAdd(`custom:${customLabel.trim()}`)}
-                  className="mt-2 text-xs text-moss"
+                  onClick={() => {
+                    haptic.light()
+                    setExpandedAdd(`custom:${customLabel.trim()}`)
+                  }}
+                  className="mt-2 text-xs text-moss touch-manipulation"
                 >
                   Set initial value for "{customLabel.trim()}"
                 </button>
@@ -325,6 +334,7 @@ export function WellbeingCard({
 
               <button
                 onClick={() => {
+                  haptic.success()
                   if (expandedAdd.startsWith('custom:')) {
                     const label = expandedAdd.replace('custom:', '')
                     handleAddWithScore(label.toLowerCase().replace(/\s+/g, '-'), label)
@@ -333,7 +343,7 @@ export function WellbeingCard({
                     if (dim) handleAddWithScore(dim.name, dim.label)
                   }
                 }}
-                className="w-full py-2 bg-moss text-cream text-sm rounded-lg hover:bg-moss/90 transition-colors"
+                className="w-full py-2 bg-moss text-cream text-sm rounded-lg hover:bg-moss/90 transition-colors touch-manipulation active:scale-[0.98]"
               >
                 Add to tracking
               </button>
@@ -361,8 +371,11 @@ export function WellbeingCard({
                   {/* Delete button (revealed on swipe) */}
                   <div className="absolute inset-y-0 right-0 w-20 bg-red-500 flex items-center justify-center">
                     <button
-                      onClick={() => handleDelete(dim.id)}
-                      className="text-white text-xs font-medium"
+                      onClick={() => {
+                        haptic.medium()
+                        handleDelete(dim.id)
+                      }}
+                      className="text-white text-xs font-medium touch-manipulation"
                     >
                       Delete
                     </button>
@@ -384,8 +397,11 @@ export function WellbeingCard({
                         <div className="flex items-center justify-between mb-3">
                           <p className="text-sm text-ink font-medium">{dim.label}</p>
                           <button
-                            onClick={() => setExpandedEdit(null)}
-                            className="text-ink/40 hover:text-ink/60"
+                            onClick={() => {
+                              haptic.light()
+                              setExpandedEdit(null)
+                            }}
+                            className="text-ink/40 hover:text-ink/60 touch-manipulation"
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
@@ -423,8 +439,11 @@ export function WellbeingCard({
                         )}
 
                         <button
-                          onClick={() => handleUpdateScore(dim.id)}
-                          className="w-full py-2 bg-moss text-cream text-sm rounded-lg hover:bg-moss/90 transition-colors"
+                          onClick={() => {
+                            haptic.success()
+                            handleUpdateScore(dim.id)
+                          }}
+                          className="w-full py-2 bg-moss text-cream text-sm rounded-lg hover:bg-moss/90 transition-colors touch-manipulation active:scale-[0.98]"
                         >
                           Update
                         </button>
@@ -432,8 +451,11 @@ export function WellbeingCard({
                     ) : (
                       /* Collapsed view */
                       <button
-                        onClick={() => handleExpandEdit(dim)}
-                        className="w-full p-4 text-left"
+                        onClick={() => {
+                          haptic.light()
+                          handleExpandEdit(dim)
+                        }}
+                        className="w-full p-4 text-left touch-manipulation"
                       >
                         <div className="flex items-center justify-between mb-2">
                           <p className="text-sm text-ink">{dim.label}</p>
@@ -479,8 +501,11 @@ export function WellbeingCard({
             Track how meditation affects your wellbeing over time
           </p>
           <button
-            onClick={() => setShowAddPicker(true)}
-            className="px-4 py-2 bg-moss text-cream text-sm rounded-lg hover:bg-moss/90 transition-colors"
+            onClick={() => {
+              haptic.light()
+              setShowAddPicker(true)
+            }}
+            className="px-4 py-2 bg-moss text-cream text-sm rounded-lg hover:bg-moss/90 transition-colors touch-manipulation active:scale-[0.98]"
           >
             Start Tracking
           </button>

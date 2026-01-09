@@ -95,6 +95,7 @@ type SortType = 'rising' | 'new' | 'top' | 'saved'
 export function Explore() {
   const { setView } = useNavigationStore()
   const { user, isAuthenticated, refreshProfile } = useAuthStore()
+  const haptic = useTapFeedback()
   const [pearls, setPearls] = useState<Pearl[]>([])
   const [communityTemplates, setCommunityTemplates] = useState<SessionTemplate[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -283,9 +284,12 @@ export function Explore() {
       <div className="px-6 py-8 max-w-lg mx-auto">
         {/* Back to timer */}
         <button
-          onClick={() => setView('timer')}
+          onClick={() => {
+            haptic.light()
+            setView('timer')
+          }}
           aria-label="Return to timer"
-          className="flex items-center text-sm text-ink/40 mb-8 hover:text-ink/60 transition-colors active:scale-[0.98]"
+          className="flex items-center text-sm text-ink/40 mb-8 hover:text-ink/60 transition-colors active:scale-[0.98] touch-manipulation"
         >
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />

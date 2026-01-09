@@ -17,6 +17,7 @@ import { useAuthStore } from '../stores/useAuthStore'
 import { useVoice } from '../hooks/useVoice'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import { useSwipe } from '../hooks/useSwipe'
+import { useTapFeedback } from '../hooks/useTapFeedback'
 import {
   getUserPreferences,
   updateUserPreferences,
@@ -74,6 +75,7 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
   const { setView } = useNavigationStore()
   const { user, isAuthenticated } = useAuthStore()
   const { voice, isLoading: voiceLoading } = useVoice()
+  const haptic = useTapFeedback()
 
   // Local state
   const [preferences, setPreferences] = useState<UserPreferences | null>(null)
@@ -148,6 +150,7 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
     value: string
   ) => {
     if (!preferences) return
+    haptic.light()
     await updateUserPreferences({ [key]: value })
     setPreferences(prev => prev ? { ...prev, [key]: value } : null)
   }
@@ -226,8 +229,11 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
         {/* Header with settings gear */}
         <div className="flex items-center justify-between mb-8">
           <button
-            onClick={() => setView('timer')}
-            className="flex items-center text-sm text-ink/40 hover:text-ink/60 transition-colors active:scale-[0.98]"
+            onClick={() => {
+              haptic.light()
+              setView('timer')
+            }}
+            className="flex items-center text-sm text-ink/40 hover:text-ink/60 transition-colors active:scale-[0.98] touch-manipulation"
           >
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
@@ -237,8 +243,11 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
 
           {/* Settings gear */}
           <button
-            onClick={onNavigateToSettings}
-            className="p-2 text-ink/40 hover:text-ink/60 transition-colors active:scale-[0.95]"
+            onClick={() => {
+              haptic.light()
+              onNavigateToSettings()
+            }}
+            className="p-2 text-ink/40 hover:text-ink/60 transition-colors active:scale-[0.95] touch-manipulation"
             aria-label="Settings"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -278,8 +287,11 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
           {/* Voice badge - tappable to Progress */}
           {!voiceLoading && voice && (
             <button
-              onClick={() => setView('progress')}
-              className="flex flex-col items-center active:scale-[0.97] transition-transform"
+              onClick={() => {
+                haptic.light()
+                setView('progress')
+              }}
+              className="flex flex-col items-center active:scale-[0.97] transition-transform touch-manipulation"
             >
               <VoiceBadge score={voice.total} showScore />
               <span className="text-[10px] text-ink/30 mt-1">Voice</span>
@@ -297,8 +309,12 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
         {/* Meditation Preferences */}
         <div className="mb-6">
           <button
-            onClick={() => setShowPreferences(!showPreferences)}
-            className="w-full flex items-center justify-between p-4 bg-cream-warm rounded-xl hover:bg-cream-deep transition-colors"
+            onClick={() => {
+              haptic.light()
+              setShowPreferences(!showPreferences)
+            }}
+            className="w-full flex items-center justify-between p-4 bg-card/90 backdrop-blur-md border border-ink/5 shadow-sm
+              rounded-xl hover:bg-card/95 hover:shadow-md transition-all touch-manipulation"
           >
             <div className="text-left">
               <p className="text-sm text-ink font-medium">Meditation Preferences</p>
@@ -329,7 +345,7 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
                     <button
                       key={opt.value}
                       onClick={() => handlePreferenceChange('preferredPosture', opt.value)}
-                      className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
+                      className={`px-3 py-1.5 text-xs rounded-lg transition-colors touch-manipulation active:scale-[0.97] ${
                         preferences?.preferredPosture === opt.value
                           ? 'bg-moss text-cream'
                           : 'bg-cream text-ink/60 hover:bg-cream-deep'
@@ -349,7 +365,7 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
                     <button
                       key={opt.value}
                       onClick={() => handlePreferenceChange('preferredDiscipline', opt.value)}
-                      className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
+                      className={`px-3 py-1.5 text-xs rounded-lg transition-colors touch-manipulation active:scale-[0.97] ${
                         preferences?.preferredDiscipline === opt.value
                           ? 'bg-moss text-cream'
                           : 'bg-cream text-ink/60 hover:bg-cream-deep'
@@ -369,7 +385,7 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
                     <button
                       key={opt.value}
                       onClick={() => handlePreferenceChange('preferredDuration', opt.value)}
-                      className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
+                      className={`px-3 py-1.5 text-xs rounded-lg transition-colors touch-manipulation active:scale-[0.97] ${
                         preferences?.preferredDuration === opt.value
                           ? 'bg-moss text-cream'
                           : 'bg-cream text-ink/60 hover:bg-cream-deep'
@@ -389,7 +405,7 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
                     <button
                       key={opt.value}
                       onClick={() => handlePreferenceChange('preferredTime', opt.value)}
-                      className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
+                      className={`px-3 py-1.5 text-xs rounded-lg transition-colors touch-manipulation active:scale-[0.97] ${
                         preferences?.preferredTime === opt.value
                           ? 'bg-moss text-cream'
                           : 'bg-cream text-ink/60 hover:bg-cream-deep'
