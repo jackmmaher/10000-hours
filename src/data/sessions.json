@@ -1,6 +1,6 @@
 [
   {
-    "id": "session-001",
+    "id": "fc68ad3a-1af8-5c3f-beda-0b61f80ede74",
     "title": "First Breath Awakening",
     "tagline": "Begin your journey with the simplest practice",
     "hero_gradient": "from-emerald-400 to-teal-600",
@@ -18,13 +18,9 @@
       "#morning",
       "#foundation"
     ],
-    "seed_karma": 156,
-    "seed_saves": 234,
-    "seed_completions": 1567,
     "creator_hours": 342,
-    "course_id": "course-001",
+    "course_id": "fa40ccc4-0952-5a92-915c-df640fdcba2a",
     "course_position": 1,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "focus",
       "sleep",
@@ -34,10 +30,13 @@
       "letting-go",
       "morning",
       "beginners"
-    ]
+    ],
+    "karma": 156,
+    "saves": 234,
+    "completions": 1567
   },
   {
-    "id": "session-002",
+    "id": "6f3836dd-7fb6-5fe4-81cb-92cf6942650f",
     "title": "The Mountain Within",
     "tagline": "Cultivate unshakeable stillness",
     "hero_gradient": "from-stone-400 to-slate-600",
@@ -55,23 +54,22 @@
       "#intermediate",
       "#morning"
     ],
-    "seed_karma": 189,
-    "seed_saves": 312,
-    "seed_completions": 1234,
     "creator_hours": 456,
-    "course_id": "course-002",
+    "course_id": "cb0db006-b010-56be-8680-608aa5c23b1f",
     "course_position": 1,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "focus",
       "racing-mind",
       "body-awareness",
       "emotions",
       "letting-go"
-    ]
+    ],
+    "karma": 189,
+    "saves": 312,
+    "completions": 1234
   },
   {
-    "id": "session-003",
+    "id": "5daf3801-206f-5b47-8323-728e7f22c6d4",
     "title": "Releasing the Day",
     "tagline": "Let go of what you've carried",
     "hero_gradient": "from-indigo-400 to-violet-600",
@@ -89,13 +87,9 @@
       "#bodyscan",
       "#beginners"
     ],
-    "seed_karma": 234,
-    "seed_saves": 456,
-    "seed_completions": 1890,
     "creator_hours": 267,
-    "course_id": "course-003",
+    "course_id": "d2575386-6ae4-5ba3-b2a9-28eabc1a594f",
     "course_position": 1,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "stress",
       "low-mood",
@@ -106,10 +100,13 @@
       "letting-go",
       "morning",
       "evening"
-    ]
+    ],
+    "karma": 234,
+    "saves": 456,
+    "completions": 1890
   },
   {
-    "id": "session-004",
+    "id": "86273986-4db7-5e9d-8a32-235b6bb9051b",
     "title": "Loving-Kindness for Self",
     "tagline": "The compassion you give begins within",
     "hero_gradient": "from-rose-400 to-pink-600",
@@ -127,13 +124,9 @@
       "#heart",
       "#healing"
     ],
-    "seed_karma": 198,
-    "seed_saves": 378,
-    "seed_completions": 1456,
     "creator_hours": 389,
-    "course_id": "course-004",
+    "course_id": "5a703de3-14ca-575d-9da5-9b02d8af6d69",
     "course_position": 1,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anger",
       "pain",
@@ -141,10 +134,13 @@
       "emotions",
       "letting-go",
       "beginners"
-    ]
+    ],
+    "karma": 198,
+    "saves": 378,
+    "completions": 1456
   },
   {
-    "id": "session-005",
+    "id": "d289969c-c889-5a3f-b001-4ca35ea11364",
     "title": "The Silent Watcher",
     "tagline": "Discover the awareness behind your thoughts",
     "hero_gradient": "from-sky-400 to-cyan-600",
@@ -162,13 +158,9 @@
       "#awareness",
       "#intermediate"
     ],
-    "seed_karma": 167,
-    "seed_saves": 289,
-    "seed_completions": 987,
     "creator_hours": 456,
-    "course_id": "course-005",
+    "course_id": "97af431a-cba0-5f07-9357-c876f989ef99",
     "course_position": 1,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anger",
       "focus",
@@ -177,10 +169,13 @@
       "body-awareness",
       "self-compassion",
       "emotions"
-    ]
+    ],
+    "karma": 167,
+    "saves": 289,
+    "completions": 987
   },
   {
-    "id": "session-006",
+    "id": "fbeeac9a-dae8-5d95-98d6-5c98205b7798",
     "title": "Walking in Presence",
     "tagline": "Every step is an arrival",
     "hero_gradient": "from-emerald-400 to-green-600",
@@ -198,13 +193,8 @@
       "#outdoors",
       "#presence"
     ],
-    "seed_karma": 145,
-    "seed_saves": 234,
-    "seed_completions": 876,
     "creator_hours": 289,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "low-mood",
       "grief",
@@ -213,10 +203,13 @@
       "body-awareness",
       "self-compassion",
       "emotions"
-    ]
+    ],
+    "karma": 145,
+    "saves": 234,
+    "completions": 876
   },
   {
-    "id": "session-007",
+    "id": "25961543-231d-5d56-99bd-2e44f0209895",
     "title": "Breath Counting Basics",
     "tagline": "Numbers become doorways to stillness",
     "hero_gradient": "from-teal-400 to-emerald-600",
@@ -234,13 +227,9 @@
       "#concentration",
       "#breath"
     ],
-    "seed_karma": 178,
-    "seed_saves": 345,
-    "seed_completions": 1678,
     "creator_hours": 234,
-    "course_id": "course-001",
+    "course_id": "fa40ccc4-0952-5a92-915c-df640fdcba2a",
     "course_position": 2,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anger",
       "focus",
@@ -248,10 +237,13 @@
       "self-compassion",
       "morning",
       "beginners"
-    ]
+    ],
+    "karma": 178,
+    "saves": 345,
+    "completions": 1678
   },
   {
-    "id": "session-008",
+    "id": "2cd4aa9c-31fc-50c3-b165-f1f39622db66",
     "title": "The Gap Between Breaths",
     "tagline": "Find the stillness in the turning point",
     "hero_gradient": "from-violet-400 to-purple-600",
@@ -269,23 +261,22 @@
       "#intermediate",
       "#subtle"
     ],
-    "seed_karma": 134,
-    "seed_saves": 267,
-    "seed_completions": 789,
     "creator_hours": 378,
-    "course_id": "course-006",
+    "course_id": "82db02f2-9c83-5b5a-bfdf-4e8eb4adf883",
     "course_position": 3,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anxiety",
       "focus",
       "sleep",
       "body-awareness",
       "beginners"
-    ]
+    ],
+    "karma": 134,
+    "saves": 267,
+    "completions": 789
   },
   {
-    "id": "session-009",
+    "id": "b73d6c0b-e6bb-51d1-99b9-ae637e6e6788",
     "title": "Sitting with Difficulty",
     "tagline": "What blocks you teaches you",
     "hero_gradient": "from-amber-400 to-orange-600",
@@ -303,13 +294,8 @@
       "#emotions",
       "#intermediate"
     ],
-    "seed_karma": 189,
-    "seed_saves": 356,
-    "seed_completions": 945,
     "creator_hours": 456,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anxiety",
       "low-mood",
@@ -320,10 +306,13 @@
       "self-compassion",
       "emotions",
       "letting-go"
-    ]
+    ],
+    "karma": 189,
+    "saves": 356,
+    "completions": 945
   },
   {
-    "id": "session-010",
+    "id": "da132f0b-315a-5a9a-84e2-c564badf3129",
     "title": "Midday Reset",
     "tagline": "Reclaim your center in the chaos",
     "hero_gradient": "from-yellow-400 to-amber-600",
@@ -342,13 +331,9 @@
       "#beginners",
       "#work"
     ],
-    "seed_karma": 167,
-    "seed_saves": 378,
-    "seed_completions": 1567,
     "creator_hours": 178,
-    "course_id": "course-007",
+    "course_id": "d870dbc4-6eae-53c9-8fed-e56943657b61",
     "course_position": 3,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "stress",
       "anger",
@@ -358,10 +343,13 @@
       "body-awareness",
       "emotions",
       "morning"
-    ]
+    ],
+    "karma": 167,
+    "saves": 378,
+    "completions": 1567
   },
   {
-    "id": "session-011",
+    "id": "69aa045b-ced8-55de-b651-45b0bb027eff",
     "title": "The Body Electric",
     "tagline": "Awaken to the life force within",
     "hero_gradient": "from-cyan-400 to-blue-600",
@@ -379,13 +367,9 @@
       "#aliveness",
       "#intermediate"
     ],
-    "seed_karma": 145,
-    "seed_saves": 289,
-    "seed_completions": 1034,
     "creator_hours": 345,
-    "course_id": "course-008",
+    "course_id": "6fade3f7-5ff2-5151-bdc4-606289247044",
     "course_position": 2,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "stress",
       "low-mood",
@@ -398,10 +382,13 @@
       "emotions",
       "letting-go",
       "morning"
-    ]
+    ],
+    "karma": 145,
+    "saves": 289,
+    "completions": 1034
   },
   {
-    "id": "session-012",
+    "id": "37d7e48f-02db-5f4f-b451-56496f1f8b99",
     "title": "Just Sitting",
     "tagline": "The simplest practice, the deepest teaching",
     "hero_gradient": "from-slate-400 to-zinc-600",
@@ -419,13 +406,9 @@
       "#advanced",
       "#simplicity"
     ],
-    "seed_karma": 123,
-    "seed_saves": 234,
-    "seed_completions": 678,
     "creator_hours": 567,
-    "course_id": "course-009",
+    "course_id": "2035b062-2035-577e-b4a5-226b2b328ad0",
     "course_position": 4,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "grief",
       "anger",
@@ -436,10 +419,13 @@
       "self-compassion",
       "morning",
       "beginners"
-    ]
+    ],
+    "karma": 123,
+    "saves": 234,
+    "completions": 678
   },
   {
-    "id": "session-013",
+    "id": "dab9c033-87d9-59da-ab83-7f6755f0584e",
     "title": "Expanding Loving-Kindness",
     "tagline": "Let compassion ripple outward",
     "hero_gradient": "from-pink-400 to-rose-600",
@@ -457,13 +443,9 @@
       "#compassion",
       "#intermediate"
     ],
-    "seed_karma": 189,
-    "seed_saves": 345,
-    "seed_completions": 1123,
     "creator_hours": 345,
-    "course_id": "course-004",
+    "course_id": "5a703de3-14ca-575d-9da5-9b02d8af6d69",
     "course_position": 3,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anger",
       "focus",
@@ -471,10 +453,13 @@
       "pain",
       "self-compassion",
       "emotions"
-    ]
+    ],
+    "karma": 189,
+    "saves": 345,
+    "completions": 1123
   },
   {
-    "id": "session-014",
+    "id": "9cc6f490-69a7-58d7-91d6-e4b8dd5635a4",
     "title": "Noting Practice",
     "tagline": "Name it to tame it",
     "hero_gradient": "from-indigo-400 to-blue-600",
@@ -492,13 +477,9 @@
       "#insight",
       "#intermediate"
     ],
-    "seed_karma": 156,
-    "seed_saves": 289,
-    "seed_completions": 876,
     "creator_hours": 456,
-    "course_id": "course-005",
+    "course_id": "97af431a-cba0-5f07-9357-c876f989ef99",
     "course_position": 2,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "low-mood",
       "anger",
@@ -509,10 +490,13 @@
       "self-compassion",
       "emotions",
       "letting-go"
-    ]
+    ],
+    "karma": 156,
+    "saves": 289,
+    "completions": 876
   },
   {
-    "id": "session-015",
+    "id": "195ed675-c8a9-508b-90f9-be171a456057",
     "title": "Softening into Sleep",
     "tagline": "Surrender the day to the night",
     "hero_gradient": "from-purple-400 to-indigo-600",
@@ -530,13 +514,9 @@
       "#evening",
       "#beginners"
     ],
-    "seed_karma": 234,
-    "seed_saves": 467,
-    "seed_completions": 2134,
     "creator_hours": 189,
-    "course_id": "course-003",
+    "course_id": "d2575386-6ae4-5ba3-b2a9-28eabc1a594f",
     "course_position": 3,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anxiety",
       "stress",
@@ -550,10 +530,13 @@
       "letting-go",
       "morning",
       "evening"
-    ]
+    ],
+    "karma": 234,
+    "saves": 467,
+    "completions": 2134
   },
   {
-    "id": "session-016",
+    "id": "9a7b11e2-e638-577f-a6f2-f38c55d9bc64",
     "title": "So Hum Mantra",
     "tagline": "I am That. That I am.",
     "hero_gradient": "from-amber-400 to-yellow-600",
@@ -571,23 +554,22 @@
       "#traditional",
       "#intermediate"
     ],
-    "seed_karma": 145,
-    "seed_saves": 267,
-    "seed_completions": 934,
     "creator_hours": 378,
-    "course_id": "course-010",
+    "course_id": "0f459ba4-ab9d-5c23-9a72-18260ea85e91",
     "course_position": 1,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anger",
       "focus",
       "racing-mind",
       "clarity",
       "sleep"
-    ]
+    ],
+    "karma": 145,
+    "saves": 267,
+    "completions": 934
   },
   {
-    "id": "session-017",
+    "id": "ed02cf3d-7920-5adc-97f6-9c0752ff84bf",
     "title": "Anxiety Anchor",
     "tagline": "Finding ground when the mind spins",
     "hero_gradient": "from-teal-400 to-cyan-600",
@@ -605,13 +587,9 @@
       "#emergency",
       "#beginners"
     ],
-    "seed_karma": 267,
-    "seed_saves": 489,
-    "seed_completions": 2345,
     "creator_hours": 234,
-    "course_id": "course-011",
+    "course_id": "52ab5d0c-1ecf-520c-86fe-5bd260921253",
     "course_position": 1,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anxiety",
       "low-mood",
@@ -620,10 +598,13 @@
       "racing-mind",
       "body-awareness",
       "emotions"
-    ]
+    ],
+    "karma": 267,
+    "saves": 489,
+    "completions": 2345
   },
   {
-    "id": "session-018",
+    "id": "0708b6e0-2a2a-5224-83a3-f5e6f27826c2",
     "title": "Open Sky Awareness",
     "tagline": "Become the space in which everything appears",
     "hero_gradient": "from-sky-400 to-blue-600",
@@ -641,13 +622,9 @@
       "#advanced",
       "#presence"
     ],
-    "seed_karma": 134,
-    "seed_saves": 234,
-    "seed_completions": 567,
     "creator_hours": 567,
-    "course_id": "course-012",
+    "course_id": "1ab09eff-e7a8-594a-9938-56cd61bd451c",
     "course_position": 3,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "grief",
       "focus",
@@ -658,10 +635,13 @@
       "self-compassion",
       "letting-go",
       "beginners"
-    ]
+    ],
+    "karma": 134,
+    "saves": 234,
+    "completions": 567
   },
   {
-    "id": "session-019",
+    "id": "9ad841f3-2b4e-5d7b-ad46-7c85b3b348fe",
     "title": "Gratitude Reflection",
     "tagline": "Recognize the gifts already present",
     "hero_gradient": "from-amber-400 to-orange-600",
@@ -679,13 +659,9 @@
       "#evening",
       "#beginners"
     ],
-    "seed_karma": 198,
-    "seed_saves": 367,
-    "seed_completions": 1456,
     "creator_hours": 234,
-    "course_id": "course-013",
+    "course_id": "b520c0ed-637c-5f0e-ba34-4ae6e671f491",
     "course_position": 1,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anger",
       "focus",
@@ -695,10 +671,13 @@
       "emotions",
       "morning",
       "evening"
-    ]
+    ],
+    "karma": 198,
+    "saves": 367,
+    "completions": 1456
   },
   {
-    "id": "session-020",
+    "id": "d8f32e38-cf88-59e4-b651-1779f51daa64",
     "title": "Tension Release Breath",
     "tagline": "Let the body exhale its holding",
     "hero_gradient": "from-emerald-400 to-teal-600",
@@ -716,13 +695,9 @@
       "#body",
       "#beginners"
     ],
-    "seed_karma": 178,
-    "seed_saves": 334,
-    "seed_completions": 1234,
     "creator_hours": 189,
-    "course_id": "course-014",
+    "course_id": "2cc5eb37-2b12-5862-aac8-69fe3f8d4eaf",
     "course_position": 1,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anxiety",
       "stress",
@@ -731,10 +706,13 @@
       "clarity",
       "body-awareness",
       "letting-go"
-    ]
+    ],
+    "karma": 178,
+    "saves": 334,
+    "completions": 1234
   },
   {
-    "id": "session-021",
+    "id": "75d932c0-905b-516c-88bd-d0d33474fb80",
     "title": "Sound as Meditation",
     "tagline": "Let the ears be the doorway",
     "hero_gradient": "from-violet-400 to-purple-600",
@@ -752,13 +730,8 @@
       "#awareness",
       "#intermediate"
     ],
-    "seed_karma": 145,
-    "seed_saves": 278,
-    "seed_completions": 867,
     "creator_hours": 345,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "grief",
       "anger",
@@ -768,10 +741,13 @@
       "body-awareness",
       "emotions",
       "beginners"
-    ]
+    ],
+    "karma": 145,
+    "saves": 278,
+    "completions": 867
   },
   {
-    "id": "session-022",
+    "id": "1d2392e2-5557-5316-9c51-acae7dd1893c",
     "title": "Forgiveness Practice",
     "tagline": "Release the weight of holding on",
     "hero_gradient": "from-rose-400 to-pink-600",
@@ -789,13 +765,9 @@
       "#heart",
       "#intermediate"
     ],
-    "seed_karma": 167,
-    "seed_saves": 312,
-    "seed_completions": 789,
     "creator_hours": 378,
-    "course_id": "course-004",
+    "course_id": "5a703de3-14ca-575d-9da5-9b02d8af6d69",
     "course_position": 5,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anger",
       "racing-mind",
@@ -805,10 +777,13 @@
       "emotions",
       "letting-go",
       "beginners"
-    ]
+    ],
+    "karma": 167,
+    "saves": 312,
+    "completions": 789
   },
   {
-    "id": "session-023",
+    "id": "a26374bf-0cde-50ca-b7d7-6c2e9c1b8809",
     "title": "Energy Awakening",
     "tagline": "Start the day with vital presence",
     "hero_gradient": "from-orange-400 to-red-600",
@@ -826,13 +801,9 @@
       "#awakening",
       "#beginners"
     ],
-    "seed_karma": 189,
-    "seed_saves": 356,
-    "seed_completions": 1234,
     "creator_hours": 234,
-    "course_id": "course-007",
+    "course_id": "d870dbc4-6eae-53c9-8fed-e56943657b61",
     "course_position": 1,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "low-mood",
       "focus",
@@ -841,10 +812,13 @@
       "emotions",
       "morning",
       "beginners"
-    ]
+    ],
+    "karma": 189,
+    "saves": 356,
+    "completions": 1234
   },
   {
-    "id": "session-024",
+    "id": "6fef5dee-f672-5157-b60d-55482f8a75ef",
     "title": "Impermanence Contemplation",
     "tagline": "Find freedom in the changing nature of things",
     "hero_gradient": "from-slate-400 to-stone-600",
@@ -862,13 +836,9 @@
       "#insight",
       "#advanced"
     ],
-    "seed_karma": 134,
-    "seed_saves": 256,
-    "seed_completions": 567,
     "creator_hours": 456,
-    "course_id": "course-015",
+    "course_id": "5a849893-765d-5128-9e99-d9b9e44470c7",
     "course_position": 3,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "grief",
       "anger",
@@ -880,10 +850,13 @@
       "pain",
       "emotions",
       "letting-go"
-    ]
+    ],
+    "karma": 134,
+    "saves": 256,
+    "completions": 567
   },
   {
-    "id": "session-025",
+    "id": "5522a7d5-f759-55a1-821f-16f51474a0dd",
     "title": "Belly Breath Foundation",
     "tagline": "Return to the breath of children",
     "hero_gradient": "from-emerald-400 to-green-600",
@@ -901,13 +874,9 @@
       "#beginners",
       "#foundation"
     ],
-    "seed_karma": 198,
-    "seed_saves": 389,
-    "seed_completions": 1567,
     "creator_hours": 156,
-    "course_id": "course-001",
+    "course_id": "fa40ccc4-0952-5a92-915c-df640fdcba2a",
     "course_position": 3,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "stress",
       "focus",
@@ -915,10 +884,13 @@
       "emotions",
       "letting-go",
       "beginners"
-    ]
+    ],
+    "karma": 198,
+    "saves": 389,
+    "completions": 1567
   },
   {
-    "id": "session-026",
+    "id": "1e8003dc-66cb-5652-b1e6-262336d7af42",
     "title": "Dealing with Drowsiness",
     "tagline": "Awaken to the alert edge",
     "hero_gradient": "from-yellow-400 to-amber-600",
@@ -936,13 +908,9 @@
       "#technique",
       "#intermediate"
     ],
-    "seed_karma": 145,
-    "seed_saves": 278,
-    "seed_completions": 876,
     "creator_hours": 345,
-    "course_id": "course-016",
+    "course_id": "3c02459a-7f51-5305-8afa-bb995b4e7688",
     "course_position": 2,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "stress",
       "low-mood",
@@ -953,10 +921,13 @@
       "pain",
       "morning",
       "beginners"
-    ]
+    ],
+    "karma": 145,
+    "saves": 278,
+    "completions": 876
   },
   {
-    "id": "session-027",
+    "id": "42d27598-5174-5032-96af-fa584ed40c42",
     "title": "Heart Opening",
     "tagline": "Soften the armor around the heart",
     "hero_gradient": "from-rose-400 to-red-600",
@@ -974,22 +945,21 @@
       "#love",
       "#intermediate"
     ],
-    "seed_karma": 178,
-    "seed_saves": 334,
-    "seed_completions": 1023,
     "creator_hours": 289,
-    "course_id": "course-004",
+    "course_id": "5a703de3-14ca-575d-9da5-9b02d8af6d69",
     "course_position": 2,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "low-mood",
       "clarity",
       "body-awareness",
       "emotions"
-    ]
+    ],
+    "karma": 178,
+    "saves": 334,
+    "completions": 1023
   },
   {
-    "id": "session-028",
+    "id": "d735de8a-647b-5938-86e4-2d7ee0f3fa36",
     "title": "Working with Restlessness",
     "tagline": "Find stillness within the storm",
     "hero_gradient": "from-cyan-400 to-teal-600",
@@ -1007,13 +977,9 @@
       "#obstacles",
       "#intermediate"
     ],
-    "seed_karma": 156,
-    "seed_saves": 289,
-    "seed_completions": 934,
     "creator_hours": 378,
-    "course_id": "course-016",
+    "course_id": "3c02459a-7f51-5305-8afa-bb995b4e7688",
     "course_position": 1,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anxiety",
       "low-mood",
@@ -1025,10 +991,13 @@
       "emotions",
       "letting-go",
       "beginners"
-    ]
+    ],
+    "karma": 156,
+    "saves": 289,
+    "completions": 934
   },
   {
-    "id": "session-029",
+    "id": "a8e8648d-71cd-5feb-a142-40ce95611ba9",
     "title": "Equanimity Practice",
     "tagline": "Rest in unwavering balance",
     "hero_gradient": "from-stone-400 to-zinc-600",
@@ -1046,13 +1015,9 @@
       "#wisdom",
       "#advanced"
     ],
-    "seed_karma": 134,
-    "seed_saves": 245,
-    "seed_completions": 567,
     "creator_hours": 489,
-    "course_id": "course-015",
+    "course_id": "5a849893-765d-5128-9e99-d9b9e44470c7",
     "course_position": 4,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anxiety",
       "anger",
@@ -1061,10 +1026,13 @@
       "pain",
       "self-compassion",
       "letting-go"
-    ]
+    ],
+    "karma": 134,
+    "saves": 245,
+    "completions": 567
   },
   {
-    "id": "session-030",
+    "id": "9ce4c9e5-0fc0-5a88-a038-7f93e68e1f66",
     "title": "Two-Minute Presence",
     "tagline": "Any moment can be a meditation",
     "hero_gradient": "from-emerald-400 to-teal-600",
@@ -1082,23 +1050,22 @@
       "#anytime",
       "#beginners"
     ],
-    "seed_karma": 234,
-    "seed_saves": 467,
-    "seed_completions": 2345,
     "creator_hours": 123,
-    "course_id": "course-017",
+    "course_id": "19ed8f95-3828-5460-a16c-d2966134ba0c",
     "course_position": 1,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "focus",
       "body-awareness",
       "emotions",
       "letting-go",
       "beginners"
-    ]
+    ],
+    "karma": 234,
+    "saves": 467,
+    "completions": 2345
   },
   {
-    "id": "session-031",
+    "id": "cfe26161-4fe0-5112-aac3-2732cf8e0ee4",
     "title": "Concentration Building",
     "tagline": "Sharpen the focus like a blade",
     "hero_gradient": "from-indigo-400 to-violet-600",
@@ -1116,13 +1083,9 @@
       "#samadhi",
       "#intermediate"
     ],
-    "seed_karma": 156,
-    "seed_saves": 289,
-    "seed_completions": 876,
     "creator_hours": 456,
-    "course_id": "course-006",
+    "course_id": "82db02f2-9c83-5b5a-bfdf-4e8eb4adf883",
     "course_position": 2,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "focus",
       "clarity",
@@ -1130,10 +1093,13 @@
       "body-awareness",
       "letting-go",
       "beginners"
-    ]
+    ],
+    "karma": 156,
+    "saves": 289,
+    "completions": 876
   },
   {
-    "id": "session-032",
+    "id": "10da8843-28b7-5329-b76f-1263c79ac9e7",
     "title": "Self-Inquiry: Who Am I?",
     "tagline": "Turn the light of awareness on itself",
     "hero_gradient": "from-purple-400 to-indigo-600",
@@ -1151,13 +1117,9 @@
       "#nondual",
       "#advanced"
     ],
-    "seed_karma": 112,
-    "seed_saves": 198,
-    "seed_completions": 345,
     "creator_hours": 567,
-    "course_id": "course-018",
+    "course_id": "a82d6f56-d71a-5123-abb4-0a9f02426fb2",
     "course_position": 3,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "focus",
       "racing-mind",
@@ -1165,10 +1127,13 @@
       "body-awareness",
       "self-compassion",
       "beginners"
-    ]
+    ],
+    "karma": 112,
+    "saves": 198,
+    "completions": 345
   },
   {
-    "id": "session-033",
+    "id": "17bc4ba9-61c4-5618-97f6-f69c4b04227f",
     "title": "Compassion for a Difficult Person",
     "tagline": "Transform the heart through challenge",
     "hero_gradient": "from-pink-400 to-rose-600",
@@ -1186,13 +1151,9 @@
       "#compassion",
       "#advanced"
     ],
-    "seed_karma": 134,
-    "seed_saves": 256,
-    "seed_completions": 567,
     "creator_hours": 456,
-    "course_id": "course-004",
+    "course_id": "5a703de3-14ca-575d-9da5-9b02d8af6d69",
     "course_position": 6,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anger",
       "focus",
@@ -1202,10 +1163,13 @@
       "self-compassion",
       "emotions",
       "beginners"
-    ]
+    ],
+    "karma": 134,
+    "saves": 256,
+    "completions": 567
   },
   {
-    "id": "session-034",
+    "id": "c342e109-39b7-59b7-b4f2-f650053b69a5",
     "title": "Nature Connection",
     "tagline": "Remember that you belong to the earth",
     "hero_gradient": "from-green-400 to-emerald-600",
@@ -1223,20 +1187,18 @@
       "#outdoors",
       "#beginners"
     ],
-    "seed_karma": 178,
-    "seed_saves": 334,
-    "seed_completions": 1234,
     "creator_hours": 267,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "emotions",
       "beginners"
-    ]
+    ],
+    "karma": 178,
+    "saves": 334,
+    "completions": 1234
   },
   {
-    "id": "session-035",
+    "id": "6ea3eb81-e260-573b-a656-4d4b600e85b9",
     "title": "Emotional Weather",
     "tagline": "Observe feelings without becoming them",
     "hero_gradient": "from-sky-400 to-cyan-600",
@@ -1254,13 +1216,9 @@
       "#weather",
       "#intermediate"
     ],
-    "seed_karma": 167,
-    "seed_saves": 312,
-    "seed_completions": 945,
     "creator_hours": 378,
-    "course_id": "course-019",
+    "course_id": "847e4c86-a947-5177-b845-4d4ccd1b47d0",
     "course_position": 2,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anxiety",
       "low-mood",
@@ -1269,10 +1227,13 @@
       "body-awareness",
       "emotions",
       "letting-go"
-    ]
+    ],
+    "karma": 167,
+    "saves": 312,
+    "completions": 945
   },
   {
-    "id": "session-036",
+    "id": "bd30de70-562d-5b66-ada4-b59d620f8b27",
     "title": "Joy Practice",
     "tagline": "Cultivate the capacity for happiness",
     "hero_gradient": "from-yellow-400 to-orange-600",
@@ -1290,13 +1251,9 @@
       "#happiness",
       "#intermediate"
     ],
-    "seed_karma": 156,
-    "seed_saves": 289,
-    "seed_completions": 867,
     "creator_hours": 345,
-    "course_id": "course-004",
+    "course_id": "5a703de3-14ca-575d-9da5-9b02d8af6d69",
     "course_position": 4,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anger",
       "focus",
@@ -1304,10 +1261,13 @@
       "self-compassion",
       "emotions",
       "letting-go"
-    ]
+    ],
+    "karma": 156,
+    "saves": 289,
+    "completions": 867
   },
   {
-    "id": "session-037",
+    "id": "bbf74063-e06a-556c-99a9-0defa40c2b28",
     "title": "Silent Retreat at Home",
     "tagline": "Create sacred space in everyday life",
     "hero_gradient": "from-stone-400 to-slate-600",
@@ -1325,21 +1285,19 @@
       "#deep",
       "#advanced"
     ],
-    "seed_karma": 112,
-    "seed_saves": 212,
-    "seed_completions": 456,
     "creator_hours": 567,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "focus",
       "body-awareness",
       "self-compassion"
-    ]
+    ],
+    "karma": 112,
+    "saves": 212,
+    "completions": 456
   },
   {
-    "id": "session-038",
+    "id": "e3f2f11f-5eed-50c0-b722-80e868e19e41",
     "title": "Body Wisdom",
     "tagline": "Listen to what the body knows",
     "hero_gradient": "from-teal-400 to-cyan-600",
@@ -1357,13 +1315,9 @@
       "#listening",
       "#intermediate"
     ],
-    "seed_karma": 145,
-    "seed_saves": 267,
-    "seed_completions": 789,
     "creator_hours": 345,
-    "course_id": "course-008",
+    "course_id": "6fade3f7-5ff2-5151-bdc4-606289247044",
     "course_position": 3,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "low-mood",
       "racing-mind",
@@ -1373,10 +1327,13 @@
       "self-compassion",
       "emotions",
       "letting-go"
-    ]
+    ],
+    "karma": 145,
+    "saves": 267,
+    "completions": 789
   },
   {
-    "id": "session-039",
+    "id": "c01ce1ed-9e86-57e0-9066-636eccdc62aa",
     "title": "Mindful Eating Preview",
     "tagline": "Transform your relationship with food",
     "hero_gradient": "from-amber-400 to-orange-600",
@@ -1394,23 +1351,22 @@
       "#daily",
       "#beginners"
     ],
-    "seed_karma": 178,
-    "seed_saves": 334,
-    "seed_completions": 1123,
     "creator_hours": 234,
-    "course_id": "course-020",
+    "course_id": "a049da73-3662-5467-8a45-c50882b6e55f",
     "course_position": 1,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "low-mood",
       "focus",
       "body-awareness",
       "emotions",
       "letting-go"
-    ]
+    ],
+    "karma": 178,
+    "saves": 334,
+    "completions": 1123
   },
   {
-    "id": "session-040",
+    "id": "875efa95-fe25-5782-aa16-b68eca2e1a6d",
     "title": "Death Awareness",
     "tagline": "Let mortality awaken you to life",
     "hero_gradient": "from-slate-400 to-zinc-700",
@@ -1428,13 +1384,9 @@
       "#maranasati",
       "#advanced"
     ],
-    "seed_karma": 89,
-    "seed_saves": 167,
-    "seed_completions": 345,
     "creator_hours": 489,
-    "course_id": "course-015",
+    "course_id": "5a849893-765d-5128-9e99-d9b9e44470c7",
     "course_position": 5,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anxiety",
       "stress",
@@ -1446,10 +1398,13 @@
       "self-compassion",
       "emotions",
       "morning"
-    ]
+    ],
+    "karma": 89,
+    "saves": 167,
+    "completions": 345
   },
   {
-    "id": "session-041",
+    "id": "8b36d726-1ca7-5dca-bb61-7838add544a6",
     "title": "Morning Intention Setting",
     "tagline": "Plant the seeds for your day",
     "hero_gradient": "from-orange-400 to-amber-600",
@@ -1467,13 +1422,9 @@
       "#purpose",
       "#beginners"
     ],
-    "seed_karma": 198,
-    "seed_saves": 367,
-    "seed_completions": 1456,
     "creator_hours": 234,
-    "course_id": "course-007",
+    "course_id": "d870dbc4-6eae-53c9-8fed-e56943657b61",
     "course_position": 2,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anger",
       "focus",
@@ -1483,10 +1434,13 @@
       "emotions",
       "morning",
       "evening"
-    ]
+    ],
+    "karma": 198,
+    "saves": 367,
+    "completions": 1456
   },
   {
-    "id": "session-042",
+    "id": "9d343cd0-e6e0-5d13-83a2-ef523548d463",
     "title": "Breath and Beyond",
     "tagline": "Use the breath as a launch pad",
     "hero_gradient": "from-cyan-400 to-blue-600",
@@ -1504,13 +1458,9 @@
       "#transition",
       "#intermediate"
     ],
-    "seed_karma": 145,
-    "seed_saves": 267,
-    "seed_completions": 789,
     "creator_hours": 389,
-    "course_id": "course-006",
+    "course_id": "82db02f2-9c83-5b5a-bfdf-4e8eb4adf883",
     "course_position": 4,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "grief",
       "focus",
@@ -1522,10 +1472,13 @@
       "emotions",
       "letting-go",
       "beginners"
-    ]
+    ],
+    "karma": 145,
+    "saves": 267,
+    "completions": 789
   },
   {
-    "id": "session-043",
+    "id": "85afc224-db1c-505a-911f-af9b62169667",
     "title": "Pain and Presence",
     "tagline": "Meet physical discomfort with awareness",
     "hero_gradient": "from-amber-400 to-red-600",
@@ -1543,13 +1496,8 @@
       "#resilience",
       "#intermediate"
     ],
-    "seed_karma": 134,
-    "seed_saves": 256,
-    "seed_completions": 678,
     "creator_hours": 389,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "stress",
       "anger",
@@ -1558,10 +1506,13 @@
       "pain",
       "emotions",
       "letting-go"
-    ]
+    ],
+    "karma": 134,
+    "saves": 256,
+    "completions": 678
   },
   {
-    "id": "session-044",
+    "id": "212ad590-b473-5b37-90f5-68c904d68bb3",
     "title": "Noting Thoughts",
     "tagline": "Label the mind's movements lightly",
     "hero_gradient": "from-indigo-400 to-violet-600",
@@ -1579,13 +1530,9 @@
       "#patterns",
       "#intermediate"
     ],
-    "seed_karma": 145,
-    "seed_saves": 267,
-    "seed_completions": 789,
     "creator_hours": 378,
-    "course_id": "course-005",
+    "course_id": "97af431a-cba0-5f07-9357-c876f989ef99",
     "course_position": 3,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "grief",
       "focus",
@@ -1596,10 +1543,13 @@
       "letting-go",
       "morning",
       "beginners"
-    ]
+    ],
+    "karma": 145,
+    "saves": 267,
+    "completions": 789
   },
   {
-    "id": "session-045",
+    "id": "b83c63c7-a4aa-5354-8906-5b6005727698",
     "title": "Weekend Morning Expansion",
     "tagline": "Take time when time allows",
     "hero_gradient": "from-emerald-400 to-teal-600",
@@ -1617,13 +1567,8 @@
       "#settling",
       "#intermediate"
     ],
-    "seed_karma": 167,
-    "seed_saves": 312,
-    "seed_completions": 945,
     "creator_hours": 345,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anger",
       "focus",
@@ -1634,10 +1579,13 @@
       "letting-go",
       "morning",
       "beginners"
-    ]
+    ],
+    "karma": 167,
+    "saves": 312,
+    "completions": 945
   },
   {
-    "id": "session-046",
+    "id": "a059bd1c-33a8-5b48-a6e5-94a9bb4897fa",
     "title": "Breathing Through Stress",
     "tagline": "Activate your parasympathetic ally",
     "hero_gradient": "from-teal-400 to-emerald-600",
@@ -1655,13 +1603,9 @@
       "#nervous-system",
       "#beginners"
     ],
-    "seed_karma": 234,
-    "seed_saves": 456,
-    "seed_completions": 1789,
     "creator_hours": 189,
-    "course_id": "course-011",
+    "course_id": "52ab5d0c-1ecf-520c-86fe-5bd260921253",
     "course_position": 2,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anxiety",
       "stress",
@@ -1670,10 +1614,13 @@
       "body-awareness",
       "emotions",
       "letting-go"
-    ]
+    ],
+    "karma": 234,
+    "saves": 456,
+    "completions": 1789
   },
   {
-    "id": "session-047",
+    "id": "91bb6ed1-c148-590e-9a8f-fa7927726011",
     "title": "The Space Between",
     "tagline": "Rest in the gaps of experience",
     "hero_gradient": "from-violet-400 to-indigo-600",
@@ -1691,13 +1638,9 @@
       "#space",
       "#advanced"
     ],
-    "seed_karma": 123,
-    "seed_saves": 234,
-    "seed_completions": 567,
     "creator_hours": 456,
-    "course_id": "course-012",
+    "course_id": "1ab09eff-e7a8-594a-9938-56cd61bd451c",
     "course_position": 4,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "grief",
       "anger",
@@ -1708,10 +1651,13 @@
       "body-awareness",
       "self-compassion",
       "beginners"
-    ]
+    ],
+    "karma": 123,
+    "saves": 234,
+    "completions": 567
   },
   {
-    "id": "session-048",
+    "id": "e8be87d2-7028-5dfd-a05f-08cf47d453cb",
     "title": "Whole Body Breathing",
     "tagline": "Let the entire body breathe",
     "hero_gradient": "from-emerald-400 to-green-600",
@@ -1729,13 +1675,9 @@
       "#wholeness",
       "#intermediate"
     ],
-    "seed_karma": 145,
-    "seed_saves": 278,
-    "seed_completions": 876,
     "creator_hours": 345,
-    "course_id": "course-008",
+    "course_id": "6fade3f7-5ff2-5151-bdc4-606289247044",
     "course_position": 4,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "low-mood",
       "grief",
@@ -1744,10 +1686,13 @@
       "body-awareness",
       "emotions",
       "letting-go"
-    ]
+    ],
+    "karma": 145,
+    "saves": 278,
+    "completions": 876
   },
   {
-    "id": "session-049",
+    "id": "23c18c32-2e19-577e-8dc9-6fd45f2c2251",
     "title": "Letting Go Practice",
     "tagline": "Release your grip on holding",
     "hero_gradient": "from-sky-400 to-teal-600",
@@ -1765,13 +1710,8 @@
       "#attachment",
       "#intermediate"
     ],
-    "seed_karma": 189,
-    "seed_saves": 345,
-    "seed_completions": 1234,
     "creator_hours": 289,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anxiety",
       "stress",
@@ -1782,10 +1722,13 @@
       "self-compassion",
       "emotions",
       "letting-go"
-    ]
+    ],
+    "karma": 189,
+    "saves": 345,
+    "completions": 1234
   },
   {
-    "id": "session-050",
+    "id": "6b9a3b54-328c-5ee4-9e71-71dd3c576c14",
     "title": "Presence in Daily Life",
     "tagline": "Every moment is a meditation",
     "hero_gradient": "from-amber-400 to-orange-600",
@@ -1803,13 +1746,9 @@
       "#life",
       "#intermediate"
     ],
-    "seed_karma": 198,
-    "seed_saves": 378,
-    "seed_completions": 1345,
     "creator_hours": 289,
-    "course_id": "course-020",
+    "course_id": "a049da73-3662-5467-8a45-c50882b6e55f",
     "course_position": 3,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anger",
       "focus",
@@ -1817,10 +1756,13 @@
       "self-compassion",
       "emotions",
       "beginners"
-    ]
+    ],
+    "karma": 198,
+    "saves": 378,
+    "completions": 1345
   },
   {
-    "id": "session-051",
+    "id": "82f1ea07-9cd0-50d6-ba6e-105ea5758a1a",
     "title": "Forest Path Walking",
     "tagline": "Each step returns you home",
     "hero_gradient": "from-green-400 to-emerald-600",
@@ -1838,13 +1780,8 @@
       "#beginners",
       "#morning"
     ],
-    "seed_karma": 145,
-    "seed_saves": 234,
-    "seed_completions": 987,
     "creator_hours": 234,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "low-mood",
       "grief",
@@ -1852,10 +1789,13 @@
       "body-awareness",
       "self-compassion",
       "emotions"
-    ]
+    ],
+    "karma": 145,
+    "saves": 234,
+    "completions": 987
   },
   {
-    "id": "session-052",
+    "id": "42b70326-f9bb-59fc-b8e3-450260732e6b",
     "title": "Urban Mindful Steps",
     "tagline": "Find stillness in the city's pulse",
     "hero_gradient": "from-slate-400 to-zinc-600",
@@ -1873,22 +1813,20 @@
       "#midday",
       "#intermediate"
     ],
-    "seed_karma": 134,
-    "seed_saves": 212,
-    "seed_completions": 876,
     "creator_hours": 289,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "clarity",
       "sleep",
       "self-compassion",
       "emotions"
-    ]
+    ],
+    "karma": 134,
+    "saves": 212,
+    "completions": 876
   },
   {
-    "id": "session-053",
+    "id": "af7fc0b7-5479-5524-9aa2-fff738871bc1",
     "title": "Slow Motion Journey",
     "tagline": "When you slow down, everything opens up",
     "hero_gradient": "from-amber-300 to-yellow-500",
@@ -1906,23 +1844,21 @@
       "#advanced",
       "#morning"
     ],
-    "seed_karma": 112,
-    "seed_saves": 189,
-    "seed_completions": 543,
     "creator_hours": 456,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "low-mood",
       "body-awareness",
       "pain",
       "emotions",
       "beginners"
-    ]
+    ],
+    "karma": 112,
+    "saves": 189,
+    "completions": 543
   },
   {
-    "id": "session-054",
+    "id": "ad57fdfb-7072-5396-ba3f-665573d8f1ab",
     "title": "Evening Stroll Release",
     "tagline": "Walk off the weight of the day",
     "hero_gradient": "from-purple-400 to-indigo-600",
@@ -1940,23 +1876,21 @@
       "#release",
       "#beginners"
     ],
-    "seed_karma": 178,
-    "seed_saves": 289,
-    "seed_completions": 1234,
     "creator_hours": 178,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "sleep",
       "body-awareness",
       "emotions",
       "letting-go",
       "evening"
-    ]
+    ],
+    "karma": 178,
+    "saves": 289,
+    "completions": 1234
   },
   {
-    "id": "session-055",
+    "id": "58a356a6-56c4-5b32-af3e-02df17881ec5",
     "title": "Breath-Step Synchrony",
     "tagline": "When breath and step become one rhythm",
     "hero_gradient": "from-teal-400 to-cyan-600",
@@ -1974,13 +1908,8 @@
       "#rhythm",
       "#intermediate"
     ],
-    "seed_karma": 156,
-    "seed_saves": 267,
-    "seed_completions": 987,
     "creator_hours": 312,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "focus",
       "racing-mind",
@@ -1988,10 +1917,13 @@
       "body-awareness",
       "emotions",
       "beginners"
-    ]
+    ],
+    "karma": 156,
+    "saves": 267,
+    "completions": 987
   },
   {
-    "id": "session-056",
+    "id": "b678a9f9-148e-507a-b5da-8702c70b30d0",
     "title": "Gratitude Walk",
     "tagline": "Step by step, count your blessings",
     "hero_gradient": "from-rose-400 to-pink-600",
@@ -2009,20 +1941,18 @@
       "#morning",
       "#beginners"
     ],
-    "seed_karma": 198,
-    "seed_saves": 345,
-    "seed_completions": 1456,
     "creator_hours": 234,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "focus",
       "beginners"
-    ]
+    ],
+    "karma": 198,
+    "saves": 345,
+    "completions": 1456
   },
   {
-    "id": "session-057",
+    "id": "e9555894-c141-5004-b154-20e0d95a68f7",
     "title": "Walking with Questions",
     "tagline": "Let your feet find the answers",
     "hero_gradient": "from-violet-400 to-purple-600",
@@ -2040,13 +1970,8 @@
       "#questions",
       "#advanced"
     ],
-    "seed_karma": 134,
-    "seed_saves": 234,
-    "seed_completions": 678,
     "creator_hours": 389,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "focus",
       "clarity",
@@ -2055,10 +1980,13 @@
       "self-compassion",
       "emotions",
       "letting-go"
-    ]
+    ],
+    "karma": 134,
+    "saves": 234,
+    "completions": 678
   },
   {
-    "id": "session-058",
+    "id": "3d384978-8d7d-5a9a-b6fc-aae76b91c989",
     "title": "Barefoot Earth Connection",
     "tagline": "Feel the planet beneath your feet",
     "hero_gradient": "from-amber-400 to-green-600",
@@ -2076,23 +2004,21 @@
       "#nature",
       "#beginners"
     ],
-    "seed_karma": 167,
-    "seed_saves": 298,
-    "seed_completions": 1123,
     "creator_hours": 256,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "sleep",
       "body-awareness",
       "emotions",
       "letting-go",
       "morning"
-    ]
+    ],
+    "karma": 167,
+    "saves": 298,
+    "completions": 1123
   },
   {
-    "id": "session-059",
+    "id": "3ce00183-fe57-5936-b160-6ebd015af449",
     "title": "Just Sitting: Shikantaza",
     "tagline": "No technique, no goal, just this",
     "hero_gradient": "from-stone-400 to-gray-600",
@@ -2110,13 +2036,8 @@
       "#advanced",
       "#morning"
     ],
-    "seed_karma": 112,
-    "seed_saves": 189,
-    "seed_completions": 456,
     "creator_hours": 567,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "low-mood",
       "racing-mind",
@@ -2124,10 +2045,13 @@
       "body-awareness",
       "emotions",
       "beginners"
-    ]
+    ],
+    "karma": 112,
+    "saves": 189,
+    "completions": 456
   },
   {
-    "id": "session-060",
+    "id": "2ac8d941-c2c8-5e6b-8c06-ea5e4335e61c",
     "title": "Beginner's Mind Sitting",
     "tagline": "Fresh eyes see what expertise misses",
     "hero_gradient": "from-sky-300 to-blue-500",
@@ -2145,20 +2069,18 @@
       "#morning",
       "#intermediate"
     ],
-    "seed_karma": 156,
-    "seed_saves": 267,
-    "seed_completions": 890,
     "creator_hours": 345,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "body-awareness",
       "beginners"
-    ]
+    ],
+    "karma": 156,
+    "saves": 267,
+    "completions": 890
   },
   {
-    "id": "session-061",
+    "id": "25db1dac-e22f-5cad-b0e3-b2b0dec420b7",
     "title": "Breath Counting Zen Style",
     "tagline": "Count to ten, then start again",
     "hero_gradient": "from-slate-300 to-gray-500",
@@ -2176,13 +2098,8 @@
       "#concentration",
       "#beginners"
     ],
-    "seed_karma": 145,
-    "seed_saves": 234,
-    "seed_completions": 1234,
     "creator_hours": 278,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "low-mood",
       "focus",
@@ -2190,10 +2107,13 @@
       "self-compassion",
       "morning",
       "beginners"
-    ]
+    ],
+    "karma": 145,
+    "saves": 234,
+    "completions": 1234
   },
   {
-    "id": "session-062",
+    "id": "7c507cf5-6977-5ad4-beab-561f9a604974",
     "title": "Sitting with Koans",
     "tagline": "What is the sound of one hand clapping?",
     "hero_gradient": "from-amber-400 to-orange-600",
@@ -2211,20 +2131,18 @@
       "#advanced",
       "#morning"
     ],
-    "seed_karma": 98,
-    "seed_saves": 167,
-    "seed_completions": 345,
     "creator_hours": 678,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "racing-mind",
       "self-compassion"
-    ]
+    ],
+    "karma": 98,
+    "saves": 167,
+    "completions": 345
   },
   {
-    "id": "session-063",
+    "id": "a200ba1d-aa98-5f50-9625-e49067243bf0",
     "title": "Kinhin: Walking Zen",
     "tagline": "Meditation between meditation",
     "hero_gradient": "from-green-400 to-teal-600",
@@ -2242,21 +2160,19 @@
       "#kinhin",
       "#intermediate"
     ],
-    "seed_karma": 123,
-    "seed_saves": 198,
-    "seed_completions": 567,
     "creator_hours": 389,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "low-mood",
       "focus",
       "body-awareness"
-    ]
+    ],
+    "karma": 123,
+    "saves": 198,
+    "completions": 567
   },
   {
-    "id": "session-064",
+    "id": "a8786cfa-cc91-5546-997d-35c3cacf20c3",
     "title": "Tea Mind Sitting",
     "tagline": "Nothing matters except this cup",
     "hero_gradient": "from-emerald-300 to-green-500",
@@ -2274,23 +2190,21 @@
       "#ceremony",
       "#intermediate"
     ],
-    "seed_karma": 145,
-    "seed_saves": 256,
-    "seed_completions": 789,
     "creator_hours": 312,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "low-mood",
       "focus",
       "emotions",
       "letting-go",
       "beginners"
-    ]
+    ],
+    "karma": 145,
+    "saves": 256,
+    "completions": 789
   },
   {
-    "id": "session-065",
+    "id": "7a1bd2c8-f1ec-5a8d-ad94-66b6576cff93",
     "title": "Empty Mind, Empty Room",
     "tagline": "What's left when there's nothing left?",
     "hero_gradient": "from-gray-200 to-slate-400",
@@ -2308,22 +2222,20 @@
       "#advanced",
       "#morning"
     ],
-    "seed_karma": 89,
-    "seed_saves": 145,
-    "seed_completions": 234,
     "creator_hours": 789,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "focus",
       "racing-mind",
       "sleep",
       "self-compassion"
-    ]
+    ],
+    "karma": 89,
+    "saves": 145,
+    "completions": 234
   },
   {
-    "id": "session-066",
+    "id": "d76e0942-6721-5584-9de4-5bd13c5e8eb4",
     "title": "Zen at Your Desk",
     "tagline": "The office becomes the zendo",
     "hero_gradient": "from-blue-300 to-slate-500",
@@ -2341,13 +2253,8 @@
       "#midday",
       "#beginners"
     ],
-    "seed_karma": 178,
-    "seed_saves": 312,
-    "seed_completions": 1567,
     "creator_hours": 234,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anxiety",
       "stress",
@@ -2355,10 +2262,13 @@
       "sleep",
       "body-awareness",
       "emotions"
-    ]
+    ],
+    "karma": 178,
+    "saves": 312,
+    "completions": 1567
   },
   {
-    "id": "session-067",
+    "id": "103c4784-1c16-593f-bbb7-0583918ccd71",
     "title": "Om: The Universal Sound",
     "tagline": "Vibrate with the cosmos",
     "hero_gradient": "from-amber-400 to-orange-600",
@@ -2376,22 +2286,20 @@
       "#morning",
       "#beginners"
     ],
-    "seed_karma": 167,
-    "seed_saves": 289,
-    "seed_completions": 1234,
     "creator_hours": 256,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "racing-mind",
       "sleep",
       "body-awareness",
       "emotions"
-    ]
+    ],
+    "karma": 167,
+    "saves": 289,
+    "completions": 1234
   },
   {
-    "id": "session-068",
+    "id": "6d0b0ac0-ad69-570b-a4ba-858826adfa41",
     "title": "So Hum: I Am That",
     "tagline": "Ride the natural mantra of breath",
     "hero_gradient": "from-indigo-400 to-violet-600",
@@ -2409,22 +2317,20 @@
       "#breath",
       "#beginners"
     ],
-    "seed_karma": 156,
-    "seed_saves": 267,
-    "seed_completions": 1345,
     "creator_hours": 234,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anxiety",
       "focus",
       "clarity",
       "self-compassion"
-    ]
+    ],
+    "karma": 156,
+    "saves": 267,
+    "completions": 1345
   },
   {
-    "id": "session-069",
+    "id": "52a3fad2-52b2-53c5-878e-e7d427a9c2a5",
     "title": "Mala Meditation",
     "tagline": "108 repetitions to inner quiet",
     "hero_gradient": "from-red-400 to-rose-600",
@@ -2442,13 +2348,8 @@
       "#morning",
       "#intermediate"
     ],
-    "seed_karma": 134,
-    "seed_saves": 234,
-    "seed_completions": 890,
     "creator_hours": 345,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anger",
       "focus",
@@ -2456,10 +2357,13 @@
       "body-awareness",
       "pain",
       "beginners"
-    ]
+    ],
+    "karma": 134,
+    "saves": 234,
+    "completions": 890
   },
   {
-    "id": "session-070",
+    "id": "d28e54e4-293e-55ba-a7f7-bae9d13896f9",
     "title": "Loving-Kindness Mantra",
     "tagline": "May all beings be happy",
     "hero_gradient": "from-pink-400 to-rose-600",
@@ -2477,22 +2381,20 @@
       "#compassion",
       "#intermediate"
     ],
-    "seed_karma": 189,
-    "seed_saves": 345,
-    "seed_completions": 1123,
     "creator_hours": 289,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "pain",
       "self-compassion",
       "emotions",
       "beginners"
-    ]
+    ],
+    "karma": 189,
+    "saves": 345,
+    "completions": 1123
   },
   {
-    "id": "session-071",
+    "id": "66852697-fefe-5390-9670-4833c41b8eea",
     "title": "Silent Mantra Practice",
     "tagline": "The sound that only you can hear",
     "hero_gradient": "from-purple-400 to-indigo-600",
@@ -2510,21 +2412,19 @@
       "#morning",
       "#intermediate"
     ],
-    "seed_karma": 145,
-    "seed_saves": 256,
-    "seed_completions": 987,
     "creator_hours": 312,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "racing-mind",
       "sleep",
       "self-compassion"
-    ]
+    ],
+    "karma": 145,
+    "saves": 256,
+    "completions": 987
   },
   {
-    "id": "session-072",
+    "id": "9149185e-39d5-55fe-bcad-e76d1839402c",
     "title": "Healing Sound Meditation",
     "tagline": "Let vibration medicine reach deep",
     "hero_gradient": "from-teal-400 to-cyan-600",
@@ -2542,13 +2442,8 @@
       "#beforesleep",
       "#intermediate"
     ],
-    "seed_karma": 167,
-    "seed_saves": 289,
-    "seed_completions": 890,
     "creator_hours": 345,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "stress",
       "low-mood",
@@ -2557,10 +2452,13 @@
       "body-awareness",
       "pain",
       "emotions"
-    ]
+    ],
+    "karma": 167,
+    "saves": 289,
+    "completions": 890
   },
   {
-    "id": "session-073",
+    "id": "71f3bafd-2f7d-5255-8c63-39739c01b8a8",
     "title": "Morning Affirmation Mantra",
     "tagline": "Program your day with positive vibration",
     "hero_gradient": "from-amber-300 to-yellow-500",
@@ -2578,23 +2476,21 @@
       "#morning",
       "#beginners"
     ],
-    "seed_karma": 178,
-    "seed_saves": 312,
-    "seed_completions": 1456,
     "creator_hours": 189,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anxiety",
       "sleep",
       "self-compassion",
       "emotions",
       "morning"
-    ]
+    ],
+    "karma": 178,
+    "saves": 312,
+    "completions": 1456
   },
   {
-    "id": "session-074",
+    "id": "420b6c46-39e9-5812-8682-dfdd2eb60356",
     "title": "Chanting into Stillness",
     "tagline": "Build the wave, then ride the silence",
     "hero_gradient": "from-orange-400 to-red-600",
@@ -2612,21 +2508,19 @@
       "#evening",
       "#advanced"
     ],
-    "seed_karma": 123,
-    "seed_saves": 198,
-    "seed_completions": 567,
     "creator_hours": 456,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "focus",
       "body-awareness",
       "emotions"
-    ]
+    ],
+    "karma": 123,
+    "saves": 198,
+    "completions": 567
   },
   {
-    "id": "session-075",
+    "id": "e39648a3-4c98-5747-9dc0-46d519b03dbc",
     "title": "Full Body Scan",
     "tagline": "Meet your body, part by part",
     "hero_gradient": "from-blue-400 to-indigo-600",
@@ -2644,13 +2538,8 @@
       "#beginners",
       "#awareness"
     ],
-    "seed_karma": 189,
-    "seed_saves": 345,
-    "seed_completions": 1567,
     "creator_hours": 234,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "stress",
       "low-mood",
@@ -2659,10 +2548,13 @@
       "emotions",
       "letting-go",
       "beginners"
-    ]
+    ],
+    "karma": 189,
+    "saves": 345,
+    "completions": 1567
   },
   {
-    "id": "session-076",
+    "id": "4dd7b7b7-d6ee-5e2f-8357-b5e11a9a6cad",
     "title": "Quick Body Check-In",
     "tagline": "Sixty seconds of embodiment",
     "hero_gradient": "from-cyan-400 to-blue-600",
@@ -2680,23 +2572,21 @@
       "#midday",
       "#beginners"
     ],
-    "seed_karma": 198,
-    "seed_saves": 356,
-    "seed_completions": 2134,
     "creator_hours": 156,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anxiety",
       "stress",
       "body-awareness",
       "emotions",
       "letting-go"
-    ]
+    ],
+    "karma": 198,
+    "saves": 356,
+    "completions": 2134
   },
   {
-    "id": "session-077",
+    "id": "22c96d0d-a561-5d30-b5c1-2013524d2693",
     "title": "Tension Release Scan",
     "tagline": "Find it, feel it, let it go",
     "hero_gradient": "from-rose-400 to-pink-600",
@@ -2714,13 +2604,8 @@
       "#evening",
       "#intermediate"
     ],
-    "seed_karma": 167,
-    "seed_saves": 289,
-    "seed_completions": 1234,
     "creator_hours": 289,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "stress",
       "low-mood",
@@ -2730,10 +2615,13 @@
       "emotions",
       "letting-go",
       "beginners"
-    ]
+    ],
+    "karma": 167,
+    "saves": 289,
+    "completions": 1234
   },
   {
-    "id": "session-078",
+    "id": "a741b174-1bab-507f-8f32-041dfbb5c995",
     "title": "Mindful Movement Scan",
     "tagline": "Scan as you stretch",
     "hero_gradient": "from-green-400 to-emerald-600",
@@ -2751,13 +2639,8 @@
       "#morning",
       "#beginners"
     ],
-    "seed_karma": 178,
-    "seed_saves": 312,
-    "seed_completions": 1456,
     "creator_hours": 234,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "grief",
       "focus",
@@ -2767,10 +2650,13 @@
       "emotions",
       "morning",
       "beginners"
-    ]
+    ],
+    "karma": 178,
+    "saves": 312,
+    "completions": 1456
   },
   {
-    "id": "session-079",
+    "id": "5c6666fd-987c-5dd1-ba78-920e6d62e70d",
     "title": "Sleep Preparation Scan",
     "tagline": "Guide your body into deep rest",
     "hero_gradient": "from-indigo-500 to-purple-700",
@@ -2788,13 +2674,8 @@
       "#beforesleep",
       "#beginners"
     ],
-    "seed_karma": 234,
-    "seed_saves": 456,
-    "seed_completions": 2345,
     "creator_hours": 189,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "grief",
       "focus",
@@ -2804,10 +2685,13 @@
       "emotions",
       "letting-go",
       "morning"
-    ]
+    ],
+    "karma": 234,
+    "saves": 456,
+    "completions": 2345
   },
   {
-    "id": "session-080",
+    "id": "efd79817-49ce-58a5-8867-348a85f2b482",
     "title": "Pain Awareness Scan",
     "tagline": "Meeting discomfort with curiosity",
     "hero_gradient": "from-amber-400 to-orange-600",
@@ -2825,13 +2709,8 @@
       "#healing",
       "#intermediate"
     ],
-    "seed_karma": 145,
-    "seed_saves": 267,
-    "seed_completions": 789,
     "creator_hours": 312,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "low-mood",
       "anger",
@@ -2842,10 +2721,13 @@
       "self-compassion",
       "emotions",
       "letting-go"
-    ]
+    ],
+    "karma": 145,
+    "saves": 267,
+    "completions": 789
   },
   {
-    "id": "session-081",
+    "id": "f3c32b77-4fa5-5897-b4e0-b3e21c4831a5",
     "title": "Metta for Difficult People",
     "tagline": "The hardest kindness transforms us most",
     "hero_gradient": "from-violet-400 to-purple-600",
@@ -2863,13 +2745,8 @@
       "#difficult",
       "#advanced"
     ],
-    "seed_karma": 134,
-    "seed_saves": 234,
-    "seed_completions": 567,
     "creator_hours": 456,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anger",
       "focus",
@@ -2877,10 +2754,13 @@
       "self-compassion",
       "emotions",
       "beginners"
-    ]
+    ],
+    "karma": 134,
+    "saves": 234,
+    "completions": 567
   },
   {
-    "id": "session-082",
+    "id": "f81cffe1-7656-57b7-9d15-f104c767effb",
     "title": "Loving-Kindness for the World",
     "tagline": "Expand your heart to hold everything",
     "hero_gradient": "from-sky-400 to-cyan-600",
@@ -2898,23 +2778,21 @@
       "#morning",
       "#intermediate"
     ],
-    "seed_karma": 189,
-    "seed_saves": 345,
-    "seed_completions": 1123,
     "creator_hours": 312,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "grief",
       "anger",
       "pain",
       "self-compassion",
       "emotions"
-    ]
+    ],
+    "karma": 189,
+    "saves": 345,
+    "completions": 1123
   },
   {
-    "id": "session-083",
+    "id": "206242ad-04f3-54f1-818c-b37f9919dc4b",
     "title": "Self-Compassion Break",
     "tagline": "Be your own best friend",
     "hero_gradient": "from-rose-300 to-pink-500",
@@ -2932,22 +2810,20 @@
       "#crisis",
       "#beginners"
     ],
-    "seed_karma": 198,
-    "seed_saves": 378,
-    "seed_completions": 1789,
     "creator_hours": 234,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "stress",
       "pain",
       "self-compassion",
       "emotions"
-    ]
+    ],
+    "karma": 198,
+    "saves": 378,
+    "completions": 1789
   },
   {
-    "id": "session-084",
+    "id": "7281b00b-3fb8-52d1-b2ba-96d44323ff43",
     "title": "Gratitude Loving-Kindness",
     "tagline": "Thank the web that holds you",
     "hero_gradient": "from-amber-300 to-orange-500",
@@ -2965,23 +2841,21 @@
       "#evening",
       "#beginners"
     ],
-    "seed_karma": 167,
-    "seed_saves": 289,
-    "seed_completions": 1234,
     "creator_hours": 267,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anger",
       "focus",
       "pain",
       "self-compassion",
       "emotions"
-    ]
+    ],
+    "karma": 167,
+    "saves": 289,
+    "completions": 1234
   },
   {
-    "id": "session-085",
+    "id": "0d76f0f2-e84d-5b42-a87b-4f5a85314229",
     "title": "Heart-Opening Visualization",
     "tagline": "Let your heart bloom",
     "hero_gradient": "from-pink-400 to-red-600",
@@ -2999,13 +2873,8 @@
       "#morning",
       "#intermediate"
     ],
-    "seed_karma": 145,
-    "seed_saves": 267,
-    "seed_completions": 890,
     "creator_hours": 345,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anger",
       "focus",
@@ -3013,10 +2882,13 @@
       "body-awareness",
       "self-compassion",
       "emotions"
-    ]
+    ],
+    "karma": 145,
+    "saves": 267,
+    "completions": 890
   },
   {
-    "id": "session-086",
+    "id": "27e32ce9-bca2-51cb-8f46-d82fe94b3977",
     "title": "Tonglen: Taking and Giving",
     "tagline": "Transform suffering through the breath",
     "hero_gradient": "from-slate-400 to-gray-600",
@@ -3034,23 +2906,21 @@
       "#advanced",
       "#tibetan"
     ],
-    "seed_karma": 112,
-    "seed_saves": 189,
-    "seed_completions": 456,
     "creator_hours": 567,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "low-mood",
       "sleep",
       "pain",
       "self-compassion",
       "emotions"
-    ]
+    ],
+    "karma": 112,
+    "saves": 189,
+    "completions": 456
   },
   {
-    "id": "session-087",
+    "id": "8e52d4a7-0ebf-5b29-b14f-5ecc0e4344b5",
     "title": "Belly Breathing Basics",
     "tagline": "Drop your breath into your center",
     "hero_gradient": "from-emerald-400 to-teal-600",
@@ -3068,13 +2938,8 @@
       "#beginners",
       "#foundation"
     ],
-    "seed_karma": 189,
-    "seed_saves": 345,
-    "seed_completions": 1678,
     "creator_hours": 189,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anxiety",
       "stress",
@@ -3083,10 +2948,13 @@
       "pain",
       "emotions",
       "beginners"
-    ]
+    ],
+    "karma": 189,
+    "saves": 345,
+    "completions": 1678
   },
   {
-    "id": "session-088",
+    "id": "e97c686c-0795-5c12-8520-0ce2a35cee1f",
     "title": "Four-Count Square Breathing",
     "tagline": "Create a calm, steady rhythm",
     "hero_gradient": "from-blue-400 to-indigo-600",
@@ -3104,22 +2972,20 @@
       "#midday",
       "#beginners"
     ],
-    "seed_karma": 198,
-    "seed_saves": 367,
-    "seed_completions": 1890,
     "creator_hours": 234,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anxiety",
       "focus",
       "emotions",
       "beginners"
-    ]
+    ],
+    "karma": 198,
+    "saves": 367,
+    "completions": 1890
   },
   {
-    "id": "session-089",
+    "id": "b0c12d46-67b7-5f7b-9c49-e5e793c1609f",
     "title": "Extended Exhale Relaxation",
     "tagline": "Let the out-breath carry you to rest",
     "hero_gradient": "from-violet-400 to-purple-600",
@@ -3137,13 +3003,8 @@
       "#beforesleep",
       "#beginners"
     ],
-    "seed_karma": 212,
-    "seed_saves": 398,
-    "seed_completions": 2134,
     "creator_hours": 189,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anxiety",
       "low-mood",
@@ -3152,10 +3013,13 @@
       "self-compassion",
       "emotions",
       "letting-go"
-    ]
+    ],
+    "karma": 212,
+    "saves": 398,
+    "completions": 2134
   },
   {
-    "id": "session-090",
+    "id": "5629f03e-ade6-5be5-a039-58eeed17ee00",
     "title": "Breath at the Nostrils",
     "tagline": "The subtle doorway to presence",
     "hero_gradient": "from-cyan-400 to-teal-600",
@@ -3173,23 +3037,21 @@
       "#morning",
       "#intermediate"
     ],
-    "seed_karma": 156,
-    "seed_saves": 278,
-    "seed_completions": 987,
     "creator_hours": 345,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "grief",
       "anger",
       "focus",
       "racing-mind",
       "body-awareness"
-    ]
+    ],
+    "karma": 156,
+    "saves": 278,
+    "completions": 987
   },
   {
-    "id": "session-091",
+    "id": "cadd3af1-196d-5881-be1a-7277ce17caed",
     "title": "Whole Body Breathing",
     "tagline": "Let breath animate every cell",
     "hero_gradient": "from-green-400 to-emerald-600",
@@ -3207,23 +3069,21 @@
       "#intermediate",
       "#expansion"
     ],
-    "seed_karma": 134,
-    "seed_saves": 234,
-    "seed_completions": 678,
     "creator_hours": 389,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "stress",
       "low-mood",
       "body-awareness",
       "emotions",
       "letting-go"
-    ]
+    ],
+    "karma": 134,
+    "saves": 234,
+    "completions": 678
   },
   {
-    "id": "session-092",
+    "id": "708980d4-ec43-58cd-aa7f-88a05bcecd8b",
     "title": "Noting Practice",
     "tagline": "Name what arises, then let it go",
     "hero_gradient": "from-amber-400 to-orange-600",
@@ -3241,13 +3101,8 @@
       "#morning",
       "#intermediate"
     ],
-    "seed_karma": 156,
-    "seed_saves": 278,
-    "seed_completions": 890,
     "creator_hours": 345,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anxiety",
       "focus",
@@ -3258,10 +3113,13 @@
       "pain",
       "emotions",
       "letting-go"
-    ]
+    ],
+    "karma": 156,
+    "saves": 278,
+    "completions": 890
   },
   {
-    "id": "session-093",
+    "id": "92f1ae01-4842-52cb-8025-380797a73ddf",
     "title": "Observing Impermanence",
     "tagline": "Watch everything change",
     "hero_gradient": "from-slate-400 to-gray-600",
@@ -3279,13 +3137,8 @@
       "#morning",
       "#advanced"
     ],
-    "seed_karma": 134,
-    "seed_saves": 234,
-    "seed_completions": 567,
     "creator_hours": 456,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "stress",
       "grief",
@@ -3296,10 +3149,13 @@
       "self-compassion",
       "emotions",
       "letting-go"
-    ]
+    ],
+    "karma": 134,
+    "saves": 234,
+    "completions": 567
   },
   {
-    "id": "session-094",
+    "id": "84e397ff-5b5e-5550-a4d3-08060ec5b41a",
     "title": "Investigating Vedana",
     "tagline": "Notice pleasant, unpleasant, neutral",
     "hero_gradient": "from-rose-400 to-pink-600",
@@ -3317,13 +3173,8 @@
       "#intermediate",
       "#insight"
     ],
-    "seed_karma": 123,
-    "seed_saves": 212,
-    "seed_completions": 567,
     "creator_hours": 389,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "racing-mind",
       "clarity",
@@ -3331,10 +3182,13 @@
       "self-compassion",
       "emotions",
       "beginners"
-    ]
+    ],
+    "karma": 123,
+    "saves": 212,
+    "completions": 567
   },
   {
-    "id": "session-095",
+    "id": "3d3b18a0-f380-5a89-9d72-1dcd67837651",
     "title": "Open Awareness Vipassana",
     "tagline": "Include everything, grasp nothing",
     "hero_gradient": "from-sky-400 to-blue-600",
@@ -3352,13 +3206,8 @@
       "#advanced",
       "#morning"
     ],
-    "seed_karma": 112,
-    "seed_saves": 189,
-    "seed_completions": 456,
     "creator_hours": 567,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "grief",
       "focus",
@@ -3369,10 +3218,13 @@
       "emotions",
       "letting-go",
       "beginners"
-    ]
+    ],
+    "karma": 112,
+    "saves": 189,
+    "completions": 456
   },
   {
-    "id": "session-096",
+    "id": "71ea58c1-997f-5587-ab14-9bc0fe239c0c",
     "title": "Body Sensations Vipassana",
     "tagline": "The body as a field of changing sensations",
     "hero_gradient": "from-emerald-400 to-teal-600",
@@ -3390,13 +3242,8 @@
       "#morning",
       "#advanced"
     ],
-    "seed_karma": 123,
-    "seed_saves": 198,
-    "seed_completions": 456,
     "creator_hours": 456,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "stress",
       "anger",
@@ -3405,10 +3252,13 @@
       "body-awareness",
       "emotions",
       "letting-go"
-    ]
+    ],
+    "karma": 123,
+    "saves": 198,
+    "completions": 456
   },
   {
-    "id": "session-097",
+    "id": "401d079c-6fd2-57f1-9205-4beb4d672857",
     "title": "Sky-Like Mind",
     "tagline": "Thoughts are clouds, you are the sky",
     "hero_gradient": "from-sky-300 to-blue-500",
@@ -3426,13 +3276,8 @@
       "#morning",
       "#intermediate"
     ],
-    "seed_karma": 178,
-    "seed_saves": 312,
-    "seed_completions": 987,
     "creator_hours": 312,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "low-mood",
       "racing-mind",
@@ -3440,10 +3285,13 @@
       "sleep",
       "self-compassion",
       "letting-go"
-    ]
+    ],
+    "karma": 178,
+    "saves": 312,
+    "completions": 987
   },
   {
-    "id": "session-098",
+    "id": "8bb53d57-b78e-5d73-b51a-38459ffd126d",
     "title": "Sound Bath Meditation",
     "tagline": "Let sounds wash through you",
     "hero_gradient": "from-violet-400 to-purple-600",
@@ -3461,22 +3309,20 @@
       "#anytime",
       "#beginners"
     ],
-    "seed_karma": 167,
-    "seed_saves": 289,
-    "seed_completions": 1123,
     "creator_hours": 267,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anger",
       "focus",
       "pain",
       "emotions"
-    ]
+    ],
+    "karma": 167,
+    "saves": 289,
+    "completions": 1123
   },
   {
-    "id": "session-099",
+    "id": "07a4e22f-513b-5d4c-b6d1-dfc32e122cef",
     "title": "Midday Presence Reset",
     "tagline": "Find stillness in the center of your day",
     "hero_gradient": "from-amber-400 to-yellow-600",
@@ -3494,13 +3340,8 @@
       "#reset",
       "#beginners"
     ],
-    "seed_karma": 189,
-    "seed_saves": 345,
-    "seed_completions": 1567,
     "creator_hours": 234,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "sleep",
       "body-awareness",
@@ -3509,10 +3350,13 @@
       "letting-go",
       "morning",
       "beginners"
-    ]
+    ],
+    "karma": 189,
+    "saves": 345,
+    "completions": 1567
   },
   {
-    "id": "session-100",
+    "id": "178bf97b-80bd-5b82-82b9-4b5d08c508e0",
     "title": "Resting in Not Knowing",
     "tagline": "Release the need to figure it all out",
     "hero_gradient": "from-slate-400 to-gray-600",
@@ -3530,13 +3374,8 @@
       "#evening",
       "#advanced"
     ],
-    "seed_karma": 134,
-    "seed_saves": 234,
-    "seed_completions": 567,
     "creator_hours": 456,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "racing-mind",
       "clarity",
@@ -3545,10 +3384,13 @@
       "emotions",
       "letting-go",
       "beginners"
-    ]
+    ],
+    "karma": 134,
+    "saves": 234,
+    "completions": 567
   },
   {
-    "id": "session-101",
+    "id": "7621675a-820a-5776-a413-ad8c1dcbf518",
     "title": "Before Sleep Stillness",
     "tagline": "Let the day dissolve into rest",
     "hero_gradient": "from-indigo-500 to-purple-700",
@@ -3566,13 +3408,8 @@
       "#beforesleep",
       "#beginners"
     ],
-    "seed_karma": 198,
-    "seed_saves": 378,
-    "seed_completions": 1890,
     "creator_hours": 234,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "low-mood",
       "anger",
@@ -3583,10 +3420,13 @@
       "emotions",
       "letting-go",
       "morning"
-    ]
+    ],
+    "karma": 198,
+    "saves": 378,
+    "completions": 1890
   },
   {
-    "id": "session-102",
+    "id": "3c201219-572c-55d4-b28d-cba8184344f1",
     "title": "Equanimity Practice",
     "tagline": "Meet everything with steady presence",
     "hero_gradient": "from-teal-400 to-cyan-600",
@@ -3604,13 +3444,8 @@
       "#intermediate",
       "#balance"
     ],
-    "seed_karma": 145,
-    "seed_saves": 267,
-    "seed_completions": 789,
     "creator_hours": 389,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anger",
       "focus",
@@ -3619,10 +3454,13 @@
       "self-compassion",
       "emotions",
       "letting-go"
-    ]
+    ],
+    "karma": 145,
+    "saves": 267,
+    "completions": 789
   },
   {
-    "id": "session-103",
+    "id": "7ecba322-0673-57ec-bbcd-b305e2427c0a",
     "title": "Nature Immersion Sitting",
     "tagline": "Let nature meditate you",
     "hero_gradient": "from-green-400 to-emerald-600",
@@ -3640,21 +3478,19 @@
       "#outdoors",
       "#beginners"
     ],
-    "seed_karma": 178,
-    "seed_saves": 312,
-    "seed_completions": 1234,
     "creator_hours": 289,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "sleep",
       "pain",
       "emotions"
-    ]
+    ],
+    "karma": 178,
+    "saves": 312,
+    "completions": 1234
   },
   {
-    "id": "session-104",
+    "id": "7b157897-55e9-5a1d-a1a4-7adcc4a7b1bc",
     "title": "Twilight Transition",
     "tagline": "Observe the dying of the light",
     "hero_gradient": "from-orange-400 to-purple-600",
@@ -3672,13 +3508,8 @@
       "#transition",
       "#intermediate"
     ],
-    "seed_karma": 145,
-    "seed_saves": 256,
-    "seed_completions": 890,
     "creator_hours": 312,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "low-mood",
       "grief",
@@ -3690,10 +3521,13 @@
       "letting-go",
       "morning",
       "evening"
-    ]
+    ],
+    "karma": 145,
+    "saves": 256,
+    "completions": 890
   },
   {
-    "id": "session-105",
+    "id": "3684bf02-798c-51d8-b40b-c9ffad9527ed",
     "title": "Witnessing Thoughts",
     "tagline": "Step back and watch the show",
     "hero_gradient": "from-slate-400 to-zinc-600",
@@ -3711,13 +3545,8 @@
       "#anytime",
       "#beginners"
     ],
-    "seed_karma": 189,
-    "seed_saves": 345,
-    "seed_completions": 1456,
     "creator_hours": 256,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anxiety",
       "racing-mind",
@@ -3725,10 +3554,13 @@
       "self-compassion",
       "emotions",
       "beginners"
-    ]
+    ],
+    "karma": 189,
+    "saves": 345,
+    "completions": 1456
   },
   {
-    "id": "session-106",
+    "id": "e78ce4f7-f256-5f8c-82aa-e1ca37c5bd45",
     "title": "Integration Practice",
     "tagline": "Bring all parts of yourself together",
     "hero_gradient": "from-rose-400 to-violet-600",
@@ -3746,13 +3578,8 @@
       "#evening",
       "#advanced"
     ],
-    "seed_karma": 134,
-    "seed_saves": 234,
-    "seed_completions": 567,
     "creator_hours": 456,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "low-mood",
       "anger",
@@ -3762,10 +3589,13 @@
       "self-compassion",
       "emotions",
       "beginners"
-    ]
+    ],
+    "karma": 134,
+    "saves": 234,
+    "completions": 567
   },
   {
-    "id": "session-107",
+    "id": "8bbd3a72-bfab-5c80-bfde-929e7d5aa8fb",
     "title": "Anchor Breath Basics",
     "tagline": "The breath is always here",
     "hero_gradient": "from-blue-400 to-cyan-600",
@@ -3783,13 +3613,8 @@
       "#morning",
       "#foundation"
     ],
-    "seed_karma": 198,
-    "seed_saves": 356,
-    "seed_completions": 1789,
     "creator_hours": 189,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anxiety",
       "focus",
@@ -3797,10 +3622,13 @@
       "emotions",
       "letting-go",
       "beginners"
-    ]
+    ],
+    "karma": 198,
+    "saves": 356,
+    "completions": 1789
   },
   {
-    "id": "session-108",
+    "id": "adf878d9-814a-5588-aa8e-c930e8df786e",
     "title": "Anxiety Antidote",
     "tagline": "When worry strikes, come back to now",
     "hero_gradient": "from-teal-400 to-blue-600",
@@ -3818,13 +3646,8 @@
       "#anytime",
       "#beginners"
     ],
-    "seed_karma": 234,
-    "seed_saves": 456,
-    "seed_completions": 2345,
     "creator_hours": 234,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anxiety",
       "stress",
@@ -3833,10 +3656,13 @@
       "sleep",
       "emotions",
       "evening"
-    ]
+    ],
+    "karma": 234,
+    "saves": 456,
+    "completions": 2345
   },
   {
-    "id": "session-109",
+    "id": "84976f67-20ae-5594-98e7-b1cfde246493",
     "title": "Midday Mantra Pause",
     "tagline": "Sacred sound in the middle of chaos",
     "hero_gradient": "from-orange-400 to-amber-600",
@@ -3854,23 +3680,21 @@
       "#quick",
       "#beginners"
     ],
-    "seed_karma": 178,
-    "seed_saves": 312,
-    "seed_completions": 1567,
     "creator_hours": 189,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anxiety",
       "stress",
       "racing-mind",
       "emotions",
       "beginners"
-    ]
+    ],
+    "karma": 178,
+    "saves": 312,
+    "completions": 1567
   },
   {
-    "id": "session-110",
+    "id": "6c2763c5-e7f0-56a5-8a5e-a4e67610d600",
     "title": "Night Wisdom Reflection",
     "tagline": "What did today teach you?",
     "hero_gradient": "from-purple-500 to-indigo-700",
@@ -3888,13 +3712,8 @@
       "#reflection",
       "#beginners"
     ],
-    "seed_karma": 189,
-    "seed_saves": 345,
-    "seed_completions": 1456,
     "creator_hours": 267,
-    "course_id": null,
     "course_position": null,
-    "source_reddit_id": "redacted",
     "intent_tags": [
       "anxiety",
       "anger",
@@ -3905,6 +3724,9 @@
       "letting-go",
       "morning",
       "evening"
-    ]
+    ],
+    "karma": 189,
+    "saves": 345,
+    "completions": 1456
   }
 ]

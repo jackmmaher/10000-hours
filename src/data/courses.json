@@ -1,856 +1,856 @@
 [
   {
-    "id": "course-001",
+    "id": "fa40ccc4-0952-5a92-915c-df640fdcba2a",
     "title": "Breath Basics: Your First Week",
     "description": "A gentle 5-session introduction to breath-based meditation. Start with the simplest practices and build a foundation that will support your entire journey. Perfect for complete beginners or those returning after time away.",
     "session_count": 5,
     "difficulty": "beginner",
-    "seed_karma": 234,
-    "seed_saves": 567,
     "session_ids": [
-      "session-001",
-      "session-007",
-      "session-025",
-      "session-030",
-      "session-010"
-    ]
+      "fc68ad3a-1af8-5c3f-beda-0b61f80ede74",
+      "25961543-231d-5d56-99bd-2e44f0209895",
+      "5522a7d5-f759-55a1-821f-16f51474a0dd",
+      "9ce4c9e5-0fc0-5a88-a038-7f93e68e1f66",
+      "da132f0b-315a-5a9a-84e2-c564badf3129"
+    ],
+    "karma": 234,
+    "saves": 567
   },
   {
-    "id": "course-002",
+    "id": "cb0db006-b010-56be-8680-608aa5c23b1f",
     "title": "Mountain Mind: Stability and Grounding",
     "description": "Develop unshakeable stability through practices that connect you to the earth and cultivate mountain-like stillness. These sessions build resilience for when life gets turbulent.",
     "session_count": 4,
     "difficulty": "intermediate",
-    "seed_karma": 189,
-    "seed_saves": 456,
     "session_ids": [
-      "session-002",
-      "session-017",
-      "session-020",
-      "session-034"
-    ]
+      "6f3836dd-7fb6-5fe4-81cb-92cf6942650f",
+      "ed02cf3d-7920-5adc-97f6-9c0752ff84bf",
+      "d8f32e38-cf88-59e4-b651-1779f51daa64",
+      "c342e109-39b7-59b7-b4f2-f650053b69a5"
+    ],
+    "karma": 189,
+    "saves": 456
   },
   {
-    "id": "course-003",
+    "id": "d2575386-6ae4-5ba3-b2a9-28eabc1a594f",
     "title": "Sleep Well: Evening Practices",
     "description": "Transform your relationship with sleep through practices designed for the evening and bedtime. Release the day, calm the nervous system, and prepare for restful sleep.",
     "session_count": 4,
     "difficulty": "beginner",
-    "seed_karma": 256,
-    "seed_saves": 534,
     "session_ids": [
-      "session-003",
-      "session-019",
-      "session-015",
-      "session-049"
-    ]
+      "5daf3801-206f-5b47-8323-728e7f22c6d4",
+      "9ad841f3-2b4e-5d7b-ad46-7c85b3b348fe",
+      "195ed675-c8a9-508b-90f9-be171a456057",
+      "23c18c32-2e19-577e-8dc9-6fd45f2c2251"
+    ],
+    "karma": 256,
+    "saves": 534
   },
   {
-    "id": "course-004",
+    "id": "5a703de3-14ca-575d-9da5-9b02d8af6d69",
     "title": "Open Heart: A Loving-Kindness Journey",
     "description": "A transformative 6-session journey through loving-kindness practice. Begin with self-compassion, expand to loved ones, and eventually extend kindness even to difficult people.",
     "session_count": 6,
     "difficulty": "intermediate",
-    "seed_karma": 198,
-    "seed_saves": 423,
     "session_ids": [
-      "session-004",
-      "session-027",
-      "session-013",
-      "session-036",
-      "session-022",
-      "session-033"
-    ]
+      "86273986-4db7-5e9d-8a32-235b6bb9051b",
+      "42d27598-5174-5032-96af-fa584ed40c42",
+      "dab9c033-87d9-59da-ab83-7f6755f0584e",
+      "bd30de70-562d-5b66-ada4-b59d620f8b27",
+      "1d2392e2-5557-5316-9c51-acae7dd1893c",
+      "17bc4ba9-61c4-5618-97f6-f69c4b04227f"
+    ],
+    "karma": 198,
+    "saves": 423
   },
   {
-    "id": "course-005",
+    "id": "97af431a-cba0-5f07-9357-c876f989ef99",
     "title": "Vipassana Foundations",
     "description": "An introduction to insight meditation. Learn to observe the mind, note experiences, and develop the clear seeing that leads to wisdom. For those ready to go deeper.",
     "session_count": 5,
     "difficulty": "intermediate",
-    "seed_karma": 167,
-    "seed_saves": 378,
     "session_ids": [
-      "session-005",
-      "session-014",
-      "session-044",
-      "session-035",
-      "session-024"
-    ]
+      "d289969c-c889-5a3f-b001-4ca35ea11364",
+      "9cc6f490-69a7-58d7-91d6-e4b8dd5635a4",
+      "212ad590-b473-5b37-90f5-68c904d68bb3",
+      "6ea3eb81-e260-573b-a656-4d4b600e85b9",
+      "6fef5dee-f672-5157-b60d-55482f8a75ef"
+    ],
+    "karma": 167,
+    "saves": 378
   },
   {
-    "id": "course-006",
+    "id": "82db02f2-9c83-5b5a-bfdf-4e8eb4adf883",
     "title": "Deep Concentration",
     "description": "Develop single-pointed focus through progressive concentration practices. This course builds the samadhi foundation needed for deeper insight work.",
     "session_count": 4,
     "difficulty": "intermediate",
-    "seed_karma": 145,
-    "seed_saves": 312,
     "session_ids": [
-      "session-031",
-      "session-008",
-      "session-026",
-      "session-042"
-    ]
+      "cfe26161-4fe0-5112-aac3-2732cf8e0ee4",
+      "2cd4aa9c-31fc-50c3-b165-f1f39622db66",
+      "1e8003dc-66cb-5652-b1e6-262336d7af42",
+      "9d343cd0-e6e0-5d13-83a2-ef523548d463"
+    ],
+    "karma": 145,
+    "saves": 312
   },
   {
-    "id": "course-007",
+    "id": "d870dbc4-6eae-53c9-8fed-e56943657b61",
     "title": "Morning Ritual: Start Strong",
     "description": "Create a transformative morning routine with these energy-building practices. Wake up body and mind, set intentions, and meet each day with presence.",
     "session_count": 4,
     "difficulty": "beginner",
-    "seed_karma": 212,
-    "seed_saves": 456,
     "session_ids": [
-      "session-023",
-      "session-041",
-      "session-010",
-      "session-001"
-    ]
+      "a26374bf-0cde-50ca-b7d7-6c2e9c1b8809",
+      "8b36d726-1ca7-5dca-bb61-7838add544a6",
+      "da132f0b-315a-5a9a-84e2-c564badf3129",
+      "fc68ad3a-1af8-5c3f-beda-0b61f80ede74"
+    ],
+    "karma": 212,
+    "saves": 456
   },
   {
-    "id": "course-008",
+    "id": "6fade3f7-5ff2-5151-bdc4-606289247044",
     "title": "Body Wisdom: Somatic Practices",
     "description": "Reconnect with the intelligence of the body through scans, breath work, and somatic listening. The body knows things the thinking mind doesn't.",
     "session_count": 5,
     "difficulty": "intermediate",
-    "seed_karma": 178,
-    "seed_saves": 389,
     "session_ids": [
-      "session-011",
-      "session-003",
-      "session-038",
-      "session-048",
-      "session-043"
-    ]
+      "69aa045b-ced8-55de-b651-45b0bb027eff",
+      "5daf3801-206f-5b47-8323-728e7f22c6d4",
+      "e3f2f11f-5eed-50c0-b722-80e868e19e41",
+      "e8be87d2-7028-5dfd-a05f-08cf47d453cb",
+      "85afc224-db1c-505a-911f-af9b62169667"
+    ],
+    "karma": 178,
+    "saves": 389
   },
   {
-    "id": "course-009",
+    "id": "2035b062-2035-577e-b4a5-226b2b328ad0",
     "title": "Zen Simplicity",
     "description": "Explore the elegant simplicity of Zen practice. These sessions strip away technique to reveal the essence: just sitting, just being, just this moment.",
     "session_count": 4,
     "difficulty": "advanced",
-    "seed_karma": 134,
-    "seed_saves": 278,
     "session_ids": [
-      "session-012",
-      "session-018",
-      "session-047",
-      "session-037"
-    ]
+      "37d7e48f-02db-5f4f-b451-56496f1f8b99",
+      "0708b6e0-2a2a-5224-83a3-f5e6f27826c2",
+      "91bb6ed1-c148-590e-9a8f-fa7927726011",
+      "bbf74063-e06a-556c-99a9-0defa40c2b28"
+    ],
+    "karma": 134,
+    "saves": 278
   },
   {
-    "id": "course-010",
+    "id": "0f459ba4-ab9d-5c23-9a72-18260ea85e91",
     "title": "Mantra Meditation",
     "description": "Discover the power of sacred sound. Learn traditional mantras and experience how repetition can quiet the mind and open the heart.",
     "session_count": 3,
     "difficulty": "beginner",
-    "seed_karma": 156,
-    "seed_saves": 312,
     "session_ids": [
-      "session-016",
-      "session-007",
-      "session-031"
-    ]
+      "9a7b11e2-e638-577f-a6f2-f38c55d9bc64",
+      "25961543-231d-5d56-99bd-2e44f0209895",
+      "cfe26161-4fe0-5112-aac3-2732cf8e0ee4"
+    ],
+    "karma": 156,
+    "saves": 312
   },
   {
-    "id": "course-011",
+    "id": "52ab5d0c-1ecf-520c-86fe-5bd260921253",
     "title": "Anxiety Relief Kit",
     "description": "Evidence-based practices for calming anxiety. Learn grounding techniques, breathing exercises, and awareness practices for when the mind spins.",
     "session_count": 4,
     "difficulty": "beginner",
-    "seed_karma": 287,
-    "seed_saves": 567,
     "session_ids": [
-      "session-017",
-      "session-046",
-      "session-020",
-      "session-030"
-    ]
+      "ed02cf3d-7920-5adc-97f6-9c0752ff84bf",
+      "a059bd1c-33a8-5b48-a6e5-94a9bb4897fa",
+      "d8f32e38-cf88-59e4-b651-1779f51daa64",
+      "9ce4c9e5-0fc0-5a88-a038-7f93e68e1f66"
+    ],
+    "karma": 287,
+    "saves": 567
   },
   {
-    "id": "course-012",
+    "id": "1ab09eff-e7a8-594a-9938-56cd61bd451c",
     "title": "Spacious Awareness",
     "description": "Move beyond focused attention to panoramic awareness. These advanced practices cultivate the open, sky-like quality of consciousness itself.",
     "session_count": 5,
     "difficulty": "advanced",
-    "seed_karma": 123,
-    "seed_saves": 267,
     "session_ids": [
-      "session-018",
-      "session-021",
-      "session-042",
-      "session-047",
-      "session-032"
-    ]
+      "0708b6e0-2a2a-5224-83a3-f5e6f27826c2",
+      "75d932c0-905b-516c-88bd-d0d33474fb80",
+      "9d343cd0-e6e0-5d13-83a2-ef523548d463",
+      "91bb6ed1-c148-590e-9a8f-fa7927726011",
+      "10da8843-28b7-5329-b76f-1263c79ac9e7"
+    ],
+    "karma": 123,
+    "saves": 267
   },
   {
-    "id": "course-013",
+    "id": "b520c0ed-637c-5f0e-ba34-4ae6e671f491",
     "title": "Gratitude Practice",
     "description": "Transform your outlook through the practice of appreciation. Simple but profound sessions that shift attention from lack to abundance.",
     "session_count": 3,
     "difficulty": "beginner",
-    "seed_karma": 198,
-    "seed_saves": 423,
     "session_ids": [
-      "session-019",
-      "session-041",
-      "session-036"
-    ]
+      "9ad841f3-2b4e-5d7b-ad46-7c85b3b348fe",
+      "8b36d726-1ca7-5dca-bb61-7838add544a6",
+      "bd30de70-562d-5b66-ada4-b59d620f8b27"
+    ],
+    "karma": 198,
+    "saves": 423
   },
   {
-    "id": "course-014",
+    "id": "2cc5eb37-2b12-5862-aac8-69fe3f8d4eaf",
     "title": "Tension Release",
     "description": "Learn to identify and release physical tension through breathwork and body awareness. The body wants to let go - sometimes it just needs permission.",
     "session_count": 4,
     "difficulty": "beginner",
-    "seed_karma": 189,
-    "seed_saves": 378,
     "session_ids": [
-      "session-020",
-      "session-011",
-      "session-003",
-      "session-048"
-    ]
+      "d8f32e38-cf88-59e4-b651-1779f51daa64",
+      "69aa045b-ced8-55de-b651-45b0bb027eff",
+      "5daf3801-206f-5b47-8323-728e7f22c6d4",
+      "e8be87d2-7028-5dfd-a05f-08cf47d453cb"
+    ],
+    "karma": 189,
+    "saves": 378
   },
   {
-    "id": "course-015",
+    "id": "5a849893-765d-5128-9e99-d9b9e44470c7",
     "title": "Wisdom Teachings: Deep Contemplations",
     "description": "Explore the profound contemplations that have awakened meditators for millennia: impermanence, equanimity, and the nature of mortality.",
     "session_count": 5,
     "difficulty": "advanced",
-    "seed_karma": 112,
-    "seed_saves": 234,
     "session_ids": [
-      "session-024",
-      "session-029",
-      "session-040",
-      "session-032",
-      "session-047"
-    ]
+      "6fef5dee-f672-5157-b60d-55482f8a75ef",
+      "a8e8648d-71cd-5feb-a142-40ce95611ba9",
+      "875efa95-fe25-5782-aa16-b68eca2e1a6d",
+      "10da8843-28b7-5329-b76f-1263c79ac9e7",
+      "91bb6ed1-c148-590e-9a8f-fa7927726011"
+    ],
+    "karma": 112,
+    "saves": 234
   },
   {
-    "id": "course-016",
+    "id": "3c02459a-7f51-5305-8afa-bb995b4e7688",
     "title": "Working with Obstacles",
     "description": "Learn skillful means for the common meditation obstacles: restlessness, drowsiness, doubt. These sessions turn hindrances into teachers.",
     "session_count": 4,
     "difficulty": "intermediate",
-    "seed_karma": 167,
-    "seed_saves": 345,
     "session_ids": [
-      "session-028",
-      "session-026",
-      "session-009",
-      "session-043"
-    ]
+      "d735de8a-647b-5938-86e4-2d7ee0f3fa36",
+      "1e8003dc-66cb-5652-b1e6-262336d7af42",
+      "b73d6c0b-e6bb-51d1-99b9-ae637e6e6788",
+      "85afc224-db1c-505a-911f-af9b62169667"
+    ],
+    "karma": 167,
+    "saves": 345
   },
   {
-    "id": "course-017",
+    "id": "19ed8f95-3828-5460-a16c-d2966134ba0c",
     "title": "Micro-Meditations",
     "description": "Short but powerful practices for busy lives. Prove to yourself that presence is always available, even in moments stolen from the rush.",
     "session_count": 4,
     "difficulty": "beginner",
-    "seed_karma": 234,
-    "seed_saves": 512,
     "session_ids": [
-      "session-030",
-      "session-010",
-      "session-046",
-      "session-041"
-    ]
+      "9ce4c9e5-0fc0-5a88-a038-7f93e68e1f66",
+      "da132f0b-315a-5a9a-84e2-c564badf3129",
+      "a059bd1c-33a8-5b48-a6e5-94a9bb4897fa",
+      "8b36d726-1ca7-5dca-bb61-7838add544a6"
+    ],
+    "karma": 234,
+    "saves": 512
   },
   {
-    "id": "course-018",
+    "id": "a82d6f56-d71a-5123-abb4-0a9f02426fb2",
     "title": "The Self-Inquiry Path",
     "description": "Advanced contemplations that point directly to the nature of awareness. Who am I? What is aware? These questions dissolve into recognition.",
     "session_count": 3,
     "difficulty": "advanced",
-    "seed_karma": 89,
-    "seed_saves": 178,
     "session_ids": [
-      "session-032",
-      "session-047",
-      "session-018"
-    ]
+      "10da8843-28b7-5329-b76f-1263c79ac9e7",
+      "91bb6ed1-c148-590e-9a8f-fa7927726011",
+      "0708b6e0-2a2a-5224-83a3-f5e6f27826c2"
+    ],
+    "karma": 89,
+    "saves": 178
   },
   {
-    "id": "course-019",
+    "id": "847e4c86-a947-5177-b845-4d4ccd1b47d0",
     "title": "Emotional Intelligence",
     "description": "Develop the capacity to observe, understand, and work skillfully with emotions. Weather passes through; you are the sky.",
     "session_count": 4,
     "difficulty": "intermediate",
-    "seed_karma": 178,
-    "seed_saves": 367,
     "session_ids": [
-      "session-035",
-      "session-009",
-      "session-029",
-      "session-049"
-    ]
+      "6ea3eb81-e260-573b-a656-4d4b600e85b9",
+      "b73d6c0b-e6bb-51d1-99b9-ae637e6e6788",
+      "a8e8648d-71cd-5feb-a142-40ce95611ba9",
+      "23c18c32-2e19-577e-8dc9-6fd45f2c2251"
+    ],
+    "karma": 178,
+    "saves": 367
   },
   {
-    "id": "course-020",
+    "id": "a049da73-3662-5467-8a45-c50882b6e55f",
     "title": "Mindfulness in Daily Life",
     "description": "Bridge formal practice and everyday presence. Learn to bring awareness to eating, walking, working, and relating.",
     "session_count": 4,
     "difficulty": "intermediate",
-    "seed_karma": 189,
-    "seed_saves": 423,
     "session_ids": [
-      "session-039",
-      "session-006",
-      "session-050",
-      "session-034"
-    ]
+      "c01ce1ed-9e86-57e0-9066-636eccdc62aa",
+      "fbeeac9a-dae8-5d95-98d6-5c98205b7798",
+      "6b9a3b54-328c-5ee4-9e71-71dd3c576c14",
+      "c342e109-39b7-59b7-b4f2-f650053b69a5"
+    ],
+    "karma": 189,
+    "saves": 423
   },
   {
-    "id": "course-021",
+    "id": "29f11695-93d1-5a21-bd5f-8a7ce54a90f8",
     "title": "Beginner's Mind Week",
     "description": "A 7-session introduction covering all the fundamentals. By the end, you'll have experienced breath awareness, body scanning, and loving-kindness.",
     "session_count": 7,
     "difficulty": "beginner",
-    "seed_karma": 256,
-    "seed_saves": 534,
     "session_ids": [
-      "session-001",
-      "session-007",
-      "session-025",
-      "session-003",
-      "session-004",
-      "session-030",
-      "session-019"
-    ]
+      "fc68ad3a-1af8-5c3f-beda-0b61f80ede74",
+      "25961543-231d-5d56-99bd-2e44f0209895",
+      "5522a7d5-f759-55a1-821f-16f51474a0dd",
+      "5daf3801-206f-5b47-8323-728e7f22c6d4",
+      "86273986-4db7-5e9d-8a32-235b6bb9051b",
+      "9ce4c9e5-0fc0-5a88-a038-7f93e68e1f66",
+      "9ad841f3-2b4e-5d7b-ad46-7c85b3b348fe"
+    ],
+    "karma": 256,
+    "saves": 534
   },
   {
-    "id": "course-022",
+    "id": "f90dbf5a-0b5e-5d72-a3ca-2f32d3551a5b",
     "title": "Movement Meditation",
     "description": "For those who struggle to sit still, these practices bring meditation into motion. Walking, standing, and gentle movement as pathways to presence.",
     "session_count": 3,
     "difficulty": "beginner",
-    "seed_karma": 156,
-    "seed_saves": 312,
     "session_ids": [
-      "session-006",
-      "session-023",
-      "session-034"
-    ]
+      "fbeeac9a-dae8-5d95-98d6-5c98205b7798",
+      "a26374bf-0cde-50ca-b7d7-6c2e9c1b8809",
+      "c342e109-39b7-59b7-b4f2-f650053b69a5"
+    ],
+    "karma": 156,
+    "saves": 312
   },
   {
-    "id": "course-023",
+    "id": "3bbb4049-0c76-5045-bf67-7a511f3333cb",
     "title": "Heart Healing",
     "description": "Practices for those carrying emotional wounds. Gentle, compassionate sessions that create space for healing without forcing.",
     "session_count": 5,
     "difficulty": "intermediate",
-    "seed_karma": 178,
-    "seed_saves": 389,
     "session_ids": [
-      "session-004",
-      "session-022",
-      "session-027",
-      "session-049",
-      "session-035"
-    ]
+      "86273986-4db7-5e9d-8a32-235b6bb9051b",
+      "1d2392e2-5557-5316-9c51-acae7dd1893c",
+      "42d27598-5174-5032-96af-fa584ed40c42",
+      "23c18c32-2e19-577e-8dc9-6fd45f2c2251",
+      "6ea3eb81-e260-573b-a656-4d4b600e85b9"
+    ],
+    "karma": 178,
+    "saves": 389
   },
   {
-    "id": "course-024",
+    "id": "c37a6e85-1b51-5d6a-a1c2-af12830e02cc",
     "title": "Focus for Work",
     "description": "Build concentration that supports productivity. These sessions develop the one-pointed attention that makes deep work possible.",
     "session_count": 4,
     "difficulty": "beginner",
-    "seed_karma": 198,
-    "seed_saves": 423,
     "session_ids": [
-      "session-010",
-      "session-031",
-      "session-007",
-      "session-046"
-    ]
+      "da132f0b-315a-5a9a-84e2-c564badf3129",
+      "cfe26161-4fe0-5112-aac3-2732cf8e0ee4",
+      "25961543-231d-5d56-99bd-2e44f0209895",
+      "a059bd1c-33a8-5b48-a6e5-94a9bb4897fa"
+    ],
+    "karma": 198,
+    "saves": 423
   },
   {
-    "id": "course-025",
+    "id": "316b56e3-7849-5202-8778-cfd63b10a75f",
     "title": "Resilience Building",
     "description": "Develop the inner strength to meet life's challenges. These practices cultivate equanimity, patience, and the capacity to be with difficulty.",
     "session_count": 5,
     "difficulty": "intermediate",
-    "seed_karma": 167,
-    "seed_saves": 356,
     "session_ids": [
-      "session-009",
-      "session-028",
-      "session-029",
-      "session-043",
-      "session-002"
-    ]
+      "b73d6c0b-e6bb-51d1-99b9-ae637e6e6788",
+      "d735de8a-647b-5938-86e4-2d7ee0f3fa36",
+      "a8e8648d-71cd-5feb-a142-40ce95611ba9",
+      "85afc224-db1c-505a-911f-af9b62169667",
+      "6f3836dd-7fb6-5fe4-81cb-92cf6942650f"
+    ],
+    "karma": 167,
+    "saves": 356
   },
   {
-    "id": "course-026",
+    "id": "25432daa-1a59-5b9d-8045-4f7401046aa5",
     "title": "Sound and Silence",
     "description": "Use sound as a meditation object and discover the silence beneath all sounds. An alternative entry point for those who struggle with breath focus.",
     "session_count": 3,
     "difficulty": "intermediate",
-    "seed_karma": 145,
-    "seed_saves": 289,
     "session_ids": [
-      "session-021",
-      "session-047",
-      "session-037"
-    ]
+      "75d932c0-905b-516c-88bd-d0d33474fb80",
+      "91bb6ed1-c148-590e-9a8f-fa7927726011",
+      "bbf74063-e06a-556c-99a9-0defa40c2b28"
+    ],
+    "karma": 145,
+    "saves": 289
   },
   {
-    "id": "course-027",
+    "id": "1a03ff93-d284-5e93-8760-6bf76cf1c8f7",
     "title": "30-Day Challenge",
     "description": "Establish a daily practice habit with this progressive month-long journey. Start simple, build gradually, and emerge with a solid foundation.",
     "session_count": 7,
     "difficulty": "beginner",
-    "seed_karma": 234,
-    "seed_saves": 567,
     "session_ids": [
-      "session-001",
-      "session-007",
-      "session-025",
-      "session-010",
-      "session-004",
-      "session-011",
-      "session-019"
-    ]
+      "fc68ad3a-1af8-5c3f-beda-0b61f80ede74",
+      "25961543-231d-5d56-99bd-2e44f0209895",
+      "5522a7d5-f759-55a1-821f-16f51474a0dd",
+      "da132f0b-315a-5a9a-84e2-c564badf3129",
+      "86273986-4db7-5e9d-8a32-235b6bb9051b",
+      "69aa045b-ced8-55de-b651-45b0bb027eff",
+      "9ad841f3-2b4e-5d7b-ad46-7c85b3b348fe"
+    ],
+    "karma": 234,
+    "saves": 567
   },
   {
-    "id": "course-028",
+    "id": "d6c27769-fe58-5b62-b085-cb22e8d93f5b",
     "title": "Night Owl Sessions",
     "description": "Practices designed for evening and night. Wind down the day, process experiences, and prepare for sleep.",
     "session_count": 4,
     "difficulty": "beginner",
-    "seed_karma": 189,
-    "seed_saves": 412,
     "session_ids": [
-      "session-003",
-      "session-015",
-      "session-019",
-      "session-049"
-    ]
+      "5daf3801-206f-5b47-8323-728e7f22c6d4",
+      "195ed675-c8a9-508b-90f9-be171a456057",
+      "9ad841f3-2b4e-5d7b-ad46-7c85b3b348fe",
+      "23c18c32-2e19-577e-8dc9-6fd45f2c2251"
+    ],
+    "karma": 189,
+    "saves": 412
   },
   {
-    "id": "course-029",
+    "id": "e0293672-a350-53b2-a689-9d725e9dba5f",
     "title": "Advanced Awareness",
     "description": "For experienced practitioners ready to explore the subtler dimensions of consciousness. These sessions require a foundation of regular practice.",
     "session_count": 5,
     "difficulty": "advanced",
-    "seed_karma": 112,
-    "seed_saves": 234,
     "session_ids": [
-      "session-018",
-      "session-032",
-      "session-047",
-      "session-029",
-      "session-040"
-    ]
+      "0708b6e0-2a2a-5224-83a3-f5e6f27826c2",
+      "10da8843-28b7-5329-b76f-1263c79ac9e7",
+      "91bb6ed1-c148-590e-9a8f-fa7927726011",
+      "a8e8648d-71cd-5feb-a142-40ce95611ba9",
+      "875efa95-fe25-5782-aa16-b68eca2e1a6d"
+    ],
+    "karma": 112,
+    "saves": 234
   },
   {
-    "id": "course-030",
+    "id": "2a011440-0fa7-5e07-b00f-92e9965ddc0c",
     "title": "Compassion in Action",
     "description": "Move loving-kindness from the cushion into the world. Practices that prepare the heart for engaged, compassionate living.",
     "session_count": 5,
     "difficulty": "intermediate",
-    "seed_karma": 178,
-    "seed_saves": 367,
     "session_ids": [
-      "session-013",
-      "session-033",
-      "session-036",
-      "session-022",
-      "session-050"
-    ]
+      "dab9c033-87d9-59da-ab83-7f6755f0584e",
+      "17bc4ba9-61c4-5618-97f6-f69c4b04227f",
+      "bd30de70-562d-5b66-ada4-b59d620f8b27",
+      "1d2392e2-5557-5316-9c51-acae7dd1893c",
+      "6b9a3b54-328c-5ee4-9e71-71dd3c576c14"
+    ],
+    "karma": 178,
+    "saves": 367
   },
   {
-    "id": "course-031",
+    "id": "3db86d13-91f1-5a68-a395-a256c15051cf",
     "title": "Stress-Free Living",
     "description": "A comprehensive approach to stress management through meditation. Learn techniques you can use anywhere, anytime.",
     "session_count": 5,
     "difficulty": "beginner",
-    "seed_karma": 267,
-    "seed_saves": 534,
     "session_ids": [
-      "session-017",
-      "session-046",
-      "session-020",
-      "session-030",
-      "session-010"
-    ]
+      "ed02cf3d-7920-5adc-97f6-9c0752ff84bf",
+      "a059bd1c-33a8-5b48-a6e5-94a9bb4897fa",
+      "d8f32e38-cf88-59e4-b651-1779f51daa64",
+      "9ce4c9e5-0fc0-5a88-a038-7f93e68e1f66",
+      "da132f0b-315a-5a9a-84e2-c564badf3129"
+    ],
+    "karma": 267,
+    "saves": 534
   },
   {
-    "id": "course-032",
+    "id": "19300376-9927-5084-9eb8-076d2d56abe2",
     "title": "Body Scan Mastery",
     "description": "Go deep with body scan practice. From basic tension release to subtle energy awareness, develop full-body sensitivity.",
     "session_count": 4,
     "difficulty": "intermediate",
-    "seed_karma": 156,
-    "seed_saves": 334,
     "session_ids": [
-      "session-003",
-      "session-011",
-      "session-038",
-      "session-048"
-    ]
+      "5daf3801-206f-5b47-8323-728e7f22c6d4",
+      "69aa045b-ced8-55de-b651-45b0bb027eff",
+      "e3f2f11f-5eed-50c0-b722-80e868e19e41",
+      "e8be87d2-7028-5dfd-a05f-08cf47d453cb"
+    ],
+    "karma": 156,
+    "saves": 334
   },
   {
-    "id": "course-033",
+    "id": "4d08dc4a-abbb-50fd-ad38-c44dbc6d0e98",
     "title": "Meditation for Skeptics",
     "description": "Evidence-based, no-nonsense practices for analytical minds. These sessions focus on technique and effect without spiritual language.",
     "session_count": 4,
     "difficulty": "beginner",
-    "seed_karma": 189,
-    "seed_saves": 389,
     "session_ids": [
-      "session-007",
-      "session-025",
-      "session-046",
-      "session-031"
-    ]
+      "25961543-231d-5d56-99bd-2e44f0209895",
+      "5522a7d5-f759-55a1-821f-16f51474a0dd",
+      "a059bd1c-33a8-5b48-a6e5-94a9bb4897fa",
+      "cfe26161-4fe0-5112-aac3-2732cf8e0ee4"
+    ],
+    "karma": 189,
+    "saves": 389
   },
   {
-    "id": "course-034",
+    "id": "1868cca5-4f02-5c60-a06b-18897536f729",
     "title": "Opening to Joy",
     "description": "Cultivate the capacity for happiness, contentment, and appreciation. These practices reveal that joy is our natural state.",
     "session_count": 4,
     "difficulty": "intermediate",
-    "seed_karma": 167,
-    "seed_saves": 345,
     "session_ids": [
-      "session-036",
-      "session-019",
-      "session-027",
-      "session-013"
-    ]
+      "bd30de70-562d-5b66-ada4-b59d620f8b27",
+      "9ad841f3-2b4e-5d7b-ad46-7c85b3b348fe",
+      "42d27598-5174-5032-96af-fa584ed40c42",
+      "dab9c033-87d9-59da-ab83-7f6755f0584e"
+    ],
+    "karma": 167,
+    "saves": 345
   },
   {
-    "id": "course-035",
+    "id": "510e2dde-e208-529c-970d-62b5dae592bd",
     "title": "The Art of Letting Go",
     "description": "Learn to release what no longer serves you - thoughts, emotions, identities, outcomes. Freedom is found in open hands.",
     "session_count": 4,
     "difficulty": "intermediate",
-    "seed_karma": 178,
-    "seed_saves": 367,
     "session_ids": [
-      "session-049",
-      "session-003",
-      "session-022",
-      "session-024"
-    ]
+      "23c18c32-2e19-577e-8dc9-6fd45f2c2251",
+      "5daf3801-206f-5b47-8323-728e7f22c6d4",
+      "1d2392e2-5557-5316-9c51-acae7dd1893c",
+      "6fef5dee-f672-5157-b60d-55482f8a75ef"
+    ],
+    "karma": 178,
+    "saves": 367
   },
   {
-    "id": "course-036",
+    "id": "ee46ce3d-9693-56d0-90ad-ea693a292e16",
     "title": "Weekend Retreat",
     "description": "Create a mini-retreat at home with this sequence of extended practices. Perfect for a Saturday or Sunday morning of deep practice.",
     "session_count": 4,
     "difficulty": "intermediate",
-    "seed_karma": 145,
-    "seed_saves": 312,
     "session_ids": [
-      "session-045",
-      "session-037",
-      "session-006",
-      "session-019"
-    ]
+      "b83c63c7-a4aa-5354-8906-5b6005727698",
+      "bbf74063-e06a-556c-99a9-0defa40c2b28",
+      "fbeeac9a-dae8-5d95-98d6-5c98205b7798",
+      "9ad841f3-2b4e-5d7b-ad46-7c85b3b348fe"
+    ],
+    "karma": 145,
+    "saves": 312
   },
   {
-    "id": "course-037",
+    "id": "132323ac-c3f1-5a75-8dc3-515e096f34a9",
     "title": "Everyday Mindfulness",
     "description": "Practical awareness practices for regular life. Eating, walking, listening, waiting - transform ordinary moments into meditation.",
     "session_count": 4,
     "difficulty": "beginner",
-    "seed_karma": 198,
-    "seed_saves": 423,
     "session_ids": [
-      "session-039",
-      "session-006",
-      "session-050",
-      "session-030"
-    ]
+      "c01ce1ed-9e86-57e0-9066-636eccdc62aa",
+      "fbeeac9a-dae8-5d95-98d6-5c98205b7798",
+      "6b9a3b54-328c-5ee4-9e71-71dd3c576c14",
+      "9ce4c9e5-0fc0-5a88-a038-7f93e68e1f66"
+    ],
+    "karma": 198,
+    "saves": 423
   },
   {
-    "id": "course-038",
+    "id": "0748b44a-f409-5557-b023-6e019339b9e0",
     "title": "Dealing with Difficult Emotions",
     "description": "Skillful practices for working with anger, sadness, fear, and frustration. Learn to ride emotional waves with grace.",
     "session_count": 5,
     "difficulty": "intermediate",
-    "seed_karma": 178,
-    "seed_saves": 378,
     "session_ids": [
-      "session-009",
-      "session-035",
-      "session-028",
-      "session-029",
-      "session-049"
-    ]
+      "b73d6c0b-e6bb-51d1-99b9-ae637e6e6788",
+      "6ea3eb81-e260-573b-a656-4d4b600e85b9",
+      "d735de8a-647b-5938-86e4-2d7ee0f3fa36",
+      "a8e8648d-71cd-5feb-a142-40ce95611ba9",
+      "23c18c32-2e19-577e-8dc9-6fd45f2c2251"
+    ],
+    "karma": 178,
+    "saves": 378
   },
   {
-    "id": "course-039",
+    "id": "10b715ac-3b89-5c3d-9e84-269176788c3a",
     "title": "Breath Mastery",
     "description": "Go beyond basics to explore the full potential of breath-based meditation. From belly breathing to subtle breath awareness.",
     "session_count": 5,
     "difficulty": "intermediate",
-    "seed_karma": 167,
-    "seed_saves": 345,
     "session_ids": [
-      "session-025",
-      "session-007",
-      "session-008",
-      "session-042",
-      "session-046"
-    ]
+      "5522a7d5-f759-55a1-821f-16f51474a0dd",
+      "25961543-231d-5d56-99bd-2e44f0209895",
+      "2cd4aa9c-31fc-50c3-b165-f1f39622db66",
+      "9d343cd0-e6e0-5d13-83a2-ef523548d463",
+      "a059bd1c-33a8-5b48-a6e5-94a9bb4897fa"
+    ],
+    "karma": 167,
+    "saves": 345
   },
   {
-    "id": "course-040",
+    "id": "d74b60c2-3a1f-5595-89a9-8a1885134674",
     "title": "Nature and Presence",
     "description": "Practices that reconnect you with the natural world. Remember that you belong to the earth and the earth belongs to you.",
     "session_count": 3,
     "difficulty": "beginner",
-    "seed_karma": 178,
-    "seed_saves": 356,
     "session_ids": [
-      "session-034",
-      "session-006",
-      "session-021"
-    ]
+      "c342e109-39b7-59b7-b4f2-f650053b69a5",
+      "fbeeac9a-dae8-5d95-98d6-5c98205b7798",
+      "75d932c0-905b-516c-88bd-d0d33474fb80"
+    ],
+    "karma": 178,
+    "saves": 356
   },
   {
-    "id": "course-041",
+    "id": "2cf93b55-45f3-5d15-a50f-737ebe60f332",
     "title": "Walking Wisdom: A Movement Journey",
     "description": "Discover the profound practice of walking meditation. These 5 sessions take you from basic walking awareness to deep embodied presence, proving that stillness doesn't require standing still.",
     "session_count": 5,
     "difficulty": "beginner",
-    "seed_karma": 178,
-    "seed_saves": 345,
     "session_ids": [
-      "session-051",
-      "session-054",
-      "session-056",
-      "session-058",
-      "session-055"
-    ]
+      "82f1ea07-9cd0-50d6-ba6e-105ea5758a1a",
+      "ad57fdfb-7072-5396-ba3f-665573d8f1ab",
+      "b678a9f9-148e-507a-b5da-8702c70b30d0",
+      "3d384978-8d7d-5a9a-b6fc-aae76b91c989",
+      "58a356a6-56c4-5b32-af3e-02df17881ec5"
+    ],
+    "karma": 178,
+    "saves": 345
   },
   {
-    "id": "course-042",
+    "id": "f676712f-0bf8-5576-841c-08913c6476fc",
     "title": "Zen Essentials: The Art of Just Sitting",
     "description": "An introduction to Zen meditation practices. From breath counting to shikantaza (just sitting), explore the elegant simplicity that has transformed practitioners for centuries.",
     "session_count": 5,
     "difficulty": "intermediate",
-    "seed_karma": 145,
-    "seed_saves": 289,
     "session_ids": [
-      "session-061",
-      "session-060",
-      "session-063",
-      "session-066",
-      "session-059"
-    ]
+      "25db1dac-e22f-5cad-b0e3-b2b0dec420b7",
+      "2ac8d941-c2c8-5e6b-8c06-ea5e4335e61c",
+      "a200ba1d-aa98-5f50-9625-e49067243bf0",
+      "d76e0942-6721-5584-9de4-5bd13c5e8eb4",
+      "3ce00183-fe57-5936-b160-6ebd015af449"
+    ],
+    "karma": 145,
+    "saves": 289
   },
   {
-    "id": "course-043",
+    "id": "32f9f3e0-2110-58e6-9900-c8817d707fe8",
     "title": "Sound Medicine: Mantra Mastery",
     "description": "Harness the power of sacred sound. This 6-session journey teaches traditional mantras and modern applications, from Om to personalized affirmations.",
     "session_count": 6,
     "difficulty": "beginner",
-    "seed_karma": 167,
-    "seed_saves": 312,
     "session_ids": [
-      "session-067",
-      "session-068",
-      "session-073",
-      "session-069",
-      "session-071",
-      "session-074"
-    ]
+      "103c4784-1c16-593f-bbb7-0583918ccd71",
+      "6d0b0ac0-ad69-570b-a4ba-858826adfa41",
+      "71f3bafd-2f7d-5255-8c63-39739c01b8a8",
+      "52a3fad2-52b2-53c5-878e-e7d427a9c2a5",
+      "66852697-fefe-5390-9670-4833c41b8eea",
+      "420b6c46-39e9-5812-8682-dfdd2eb60356"
+    ],
+    "karma": 167,
+    "saves": 312
   },
   {
-    "id": "course-044",
+    "id": "06b3a694-29a8-598d-945f-315b5e10a94a",
     "title": "Midday Mindfulness",
     "description": "Reclaim your lunch hour with these 5 midday practices. Each session is designed for the workplace, helping you reset and return to your afternoon with clarity.",
     "session_count": 5,
     "difficulty": "beginner",
-    "seed_karma": 189,
-    "seed_saves": 367,
     "session_ids": [
-      "session-052",
-      "session-076",
-      "session-088",
-      "session-099",
-      "session-109"
-    ]
+      "42b70326-f9bb-59fc-b8e3-450260732e6b",
+      "4dd7b7b7-d6ee-5e2f-8357-b5e11a9a6cad",
+      "e97c686c-0795-5c12-8520-0ce2a35cee1f",
+      "07a4e22f-513b-5d4c-b6d1-dfc32e122cef",
+      "84976f67-20ae-5594-98e7-b1cfde246493"
+    ],
+    "karma": 189,
+    "saves": 367
   },
   {
-    "id": "course-045",
+    "id": "464468eb-403f-508e-ae3c-397d92148eb0",
     "title": "Sleep Sanctuary Extended",
     "description": "Expand your before-sleep practice with these 5 sessions designed to transition you from waking to restful slumber. End each day with peace.",
     "session_count": 5,
     "difficulty": "beginner",
-    "seed_karma": 212,
-    "seed_saves": 423,
     "session_ids": [
-      "session-079",
-      "session-089",
-      "session-101",
-      "session-072",
-      "session-110"
-    ]
+      "5c6666fd-987c-5dd1-ba78-920e6d62e70d",
+      "b0c12d46-67b7-5f7b-9c49-e5e793c1609f",
+      "7621675a-820a-5776-a413-ad8c1dcbf518",
+      "9149185e-39d5-55fe-bcad-e76d1839402c",
+      "6c2763c5-e7f0-56a5-8a5e-a4e67610d600"
+    ],
+    "karma": 212,
+    "saves": 423
   },
   {
-    "id": "course-046",
+    "id": "3448c20f-5ee8-583c-87c8-9c02d6a96715",
     "title": "Body Wisdom: Deep Somatic Practice",
     "description": "Your body holds wisdom your mind doesn't know. These 6 body scan sessions teach you to listen to the body's messages and release stored tension.",
     "session_count": 6,
     "difficulty": "intermediate",
-    "seed_karma": 156,
-    "seed_saves": 298,
     "session_ids": [
-      "session-075",
-      "session-077",
-      "session-078",
-      "session-080",
-      "session-076",
-      "session-087"
-    ]
+      "e39648a3-4c98-5747-9dc0-46d519b03dbc",
+      "22c96d0d-a561-5d30-b5c1-2013524d2693",
+      "a741b174-1bab-507f-8f32-041dfbb5c995",
+      "efd79817-49ce-58a5-8867-348a85f2b482",
+      "4dd7b7b7-d6ee-5e2f-8357-b5e11a9a6cad",
+      "8e52d4a7-0ebf-5b29-b14f-5ecc0e4344b5"
+    ],
+    "karma": 156,
+    "saves": 298
   },
   {
-    "id": "course-047",
+    "id": "8c3304e8-b170-50f6-9478-a2e113b4c001",
     "title": "Compassion Deep Dive",
     "description": "Take loving-kindness practice to new depths. From self-compassion to tonglen, these 6 sessions systematically open the heart and develop genuine care for all beings.",
     "session_count": 6,
     "difficulty": "advanced",
-    "seed_karma": 134,
-    "seed_saves": 256,
     "session_ids": [
-      "session-083",
-      "session-084",
-      "session-082",
-      "session-085",
-      "session-081",
-      "session-086"
-    ]
+      "206242ad-04f3-54f1-818c-b37f9919dc4b",
+      "7281b00b-3fb8-52d1-b2ba-96d44323ff43",
+      "f81cffe1-7656-57b7-9d15-f104c767effb",
+      "0d76f0f2-e84d-5b42-a87b-4f5a85314229",
+      "f3c32b77-4fa5-5897-b4e0-b3e21c4831a5",
+      "27e32ce9-bca2-51cb-8f46-d82fe94b3977"
+    ],
+    "karma": 134,
+    "saves": 256
   },
   {
-    "id": "course-048",
+    "id": "d941376c-0001-52cb-8df8-4394d549f682",
     "title": "Vipassana Insight Path",
     "description": "Develop the clear seeing of insight meditation. These 5 sessions introduce noting, impermanence observation, and open awareness in the Vipassana tradition.",
     "session_count": 5,
     "difficulty": "advanced",
-    "seed_karma": 123,
-    "seed_saves": 234,
     "session_ids": [
-      "session-092",
-      "session-093",
-      "session-094",
-      "session-096",
-      "session-095"
-    ]
+      "708980d4-ec43-58cd-aa7f-88a05bcecd8b",
+      "92f1ae01-4842-52cb-8025-380797a73ddf",
+      "84e397ff-5b5e-5550-a4d3-08060ec5b41a",
+      "71ea58c1-997f-5587-ab14-9bc0fe239c0c",
+      "3d3b18a0-f380-5a89-9d72-1dcd67837651"
+    ],
+    "karma": 123,
+    "saves": 234
   },
   {
-    "id": "course-049",
+    "id": "571f26cf-5766-5602-867e-d9dab5daed02",
     "title": "Breath Mastery Foundations",
     "description": "Master the breath as your primary meditation tool. From belly breathing to whole-body awareness, these 5 sessions build a solid foundation for all other practices.",
     "session_count": 5,
     "difficulty": "beginner",
-    "seed_karma": 198,
-    "seed_saves": 378,
     "session_ids": [
-      "session-087",
-      "session-107",
-      "session-088",
-      "session-090",
-      "session-091"
-    ]
+      "8e52d4a7-0ebf-5b29-b14f-5ecc0e4344b5",
+      "8bbd3a72-bfab-5c80-bfde-929e7d5aa8fb",
+      "e97c686c-0795-5c12-8520-0ce2a35cee1f",
+      "5629f03e-ade6-5be5-a039-58eeed17ee00",
+      "cadd3af1-196d-5881-be1a-7277ce17caed"
+    ],
+    "karma": 198,
+    "saves": 378
   },
   {
-    "id": "course-050",
+    "id": "fd1492e2-b8c9-50fb-be0c-e19396ea6040",
     "title": "Anxiety Toolkit",
     "description": "Practical meditation techniques for managing anxiety. These 4 sessions provide go-to practices for when worry strikes, building resilience over time.",
     "session_count": 4,
     "difficulty": "beginner",
-    "seed_karma": 234,
-    "seed_saves": 456,
     "session_ids": [
-      "session-108",
-      "session-076",
-      "session-088",
-      "session-083"
-    ]
+      "adf878d9-814a-5588-aa8e-c930e8df786e",
+      "4dd7b7b7-d6ee-5e2f-8357-b5e11a9a6cad",
+      "e97c686c-0795-5c12-8520-0ce2a35cee1f",
+      "206242ad-04f3-54f1-818c-b37f9919dc4b"
+    ],
+    "karma": 234,
+    "saves": 456
   },
   {
-    "id": "course-051",
+    "id": "fad6cd63-e942-5ea9-b9c4-f7e45f6e99ac",
     "title": "Evening Wind-Down",
     "description": "Create a consistent evening practice that helps you transition from the active day to restful night. These 5 sessions are perfect for unwinding.",
     "session_count": 5,
     "difficulty": "beginner",
-    "seed_karma": 189,
-    "seed_saves": 367,
     "session_ids": [
-      "session-054",
-      "session-104",
-      "session-077",
-      "session-100",
-      "session-106"
-    ]
+      "ad57fdfb-7072-5396-ba3f-665573d8f1ab",
+      "7b157897-55e9-5a1d-a1a4-7adcc4a7b1bc",
+      "22c96d0d-a561-5d30-b5c1-2013524d2693",
+      "178bf97b-80bd-5b82-82b9-4b5d08c508e0",
+      "e78ce4f7-f256-5f8c-82aa-e1ca37c5bd45"
+    ],
+    "karma": 189,
+    "saves": 367
   },
   {
-    "id": "course-052",
+    "id": "b76a28ff-db82-5697-b503-abde2a14242c",
     "title": "Advanced Open Awareness",
     "description": "For experienced practitioners ready to rest in awareness itself. These 5 sessions explore equanimity, not-knowing, and the spacious nature of mind.",
     "session_count": 5,
     "difficulty": "advanced",
-    "seed_karma": 112,
-    "seed_saves": 198,
     "session_ids": [
-      "session-097",
-      "session-100",
-      "session-102",
-      "session-106",
-      "session-095"
-    ]
+      "401d079c-6fd2-57f1-9205-4beb4d672857",
+      "178bf97b-80bd-5b82-82b9-4b5d08c508e0",
+      "3c201219-572c-55d4-b28d-cba8184344f1",
+      "e78ce4f7-f256-5f8c-82aa-e1ca37c5bd45",
+      "3d3b18a0-f380-5a89-9d72-1dcd67837651"
+    ],
+    "karma": 112,
+    "saves": 198
   },
   {
-    "id": "course-053",
+    "id": "b83b8661-37a6-5a25-98cf-5c04706f43aa",
     "title": "Nature Connection Practices",
     "description": "Take your meditation outdoors with these 4 sessions designed for natural settings. From walking to sitting, learn to let nature be your teacher.",
     "session_count": 4,
     "difficulty": "beginner",
-    "seed_karma": 167,
-    "seed_saves": 312,
     "session_ids": [
-      "session-058",
-      "session-103",
-      "session-056",
-      "session-051"
-    ]
+      "3d384978-8d7d-5a9a-b6fc-aae76b91c989",
+      "7ecba322-0673-57ec-bbcd-b305e2427c0a",
+      "b678a9f9-148e-507a-b5da-8702c70b30d0",
+      "82f1ea07-9cd0-50d6-ba6e-105ea5758a1a"
+    ],
+    "karma": 167,
+    "saves": 312
   },
   {
-    "id": "course-054",
+    "id": "44e0592c-b0b2-5e4a-9a8b-625dc700d230",
     "title": "Zen at Work",
     "description": "Bring Zen principles to your professional life. These 4 sessions teach you to find stillness amid activity, making the workplace a place of practice.",
     "session_count": 4,
     "difficulty": "intermediate",
-    "seed_karma": 145,
-    "seed_saves": 278,
     "session_ids": [
-      "session-066",
-      "session-099",
-      "session-109",
-      "session-105"
-    ]
+      "d76e0942-6721-5584-9de4-5bd13c5e8eb4",
+      "07a4e22f-513b-5d4c-b6d1-dfc32e122cef",
+      "84976f67-20ae-5594-98e7-b1cfde246493",
+      "3684bf02-798c-51d8-b40b-c9ffad9527ed"
+    ],
+    "karma": 145,
+    "saves": 278
   },
   {
-    "id": "course-055",
+    "id": "97038e8e-0b4b-5e11-bdcf-5bc6c8dbcdc3",
     "title": "The Complete Day: Morning to Night",
     "description": "A full-day meditation journey with practices for each phase of the day. From morning awakening to nighttime reflection, live your whole day mindfully.",
     "session_count": 5,
     "difficulty": "intermediate",
-    "seed_karma": 178,
-    "seed_saves": 345,
     "session_ids": [
-      "session-107",
-      "session-099",
-      "session-104",
-      "session-101",
-      "session-110"
-    ]
+      "8bbd3a72-bfab-5c80-bfde-929e7d5aa8fb",
+      "07a4e22f-513b-5d4c-b6d1-dfc32e122cef",
+      "7b157897-55e9-5a1d-a1a4-7adcc4a7b1bc",
+      "7621675a-820a-5776-a413-ad8c1dcbf518",
+      "6c2763c5-e7f0-56a5-8a5e-a4e67610d600"
+    ],
+    "karma": 178,
+    "saves": 345
   }
 ]

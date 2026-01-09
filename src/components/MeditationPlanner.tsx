@@ -126,9 +126,9 @@ interface ExtractedSession {
   intention: string
   recommended_after_hours: number
   tags?: string[]
-  seed_karma: number
-  seed_saves: number
-  seed_completions: number
+  karma: number
+  saves: number
+  completions: number
   creator_hours: number
   course_id?: string
   course_position?: number
@@ -151,9 +151,9 @@ function getTemplateById(templateId: string): SessionTemplate | null {
     intention: raw.intention,
     recommendedAfterHours: raw.recommended_after_hours,
     tags: raw.tags,
-    karma: raw.seed_karma,
-    saves: raw.seed_saves,
-    completions: raw.seed_completions,
+    karma: raw.karma,
+    saves: raw.saves,
+    completions: raw.completions,
     creatorHours: raw.creator_hours,
     courseId: raw.course_id,
     coursePosition: raw.course_position

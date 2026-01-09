@@ -33,34 +33,78 @@ function calculateSessionVoice(hours: number, karma: number, saves: number, comp
 }
 
 interface SessionCardProps {
-  session: SessionTemplate
+  session: SessionTemplate & { hasVoted?: boolean; hasSaved?: boolean }
   gradient: string
   onClick: () => void
+  // Optional callbacks for Supabase integration
+  onVote?: (sessionId: string, shouldVote: boolean) => Promise<void>
+  onRequireAuth?: () => void
+  isAuthenticated?: boolean
 }
 
-export function SessionCard({ session, gradient, onClick }: SessionCardProps) {
+export function SessionCard({
+  session,
+  gradient,
+  onClick,
+  onVote,
+  onRequireAuth,
+  isAuthenticated = true
+}: SessionCardProps) {
   const [isVoting, setIsVoting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [localVoted, setLocalVoted] = useState(false)
-  const [localSaved, setLocalSaved] = useState(false)
+  // Initialize from props if provided (Supabase), otherwise local state
+  const [localVoted, setLocalVoted] = useState(session.hasVoted ?? false)
+  const [localSaved, setLocalSaved] = useState(session.hasSaved ?? false)
   const [localUpvotes, setLocalUpvotes] = useState(session.karma)
   const haptic = useTapFeedback()
 
-  // Check if template is already saved on mount
+  // Sync local state when props change (e.g., on refresh)
   useEffect(() => {
-    isTemplateSaved(session.id).then(setLocalSaved)
-  }, [session.id])
+    if (session.hasVoted !== undefined) {
+      setLocalVoted(session.hasVoted)
+    }
+    if (session.hasSaved !== undefined) {
+      setLocalSaved(session.hasSaved)
+    }
+    setLocalUpvotes(session.karma)
+  }, [session.hasVoted, session.hasSaved, session.karma])
 
-  // Handle vote (local only - no backend for template votes)
+  // Check if template is already saved on mount (fallback to IndexedDB)
+  useEffect(() => {
+    if (session.hasSaved === undefined) {
+      isTemplateSaved(session.id).then(setLocalSaved)
+    }
+  }, [session.id, session.hasSaved])
+
+  // Handle vote - uses Supabase if callback provided
   const handleVote = useCallback(async () => {
+    if (!isAuthenticated && onRequireAuth) {
+      onRequireAuth()
+      return
+    }
     if (isVoting) return
     haptic.light()
     setIsVoting(true)
     const newVoted = !localVoted
+
+    // Optimistic update
     setLocalVoted(newVoted)
     setLocalUpvotes(prev => newVoted ? prev + 1 : prev - 1)
-    setIsVoting(false)
-  }, [isVoting, localVoted, haptic])
+
+    try {
+      // Call Supabase if callback provided
+      if (onVote) {
+        await onVote(session.id, newVoted)
+      }
+    } catch (err) {
+      // Rollback on error
+      setLocalVoted(!newVoted)
+      setLocalUpvotes(prev => newVoted ? prev - 1 : prev + 1)
+      console.error('Failed to vote:', err)
+    } finally {
+      setIsVoting(false)
+    }
+  }, [isVoting, localVoted, haptic, onVote, session.id, isAuthenticated, onRequireAuth])
 
   // Handle save (persists to local IndexedDB)
   const handleSave = useCallback(async () => {

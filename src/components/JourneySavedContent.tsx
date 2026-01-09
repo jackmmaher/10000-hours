@@ -107,9 +107,9 @@ export function JourneySavedContent({ onCreateNew }: SavedContentProps) {
           recommended_after_hours: number
           tags?: string[]
           intent_tags?: string[]
-          seed_karma: number
-          seed_saves: number
-          seed_completions: number
+          karma: number
+          saves: number
+          completions: number
           creator_hours: number
         }>
 
@@ -131,9 +131,9 @@ export function JourneySavedContent({ onCreateNew }: SavedContentProps) {
             recommendedAfterHours: s.recommended_after_hours,
             tags: s.tags,
             intentTags: s.intent_tags,
-            karma: s.seed_karma,
-            saves: s.seed_saves,
-            completions: s.seed_completions,
+            karma: s.karma,
+            saves: s.saves,
+            completions: s.completions,
             creatorHours: s.creator_hours
           }))
 

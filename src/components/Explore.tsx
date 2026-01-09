@@ -24,7 +24,7 @@ import { AuthModal } from './AuthModal'
 import { SessionCard } from './SessionCard'
 import { SessionDetailModal, SessionTemplate } from './SessionDetailModal'
 import { getIntentionGradient } from '../lib/animations'
-import { getPublishedTemplates } from '../lib/templates'
+import { getTemplatesForUser, voteTemplate, unvoteTemplate } from '../lib/templates'
 import { Card, CardHeader, CardBody, CardEngagement, PearlOrb } from './Card'
 
 // Import extracted data
@@ -39,7 +39,7 @@ interface FeedItem {
   data: Pearl | SessionTemplate
 }
 
-// Raw extracted session type (snake_case from JSON)
+// Raw session type (snake_case from JSON - used as offline fallback)
 interface ExtractedSession {
   id: string
   title: string
@@ -55,15 +55,15 @@ interface ExtractedSession {
   recommended_after_hours: number
   tags?: string[]
   intent_tags?: string[]
-  seed_karma: number
-  seed_saves: number
-  seed_completions: number
+  karma: number
+  saves: number
+  completions: number
   creator_hours: number
   course_id?: string
   course_position?: number
 }
 
-// Transform extracted sessions to SessionTemplate format
+// Transform extracted sessions to SessionTemplate format (for offline fallback)
 function transformSession(raw: ExtractedSession): SessionTemplate {
   return {
     id: raw.id,
@@ -79,17 +79,17 @@ function transformSession(raw: ExtractedSession): SessionTemplate {
     recommendedAfterHours: raw.recommended_after_hours,
     tags: raw.tags,
     intentTags: raw.intent_tags,
-    karma: raw.seed_karma,
-    saves: raw.seed_saves,
-    completions: raw.seed_completions,
+    karma: raw.karma,
+    saves: raw.saves,
+    completions: raw.completions,
     creatorHours: raw.creator_hours,
     courseId: raw.course_id,
     coursePosition: raw.course_position
   }
 }
 
-// Load and transform sessions
-const SEEDED_SESSIONS: SessionTemplate[] = (extractedSessions as ExtractedSession[]).map(transformSession)
+// Offline fallback sessions (from JSON - used when Supabase unavailable)
+const FALLBACK_SESSIONS: SessionTemplate[] = (extractedSessions as ExtractedSession[]).map(transformSession)
 
 type FilterType = 'all' | 'pearls' | 'meditations'
 type SortType = 'rising' | 'new' | 'top' | 'saved'
@@ -108,39 +108,53 @@ const INTENT_OPTIONS = [
 
 type IntentType = typeof INTENT_OPTIONS[number] | null
 
+// Extended session template with user interaction flags
+interface SessionWithStatus extends SessionTemplate {
+  hasVoted?: boolean
+  hasSaved?: boolean
+  hasCompleted?: boolean
+}
+
 export function Explore() {
   const { setView } = useNavigationStore()
   const { user, isAuthenticated, refreshProfile } = useAuthStore()
   const haptic = useTapFeedback()
   const [pearls, setPearls] = useState<Pearl[]>([])
-  const [communityTemplates, setCommunityTemplates] = useState<SessionTemplate[]>([])
+  const [sessions, setSessions] = useState<SessionWithStatus[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [filterType, setFilterType] = useState<FilterType>('all')
   const [sortType, setSortType] = useState<SortType>('rising')
   const [intentFilter, setIntentFilter] = useState<IntentType>(null)
-  const [selectedSession, setSelectedSession] = useState<SessionTemplate | null>(null)
+  const [selectedSession, setSelectedSession] = useState<SessionWithStatus | null>(null)
 
-  // Combine seeded sessions with community templates
+  // All sessions - from Supabase with fallback to JSON
   const allSessions = useMemo(() => {
-    // Community templates first (newest), then seeded
-    return [...communityTemplates, ...SEEDED_SESSIONS]
-  }, [communityTemplates])
+    // Use Supabase data if available, otherwise fallback to JSON
+    return sessions.length > 0 ? sessions : FALLBACK_SESSIONS
+  }, [sessions])
 
-  // Load pearls and community templates from Supabase
+  // Load pearls and sessions from Supabase
   const loadContent = useCallback(async () => {
     setIsLoading(true)
     try {
-      // Map sort type to pearl filter
+      // Map sort type to filters
       const pearlFilter: PearlFilter = sortType === 'new' ? 'new' : sortType === 'top' ? 'top' : 'rising'
+      const templateFilter = sortType === 'new' ? 'new' : sortType === 'top' ? 'top' : 'rising'
+
       const [pearlData, templateData] = await Promise.all([
         getPearls(pearlFilter, user?.id),
-        getPublishedTemplates(20) // Limit to 20 community templates
+        // Fetch all templates with user's vote/save status if authenticated
+        user?.id
+          ? getTemplatesForUser(user.id, templateFilter, 100)
+          : getTemplatesForUser('00000000-0000-0000-0000-000000000000', templateFilter, 100)
       ])
       setPearls(pearlData)
-      setCommunityTemplates(templateData)
+      setSessions(templateData)
     } catch (err) {
       console.error('Failed to load content:', err)
+      // Use fallback sessions on error
+      setSessions([])
     } finally {
       setIsLoading(false)
     }
@@ -216,7 +230,7 @@ export function Explore() {
     return items
   }, [pearls, filterType, allSessions, intentFilter])
 
-  // Handle vote
+  // Handle pearl vote
   const handleVote = async (pearlId: string, shouldVote: boolean) => {
     if (!user) return
     if (shouldVote) {
@@ -227,7 +241,7 @@ export function Explore() {
     refreshProfile()
   }
 
-  // Handle save
+  // Handle pearl save
   const handleSave = async (pearlId: string, shouldSave: boolean) => {
     if (!user) return
     if (shouldSave) {
@@ -235,6 +249,23 @@ export function Explore() {
     } else {
       await unsavePearl(pearlId, user.id)
     }
+    refreshProfile()
+  }
+
+  // Handle session vote
+  const handleSessionVote = async (sessionId: string, shouldVote: boolean) => {
+    if (!user) return
+    if (shouldVote) {
+      await voteTemplate(sessionId, user.id)
+    } else {
+      await unvoteTemplate(sessionId, user.id)
+    }
+    // Update local state optimistically
+    setSessions(prev => prev.map(s =>
+      s.id === sessionId
+        ? { ...s, hasVoted: shouldVote, karma: s.karma + (shouldVote ? 1 : -1) }
+        : s
+    ))
     refreshProfile()
   }
 
@@ -434,13 +465,16 @@ export function Explore() {
               }
 
               if (item.type === 'session') {
-                const session = item.data as SessionTemplate
+                const session = item.data as SessionWithStatus
                 return (
                   <SessionCard
                     key={item.id}
                     session={session}
                     gradient={getIntentionGradient(session.intention)}
                     onClick={() => setSelectedSession(session)}
+                    onVote={handleSessionVote}
+                    onRequireAuth={() => setShowAuthModal(true)}
+                    isAuthenticated={isAuthenticated}
                   />
                 )
               }
@@ -499,10 +533,20 @@ export function Explore() {
           session={selectedSession}
           onClose={() => setSelectedSession(null)}
           onAdopt={() => {
-            // TODO: Add to plans
             setSelectedSession(null)
             setView('journey')
           }}
+          onVote={handleSessionVote}
+          onSaveChange={(sessionId, shouldSave) => {
+            // Update local state when modal saves
+            setSessions(prev => prev.map(s =>
+              s.id === sessionId
+                ? { ...s, hasSaved: shouldSave, saves: s.saves + (shouldSave ? 1 : -1) }
+                : s
+            ))
+          }}
+          isAuthenticated={isAuthenticated}
+          onRequireAuth={() => setShowAuthModal(true)}
         />
       )}
 

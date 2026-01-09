@@ -224,7 +224,8 @@ function mapTemplateFromDb(row: Record<string, unknown>): SessionTemplate {
 }
 
 /**
- * Check if a string is a valid UUID (community template) vs seeded session ID
+ * Check if a string is a valid UUID
+ * Note: All templates now use UUIDs (both seeded and user-created)
  */
 export function isUUID(id: string): boolean {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -233,7 +234,7 @@ export function isUUID(id: string): boolean {
 
 /**
  * Record a template completion
- * Only works for community templates (UUID IDs), not seeded sessions
+ * All templates now use UUIDs and are tracked in Supabase
  */
 export async function recordTemplateCompletion(
   templateId: string,
@@ -241,12 +242,6 @@ export async function recordTemplateCompletion(
   sessionUuid?: string
 ): Promise<boolean> {
   if (!isSupabaseConfigured() || !supabase) {
-    return false
-  }
-
-  // Only track completions for community templates (UUID IDs)
-  if (!isUUID(templateId)) {
-    console.log('Skipping completion tracking for seeded session:', templateId)
     return false
   }
 
@@ -259,7 +254,8 @@ export async function recordTemplateCompletion(
     })
 
   if (error) {
-    // Might already be completed - that's fine
+    // Duplicate completion is allowed (users can complete same template multiple times)
+    // but if it's a unique constraint error, that's fine
     if (error.code === '23505') {
       return true
     }
@@ -272,17 +268,12 @@ export async function recordTemplateCompletion(
 
 /**
  * Get live stats for a template from Supabase
- * Returns null for seeded sessions (they use static values from JSON)
+ * All templates now use UUIDs and are tracked in Supabase
  */
 export async function getTemplateStats(
   templateId: string
 ): Promise<{ karma: number; saves: number; completions: number } | null> {
   if (!isSupabaseConfigured() || !supabase) {
-    return null
-  }
-
-  // Only fetch live stats for community templates
-  if (!isUUID(templateId)) {
     return null
   }
 
@@ -302,4 +293,188 @@ export async function getTemplateStats(
     saves: data.saves || 0,
     completions: data.completions || 0
   }
+}
+
+/**
+ * Vote for a template (upvote)
+ * Triggers automatically increment karma on the template
+ */
+export async function voteTemplate(templateId: string, userId: string): Promise<boolean> {
+  if (!isSupabaseConfigured() || !supabase) {
+    return false
+  }
+
+  const { error } = await supabase
+    .from('session_template_votes')
+    .insert({
+      template_id: templateId,
+      user_id: userId
+    })
+
+  if (error) {
+    // Already voted (duplicate key) is not an error for the user
+    if (error.code === '23505') {
+      return true
+    }
+    console.error('Vote template error:', error)
+    return false
+  }
+
+  return true
+}
+
+/**
+ * Remove vote from a template (unvote)
+ * Triggers automatically decrement karma on the template
+ */
+export async function unvoteTemplate(templateId: string, userId: string): Promise<boolean> {
+  if (!isSupabaseConfigured() || !supabase) {
+    return false
+  }
+
+  const { error } = await supabase
+    .from('session_template_votes')
+    .delete()
+    .eq('template_id', templateId)
+    .eq('user_id', userId)
+
+  if (error) {
+    console.error('Unvote template error:', error)
+    return false
+  }
+
+  return true
+}
+
+/**
+ * Save a template to user's collection
+ * Triggers automatically increment saves on the template
+ */
+export async function saveTemplate(templateId: string, userId: string): Promise<boolean> {
+  if (!isSupabaseConfigured() || !supabase) {
+    return false
+  }
+
+  const { error } = await supabase
+    .from('session_template_saves')
+    .insert({
+      template_id: templateId,
+      user_id: userId
+    })
+
+  if (error) {
+    // Already saved (duplicate key) is not an error for the user
+    if (error.code === '23505') {
+      return true
+    }
+    console.error('Save template error:', error)
+    return false
+  }
+
+  return true
+}
+
+/**
+ * Remove template from user's saved collection
+ * Triggers automatically decrement saves on the template
+ */
+export async function unsaveTemplate(templateId: string, userId: string): Promise<boolean> {
+  if (!isSupabaseConfigured() || !supabase) {
+    return false
+  }
+
+  const { error } = await supabase
+    .from('session_template_saves')
+    .delete()
+    .eq('template_id', templateId)
+    .eq('user_id', userId)
+
+  if (error) {
+    console.error('Unsave template error:', error)
+    return false
+  }
+
+  return true
+}
+
+/**
+ * Check if user has voted for a template
+ */
+export async function hasUserVoted(templateId: string, userId: string): Promise<boolean> {
+  if (!isSupabaseConfigured() || !supabase) {
+    return false
+  }
+
+  const { data, error } = await supabase
+    .from('session_template_votes')
+    .select('template_id')
+    .eq('template_id', templateId)
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (error) {
+    console.error('Check vote error:', error)
+    return false
+  }
+
+  return data !== null
+}
+
+/**
+ * Check if user has saved a template
+ */
+export async function hasUserSaved(templateId: string, userId: string): Promise<boolean> {
+  if (!isSupabaseConfigured() || !supabase) {
+    return false
+  }
+
+  const { data, error } = await supabase
+    .from('session_template_saves')
+    .select('template_id')
+    .eq('template_id', templateId)
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (error) {
+    console.error('Check save error:', error)
+    return false
+  }
+
+  return data !== null
+}
+
+/**
+ * Get templates with user's vote/save status using RPC
+ * More efficient than separate queries
+ */
+export async function getTemplatesForUser(
+  userId: string,
+  filter: 'top' | 'new' | 'rising' | 'most_saved' = 'new',
+  limit = 50,
+  offset = 0
+): Promise<(SessionTemplate & { hasVoted: boolean; hasSaved: boolean; hasCompleted: boolean })[]> {
+  if (!isSupabaseConfigured() || !supabase) {
+    return []
+  }
+
+  const { data, error } = await supabase.rpc('get_session_templates_for_user', {
+    p_user_id: userId,
+    p_filter: filter,
+    p_discipline: null,
+    p_difficulty: null,
+    p_limit: limit,
+    p_offset: offset
+  })
+
+  if (error) {
+    console.error('Get templates for user error:', error)
+    return []
+  }
+
+  return (data || []).map((row: Record<string, unknown>) => ({
+    ...mapTemplateFromDb(row),
+    hasVoted: row.has_voted as boolean,
+    hasSaved: row.has_saved as boolean,
+    hasCompleted: row.has_completed as boolean
+  }))
 }

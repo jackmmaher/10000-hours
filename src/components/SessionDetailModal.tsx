@@ -7,7 +7,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { getIntentionGradient } from '../lib/animations'
 import { saveTemplate, unsaveTemplate, isTemplateSaved, addPlannedSession } from '../lib/db'
-import { getTemplateStats, isUUID } from '../lib/templates'
+import { getTemplateStats } from '../lib/templates'
 
 export interface SessionTemplate {
   id: string
@@ -33,9 +33,14 @@ export interface SessionTemplate {
 }
 
 interface SessionDetailModalProps {
-  session: SessionTemplate
+  session: SessionTemplate & { hasVoted?: boolean; hasSaved?: boolean }
   onClose: () => void
   onAdopt: () => void
+  // Optional callbacks for Supabase integration (state sync with parent)
+  onVote?: (sessionId: string, shouldVote: boolean) => Promise<void>
+  onSaveChange?: (sessionId: string, shouldSave: boolean) => void
+  isAuthenticated?: boolean
+  onRequireAuth?: () => void
 }
 
 // Parse duration from string like "5-10 mins" → 10 (take max)
@@ -72,8 +77,19 @@ function getSuggestedTime(bestTime: string): string {
   return '09:00' // Default for "Anytime" or unknown
 }
 
-export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailModalProps) {
-  const [isSaved, setIsSaved] = useState(false)
+export function SessionDetailModal({
+  session,
+  onClose,
+  onAdopt,
+  onVote,
+  onSaveChange,
+  isAuthenticated = true,
+  onRequireAuth
+}: SessionDetailModalProps) {
+  // Initialize from props if available (Supabase)
+  const [hasVoted, setHasVoted] = useState(session.hasVoted ?? false)
+  const [isSaved, setIsSaved] = useState(session.hasSaved ?? false)
+  const [isVoting, setIsVoting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
@@ -85,48 +101,92 @@ export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailM
   const [plannedTime, setPlannedTime] = useState(() => getSuggestedTime(session.bestTime))
   const [isAdopting, setIsAdopting] = useState(false)
 
-  // Live stats for community templates (null for seeded sessions)
+  // Live stats (fetched from Supabase)
   const [liveStats, setLiveStats] = useState<{ karma: number; saves: number; completions: number } | null>(null)
 
   // Get gradient based on intention or use fallback
   const gradient = getIntentionGradient(session.intention)
 
-  // Check if already saved on mount, and fetch live stats for community templates
+  // Sync state from props and fetch live stats
   useEffect(() => {
-    isTemplateSaved(session.id).then(setIsSaved)
-
-    // Only fetch live stats for community templates (UUID IDs)
-    if (isUUID(session.id)) {
-      getTemplateStats(session.id).then(stats => {
-        if (stats) setLiveStats(stats)
-      })
+    // Use prop values if available, fallback to IndexedDB check
+    if (session.hasSaved !== undefined) {
+      setIsSaved(session.hasSaved)
+    } else {
+      isTemplateSaved(session.id).then(setIsSaved)
     }
-  }, [session.id])
+    if (session.hasVoted !== undefined) {
+      setHasVoted(session.hasVoted)
+    }
 
-  // Use live stats for community templates, fall back to session values for seeded sessions
+    // Fetch live stats from Supabase
+    getTemplateStats(session.id).then(stats => {
+      if (stats) setLiveStats(stats)
+    })
+  }, [session.id, session.hasSaved, session.hasVoted])
+
+  // Use live stats, fall back to session values
   const displayStats = liveStats ?? {
     karma: session.karma,
     saves: session.saves,
     completions: session.completions
   }
 
+  // Handle vote with optimistic update
+  const handleVote = useCallback(async () => {
+    if (!isAuthenticated && onRequireAuth) {
+      onRequireAuth()
+      return
+    }
+    if (isVoting) return
+    setIsVoting(true)
+
+    const newVoted = !hasVoted
+    // Optimistic update
+    setHasVoted(newVoted)
+    setLiveStats(prev => prev ? {
+      ...prev,
+      karma: prev.karma + (newVoted ? 1 : -1)
+    } : null)
+
+    try {
+      if (onVote) {
+        await onVote(session.id, newVoted)
+      }
+    } catch (err) {
+      // Rollback on error
+      setHasVoted(!newVoted)
+      setLiveStats(prev => prev ? {
+        ...prev,
+        karma: prev.karma + (newVoted ? -1 : 1)
+      } : null)
+      console.error('Failed to vote:', err)
+    } finally {
+      setIsVoting(false)
+    }
+  }, [hasVoted, isVoting, onVote, session.id, isAuthenticated, onRequireAuth])
+
+  // Handle save with notification to parent
   const handleSave = useCallback(async () => {
     if (isSaving) return
     setIsSaving(true)
+    const newSaved = !isSaved
+
     try {
-      if (isSaved) {
-        await unsaveTemplate(session.id)
-        setIsSaved(false)
-      } else {
+      if (newSaved) {
         await saveTemplate(session.id)
-        setIsSaved(true)
+      } else {
+        await unsaveTemplate(session.id)
       }
+      setIsSaved(newSaved)
+      // Notify parent of save change
+      onSaveChange?.(session.id, newSaved)
     } catch (err) {
       console.error('Failed to save template:', err)
     } finally {
       setIsSaving(false)
     }
-  }, [isSaved, isSaving, session.id])
+  }, [isSaved, isSaving, session.id, onSaveChange])
 
   const handleAdopt = () => {
     setShowDatePicker(true)
@@ -247,21 +307,53 @@ export function SessionDetailModal({ session, onClose, onAdopt }: SessionDetailM
             </div>
           )}
 
-          {/* Stats - live for community templates, static for seeded sessions */}
-          <div className="flex items-center gap-6 text-sm text-ink/50 mb-8">
-            <span className="flex items-center gap-1">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {/* Interactive Stats */}
+          <div className="flex items-center gap-4 text-sm mb-8">
+            {/* Vote button */}
+            <button
+              onClick={handleVote}
+              disabled={isVoting}
+              className={`
+                flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all
+                ${hasVoted
+                  ? 'bg-indigo-deep text-cream'
+                  : 'bg-cream-deep text-ink/50 hover:text-ink/70 hover:bg-cream-deep/80'
+                }
+                ${isVoting ? 'opacity-50' : ''}
+              `}
+            >
+              <svg className="w-4 h-4" fill={hasVoted ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 15l7-7 7 7" />
               </svg>
-              <span className="tabular-nums">{displayStats.karma}</span> karma
-            </span>
-            <span className="flex items-center gap-1">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <span className="tabular-nums">{displayStats.karma}</span>
+            </button>
+
+            {/* Save button */}
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className={`
+                flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all
+                ${isSaved
+                  ? 'bg-indigo-deep text-cream'
+                  : 'bg-cream-deep text-ink/50 hover:text-ink/70 hover:bg-cream-deep/80'
+                }
+                ${isSaving ? 'opacity-50' : ''}
+              `}
+            >
+              <svg className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
               </svg>
-              <span className="tabular-nums">{displayStats.saves}</span> saved
+              <span className="tabular-nums">{displayStats.saves}</span>
+            </button>
+
+            {/* Completions (read-only) */}
+            <span className="flex items-center gap-1.5 px-3 py-1.5 text-ink/40">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="tabular-nums">{displayStats.completions.toLocaleString()}</span>
             </span>
-            <span className="tabular-nums">{displayStats.completions.toLocaleString()} completed</span>
           </div>
 
           {/* Actions */}
