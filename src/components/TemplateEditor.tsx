@@ -32,8 +32,8 @@ interface TemplateEditorProps {
   creatorHours: number
 }
 
-// Duration options in minutes (matches MeditationPlanner)
-const DURATION_MINUTES = [5, 10, 15, 20, 30, 45, 60]
+// Duration options in minutes (matches MeditationPlanner and meditation-options.ts)
+const DURATION_MINUTES = [5, 10, 15, 20, 25, 30, 45, 60]
 
 // Experience level presets
 const EXPERIENCE_LEVELS = [
@@ -466,13 +466,6 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
                 )
               })}
             </div>
-          </div>
-
-          {/* Creator hours badge */}
-          <div className="bg-cream-deep rounded-xl p-4">
-            <p className="text-xs text-ink/40">
-              This meditation will show that you have <span className="font-medium text-ink/60">{creatorHours} hours</span> of practice.
-            </p>
           </div>
 
           {/* Discard draft option */}

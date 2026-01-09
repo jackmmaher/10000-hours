@@ -45,6 +45,7 @@ import { VoiceBadge } from './VoiceBadge'
 import { PracticeShape } from './PracticeShape'
 import { CommitmentCard } from './CommitmentCard'
 import { GrowthBars } from './GrowthBars'
+import { SuggestedForYou } from './SuggestedForYou'
 import { SuggestedActions } from './SuggestedActions'
 import { VoiceDetailModal } from './VoiceDetailModal'
 
@@ -252,7 +253,13 @@ export function Progress() {
             <GrowthBars trajectory={growthTrajectory} totalSessions={sessionCount} />
 
             {/* ============================================ */}
-            {/* SECTION 7: Suggested Actions */}
+            {/* SECTION 7: Suggested For You */}
+            {/* Weekly personalized recommendation */}
+            {/* ============================================ */}
+            <SuggestedForYou />
+
+            {/* ============================================ */}
+            {/* SECTION 8: Suggested Actions */}
             {/* ============================================ */}
             <SuggestedActions actions={suggestedActions} />
           </>

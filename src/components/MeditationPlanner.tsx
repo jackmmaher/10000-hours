@@ -102,6 +102,15 @@ function formatDurationMinutes(seconds: number): string {
   return `${hours} hr ${remainingMinutes} min`
 }
 
+// Format duration for custom picker pills (concise)
+function formatCustomDuration(mins: number): string {
+  if (mins < 60) return `${mins} min`
+  const hrs = Math.floor(mins / 60)
+  const rem = mins % 60
+  if (rem === 0) return `${hrs}h`
+  return `${hrs}h ${rem}m`
+}
+
 // Raw extracted session type (snake_case from JSON)
 interface ExtractedSession {
   id: string
@@ -638,8 +647,8 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                     {showCustomDuration && (
                       <div className="mt-3 animate-fade-in">
                         <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
-                          {/* Common custom durations: 1-5, then increments of 5 up to 90, then longer options */}
-                          {[1, 2, 3, 4, 5, 7, 8, 12, 15, 18, 20, 22, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 120, 180].map((d) => (
+                          {/* Sensible increments: short sessions, then standard, then extended */}
+                          {[1, 2, 3, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 120, 150, 180].map((d) => (
                             <button
                               key={d}
                               onClick={() => setDuration(duration === d ? null : d)}
@@ -649,7 +658,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                                   : 'bg-deep/30 text-ink-soft hover:bg-deep/50'
                               }`}
                             >
-                              {d < 60 ? `${d} min` : d === 60 ? '1 hr' : d === 90 ? '1.5 hr' : d === 120 ? '2 hr' : '3 hr'}
+                              {formatCustomDuration(d)}
                             </button>
                           ))}
                         </div>
