@@ -7,6 +7,7 @@
 
 import { useAuthStore } from '../stores/useAuthStore'
 import { isSupabaseConfigured } from '../lib/supabase'
+import { Button } from './Button'
 
 interface AuthModalProps {
   isOpen: boolean
@@ -34,12 +35,9 @@ export function AuthModal({
           <p className="text-sm text-ink/50 mb-6">
             Sign-in is not available yet. Coming soon!
           </p>
-          <button
-            onClick={onClose}
-            className="w-full py-3 text-ink/60 hover:text-ink transition-colors"
-          >
+          <Button variant="ghost" fullWidth onClick={onClose}>
             Close
-          </button>
+          </Button>
         </div>
       </div>
     )
@@ -78,22 +76,26 @@ export function AuthModal({
         {/* Sign-in buttons */}
         <div className="space-y-3">
           {/* Apple Sign-in */}
-          <button
+          <Button
+            variant="primary"
+            size="lg"
+            fullWidth
+            loading={isLoading}
             onClick={handleAppleSignIn}
-            disabled={isLoading}
-            className="w-full flex items-center justify-center gap-3 py-3.5 px-4 bg-ink text-cream rounded-xl font-medium transition-all hover:bg-ink/90 active:scale-[0.98] disabled:opacity-50"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
               <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
             </svg>
             {isLoading ? 'Signing in...' : 'Continue with Apple'}
-          </button>
+          </Button>
 
           {/* Google Sign-in */}
-          <button
+          <Button
+            variant="secondary"
+            size="lg"
+            fullWidth
+            loading={isLoading}
             onClick={handleGoogleSignIn}
-            disabled={isLoading}
-            className="w-full flex items-center justify-center gap-3 py-3.5 px-4 bg-white text-ink border border-ink/10 rounded-xl font-medium transition-all hover:bg-cream-dark active:scale-[0.98] disabled:opacity-50"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -102,7 +104,7 @@ export function AuthModal({
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
             {isLoading ? 'Signing in...' : 'Continue with Google'}
-          </button>
+          </Button>
         </div>
 
         {/* Privacy note */}
@@ -113,12 +115,14 @@ export function AuthModal({
         </p>
 
         {/* Close button */}
-        <button
+        <Button
+          variant="ghost"
+          fullWidth
           onClick={onClose}
-          className="w-full mt-6 py-3 text-sm text-ink/40 hover:text-ink/60 transition-colors"
+          className="mt-6"
         >
           Maybe later
-        </button>
+        </Button>
       </div>
     </div>
   )
