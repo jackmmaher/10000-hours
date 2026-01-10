@@ -303,8 +303,8 @@ function LivingThemeEffects({
         }
       `}</style>
 
-      {/* Grain overlay - always present, intensity varies */}
-      <GrainOverlay intensity={effects.grain} />
+      {/* Grain overlay - always present, boosted at night to reduce gradient banding */}
+      <GrainOverlay intensity={effects.grain + (effects.ambientDarkness > 0.5 ? 0.02 : 0)} />
 
       {/* Atmospheric gradient - blends based on darkness */}
       <AtmosphericGradient
@@ -430,8 +430,8 @@ function DirectionalLight({
   if (intensity < 0.05) return null
 
   // Warm golden color when warmth is high, cool when low
-  const coolColor = 'rgba(255, 255, 255, 0.12)'
-  const warmColor = 'rgba(251, 191, 36, 0.2)'
+  const coolColor = 'rgba(255, 255, 255, 0.15)'
+  const warmColor = 'rgba(251, 191, 36, 0.25)'
 
   // Interpolate color based on warmth
   const color = warmth > 0.5 ? warmColor : coolColor
@@ -441,24 +441,29 @@ function DirectionalLight({
   const isEvening = warmth > 0.3
   const angle = isEvening ? 'to top right' : 'to bottom left'
 
+  // Blend mode: screen for cool light, color-dodge for warm "hot" light
+  const blendMode = warmth > 0.5 ? 'color-dodge' : 'screen'
+
   return (
     <div
       className="absolute inset-0 transition-all duration-[2000ms]"
       style={{
         background: `linear-gradient(${angle}, ${color} 0%, transparent 60%)`,
-        opacity: finalOpacity
+        opacity: finalOpacity,
+        mixBlendMode: blendMode as React.CSSProperties['mixBlendMode']
       }}
     />
   )
 }
 
-// Stable star positions
+// Stable star positions with z-depth for parallax
 const STARS = [...Array(25)].map((_, i) => ({
   x: ((i * 17) % 100),
   y: ((i * 23) % 80),
   size: 1 + (i % 3),
   delay: (i * 0.4) % 10,
-  twinkle: i % 4 === 0
+  twinkle: i % 4 === 0,
+  z: (i % 3) / 2  // 0, 0.5, 1 = far, mid, near (parallax depth)
 }))
 
 function Stars({ intensity, season }: { intensity: number; season: Season }) {
@@ -483,11 +488,13 @@ function Stars({ intensity, season }: { intensity: number; season: Season }) {
           style={{
             left: `${star.x}%`,
             top: `${star.y}%`,
-            width: `${star.size}px`,
-            height: `${star.size}px`,
+            width: `${star.size * (0.7 + star.z * 0.6)}px`,  // Near = larger
+            height: `${star.size * (0.7 + star.z * 0.6)}px`,
             background: starColor,
             boxShadow: `0 0 ${star.size * 2}px ${starColor}`,
-            animation: star.twinkle ? `twinkle ${3 + star.delay}s ease-in-out infinite` : undefined,
+            opacity: 0.3 + (star.z * 0.5),  // Near = brighter
+            filter: star.z < 0.3 ? 'blur(0.5px)' : 'none',  // Far = slight blur
+            animation: star.twinkle ? `twinkle ${4 - star.z * 2}s ease-in-out infinite` : undefined,  // Near = faster twinkle
             animationDelay: `${star.delay}s`
           }}
         />
@@ -665,29 +672,62 @@ function FireflyParticles({ count }: { count: number }) {
 }
 
 function LeafParticles({ count, windActive }: { count: number; windActive: boolean }) {
+  // Pre-generate stable values for each leaf
+  const leafColors = ['#D97706', '#B45309', '#DC2626', '#CA8A04']  // Orange, brown, red, gold
+  const leaves = [...Array(count)].map((_, i) => ({
+    x: (i * 18) % 100,
+    driftX: ((i * 23) % 80) - 40,  // -40 to +40px drift (leaves drift more than snow)
+    z: (i % 3) / 2,  // 0, 0.5, 1 = far, mid, near
+    size: 6 + (i % 4) * 2,  // 6-12px
+    color: leafColors[i % leafColors.length],
+    duration: 15 + i * 3,
+    delay: i * 3,
+    rotations: 1 + (i % 3)  // 1-3 full rotations
+  }))
+
   return (
     <div className={`absolute inset-0 overflow-hidden ${windActive ? 'wind-affected' : ''}`}>
       <style>{`
-        @keyframes leafFall {
-          0% { transform: translateY(-10%) rotate(0deg); opacity: 0; }
-          10% { opacity: 0.8; }
-          90% { opacity: 0.6; }
-          100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        @keyframes leafFallDrift {
+          0% {
+            transform: translateY(-10%) translateX(0) rotate(0deg);
+            opacity: 0;
+          }
+          10% { opacity: var(--leaf-opacity, 0.8); }
+          25% {
+            transform: translateY(25vh) translateX(var(--drift-x, 20px)) rotate(calc(var(--rotations, 1) * 90deg));
+          }
+          50% {
+            transform: translateY(50vh) translateX(calc(var(--drift-x, 20px) * -0.5)) rotate(calc(var(--rotations, 1) * 180deg));
+          }
+          75% {
+            transform: translateY(75vh) translateX(var(--drift-x, 20px)) rotate(calc(var(--rotations, 1) * 270deg));
+          }
+          90% { opacity: calc(var(--leaf-opacity, 0.8) * 0.7); }
+          100% {
+            transform: translateY(110vh) translateX(calc(var(--drift-x, 20px) * 0.3)) rotate(calc(var(--rotations, 1) * 360deg));
+            opacity: 0;
+          }
         }
       `}</style>
-      {[...Array(count)].map((_, i) => (
+      {leaves.map((leaf, i) => (
         <div
           key={i}
           className="absolute"
           style={{
-            left: `${(i * 18) % 100}%`,
+            left: `${leaf.x}%`,
             top: '-5%',
-            width: '8px',
-            height: '8px',
-            background: i % 2 === 0 ? '#D97706' : '#B45309',
+            width: `${leaf.size * (0.7 + leaf.z * 0.5)}px`,  // Near = larger
+            height: `${leaf.size * (0.7 + leaf.z * 0.5) * 0.8}px`,
+            background: `linear-gradient(135deg, ${leaf.color} 0%, ${leaf.color}cc 100%)`,
             borderRadius: '0 50% 50% 50%',
-            animation: `leafFall ${15 + i * 3}s linear infinite`,
-            animationDelay: `${i * 3}s`
+            boxShadow: leaf.z > 0.5 ? `0 2px 4px rgba(0,0,0,0.2)` : 'none',
+            filter: leaf.z < 0.3 ? 'blur(0.5px)' : 'none',  // Far = slight blur
+            animation: `leafFallDrift ${leaf.duration * (1.3 - leaf.z * 0.5)}s ease-in-out infinite`,  // Near = faster
+            animationDelay: `${leaf.delay}s`,
+            ['--drift-x' as string]: `${leaf.driftX}px`,
+            ['--leaf-opacity' as string]: 0.5 + leaf.z * 0.4,  // Near = more opaque
+            ['--rotations' as string]: leaf.rotations
           }}
         />
       ))}
@@ -696,29 +736,51 @@ function LeafParticles({ count, windActive }: { count: number; windActive: boole
 }
 
 function SnowParticles({ count }: { count: number }) {
+  // Pre-generate stable drift values for each particle
+  const particles = [...Array(count)].map((_, i) => ({
+    x: (i * 13) % 100,
+    driftX: ((i * 17) % 60) - 30,  // -30 to +30px drift
+    z: (i % 3) / 2,  // 0, 0.5, 1 = far, mid, near
+    size: 2 + (i % 3),
+    duration: 12 + i * 2,
+    delay: i * 2
+  }))
+
   return (
     <div className="absolute inset-0 overflow-hidden">
       <style>{`
-        @keyframes snowFall {
-          0% { transform: translateY(-5%) translateX(0); opacity: 0; }
-          10% { opacity: 0.8; }
-          90% { opacity: 0.6; }
-          100% { transform: translateY(105vh) translateX(20px); opacity: 0; }
+        @keyframes snowFallDrift {
+          0% {
+            transform: translateY(-5%) translateX(0);
+            opacity: 0;
+          }
+          10% { opacity: var(--snow-opacity, 0.8); }
+          50% {
+            transform: translateY(50vh) translateX(var(--drift-x, 20px));
+          }
+          90% { opacity: calc(var(--snow-opacity, 0.8) * 0.7); }
+          100% {
+            transform: translateY(105vh) translateX(calc(var(--drift-x, 20px) * -0.5));
+            opacity: 0;
+          }
         }
       `}</style>
-      {[...Array(count)].map((_, i) => (
+      {particles.map((p, i) => (
         <div
           key={i}
           className="absolute rounded-full"
           style={{
-            left: `${(i * 13) % 100}%`,
+            left: `${p.x}%`,
             top: '-3%',
-            width: `${2 + (i % 3)}px`,
-            height: `${2 + (i % 3)}px`,
-            background: 'rgba(255, 255, 255, 0.9)',
-            boxShadow: '0 0 4px rgba(255, 255, 255, 0.5)',
-            animation: `snowFall ${12 + i * 2}s linear infinite`,
-            animationDelay: `${i * 2}s`
+            width: `${p.size * (0.7 + p.z * 0.5)}px`,  // Near = larger
+            height: `${p.size * (0.7 + p.z * 0.5)}px`,
+            background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%)',
+            boxShadow: p.z > 0.5 ? '0 0 6px rgba(255, 255, 255, 0.6)' : '0 0 3px rgba(255, 255, 255, 0.3)',
+            filter: p.z < 0.3 ? 'blur(0.5px)' : 'none',  // Far = slight blur
+            animation: `snowFallDrift ${p.duration * (1.2 - p.z * 0.4)}s linear infinite`,  // Near = faster
+            animationDelay: `${p.delay}s`,
+            ['--drift-x' as string]: `${p.driftX}px`,
+            ['--snow-opacity' as string]: 0.4 + p.z * 0.5  // Near = more opaque
           }}
         />
       ))}

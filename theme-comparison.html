@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Living Theme Comparison: Level 1 vs Level 2</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow: hidden;
+      background: #0a0a0a;
+      color: white;
+    }
+
+    /* Controls */
+    #controls {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px 24px;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(20px);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .button-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.05);
+      color: rgba(255, 255, 255, 0.7);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    .btn.active {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .checkbox-row {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      align-items: center;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .checkbox-row input {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    /* Viewport */
+    #viewport {
+      position: fixed;
+      inset: 0;
+    }
+
+    /* Split panels */
+    #level1, #level2 {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      overflow: hidden;
+    }
+
+    #level1 {
+      left: 0;
+      right: 50%;
+    }
+
+    #level2 {
+      left: 50%;
+      right: 0;
+    }
+
+    /* Atmosphere containers */
+    .atmosphere {
+      position: absolute;
+      inset: 0;
+    }
+
+    /* Labels */
+    .label {
+      position: absolute;
+      bottom: 40px;
+      padding: 8px 16px;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      border-radius: 8px;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.8);
+      pointer-events: none;
+    }
+
+    #level1 .label {
+      left: 20px;
+    }
+
+    #level2 .label {
+      right: 20px;
+    }
+
+    /* Divider */
+    #divider {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 4px;
+      background: rgba(255, 255, 255, 0.3);
+      cursor: ew-resize;
+      z-index: 50;
+      transform: translateX(-50%);
+    }
+
+    #divider:hover {
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    #divider::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+    }
+
+    /* Grain overlay */
+    .grain {
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      opacity: 0.04;
+      mix-blend-mode: overlay;
+      pointer-events: none;
+    }
+
+    /* Canvas */
+    #canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* DOM Particles */
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    /* Keyframes for Level 1 DOM */
+    @keyframes snowFallDOM {
+      0% { transform: translateY(-5%) translateX(0); opacity: 0; }
+      10% { opacity: var(--opacity, 0.8); }
+      50% { transform: translateY(50vh) translateX(var(--drift-x, 20px)); }
+      90% { opacity: calc(var(--opacity, 0.8) * 0.7); }
+      100% { transform: translateY(105vh) translateX(calc(var(--drift-x, 20px) * -0.5)); opacity: 0; }
+    }
+
+    @keyframes leafFallDOM {
+      0% { transform: translateY(-10%) translateX(0) rotate(0deg); opacity: 0; }
+      10% { opacity: var(--opacity, 0.8); }
+      25% { transform: translateY(25vh) translateX(var(--drift-x, 20px)) rotate(90deg); }
+      50% { transform: translateY(50vh) translateX(calc(var(--drift-x, 20px) * -0.5)) rotate(180deg); }
+      75% { transform: translateY(75vh) translateX(var(--drift-x, 20px)) rotate(270deg); }
+      90% { opacity: calc(var(--opacity, 0.8) * 0.7); }
+      100% { transform: translateY(110vh) translateX(calc(var(--drift-x, 20px) * 0.3)) rotate(360deg); opacity: 0; }
+    }
+
+    @keyframes fireflyGlow {
+      0%, 100% { opacity: 0.2; box-shadow: 0 0 4px rgba(253, 224, 71, 0.3); }
+      15% { opacity: 0.9; box-shadow: 0 0 12px rgba(253, 224, 71, 0.8); }
+      30% { opacity: 0.2; }
+      50% { opacity: 0.95; box-shadow: 0 0 16px rgba(253, 224, 71, 0.9); }
+      65% { opacity: 0.15; }
+    }
+
+    @keyframes mistFloat {
+      0%, 100% { transform: translateX(0) scale(1); opacity: 0.3; }
+      50% { transform: translateX(30px) scale(1.1); opacity: 0.5; }
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+
+    @keyframes shootingStar {
+      0% { transform: translateX(0) translateY(0); opacity: 1; }
+      100% { transform: translateX(200px) translateY(150px); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Controls -->
+  <div id="controls">
+    <div class="button-row">
+      <button class="btn" data-season="spring">Spring</button>
+      <button class="btn" data-season="summer">Summer</button>
+      <button class="btn active" data-season="autumn">Autumn</button>
+      <button class="btn" data-season="winter">Winter</button>
+    </div>
+    <div class="button-row">
+      <button class="btn" data-time="morning">Morning</button>
+      <button class="btn" data-time="daytime">Daytime</button>
+      <button class="btn active" data-time="evening">Evening</button>
+      <button class="btn" data-time="night">Night</button>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="expressive" checked>
+      <label for="expressive">Expressive (aurora, shooting stars)</label>
+    </div>
+  </div>
+
+  <!-- Viewport -->
+  <div id="viewport">
+    <!-- Level 1: DOM -->
+    <div id="level1">
+      <div class="atmosphere" id="atmos1"></div>
+      <div class="grain"></div>
+      <div class="label">Level 1: DOM (~25 particles)</div>
+    </div>
+
+    <!-- Divider -->
+    <div id="divider"></div>
+
+    <!-- Level 2: Canvas -->
+    <div id="level2">
+      <div class="atmosphere" id="atmos2-bg"></div>
+      <canvas id="canvas"></canvas>
+      <div class="grain"></div>
+      <div class="label">Level 2: Canvas (~150 particles)</div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================================
+    // STATE
+    // ============================================================================
+
+    let state = {
+      season: 'autumn',
+      timeOfDay: 'evening',
+      expressive: true,
+      dividerPosition: 50
+    }
+
+    // ============================================================================
+    // THEME CONFIGS
+    // ============================================================================
+
+    const GRADIENTS = {
+      spring: {
+        morning: 'linear-gradient(180deg, #fdf2f8 0%, #fce7f3 30%, #fbcfe8 60%, #f9a8d4 100%)',
+        daytime: 'linear-gradient(180deg, #ecfdf5 0%, #d1fae5 30%, #a7f3d0 60%, #6ee7b7 100%)',
+        evening: 'linear-gradient(180deg, #faf5ff 0%, #f3e8ff 30%, #e9d5ff 60%, #d8b4fe 100%)',
+        night: 'linear-gradient(180deg, #1e1b2e 0%, #2d2640 30%, #3b3154 60%, #1e1b2e 100%)'
+      },
+      summer: {
+        morning: 'linear-gradient(180deg, #fffbeb 0%, #fef3c7 30%, #fde68a 60%, #fcd34d 100%)',
+        daytime: 'linear-gradient(180deg, #fff7ed 0%, #ffedd5 30%, #fed7aa 60%, #fdba74 100%)',
+        evening: 'linear-gradient(180deg, #fef3c7 0%, #fde68a 20%, #f59e0b 50%, #d97706 80%, #92400e 100%)',
+        night: 'linear-gradient(180deg, #1c1917 0%, #292524 30%, #1c1917 100%)'
+      },
+      autumn: {
+        morning: 'linear-gradient(180deg, #faf5f0 0%, #f5ebe0 30%, #e8dcc8 60%, #d4c4a8 100%)',
+        daytime: 'linear-gradient(180deg, #fefce8 0%, #fef9c3 30%, #fde047 60%, #facc15 100%)',
+        evening: 'linear-gradient(180deg, #fef3c7 0%, #fbbf24 20%, #f59e0b 40%, #d97706 60%, #92400e 80%, #451a03 100%)',
+        night: 'linear-gradient(180deg, #1a1412 0%, #27211c 30%, #1a1412 100%)'
+      },
+      winter: {
+        morning: 'linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 30%, #bae6fd 60%, #7dd3fc 100%)',
+        daytime: 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 30%, #e2e8f0 60%, #cbd5e1 100%)',
+        evening: 'linear-gradient(180deg, #fef3c7 0%, #fde68a 20%, #fbbf24 40%, #f59e0b 60%, #78716c 80%, #44403c 100%)',
+        night: 'linear-gradient(180deg, #0f172a 0%, #1e293b 20%, #0f172a 100%)'
+      }
+    }
+
+    const PARTICLE_CONFIGS = {
+      spring: { type: 'mist', count: 8, color: 'rgba(200, 200, 200, 0.15)' },
+      summer: { type: 'firefly', count: 10, color: 'rgba(253, 224, 71, 0.9)' },
+      autumn: { type: 'leaf', count: 8, colors: ['#D97706', '#B45309', '#DC2626', '#CA8A04'] },
+      winter: { type: 'snow', count: 12, color: 'rgba(255, 255, 255, 0.9)' }
+    }
+
+    // ============================================================================
+    // DOM ELEMENTS
+    // ============================================================================
+
+    const level1Container = document.getElementById('atmos1')
+    const level2BgContainer = document.getElementById('atmos2-bg')
+    const canvas = document.getElementById('canvas')
+    const ctx = canvas.getContext('2d')
+    const divider = document.getElementById('divider')
+    const level1Panel = document.getElementById('level1')
+    const level2Panel = document.getElementById('level2')
+
+    // ============================================================================
+    // LEVEL 1: DOM RENDERER
+    // ============================================================================
+
+    function renderLevel1() {
+      const { season, timeOfDay, expressive } = state
+
+      // Clear
+      level1Container.innerHTML = ''
+
+      // Background gradient
+      level1Container.style.background = GRADIENTS[season][timeOfDay]
+
+      // Add stars for night
+      if (timeOfDay === 'night') {
+        for (let i = 0; i < 25; i++) {
+          const star = document.createElement('div')
+          star.className = 'particle'
+          const z = (i % 3) / 2
+          const size = (1 + (i % 3)) * (0.7 + z * 0.6)
+          star.style.cssText = `
+            left: ${(i * 17) % 100}%;
+            top: ${(i * 23) % 60}%;
+            width: ${size}px;
+            height: ${size}px;
+            background: white;
+            opacity: ${0.3 + z * 0.5};
+            filter: ${z < 0.3 ? 'blur(0.5px)' : 'none'};
+            box-shadow: 0 0 ${size * 2}px white;
+            animation: ${i % 4 === 0 ? `twinkle ${4 - z * 2}s ease-in-out infinite` : 'none'};
+            animation-delay: ${(i * 0.4) % 10}s;
+          `
+          level1Container.appendChild(star)
+        }
+
+        // Shooting stars (expressive)
+        if (expressive) {
+          setInterval(() => {
+            if (Math.random() > 0.7 && state.timeOfDay === 'night') {
+              const star = document.createElement('div')
+              star.className = 'particle'
+              star.style.cssText = `
+                left: ${10 + Math.random() * 50}%;
+                top: ${5 + Math.random() * 20}%;
+                width: 2px;
+                height: 2px;
+                background: white;
+                box-shadow: 0 0 6px white, -20px -20px 10px rgba(255,255,255,0.5);
+                animation: shootingStar 1s ease-out forwards;
+              `
+              level1Container.appendChild(star)
+              setTimeout(() => star.remove(), 1000)
+            }
+          }, 5000)
+        }
+      }
+
+      // Season-specific particles
+      const config = PARTICLE_CONFIGS[season]
+      const count = config.count
+
+      if (config.type === 'snow') {
+        for (let i = 0; i < count; i++) {
+          const p = document.createElement('div')
+          p.className = 'particle'
+          const z = (i % 3) / 2
+          const size = (2 + (i % 3)) * (0.7 + z * 0.5)
+          const driftX = ((i * 17) % 60) - 30
+          p.style.cssText = `
+            left: ${(i * 13) % 100}%;
+            top: -3%;
+            width: ${size}px;
+            height: ${size}px;
+            background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%);
+            box-shadow: ${z > 0.5 ? '0 0 6px rgba(255,255,255,0.6)' : '0 0 3px rgba(255,255,255,0.3)'};
+            filter: ${z < 0.3 ? 'blur(0.5px)' : 'none'};
+            --drift-x: ${driftX}px;
+            --opacity: ${0.4 + z * 0.5};
+            animation: snowFallDOM ${(12 + i * 2) * (1.2 - z * 0.4)}s linear infinite;
+            animation-delay: ${i * 2}s;
+          `
+          level1Container.appendChild(p)
+        }
+      } else if (config.type === 'leaf') {
+        for (let i = 0; i < count; i++) {
+          const p = document.createElement('div')
+          const z = (i % 3) / 2
+          const size = (6 + (i % 4) * 2) * (0.7 + z * 0.5)
+          const driftX = ((i * 23) % 80) - 40
+          const color = config.colors[i % config.colors.length]
+          p.style.cssText = `
+            position: absolute;
+            left: ${(i * 18) % 100}%;
+            top: -5%;
+            width: ${size}px;
+            height: ${size * 0.8}px;
+            background: linear-gradient(135deg, ${color} 0%, ${color}cc 100%);
+            border-radius: 0 50% 50% 50%;
+            box-shadow: ${z > 0.5 ? '0 2px 4px rgba(0,0,0,0.2)' : 'none'};
+            filter: ${z < 0.3 ? 'blur(0.5px)' : 'none'};
+            --drift-x: ${driftX}px;
+            --opacity: ${0.5 + z * 0.4};
+            animation: leafFallDOM ${(15 + i * 3) * (1.3 - z * 0.5)}s ease-in-out infinite;
+            animation-delay: ${i * 3}s;
+          `
+          level1Container.appendChild(p)
+        }
+      } else if (config.type === 'firefly' && (timeOfDay === 'evening' || timeOfDay === 'night')) {
+        for (let i = 0; i < count; i++) {
+          const p = document.createElement('div')
+          p.className = 'particle'
+          p.style.cssText = `
+            left: ${(i * 17) % 90}%;
+            top: ${30 + (i * 13) % 50}%;
+            width: 4px;
+            height: 4px;
+            background: ${config.color};
+            box-shadow: 0 0 8px rgba(253, 224, 71, 0.8);
+            animation: fireflyGlow ${3 + (i % 3)}s ease-in-out infinite;
+            animation-delay: ${i * 0.5}s;
+          `
+          level1Container.appendChild(p)
+        }
+      } else if (config.type === 'mist' && (timeOfDay === 'morning' || timeOfDay === 'evening')) {
+        for (let i = 0; i < 6; i++) {
+          const p = document.createElement('div')
+          p.style.cssText = `
+            position: absolute;
+            left: ${(i * 20) % 100}%;
+            top: ${40 + (i * 10) % 40}%;
+            width: 120px;
+            height: 60px;
+            background: radial-gradient(ellipse at center, ${config.color} 0%, transparent 70%);
+            filter: blur(20px);
+            animation: mistFloat ${20 + i * 3}s ease-in-out infinite;
+            animation-delay: ${i * 2}s;
+          `
+          level1Container.appendChild(p)
+        }
+      }
+
+      // Aurora (winter night expressive)
+      if (season === 'winter' && timeOfDay === 'night' && expressive) {
+        const aurora = document.createElement('div')
+        aurora.style.cssText = `
+          position: absolute;
+          top: 0;
+          left: 10%;
+          right: 10%;
+          height: 40%;
+          background: linear-gradient(180deg,
+            rgba(34, 211, 238, 0.2) 0%,
+            rgba(52, 211, 153, 0.15) 30%,
+            rgba(167, 139, 250, 0.1) 60%,
+            transparent 100%);
+          filter: blur(30px);
+          animation: mistFloat 20s ease-in-out infinite;
+        `
+        level1Container.appendChild(aurora)
+      }
+    }
+
+    // ============================================================================
+    // LEVEL 2: CANVAS RENDERER
+    // ============================================================================
+
+    let particles = []
+    let shootingStars = []
+    let windGust = 0
+    let windDirection = 1
+    let animationId = null
+
+    function initCanvas() {
+      const dpr = window.devicePixelRatio || 1
+      canvas.width = canvas.offsetWidth * dpr
+      canvas.height = canvas.offsetHeight * dpr
+      ctx.scale(dpr, dpr)
+    }
+
+    function createParticles() {
+      const { season, timeOfDay } = state
+      particles = []
+      shootingStars = []
+
+      const width = canvas.offsetWidth
+      const height = canvas.offsetHeight
+
+      // Stars for night
+      if (timeOfDay === 'night') {
+        for (let i = 0; i < 40; i++) {
+          particles.push({
+            type: 'star',
+            x: Math.random() * width,
+            y: Math.random() * height * 0.6,
+            z: Math.random(),
+            size: 1 + Math.random() * 2,
+            speedX: 0,
+            speedY: 0,
+            sway: 0,
+            swayOffset: Math.random() * Math.PI * 2,
+            alpha: 0.3 + Math.random() * 0.7,
+            twinkleSpeed: 0.02 + Math.random() * 0.03,
+            twinklePhase: Math.random() * Math.PI * 2
+          })
+        }
+      }
+
+      // Season particles
+      const config = PARTICLE_CONFIGS[season]
+      const count = season === 'winter' ? 150 : season === 'autumn' ? 50 : 80
+
+      if (config.type === 'snow') {
+        for (let i = 0; i < count; i++) {
+          particles.push(createSnowParticle(width, height, true))
+        }
+      } else if (config.type === 'leaf') {
+        for (let i = 0; i < count; i++) {
+          particles.push(createLeafParticle(width, height, true))
+        }
+      } else if (config.type === 'firefly' && (timeOfDay === 'evening' || timeOfDay === 'night')) {
+        for (let i = 0; i < 30; i++) {
+          particles.push(createFireflyParticle(width, height))
+        }
+      } else if (config.type === 'mist' && (timeOfDay === 'morning' || timeOfDay === 'evening')) {
+        for (let i = 0; i < 40; i++) {
+          particles.push(createMistParticle(width, height))
+        }
+      }
+    }
+
+    function createSnowParticle(width, height, init = false) {
+      return {
+        type: 'snow',
+        x: Math.random() * width,
+        y: init ? Math.random() * height : -10,
+        z: Math.random(),
+        size: 1 + Math.random() * 3,
+        speedX: (Math.random() - 0.5) * 0.5,
+        speedY: 0.5 + Math.random() * 1.5,
+        sway: Math.random() * 0.05,
+        swayOffset: Math.random() * Math.PI * 2,
+        alpha: 0.4 + Math.random() * 0.5
+      }
+    }
+
+    function createLeafParticle(width, height, init = false) {
+      const colors = ['#D97706', '#B45309', '#DC2626', '#CA8A04']
+      return {
+        type: 'leaf',
+        x: Math.random() * width,
+        y: init ? Math.random() * height : -20,
+        z: Math.random(),
+        size: 4 + Math.random() * 8,
+        speedX: (Math.random() - 0.5) * 2,
+        speedY: 1 + Math.random() * 2,
+        sway: Math.random() * 0.1,
+        swayOffset: Math.random() * Math.PI * 2,
+        alpha: 0.6 + Math.random() * 0.4,
+        rotation: Math.random() * Math.PI * 2,
+        rotationSpeed: (Math.random() - 0.5) * 0.1,
+        color: colors[Math.floor(Math.random() * colors.length)]
+      }
+    }
+
+    function createFireflyParticle(width, height) {
+      return {
+        type: 'firefly',
+        x: Math.random() * width,
+        y: height * 0.3 + Math.random() * height * 0.5,
+        z: Math.random(),
+        size: 2 + Math.random() * 2,
+        speedX: (Math.random() - 0.5) * 0.3,
+        speedY: (Math.random() - 0.5) * 0.3,
+        sway: Math.random() * 0.02,
+        swayOffset: Math.random() * Math.PI * 2,
+        alpha: 0.1,
+        glowPhase: Math.random() * Math.PI * 2,
+        glowSpeed: 0.02 + Math.random() * 0.03
+      }
+    }
+
+    function createMistParticle(width, height) {
+      return {
+        type: 'mist',
+        x: Math.random() * width,
+        y: height * 0.4 + Math.random() * height * 0.4,
+        z: Math.random(),
+        size: 50 + Math.random() * 100,
+        speedX: (Math.random() - 0.5) * 0.2,
+        speedY: (Math.random() - 0.5) * 0.1,
+        sway: Math.random() * 0.01,
+        swayOffset: Math.random() * Math.PI * 2,
+        alpha: 0.05 + Math.random() * 0.1
+      }
+    }
+
+    function renderLevel2(time) {
+      const { season, timeOfDay, expressive } = state
+      const width = canvas.offsetWidth
+      const height = canvas.offsetHeight
+
+      // Background
+      level2BgContainer.style.background = GRADIENTS[season][timeOfDay]
+
+      // Clear canvas
+      ctx.clearRect(0, 0, width, height)
+
+      // Wind physics
+      windGust *= 0.98
+      if (Math.random() < 0.001) {
+        windGust = 1
+        windDirection = Math.random() > 0.5 ? 1 : -1
+      }
+      const currentWind = windGust * 3 * windDirection
+
+      // Update and draw particles
+      particles.forEach(p => {
+        if (p.type === 'star') {
+          // Stars twinkle
+          p.twinklePhase += p.twinkleSpeed
+          const twinkle = 0.5 + Math.sin(p.twinklePhase) * 0.5
+
+          ctx.globalAlpha = p.alpha * twinkle * (0.4 + p.z * 0.6)
+          ctx.fillStyle = 'white'
+          ctx.beginPath()
+          ctx.arc(p.x, p.y, p.size * (0.5 + p.z * 0.5), 0, Math.PI * 2)
+          ctx.fill()
+
+          // Glow
+          ctx.globalAlpha = p.alpha * twinkle * 0.3
+          ctx.beginPath()
+          ctx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2)
+          ctx.fill()
+        }
+        else if (p.type === 'snow') {
+          // Physics
+          p.y += p.speedY * (0.5 + p.z)
+          p.x += p.speedX + (currentWind * p.z)
+          p.x += Math.sin(time * 0.001 + p.swayOffset) * p.sway
+
+          // Wrap
+          if (p.y > height + 10) {
+            p.y = -10
+            p.x = Math.random() * width
+          }
+          if (p.x > width + 10) p.x = -10
+          if (p.x < -10) p.x = width + 10
+
+          // Draw
+          ctx.globalAlpha = p.alpha * (0.4 + p.z * 0.6)
+          ctx.fillStyle = 'white'
+          ctx.beginPath()
+          ctx.arc(p.x, p.y, p.size * (0.5 + p.z), 0, Math.PI * 2)
+          ctx.fill()
+        }
+        else if (p.type === 'leaf') {
+          // Physics
+          p.y += p.speedY * (0.5 + p.z)
+          p.x += p.speedX + (currentWind * p.z * 2)
+          p.x += Math.sin(time * 0.002 + p.swayOffset) * p.sway * 20
+          p.rotation += p.rotationSpeed
+
+          // Wrap
+          if (p.y > height + 20) {
+            p.y = -20
+            p.x = Math.random() * width
+          }
+          if (p.x > width + 20) p.x = -20
+          if (p.x < -20) p.x = width + 20
+
+          // Draw leaf shape
+          ctx.save()
+          ctx.translate(p.x, p.y)
+          ctx.rotate(p.rotation)
+          ctx.globalAlpha = p.alpha * (0.5 + p.z * 0.5)
+          ctx.fillStyle = p.color
+          ctx.beginPath()
+          const s = p.size * (0.5 + p.z * 0.5)
+          ctx.ellipse(0, 0, s, s * 0.6, 0, 0, Math.PI * 2)
+          ctx.fill()
+          ctx.restore()
+        }
+        else if (p.type === 'firefly') {
+          // Wander
+          p.speedX += (Math.random() - 0.5) * 0.02
+          p.speedY += (Math.random() - 0.5) * 0.02
+          p.speedX *= 0.99
+          p.speedY *= 0.99
+          p.x += p.speedX
+          p.y += p.speedY
+
+          // Bounds
+          if (p.x < 0) p.x = width
+          if (p.x > width) p.x = 0
+          if (p.y < height * 0.2) p.speedY += 0.01
+          if (p.y > height * 0.9) p.speedY -= 0.01
+
+          // Glow
+          p.glowPhase += p.glowSpeed
+          const glow = Math.max(0, Math.sin(p.glowPhase))
+
+          // Draw
+          ctx.globalAlpha = glow * 0.9
+          ctx.fillStyle = 'rgba(253, 224, 71, 1)'
+          ctx.beginPath()
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
+          ctx.fill()
+
+          // Outer glow
+          ctx.globalAlpha = glow * 0.4
+          ctx.beginPath()
+          ctx.arc(p.x, p.y, p.size * 4, 0, Math.PI * 2)
+          ctx.fill()
+        }
+        else if (p.type === 'mist') {
+          // Drift
+          p.x += p.speedX + (currentWind * 0.5)
+          p.y += p.speedY
+          p.x += Math.sin(time * 0.0005 + p.swayOffset) * p.sway * 10
+
+          // Wrap
+          if (p.x > width + p.size) p.x = -p.size
+          if (p.x < -p.size) p.x = width + p.size
+
+          // Draw
+          const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size)
+          gradient.addColorStop(0, `rgba(200, 200, 200, ${p.alpha})`)
+          gradient.addColorStop(1, 'rgba(200, 200, 200, 0)')
+          ctx.globalAlpha = 1
+          ctx.fillStyle = gradient
+          ctx.beginPath()
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
+          ctx.fill()
+        }
+      })
+
+      // Shooting stars (expressive night)
+      if (expressive && timeOfDay === 'night') {
+        // Spawn
+        if (Math.random() < 0.002) {
+          shootingStars.push({
+            x: Math.random() * width * 0.7,
+            y: Math.random() * height * 0.3,
+            speedX: 8 + Math.random() * 8,
+            speedY: 3 + Math.random() * 4,
+            life: 1
+          })
+        }
+
+        // Update and draw
+        shootingStars = shootingStars.filter(s => {
+          s.x += s.speedX
+          s.y += s.speedY
+          s.life -= 0.02
+
+          if (s.life <= 0) return false
+
+          // Draw trail
+          const gradient = ctx.createLinearGradient(s.x, s.y, s.x - 60, s.y - 20)
+          gradient.addColorStop(0, `rgba(255, 255, 255, ${s.life})`)
+          gradient.addColorStop(1, 'rgba(255, 255, 255, 0)')
+
+          ctx.strokeStyle = gradient
+          ctx.lineWidth = 2
+          ctx.beginPath()
+          ctx.moveTo(s.x, s.y)
+          ctx.lineTo(s.x - 60 * s.life, s.y - 20 * s.life)
+          ctx.stroke()
+
+          return true
+        })
+      }
+
+      // Aurora (winter night expressive)
+      if (season === 'winter' && timeOfDay === 'night' && expressive) {
+        const auroraGradient = ctx.createLinearGradient(0, 0, 0, height * 0.4)
+        const phase = time * 0.0003
+        const intensity = 0.1 + Math.sin(phase) * 0.05
+
+        auroraGradient.addColorStop(0, `rgba(34, 211, 238, ${intensity})`)
+        auroraGradient.addColorStop(0.3, `rgba(52, 211, 153, ${intensity * 0.8})`)
+        auroraGradient.addColorStop(0.6, `rgba(167, 139, 250, ${intensity * 0.5})`)
+        auroraGradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
+
+        ctx.globalAlpha = 1
+        ctx.fillStyle = auroraGradient
+        ctx.fillRect(width * 0.1, 0, width * 0.8, height * 0.4)
+      }
+
+      animationId = requestAnimationFrame(renderLevel2)
+    }
+
+    // ============================================================================
+    // DIVIDER DRAG
+    // ============================================================================
+
+    let isDragging = false
+
+    divider.addEventListener('mousedown', (e) => {
+      isDragging = true
+      e.preventDefault()
+    })
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return
+
+      const percent = (e.clientX / window.innerWidth) * 100
+      state.dividerPosition = Math.max(10, Math.min(90, percent))
+
+      level1Panel.style.right = `${100 - state.dividerPosition}%`
+      level2Panel.style.left = `${state.dividerPosition}%`
+      divider.style.left = `${state.dividerPosition}%`
+    })
+
+    document.addEventListener('mouseup', () => {
+      isDragging = false
+    })
+
+    // ============================================================================
+    // CONTROLS
+    // ============================================================================
+
+    document.querySelectorAll('[data-season]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-season]').forEach(b => b.classList.remove('active'))
+        btn.classList.add('active')
+        state.season = btn.dataset.season
+        update()
+      })
+    })
+
+    document.querySelectorAll('[data-time]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-time]').forEach(b => b.classList.remove('active'))
+        btn.classList.add('active')
+        state.timeOfDay = btn.dataset.time
+        update()
+      })
+    })
+
+    document.getElementById('expressive').addEventListener('change', (e) => {
+      state.expressive = e.target.checked
+      update()
+    })
+
+    // ============================================================================
+    // UPDATE
+    // ============================================================================
+
+    function update() {
+      renderLevel1()
+
+      if (animationId) {
+        cancelAnimationFrame(animationId)
+      }
+      initCanvas()
+      createParticles()
+      renderLevel2(0)
+    }
+
+    // ============================================================================
+    // INIT
+    // ============================================================================
+
+    window.addEventListener('resize', () => {
+      initCanvas()
+      createParticles()
+    })
+
+    // Initial render
+    update()
+  </script>
+</body>
+</html>
