@@ -152,14 +152,14 @@ export function JourneySavedContent({ onCreateNew }: SavedContentProps) {
     if (!deleteTarget || !user || isDeleting) return
 
     setIsDeleting(true)
-    haptic.medium()
+    haptic.warning()  // Attention: destructive action in progress
 
     try {
       const { deleteTemplate } = await import('../lib/templates')
       const success = await deleteTemplate(deleteTarget.id, user.id)
 
       if (success) {
-        haptic.success()
+        haptic.heavy()  // Weight of completed action (not celebration)
         // Remove from local state
         setCreatedMeditations(prev => prev.filter(m => m.id !== deleteTarget.id))
         setDeleteTarget(null)

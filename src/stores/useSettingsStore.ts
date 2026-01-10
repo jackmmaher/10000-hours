@@ -10,6 +10,7 @@
 
 import { create } from 'zustand'
 import { getSettings, updateSettings, ThemeMode, VisualEffects, SeasonOverride, TimeOverride } from '../lib/db'
+import { NotificationPreferences, DEFAULT_NOTIFICATION_PREFERENCES } from '../lib/notifications'
 
 interface SettingsState {
   // State
@@ -17,6 +18,8 @@ interface SettingsState {
   skipInsightCapture: boolean
   themeMode: ThemeMode
   visualEffects: VisualEffects
+  audioFeedbackEnabled: boolean
+  notificationPreferences: NotificationPreferences
   manualSeason: SeasonOverride
   manualTime: TimeOverride
   isLoading: boolean
@@ -27,15 +30,19 @@ interface SettingsState {
   setSkipInsightCapture: (value: boolean) => Promise<void>
   setThemeMode: (value: ThemeMode) => Promise<void>
   setVisualEffects: (value: VisualEffects) => Promise<void>
+  setAudioFeedbackEnabled: (value: boolean) => Promise<void>
+  setNotificationPreferences: (prefs: Partial<NotificationPreferences>) => Promise<void>
   setManualTheme: (season: SeasonOverride, time: TimeOverride) => Promise<void>
 }
 
-export const useSettingsStore = create<SettingsState>((set) => ({
+export const useSettingsStore = create<SettingsState>((set, get) => ({
   // Initial state
   hideTimeDisplay: false,
   skipInsightCapture: false,
   themeMode: 'auto',
   visualEffects: 'calm',
+  audioFeedbackEnabled: false,
+  notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES,
   manualSeason: 'winter',
   manualTime: 'evening',
   isLoading: true,
@@ -47,6 +54,8 @@ export const useSettingsStore = create<SettingsState>((set) => ({
       skipInsightCapture: settings.skipInsightCapture,
       themeMode: settings.themeMode,
       visualEffects: settings.visualEffects,
+      audioFeedbackEnabled: settings.audioFeedbackEnabled,
+      notificationPreferences: settings.notificationPreferences ?? DEFAULT_NOTIFICATION_PREFERENCES,
       manualSeason: settings.manualSeason ?? 'winter',
       manualTime: settings.manualTime ?? 'evening',
       isLoading: false
@@ -71,6 +80,18 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   setVisualEffects: async (value) => {
     await updateSettings({ visualEffects: value })
     set({ visualEffects: value })
+  },
+
+  setAudioFeedbackEnabled: async (value) => {
+    await updateSettings({ audioFeedbackEnabled: value })
+    set({ audioFeedbackEnabled: value })
+  },
+
+  setNotificationPreferences: async (prefs) => {
+    const current = get().notificationPreferences
+    const updated = { ...current, ...prefs }
+    await updateSettings({ notificationPreferences: updated })
+    set({ notificationPreferences: updated })
   },
 
   setManualTheme: async (season, time) => {

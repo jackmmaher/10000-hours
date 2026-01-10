@@ -1,4 +1,5 @@
 import Dexie, { Table } from 'dexie'
+import { InAppNotification, NotificationPreferences, DEFAULT_NOTIFICATION_PREFERENCES } from './notifications'
 
 export interface Session {
   id?: number
@@ -48,6 +49,8 @@ export interface UserSettings {
   skipInsightCapture: boolean  // Skip post-session insight recording prompt
   themeMode: ThemeMode
   visualEffects: VisualEffects
+  audioFeedbackEnabled: boolean  // Play subtle sounds on complete/milestone
+  notificationPreferences: NotificationPreferences  // In-app notification settings
   // Manual theme overrides (only used when themeMode === 'manual')
   manualSeason?: SeasonOverride
   manualTime?: TimeOverride
@@ -185,6 +188,7 @@ class MeditationDB extends Dexie {
   wellbeingDimensions!: Table<WellbeingDimension>
   wellbeingCheckIns!: Table<WellbeingCheckIn>
   wellbeingSettings!: Table<WellbeingSettings>
+  notifications!: Table<InAppNotification>
 
   constructor() {
     super('10000hours')
@@ -331,6 +335,25 @@ class MeditationDB extends Dexie {
       wellbeingCheckIns: 'id, dimensionId, createdAt',
       wellbeingSettings: 'id'
     })
+
+    // v11: Add notifications table for in-app notification center
+    this.version(11).stores({
+      sessions: '++id, uuid, startTime, endTime',
+      appState: 'id',
+      profile: 'id',
+      settings: 'id',
+      insights: 'id, sessionId, createdAt, sharedPearlId',
+      plannedSessions: '++id, date, createdAt, linkedSessionUuid, courseId',
+      courseProgress: 'id, courseId, status',
+      savedTemplates: 'id, templateId, savedAt',
+      pearlDrafts: 'id, insightId, updatedAt',
+      templateDrafts: 'id, updatedAt',
+      userPreferences: 'id',
+      wellbeingDimensions: 'id, name, createdAt',
+      wellbeingCheckIns: 'id, dimensionId, createdAt',
+      wellbeingSettings: 'id',
+      notifications: 'id, type, createdAt, readAt'
+    })
   }
 }
 
@@ -435,7 +458,9 @@ export async function getSettings(): Promise<UserSettings> {
       hideTimeDisplay: false,
       skipInsightCapture: false,
       themeMode: 'auto',
-      visualEffects: 'calm'
+      visualEffects: 'calm',
+      audioFeedbackEnabled: false,
+      notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES
     }
     await db.settings.put(settings)
   }
@@ -454,11 +479,62 @@ export async function getSettings(): Promise<UserSettings> {
     settings.skipInsightCapture = false
     await db.settings.put(settings)
   }
+  // Backfill audioFeedbackEnabled for existing users
+  if (settings.audioFeedbackEnabled === undefined) {
+    settings.audioFeedbackEnabled = false
+    await db.settings.put(settings)
+  }
+  // Backfill notificationPreferences for existing users
+  if (!settings.notificationPreferences) {
+    settings.notificationPreferences = DEFAULT_NOTIFICATION_PREFERENCES
+    await db.settings.put(settings)
+  }
   return settings
 }
 
 export async function updateSettings(updates: Partial<Omit<UserSettings, 'id'>>): Promise<void> {
   await db.settings.update(1, updates)
+}
+
+// Notification helpers
+export async function addNotification(notification: InAppNotification): Promise<void> {
+  await db.notifications.add(notification)
+}
+
+export async function getUnreadNotifications(): Promise<InAppNotification[]> {
+  return db.notifications
+    .filter(n => !n.readAt && !n.dismissedAt && (!n.snoozedUntil || n.snoozedUntil < Date.now()))
+    .sortBy('createdAt')
+    .then(notifications => notifications.reverse())  // Newest first
+}
+
+export async function getAllNotifications(): Promise<InAppNotification[]> {
+  return db.notifications
+    .orderBy('createdAt')
+    .reverse()
+    .toArray()
+}
+
+export async function markNotificationAsRead(id: string): Promise<void> {
+  await db.notifications.update(id, { readAt: Date.now() })
+}
+
+export async function dismissNotification(id: string): Promise<void> {
+  await db.notifications.update(id, { dismissedAt: Date.now() })
+}
+
+export async function snoozeNotification(id: string, until: number): Promise<void> {
+  await db.notifications.update(id, { snoozedUntil: until })
+}
+
+export async function getUnreadNotificationCount(): Promise<number> {
+  return db.notifications
+    .filter(n => !n.readAt && !n.dismissedAt && (!n.snoozedUntil || n.snoozedUntil < Date.now()))
+    .count()
+}
+
+export async function deleteNotification(id: string): Promise<void> {
+  await db.notifications.delete(id)
 }
 
 // Achievement helpers

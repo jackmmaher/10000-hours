@@ -3,19 +3,28 @@
  *
  * Design principle: Zen neutrality. State the fact, don't celebrate.
  * "The path continues." - not "Amazing job!"
+ *
+ * Supports three milestone types:
+ * - Hours: "100 hours" with "The path continues."
+ * - Sessions: "100th session" with "Each moment matters."
+ * - Weekly firsts: "First morning sit this week" with "A beautiful beginning."
  */
 
 import { useEffect, useState } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
+import { useAudioFeedback } from '../hooks/useAudioFeedback'
 
 export function MilestoneCelebration() {
   const { justAchievedMilestone, clearMilestoneCelebration } = useSessionStore()
   const [isVisible, setIsVisible] = useState(false)
+  const audio = useAudioFeedback()
 
   useEffect(() => {
     if (justAchievedMilestone) {
       // Show the celebration
       setIsVisible(true)
+      // Play milestone sound (respects setting internally)
+      audio.milestone()
 
       // Auto-dismiss after 2.5 seconds
       const timer = setTimeout(() => {
@@ -26,14 +35,30 @@ export function MilestoneCelebration() {
 
       return () => clearTimeout(timer)
     }
-  }, [justAchievedMilestone, clearMilestoneCelebration])
+  }, [justAchievedMilestone, clearMilestoneCelebration, audio])
 
   if (!justAchievedMilestone) return null
 
-  // Format milestone name
-  const milestoneName = justAchievedMilestone.hours >= 1000
-    ? `${justAchievedMilestone.hours / 1000}k hours`
-    : `${justAchievedMilestone.hours} hours`
+  // Get display text and zen message based on milestone type
+  const getMilestoneDisplay = () => {
+    // New milestone types have 'type' property
+    if ('type' in justAchievedMilestone) {
+      const milestone = justAchievedMilestone as { type: string; label: string; zenMessage: string }
+      return {
+        name: milestone.label,
+        zenMessage: milestone.zenMessage
+      }
+    }
+
+    // Legacy hour-based milestone (Achievement type)
+    const hours = justAchievedMilestone.hours
+    return {
+      name: hours >= 1000 ? `${hours / 1000}k hours` : `${hours} hours`,
+      zenMessage: 'The path continues.'
+    }
+  }
+
+  const { name, zenMessage } = getMilestoneDisplay()
 
   return (
     <div
@@ -51,13 +76,13 @@ export function MilestoneCelebration() {
       <div className="w-2 h-2 rounded-full bg-indigo-deep/30 mb-6" />
 
       {/* Milestone name */}
-      <p className="font-serif text-3xl text-indigo-deep mb-4">
-        {milestoneName}
+      <p className="font-serif text-3xl text-indigo-deep mb-4 text-center px-8">
+        {name}
       </p>
 
       {/* Zen message */}
       <p className="text-sm text-indigo-deep/50 italic">
-        The path continues.
+        {zenMessage}
       </p>
     </div>
   )

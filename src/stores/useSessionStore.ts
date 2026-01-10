@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { Session, Achievement, addSession, getAllSessions, initAppState, markEnlightenmentReached, recordMilestoneIfNew, linkSessionToPlan, getUserPreferences } from '../lib/db'
-import { generateMilestones } from '../lib/milestones'
+import { generateMilestones, checkSessionMilestone, checkWeeklyFirst, SessionMilestone, WeeklyFirstMilestone } from '../lib/milestones'
 import { recordTemplateCompletion } from '../lib/templates'
 import { supabase } from '../lib/supabase'
 
@@ -26,7 +26,7 @@ interface SessionState {
   justReachedEnlightenment: boolean
 
   // Milestone celebration state
-  justAchievedMilestone: Achievement | null
+  justAchievedMilestone: Achievement | SessionMilestone | WeeklyFirstMilestone | null
 
   // Last session ID for insight linking
   lastSessionUuid: string | null
@@ -149,7 +149,20 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     // Check for milestone achievements with dynamic milestones
     const newTotalHours = newTotalSeconds / 3600
     const milestones = generateMilestones(userGoalHours)
-    const achievedMilestone = await recordMilestoneIfNew(newTotalHours, milestones)
+    const hourMilestone = await recordMilestoneIfNew(newTotalHours, milestones)
+
+    // Check for session count milestone (50th, 100th, etc.)
+    const sessionMilestone = checkSessionMilestone(newSessions.length)
+
+    // Check for weekly first milestone (first morning/evening/long session this week)
+    const weekStart = new Date(sessionStartTime)
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay() + (weekStart.getDay() === 0 ? -6 : 1))
+    weekStart.setHours(0, 0, 0, 0)
+    const weekSessions = newSessions.filter(s => s.startTime >= weekStart.getTime())
+    const weeklyMilestone = checkWeeklyFirst(sessionStartTime, durationSeconds, weekSessions)
+
+    // Priority: hour milestone > session count > weekly first
+    const achievedMilestone = hourMilestone || sessionMilestone || weeklyMilestone
 
     // Check if we just crossed the enlightenment threshold
     // Only trigger enlightenment if user has explicit goal AND reached it

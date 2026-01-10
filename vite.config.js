@@ -8,8 +8,8 @@ export default defineConfig({
             registerType: 'autoUpdate',
             includeAssets: ['icon.svg'],
             manifest: {
-                name: '10,000 Hours',
-                short_name: '10K Hours',
+                name: 'Still Hours',
+                short_name: 'Still Hours',
                 description: 'Meditation timer with insights and community wisdom',
                 theme_color: '#1a1a2e',
                 background_color: '#F7F5F2',

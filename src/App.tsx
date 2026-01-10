@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useSessionStore } from './stores/useSessionStore'
 import { useNavigationStore } from './stores/useNavigationStore'
 import { useSettingsStore } from './stores/useSettingsStore'
+import { generateAttributionNotification, shouldCheckAttribution, markAttributionChecked } from './lib/attribution'
 import { Timer } from './components/Timer'
 import { Calendar } from './components/Calendar'
 import { Settings } from './components/Settings'
@@ -50,6 +51,22 @@ function AppContent() {
     }
     init()
   }, [hydrate, settingsStore, authStore])
+
+  // Weekly attribution check (delayed to not block initial load)
+  useEffect(() => {
+    const user = authStore.user
+    if (!user) return
+
+    // Check attribution weekly (oxytocin trigger)
+    if (shouldCheckAttribution()) {
+      const timeout = setTimeout(async () => {
+        await generateAttributionNotification(user.id)
+        markAttributionChecked()
+      }, 5000) // 5 second delay
+
+      return () => clearTimeout(timeout)
+    }
+  }, [authStore.user])
 
   // Handlers
   const handleOnboardingComplete = useCallback(() => {

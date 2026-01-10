@@ -33,6 +33,10 @@ import {
 import { GOAL_PRESETS } from '../lib/milestones'
 import { VoiceBadge } from './VoiceBadge'
 import { WellbeingCard } from './WellbeingCard'
+import { NotificationBell } from './NotificationBell'
+import { NotificationCenter } from './NotificationCenter'
+import { ReciprocityCard } from './ReciprocityCard'
+import { getReciprocityData, ReciprocityData } from '../lib/reciprocity'
 
 // Preference options
 const POSTURE_OPTIONS = [
@@ -84,9 +88,11 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
   const [latestCheckIns, setLatestCheckIns] = useState<Map<string, WellbeingCheckIn>>(new Map())
   const [wellbeingSettings, setWellbeingSettings] = useState<WellbeingSettings | null>(null)
   const [practicingSince, setPracticingSince] = useState<Date | null>(null)
+  const [reciprocityData, setReciprocityData] = useState<ReciprocityData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [showPreferences, setShowPreferences] = useState(false)
   const [showGoalSettings, setShowGoalSettings] = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false)
 
   // Calculate current hours for goal setting UI
   const currentHours = sessions.reduce((sum, s) => sum + s.durationSeconds, 0) / 3600
@@ -115,12 +121,18 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
       // Load latest check-ins
       const checkIns = await getLatestCheckIns()
       setLatestCheckIns(checkIns)
+
+      // Load reciprocity data if authenticated
+      if (user?.id) {
+        const reciprocity = await getReciprocityData(user.id)
+        setReciprocityData(reciprocity)
+      }
     } catch (err) {
       console.error('Failed to load profile data:', err)
     } finally {
       setIsLoading(false)
     }
-  }, [sessions])
+  }, [sessions, user?.id])
 
   useEffect(() => {
     loadData()
@@ -238,8 +250,9 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
       </div>
 
       <div className="px-6 py-8 max-w-lg mx-auto">
-        {/* Settings gear */}
-        <div className="flex items-center justify-end mb-8">
+        {/* Header actions: Notifications + Settings */}
+        <div className="flex items-center justify-end gap-1 mb-8">
+          <NotificationBell onPress={() => setShowNotifications(true)} />
           <button
             onClick={() => {
               haptic.light()
@@ -519,7 +532,20 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
           settings={wellbeingSettings}
           onRefresh={loadData}
         />
+
+        {/* Community Reciprocity (only shown if user has community interactions) */}
+        {reciprocityData && (
+          <div className="mt-6">
+            <ReciprocityCard data={reciprocityData} />
+          </div>
+        )}
       </div>
+
+      {/* Notification Center Modal */}
+      <NotificationCenter
+        isOpen={showNotifications}
+        onClose={() => setShowNotifications(false)}
+      />
     </div>
   )
 }

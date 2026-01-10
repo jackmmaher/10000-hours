@@ -5,6 +5,7 @@ import { useSettingsStore } from '../stores/useSettingsStore'
 import { useTimer, useWakeLock } from '../hooks/useTimer'
 import { useSwipe } from '../hooks/useSwipe'
 import { useTapFeedback } from '../hooks/useTapFeedback'
+import { useAudioFeedback } from '../hooks/useAudioFeedback'
 import { formatTimer, formatTotalHours, formatSessionAdded } from '../lib/format'
 import { ZenMessage } from './ZenMessage'
 import { InsightCapture } from './InsightCapture'
@@ -28,6 +29,7 @@ export function Timer() {
 
   const { hideTimeDisplay, skipInsightCapture: skipInsightSetting } = useSettingsStore()
   const haptic = useTapFeedback()
+  const audio = useAudioFeedback()
 
   const { elapsed, isRunning } = useTimer()
 
@@ -44,10 +46,11 @@ export function Timer() {
       startPreparing()
     } else if (timerPhase === 'running') {
       haptic.success() // Session complete - celebratory pattern
+      audio.complete() // Audio chime (respects setting internally)
       stopTimer()
     }
     // Don't handle tap during 'complete' - let it transition to capture
-  }, [timerPhase, startPreparing, stopTimer, haptic])
+  }, [timerPhase, startPreparing, stopTimer, haptic, audio])
 
   // After session complete, transition to insight capture (or skip if preference set)
   // Brief delay (800ms) for user to register completion, not a forced wait

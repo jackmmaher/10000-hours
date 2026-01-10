@@ -17,6 +17,7 @@ import { useAuthStore } from '../stores/useAuthStore'
 import { useThemeInfo } from '../hooks/useTheme'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import { useTapFeedback } from '../hooks/useTapFeedback'
+import { useAudioFeedback } from '../hooks/useAudioFeedback'
 import { trackHideTimeToggle } from '../lib/analytics'
 import { SeasonOverride, TimeOverride } from '../lib/db'
 import { getThemeName } from '../lib/themeEngine'
@@ -57,11 +58,14 @@ export function Settings({ onBack }: SettingsProps) {
     skipInsightCapture, setSkipInsightCapture,
     themeMode, setThemeMode,
     visualEffects, setVisualEffects,
+    audioFeedbackEnabled, setAudioFeedbackEnabled,
+    notificationPreferences, setNotificationPreferences,
     manualSeason, manualTime, setManualTheme
   } = useSettingsStore()
   const { user, isAuthenticated, signOut, isLoading: authLoading, refreshProfile } = useAuthStore()
   const { timeOfDay, season } = useThemeInfo()
   const haptic = useTapFeedback()
+  const audio = useAudioFeedback()
   const [showThemeDetail, setShowThemeDetail] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
 
@@ -274,6 +278,165 @@ export function Settings({ onBack }: SettingsProps) {
               />
             </div>
           </button>
+
+          {/* Audio Feedback */}
+          <button
+            onClick={() => {
+              haptic.light()
+              const newValue = !audioFeedbackEnabled
+              setAudioFeedbackEnabled(newValue)
+              // Preview the completion sound when enabling
+              if (newValue) {
+                audio.complete()
+              }
+            }}
+            className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform touch-manipulation"
+          >
+            <div className="text-left">
+              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Audio feedback</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                Subtle sounds on session complete and milestones
+              </p>
+            </div>
+            {/* Custom organic toggle - theme aware */}
+            <div
+              className="relative w-12 h-7 rounded-full transition-colors duration-300"
+              style={{ background: audioFeedbackEnabled ? 'var(--toggle-on)' : 'var(--toggle-off)' }}
+            >
+              <div
+                className={`
+                  absolute top-1 w-5 h-5 rounded-full shadow-sm
+                  transition-transform duration-300
+                  ${audioFeedbackEnabled ? 'translate-x-6' : 'translate-x-1'}
+                `}
+                style={{ background: 'var(--toggle-thumb)' }}
+              />
+            </div>
+          </button>
+        </div>
+
+        {/* Notifications */}
+        <div className="mb-8">
+          <p className="font-serif text-sm text-ink/50 tracking-wide mb-4">Notifications</p>
+
+          {/* Attribution notifications */}
+          <button
+            onClick={() => {
+              haptic.light()
+              setNotificationPreferences({ attributionEnabled: !notificationPreferences.attributionEnabled })
+            }}
+            className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform touch-manipulation"
+          >
+            <div className="text-left">
+              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Impact updates</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                When your shared content helps others
+              </p>
+            </div>
+            <div
+              className="relative w-12 h-7 rounded-full transition-colors duration-300"
+              style={{ background: notificationPreferences.attributionEnabled ? 'var(--toggle-on)' : 'var(--toggle-off)' }}
+            >
+              <div
+                className={`
+                  absolute top-1 w-5 h-5 rounded-full shadow-sm
+                  transition-transform duration-300
+                  ${notificationPreferences.attributionEnabled ? 'translate-x-6' : 'translate-x-1'}
+                `}
+                style={{ background: 'var(--toggle-thumb)' }}
+              />
+            </div>
+          </button>
+
+          {/* Milestone notifications */}
+          <button
+            onClick={() => {
+              haptic.light()
+              setNotificationPreferences({ milestoneEnabled: !notificationPreferences.milestoneEnabled })
+            }}
+            className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform touch-manipulation"
+          >
+            <div className="text-left">
+              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Milestone reminders</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                Gentle nudge when approaching milestones
+              </p>
+            </div>
+            <div
+              className="relative w-12 h-7 rounded-full transition-colors duration-300"
+              style={{ background: notificationPreferences.milestoneEnabled ? 'var(--toggle-on)' : 'var(--toggle-off)' }}
+            >
+              <div
+                className={`
+                  absolute top-1 w-5 h-5 rounded-full shadow-sm
+                  transition-transform duration-300
+                  ${notificationPreferences.milestoneEnabled ? 'translate-x-6' : 'translate-x-1'}
+                `}
+                style={{ background: 'var(--toggle-thumb)' }}
+              />
+            </div>
+          </button>
+
+          {/* Gentle reminders */}
+          <button
+            onClick={() => {
+              haptic.light()
+              setNotificationPreferences({ gentleRemindersEnabled: !notificationPreferences.gentleRemindersEnabled })
+            }}
+            className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform touch-manipulation"
+          >
+            <div className="text-left">
+              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Session reminders</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                Reminder before planned sessions
+              </p>
+            </div>
+            <div
+              className="relative w-12 h-7 rounded-full transition-colors duration-300"
+              style={{ background: notificationPreferences.gentleRemindersEnabled ? 'var(--toggle-on)' : 'var(--toggle-off)' }}
+            >
+              <div
+                className={`
+                  absolute top-1 w-5 h-5 rounded-full shadow-sm
+                  transition-transform duration-300
+                  ${notificationPreferences.gentleRemindersEnabled ? 'translate-x-6' : 'translate-x-1'}
+                `}
+                style={{ background: 'var(--toggle-thumb)' }}
+              />
+            </div>
+          </button>
+
+          {/* Reminder timing - only show when gentle reminders enabled */}
+          {notificationPreferences.gentleRemindersEnabled && (
+            <div className="py-4">
+              <p className="text-sm mb-3" style={{ color: 'var(--text-primary)' }}>Remind me</p>
+              <div className="flex gap-2">
+                {[15, 30, 60].map((minutes) => {
+                  const isActive = notificationPreferences.reminderMinutesBefore === minutes
+                  return (
+                    <button
+                      key={minutes}
+                      onClick={() => {
+                        haptic.light()
+                        setNotificationPreferences({ reminderMinutesBefore: minutes })
+                      }}
+                      className={`
+                        flex-1 py-2.5 rounded-xl text-center transition-all duration-200 touch-manipulation active:scale-[0.97]
+                        ${isActive
+                          ? 'bg-moss text-cream'
+                          : 'bg-cream-warm text-ink hover:bg-cream-deep'
+                        }
+                      `}
+                    >
+                      <p className={`text-xs ${isActive ? 'text-cream' : 'text-ink/60'}`}>
+                        {minutes} min before
+                      </p>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Theme Personalization */}

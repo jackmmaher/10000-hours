@@ -20,7 +20,7 @@
  * - 70+: 5 dots + glow (high voice)
  */
 
-import { getVoiceVisual, VoiceLevel } from '../lib/voice'
+import { getVoiceVisual, VoiceLevel, getVoiceTier } from '../lib/voice'
 
 /**
  * Get dot color with opacity based on voice level
@@ -59,12 +59,15 @@ interface VoiceBadgeProps {
   score: number
   /** Show numeric score alongside dots */
   showScore?: boolean
+  /** Show tier label (e.g., "Practitioner", "Mentor") */
+  showLabel?: boolean
   /** Compact mode for tight spaces */
   compact?: boolean
 }
 
-export function VoiceBadge({ score, showScore = false, compact = false }: VoiceBadgeProps) {
+export function VoiceBadge({ score, showScore = false, showLabel = false, compact = false }: VoiceBadgeProps) {
   const visual = getVoiceVisual(score)
+  const tier = getVoiceTier(score)
 
   // Glow intensity based on level - only high scores get glow
   const glowStyle = visual.glow !== 'none'
@@ -105,6 +108,16 @@ export function VoiceBadge({ score, showScore = false, compact = false }: VoiceB
           />
         ))}
       </div>
+
+      {/* Optional tier label */}
+      {showLabel && (
+        <span
+          className="text-[10px] font-medium ml-1"
+          style={{ color: getVoiceTextStyle(visual.level) }}
+        >
+          {tier.label}
+        </span>
+      )}
 
       {/* Optional numeric score */}
       {showScore && (

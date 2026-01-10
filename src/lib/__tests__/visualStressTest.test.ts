@@ -27,7 +27,7 @@ import {
 
 const SEASONS: Season[] = ['spring', 'summer', 'autumn', 'winter']
 const TIMES: TimeOfDay[] = ['morning', 'daytime', 'evening', 'night']
-const SEASON_OPTIONS: SeasonOption[] = ['spring', 'summer', 'autumn', 'winter', 'auto']
+const SEASON_OPTIONS: SeasonOption[] = ['spring', 'summer', 'autumn', 'winter', 'neutral']
 
 const DUBLIN = { lat: 53.3, long: -6.3 }
 
@@ -37,7 +37,7 @@ const DUBLIN = { lat: 53.3, long: -6.3 }
 
 describe('Visual Stress Test: 16-State Matrix', () => {
   describe('Manual Mode - All 16 Combinations', () => {
-    for (const season of SEASON_OPTIONS.filter(s => s !== 'auto')) {
+    for (const season of SEASON_OPTIONS.filter(s => s !== 'neutral')) {
       for (const time of TIMES) {
         it(`renders ${season} ${time} without errors`, () => {
           const theme = calculateManualTheme(season, time, true, true)

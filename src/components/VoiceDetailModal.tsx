@@ -7,7 +7,7 @@
  * Uses living theme colors with opacity variations for visual harmony.
  */
 
-import { VoiceScore, getVoiceVisual, VoiceLevel } from '../lib/voice'
+import { VoiceScore, getVoiceVisual, VoiceLevel, getVoiceTier, getNextTier } from '../lib/voice'
 
 interface VoiceDetailModalProps {
   voice: VoiceScore
@@ -34,6 +34,8 @@ function getVoiceDotStyle(level: VoiceLevel): string {
 
 export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
   const visual = getVoiceVisual(voice.total)
+  const tier = getVoiceTier(voice.total)
+  const nextTier = getNextTier(tier.tier)
 
   // Glow for high scores
   const scoreGlow = visual.glow !== 'none'

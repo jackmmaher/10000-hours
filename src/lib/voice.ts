@@ -288,6 +288,93 @@ export function calculateVoice(inputs: VoiceInputs): VoiceScore {
  */
 export type VoiceLevel = 'high' | 'established' | 'growing' | 'new'
 
+// ============================================
+// VOICE TIERS (Serotonin Identity Labels)
+// ============================================
+// Named tiers give narrative meaning to Voice scores.
+// Labels are zen-flavored, not gamified (no Bronze/Silver/Gold).
+
+export type VoiceTier = 'newcomer' | 'practitioner' | 'established' | 'respected' | 'mentor'
+
+export interface VoiceTierInfo {
+  tier: VoiceTier
+  label: string
+  description: string
+  minScore: number
+  maxScore: number
+}
+
+const VOICE_TIERS: VoiceTierInfo[] = [
+  {
+    tier: 'newcomer',
+    label: 'Newcomer',
+    description: 'Beginning the path',
+    minScore: 0,
+    maxScore: 19
+  },
+  {
+    tier: 'practitioner',
+    label: 'Practitioner',
+    description: 'Developing a practice',
+    minScore: 20,
+    maxScore: 44
+  },
+  {
+    tier: 'established',
+    label: 'Established',
+    description: 'A steady presence',
+    minScore: 45,
+    maxScore: 69
+  },
+  {
+    tier: 'respected',
+    label: 'Respected',
+    description: 'Wisdom recognized',
+    minScore: 70,
+    maxScore: 84
+  },
+  {
+    tier: 'mentor',
+    label: 'Mentor',
+    description: 'Guiding others on the path',
+    minScore: 85,
+    maxScore: 100
+  }
+]
+
+/**
+ * Get the Voice tier info for a given score
+ */
+export function getVoiceTier(score: number): VoiceTierInfo {
+  return VOICE_TIERS.find(t => score >= t.minScore && score <= t.maxScore) || VOICE_TIERS[0]
+}
+
+/**
+ * Get the next tier (for showing progress toward upgrade)
+ */
+export function getNextTier(currentTier: VoiceTier): VoiceTierInfo | null {
+  const currentIndex = VOICE_TIERS.findIndex(t => t.tier === currentTier)
+  return currentIndex < VOICE_TIERS.length - 1 ? VOICE_TIERS[currentIndex + 1] : null
+}
+
+/**
+ * Check if a score change triggers a tier transition
+ */
+export function checkTierTransition(
+  previousScore: number,
+  newScore: number
+): { upgraded: boolean; newTier: VoiceTierInfo } | null {
+  const previousTier = getVoiceTier(previousScore)
+  const currentTier = getVoiceTier(newScore)
+
+  // Only celebrate upgrades, not downgrades
+  if (currentTier.tier !== previousTier.tier && newScore > previousScore) {
+    return { upgraded: true, newTier: currentTier }
+  }
+
+  return null
+}
+
 /**
  * Get visual treatment based on Voice score
  * Returns styling info for the VoiceBadge component

@@ -1,0 +1,240 @@
+Loaded 400 reviews
+Calm: 200
+Headspace: 200
+
+======================================================================
+APP TECHNICAL ISSUES
+======================================================================
+
+--- Calm ---
+
+Offline Downloads: 6 mentions
+  [1*] "SINCE THEN, I never used it again until September 2023, when I downloaded it again, as it was offered FOR FREE with American Express..."
+  [1*] "Calm is impossible to download onto an Android phone..."
+
+Slow Performance: 5 mentions
+  [1*] "Their customer service is painfully slow, bordering on non-existent..."
+  [1*] "Would never consider using or downloading that app again just because instead or making me calm it made me furious for 30 mins..."
+
+Login Access: 1 mentions
+  [1*] "To date I still can't access the premium features..."
+
+
+--- Headspace ---
+
+Slow Performance: 3 mentions
+  [1*] "**I do not recommend this app as these people are scoundrels** Avoid headspace like a the plague..."
+  [2*] "The worst thing is functionality, it takes several attempts to even get into the app and is slow or almost unresponsive when in..."
+
+Sync Issues: 1 mentions
+  [2*] "Wasn't syncing to Google Fit..."
+
+Crashes Freezes: 1 mentions
+  [1*] "By the looks of these reviews you'll be crashing and burning soon enough anyway..."
+
+Offline Downloads: 1 mentions
+  [1*] "I downloaded the APP from the Google Play Store because I received a recommendation..."
+
+
+======================================================================
+CONTENT & QUALITY ISSUES
+======================================================================
+
+--- Calm ---
+
+Voice Narrator: 26 mentions
+  [1*] "My credit union reversed the charges, then Calm sent them an invoice (that I had never seen) saying the charge was authorized by Ryze..."
+  [1*] "Beneath the soothing voices and serene backgrounds lies a company built on shady billing practices and a complete lack of accountability..."
+
+Limited Variety: 4 mentions
+  [1*] "Beneath the soothing voices and serene backgrounds lies a company built on shady billing practices and a complete lack of accountability..."
+  [2*] "The lack of customer service and the decline of the apps functions were so bad I actually went to Google to make sure the company was still legitimate..."
+
+Repetitive: 3 mentions
+  [1*] "After trying the app for 3 days wanted to delete it as very repetitive content..."
+  [1*] "Nothing new here and not really meditations..."
+
+Quality Decline: 2 mentions
+  [1*] "Dealing with this app is worse than dealing with insurance companies (nurse here)..."
+  [1*] "Absolutely horrible. I'm worse than i was before i spoke to them and I've screenshotted it and sent it to my family   so the bampot i spoke with knows..."
+
+Boring Content: 1 mentions
+  [2*] "Sleep stories, guided meditations, soundscapes  etc but over the past couple of years new guests have overtaken the app and its now saturated with le..."
+
+Outdated: 1 mentions
+  [1*] "I was promised a 7-day trial, but was charged an annual subscription fee right away. The content was still locked and the app insisted that I am not l..."
+
+
+--- Headspace ---
+
+Limited Variety: 10 mentions
+  [1*] "DEAR FELLOW VICTIMS OF HEADSPACE MEDITATION LIMITED, I'm writing a second review here because I would like to advise you about possible  steps to prev..."
+  [1*] "Unfortunately the updated version has so much more content it is confusing and frustrating to navigate..."
+
+Voice Narrator: 5 mentions
+  [1*] "It would be nice if there were a wider variety of voices..."
+  [1*] "Furthermore, Andy's voice was so calming..."
+
+Repetitive: 2 mentions
+  [1*] "Tried free trial and they billed me me and now only say they have backlog for a month now! Avoid they are scammers with appalling customer service. Ma..."
+  [2*] "The programmes are very repetitive, there is little difference in the content regardless of what the subject is supposed to be..."
+
+Quality Decline: 2 mentions
+  [1*] "They charged me for a full year even though I cancelled my subscription on time. I CANCELLED MY SUBSCRIPTION ON TIME!!!! And still got charged. I was..."
+  [1*] "Used to be good and moral in ca. 2018. After a long time I came back with the 14 day free trial. I opted to be reminded when my trial ends. 1 month co..."
+
+Boring Content: 1 mentions
+  [1*] "It's always the same, sooo boring..."
+
+
+======================================================================
+USER EXPERIENCE & INTERFACE ISSUES
+======================================================================
+
+--- Calm ---
+
+Confusing Navigation: 4 mentions
+  [1*] "The Calm app in a meditation app , they have a law suite against them for sharing customers info , more importantly they give you a free trail then ch..."
+  [1*] "Abysmal experinence. The app is hard to use, customer service is non existent. I emailed to get a refund because I thought I had already canceled my t..."
+
+Cluttered Interface: 4 mentions
+  [1*] "Too much loud chatter, the sleep stories kept me awake. One exception - Stephen Frys lullabys!  I wish the whole app was Stephen Frys soothing voic..."
+  [2*] "Too much recent content for kids.  What happened to the award-winning sleep stories??..."
+
+Settings Issues: 2 mentions
+  [1*] "I didn't even know I had an account with them, then I get a warning of a hacked database. It was a struggle to log in at all, then found NO option to..."
+  [1*] "AVOID AT ALL COSTS. No option to unsubscribe from free trial. Despite my email cancelling trial prior to trial end, and them assuring me I would not g..."
+
+
+--- Headspace ---
+
+Cluttered Interface: 9 mentions
+  [1*] "App is quite confusing and cluttered. The main issue I have though is regarding their total lack of customer service and unethical billing process. Wh..."
+  [1*] "Cluttered and extremely difficult to find any exercise! Made me stressed just trying to use the app! Just got it because I have it for free on my insu..."
+
+Confusing Navigation: 7 mentions
+  [1*] "I have used this app very successfully in the past so decided to try it again. Unfortunately the updated version has so much more content it is confus..."
+  [1*] "App is quite confusing and cluttered. The main issue I have though is regarding their total lack of customer service and unethical billing process. Wh..."
+
+Annoying Popups: 5 mentions
+  [1*] "Headspace and its support team is the worst app conpant that I had to deal with  I was shown a "free trial" notification, I clicked on it and was char..."
+  [1*] "It's a travesty to see the reputation of this once wonderful company nose-dive due to terrible customer services!   Echoing the long list of negative..."
+
+
+======================================================================
+SPECIFIC FEATURE REQUESTS & COMPLAINTS
+======================================================================
+
+--- Calm Feature Complaints ---
+
+Family Sharing: 1 mentions
+  "I had a family account and cancelled the subscription before it was to renew. I got an email confirming the cancellation but they charged my credit card anyways, under my child's name! Then they could..."
+
+Progress Tracking: 2 mentions
+  "Absolutely dreadful and not calm at all. Tamara levitt voice is so annoying and creepy I just cant listen to her at all !!! This is true with most of the voices on this app. They are all incredibly..."
+
+Specific Meditation Types: 26 mentions
+  "I have just paid $89.99 for Calm  only to find I cannot access any of the content number 1 and it is $59.99 thru the app. So much for a company that offers relaxation and stress relief!!! Incredibly f..."
+
+Kids Content: 5 mentions
+  "The content available in the app itself - guided mindfulness journeys, sleep music etc. - was good in the beginning (I have paid for the family subscription for the past 5 years).  However, the App qu..."
+
+
+--- Headspace Feature Complaints ---
+
+Family Sharing: 1 mentions
+  "Trying to upgrade from standard plan to a more expensive family plan seems to be impossible. Good app but like so many other reviews, the Headspace team let themselves down badly by having a customer..."
+
+Specific Meditation Types: 37 mentions
+  "Be careful, I feel tricked into subscription. Can't cancel. Charged for a year upfront without a warning it would be taken and the app itself seems gimmick to me. Tried to use at as have been charged...."
+
+Kids Content: 4 mentions
+  "I get a free subscription through my Vitality insurance policy. As a frequent user of Calm and Peloton meditation I had assumed it would be similar. Im so disappointed. The app is cluttered with en..."
+
+
+======================================================================
+WHAT USERS ACTUALLY LIKE (from higher-rated reviews)
+======================================================================
+
+--- Calm ---
+
+Sleep Content: [4*] "Love Calm, slept better since listening to the sleep stories, just with theyd bring new extra ones out at Halloween Christmas etc..."
+Meditation Quality: [4*] "Love Calm, slept better since listening to the sleep stories, just with theyd bring new extra ones out at Halloween Christmas etc..."
+Voice Quality: [4*] "Using the app feels like taking a small break from the noise of the day. The gentle sounds and calming voices make it easier to relax and fall asleep..."
+Variety: [4*] "Using the app feels like taking a small break from the noise of the day. The gentle sounds and calming voices make it easier to relax and fall asleep..."
+
+--- Headspace ---
+
+Meditation Quality: [5*] "I love Andy and what he does. Onboarded in meditations few years ago from his Netflix series, 3 years subscriber already...."
+Voice Quality: [5*] "I have used this app since 2021. There was a while that I didnt use it, then picked it back up again a while back. I see many have issues with the su..."
+Variety: [5*] "It's a fantastic app for your mental health and daily self care. It has a lot of features and lots of options for you to choose.  The support it's gre..."
+
+======================================================================
+EXECUTIVE SUMMARY: PRODUCT ISSUES (EXCLUDING BILLING)
+======================================================================
+
+CALM - KEY PRODUCT ISSUES:
+--------------------------
+1. CONTENT REPETITIVENESS
+   - Users report hearing the same meditations/stories repeatedly
+   - Long-term subscribers feel content has stagnated
+   - Request for more frequent new content additions
+
+2. APP NAVIGATION & UX
+   - Difficulty finding specific content
+   - Offline download feature is confusing/broken
+   - Interface described as cluttered after updates
+
+3. AUDIO/PLAYBACK
+   - Background play issues (stops when switching apps)
+   - Audio cutting off mid-session
+   - Volume inconsistency between tracks
+
+4. ACCOUNT ACCESS
+   - Login issues after subscription changes
+   - Password reset problems
+   - Cross-device sync unreliable
+
+5. SPECIFIC COMPLAINTS:
+   - Tamara Levitt's voice polarizing (some love, some hate)
+   - Sleep stories quality varies significantly
+   - Kids content limited
+
+
+HEADSPACE - KEY PRODUCT ISSUES:
+-------------------------------
+1. APP PERFORMANCE
+   - Android app described as "painfully slow and laggy"
+   - App crashes reported, especially after updates
+   - October 2024 update caused widespread issues
+
+2. CONTENT ORGANIZATION
+   - Hard to find specific meditation types
+   - Courses structure confusing
+   - Content feels "gimmicky" to some users
+
+3. TRACKING & PROGRESS
+   - Apple Health integration broken/unreliable
+   - Meditation minutes tracking issues
+   - Streak/progress data lost
+
+4. PERSONALIZATION
+   - Recommendations not relevant
+   - Can't easily skip content types
+   - Constant prompts for features users don't want
+
+5. SPECIFIC COMPLAINTS:
+   - Want more sleep story content with specific narrators
+   - Text-based coaching described as "like chatting with a bot"
+   - Animations/graphics seen as childish by some users
+
+
+COMPARATIVE INSIGHTS:
+--------------------
+- Both apps struggle with LONG-TERM USER RETENTION due to content repetitiveness
+- HEADSPACE has more technical/performance complaints
+- CALM has more content quality variation complaints
+- Both have significant NAVIGATION issues
+- Neither excels at PERSONALIZATION based on user preferences
+- OFFLINE functionality problematic for both
+

@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(superpowers:brainstorming)",
+      "WebFetch(domain:ie.trustpilot.com)",
+      "Bash(pip install:*)",
+      "Bash(python -m pip install:*)",
+      "Bash(python trustpilot_scraper.py:*)",
+      "Bash(python:*)",
+      "WebFetch(domain:pypi.org)",
+      "Bash(wc:*)",
+      "Bash(xargs:*)",
+      "Bash(npx ts-node:*)",
+      "Bash(cmd /c \"cd /d C:\\\\Users\\\\jackm\\\\Projects\\\\10000-hours && npx ts-node scripts/auto-tag-content.ts\")",
+      "Bash(powershell -Command \"Set-Location ''C:\\\\Users\\\\jackm\\\\Projects\\\\10000-hours''; npx ts-node scripts/auto-tag-content.ts\")",
+      "Bash(powershell:*)",
+      "Skill(ui-ux-pro-max)",
+      "Bash(python3:*)",
+      "Bash(npm test:*)",
+      "Bash(npm run build:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: Add intent-based content filtering to Explore tab\n\nUsers can now filter pearls and meditations by emotional intent:\n- anxiety, stress, sleep, focus \\(high-traffic\\)\n- beginners, body-awareness, self-compassion, letting-go \\(high-volume\\)\n\nPareto-aligned: 8 filters covering ~80% of expected user intent.\n\nChanges:\n- Add intent filter UI with haptic feedback in Explore.tsx\n- Display intent tags in SessionDetailModal\n- Fix intentTags propagation in JourneySavedContent\n- Add intent_tags to 110 sessions in sessions.json\n- Add intentTags to Pearl and TemplateInput interfaces\n- Add Supabase migration for intent_tags column + GIN indexes\n- Add comprehensive test suite \\(20 tests\\)\n\nDatabase: Run supabase/intent_tags_migration.sql in SQL Editor\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+    ]
+  }
+}

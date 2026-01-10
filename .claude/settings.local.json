@@ -50,7 +50,31 @@
       "Bash(npm run build:check:*)",
       "Bash(npm run:*)",
       "Bash(npx tsc:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(dir:*)",
+      "Bash(python scripts/search.py:*)",
+      "Bash(iconv:*)",
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(chcp 6500)",
+      "Bash(set:*)",
+      "WebFetch(domain:browsermcp.io)",
+      "WebFetch(domain:docs.browsermcp.io)",
+      "Bash(chcp 65001)",
+      "Bash(wc:*)",
+      "Bash(npx vitest:*)",
+      "Bash(if not exist \"C:\\\\Users\\\\jackm\\\\Projects\\\\10000-hours\\\\docs\\\\plans\" mkdir \"C:\\\\Users\\\\jackm\\\\Projects\\\\10000-hours\\\\docs\\\\plans\")",
+      "WebFetch(domain:www.namecheap.com)",
+      "WebFetch(domain:apps.apple.com)",
+      "WebFetch(domain:instantdomainsearch.com)",
+      "Bash(npx tsx:*)",
+      "Bash(claude mcp list:*)",
+      "Skill(superpowers:finishing-a-development-branch)",
+      "Bash(bash:*)",
+      "Bash(meditation\" element due to millisecond timestamp mismatches.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Skill(gsd:map-codebase)",
+      "WebFetch(domain:codepen.io)",
+      "Bash(npm test:*)"
     ]
   }
 }
