@@ -132,11 +132,20 @@ export default {
         },
       },
       transitionDuration: {
+        // Semantic durations (prefer these)
+        'fast': '150ms',   // Micro-interactions, hover states
+        'base': '200ms',   // Standard transitions
+        'slow': '300ms',   // Emphasis, complex motion
+        // Legacy (keep for backward compatibility)
         '400': '400ms',
         '600': '600ms',
       },
       transitionTimingFunction: {
-        'organic': 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+        // Semantic easings (from CSS variables)
+        'out': 'var(--ease-out)',           // Default for most transitions
+        'in-out': 'var(--ease-in-out)',     // Reversible actions
+        'organic': 'var(--ease-organic)',   // Playful/delightful
+        // Legacy
         'gentle': 'cubic-bezier(0.4, 0, 0.2, 1)',
       }
     },
