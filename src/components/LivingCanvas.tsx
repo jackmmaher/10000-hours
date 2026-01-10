@@ -212,7 +212,8 @@ export function LivingCanvas({
   const hasInitializedRef = useRef(false)
   // DEBUG: Track particle count for debugging
   const [debugParticleCount, setDebugParticleCount] = useState(0)
-  const [debugRenderInfo, setDebugRenderInfo] = useState({ frames: 0, lastStarAlpha: 0 })
+  const debugRenderRef = useRef({ frames: 0, starsInLoop: 0, loopRunning: false, error: '' })
+  const [, forceUpdate] = useState(0) // For debug refresh
 
   // Keep effects in a ref so render functions always use current values
   const effectsRef = useRef(effects)
@@ -365,11 +366,16 @@ export function LivingCanvas({
 
   // Main render loop
   const render = useCallback((time: number) => {
+    try {
     const canvas = canvasRef.current
-    if (!canvas) return
+    if (!canvas) { debugRenderRef.current.error = 'no canvas'; return }
 
     const ctx = canvas.getContext('2d')
-    if (!ctx) return
+    if (!ctx) { debugRenderRef.current.error = 'no ctx'; return }
+
+    debugRenderRef.current.loopRunning = true
+    debugRenderRef.current.frames++
+    debugRenderRef.current.starsInLoop = effectsRef.current.stars
 
     // Use window dimensions for full viewport coverage
     const width = window.innerWidth
@@ -403,14 +409,6 @@ export function LivingCanvas({
 
     // Sort particles by z-depth (far to near)
     const sorted = [...particlesRef.current].sort((a, b) => a.z - b.z)
-
-    // DEBUG: Update debug info every 60 frames
-    if (Math.floor(t) % 1 === 0 && Math.floor(t * 60) % 60 === 0) {
-      setDebugRenderInfo({
-        frames: Math.floor(t),
-        lastStarAlpha: effectsRef.current.stars
-      })
-    }
 
     // Render particles
     sorted.forEach(p => {
@@ -448,6 +446,9 @@ export function LivingCanvas({
     }
 
     animationIdRef.current = requestAnimationFrame(render)
+    } catch (e) {
+      debugRenderRef.current.error = String(e)
+    }
   }, [season, effects.stars, effects.shootingStars, effects.moon, expressive, seasonalEffects.aurora, seasonalEffects.harvestMoon, sunAltitude, moonIllumination, moonPhaseAngle])
 
   // ============================================================================
@@ -1162,24 +1163,27 @@ export function LivingCanvas({
         }}
       />
       {/* DEBUG: Show particle count */}
-      <div style={{
-        position: 'fixed',
-        bottom: 120,
-        left: 10,
-        background: 'rgba(255,0,0,0.8)',
-        color: 'white',
-        padding: 8,
-        fontSize: 10,
-        fontFamily: 'monospace',
-        zIndex: 9999,
-        borderRadius: 4
-      }}>
-        <div>CANVAS DEBUG:</div>
+      <div
+        style={{
+          position: 'fixed',
+          bottom: 120,
+          left: 10,
+          background: 'rgba(255,0,0,0.8)',
+          color: 'white',
+          padding: 8,
+          fontSize: 10,
+          fontFamily: 'monospace',
+          zIndex: 9999,
+          borderRadius: 4
+        }}
+        onClick={() => forceUpdate(n => n + 1)}
+      >
+        <div>CANVAS (tap to refresh):</div>
         <div>particles: {debugParticleCount}</div>
-        <div>initialized: {hasInitializedRef.current ? 'YES' : 'NO'}</div>
-        <div>renderFrames: {debugRenderInfo.frames}</div>
-        <div>starsAlpha: {debugRenderInfo.lastStarAlpha.toFixed(2)}</div>
-        <div>effectsRef.stars: {effectsRef.current.stars.toFixed(2)}</div>
+        <div>frames: {debugRenderRef.current.frames}</div>
+        <div>loopRunning: {debugRenderRef.current.loopRunning ? 'YES' : 'NO'}</div>
+        <div>starsInLoop: {debugRenderRef.current.starsInLoop.toFixed(2)}</div>
+        <div>error: {debugRenderRef.current.error || 'none'}</div>
       </div>
     </>
   )
