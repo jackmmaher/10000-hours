@@ -22,6 +22,10 @@ interface SettingsState {
   notificationPreferences: NotificationPreferences
   manualSeason: SeasonOverride
   manualTime: TimeOverride
+  // Breath pacing
+  breathPacingEnabled: boolean
+  breathPatternId: string | null
+  breathHapticsEnabled: boolean
   isLoading: boolean
 
   // Actions
@@ -33,6 +37,8 @@ interface SettingsState {
   setAudioFeedbackEnabled: (value: boolean) => Promise<void>
   setNotificationPreferences: (prefs: Partial<NotificationPreferences>) => Promise<void>
   setManualTheme: (season: SeasonOverride, time: TimeOverride) => Promise<void>
+  setBreathPacing: (enabled: boolean, patternId?: string | null) => Promise<void>
+  setBreathHapticsEnabled: (value: boolean) => Promise<void>
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -45,6 +51,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES,
   manualSeason: 'winter',
   manualTime: 'evening',
+  // Breath pacing defaults (opt-in)
+  breathPacingEnabled: false,
+  breathPatternId: 'simple',
+  breathHapticsEnabled: true,
   isLoading: true,
 
   hydrate: async () => {
@@ -58,6 +68,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       notificationPreferences: settings.notificationPreferences ?? DEFAULT_NOTIFICATION_PREFERENCES,
       manualSeason: settings.manualSeason ?? 'winter',
       manualTime: settings.manualTime ?? 'evening',
+      breathPacingEnabled: settings.breathPacingEnabled ?? false,
+      breathPatternId: settings.breathPatternId ?? 'simple',
+      breathHapticsEnabled: settings.breathHapticsEnabled ?? true,
       isLoading: false
     })
   },
@@ -97,5 +110,22 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   setManualTheme: async (season, time) => {
     await updateSettings({ manualSeason: season, manualTime: time, themeMode: 'manual' })
     set({ manualSeason: season, manualTime: time, themeMode: 'manual' })
+  },
+
+  setBreathPacing: async (enabled, patternId) => {
+    const updates: Record<string, unknown> = { breathPacingEnabled: enabled }
+    if (patternId !== undefined) {
+      updates.breathPatternId = patternId
+    }
+    await updateSettings(updates)
+    set({
+      breathPacingEnabled: enabled,
+      ...(patternId !== undefined ? { breathPatternId: patternId } : {})
+    })
+  },
+
+  setBreathHapticsEnabled: async (value) => {
+    await updateSettings({ breathHapticsEnabled: value })
+    set({ breathHapticsEnabled: value })
   }
 }))

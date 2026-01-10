@@ -54,6 +54,10 @@ export interface UserSettings {
   // Manual theme overrides (only used when themeMode === 'manual')
   manualSeason?: SeasonOverride
   manualTime?: TimeOverride
+  // Breath pacing settings (opt-in)
+  breathPacingEnabled?: boolean
+  breathPatternId?: string | null
+  breathHapticsEnabled?: boolean
 }
 
 export interface Insight {
