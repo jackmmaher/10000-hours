@@ -22,12 +22,14 @@ import {
   getLocation,
   calculateSunPosition,
   calculateMaxSolarAltitude,
-  estimateLocationFromTimezone
+  estimateLocationFromTimezone,
+  calculateMoonPosition,
+  calculateMoonPhase
 } from './solarPosition'
 
 // Re-export for convenience
 export type { ThemeTokens, TimeOfDay, Season }
-export { getSeason, getLocation, calculateSunPosition, calculateMaxSolarAltitude, estimateLocationFromTimezone }
+export { getSeason, getLocation, calculateSunPosition, calculateMaxSolarAltitude, estimateLocationFromTimezone, calculateMoonPosition, calculateMoonPhase }
 
 // ============================================================================
 // UNIFIED THRESHOLDS
@@ -207,6 +209,13 @@ export interface LivingThemeState {
   season: Season
   timeOfDay: TimeOfDay
 
+  // Moon data
+  moonAltitude: number
+  moonAzimuth: number
+  moonPhase: 'new' | 'waxing-crescent' | 'first-quarter' | 'waxing-gibbous' | 'full' | 'waning-gibbous' | 'last-quarter' | 'waning-crescent'
+  moonIllumination: number
+  moonPhaseAngle: number
+
   // User preferences
   expressive: boolean
   breathingEnabled: boolean
@@ -236,6 +245,10 @@ export function calculateLivingTheme(
   const colors = calculateThemeBySunPosition(altitude, isRising, season, maxAltitude)
   const effects = calculateEffectIntensities(altitude, isRising, season, expressive)
 
+  // Calculate moon position and phase
+  const moonPos = calculateMoonPosition(location.lat, location.long, date)
+  const moonPhaseData = calculateMoonPhase(date)
+
   return {
     location,
     sunAltitude: altitude,
@@ -243,6 +256,11 @@ export function calculateLivingTheme(
     isRising,
     season,
     timeOfDay,
+    moonAltitude: moonPos.altitude,
+    moonAzimuth: moonPos.azimuth,
+    moonPhase: moonPhaseData.phase,
+    moonIllumination: moonPhaseData.illumination,
+    moonPhaseAngle: moonPhaseData.angle,
     expressive,
     breathingEnabled,
     colors,
@@ -501,6 +519,25 @@ export function calculateManualTheme(
     night: 180      // Moon typically visible to south
   }
 
+  // Simulated moon position for manual mode
+  // Moon is roughly opposite the sun, higher at night
+  const moonAltitudeMap: Record<TimeOfDay, number> = {
+    morning: -10,   // Moon setting in morning
+    daytime: -20,   // Moon below horizon during day
+    evening: 15,    // Moon rising in evening
+    night: 45       // Moon high at night
+  }
+
+  const moonAzimuthMap: Record<TimeOfDay, number> = {
+    morning: 270,   // West (setting)
+    daytime: 270,   // West
+    evening: 120,   // East (rising)
+    night: 180      // South (high)
+  }
+
+  // Use actual moon phase calculation even in manual mode
+  const moonPhaseData = calculateMoonPhase(new Date())
+
   return {
     location: null, // No location in manual mode
     sunAltitude: altitudeMap[timeOfDay],
@@ -508,6 +545,11 @@ export function calculateManualTheme(
     isRising: timeOfDay === 'morning',
     season: isNeutral ? 'winter' : (season as Season), // Default to winter for neutral
     timeOfDay,
+    moonAltitude: moonAltitudeMap[timeOfDay],
+    moonAzimuth: moonAzimuthMap[timeOfDay],
+    moonPhase: moonPhaseData.phase,
+    moonIllumination: moonPhaseData.illumination,
+    moonPhaseAngle: moonPhaseData.angle,
     expressive,
     breathingEnabled,
     colors,

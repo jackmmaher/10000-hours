@@ -99,6 +99,11 @@ interface LivingCanvasProps {
   seasonalEffects: SeasonalEffects
   sunAltitude: number
   sunAzimuth: number
+  moonAltitude: number
+  moonAzimuth: number
+  moonPhase: string
+  moonIllumination: number
+  moonPhaseAngle: number
 }
 
 interface BaseParticle {
@@ -186,7 +191,12 @@ export function LivingCanvas({
   expressive,
   seasonalEffects,
   sunAltitude,
-  sunAzimuth
+  sunAzimuth,
+  moonAltitude,
+  moonAzimuth,
+  moonPhase,
+  moonIllumination,
+  moonPhaseAngle
 }: LivingCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const particlesRef = useRef<Particle[]>([])
@@ -372,6 +382,16 @@ export function LivingCanvas({
     // Render sun (behind particles)
     renderSun(ctx, width, height, sunAltitude, sunAzimuth, season)
 
+    // Render moon (behind particles, with phase)
+    if (effects.moon > 0) {
+      renderMoon(
+        ctx, width, height,
+        moonAltitude, moonAzimuth,
+        moonPhase, moonIllumination, moonPhaseAngle,
+        season, effects.moon, seasonalEffects.harvestMoon
+      )
+    }
+
     // Sort particles by z-depth (far to near)
     const sorted = [...particlesRef.current].sort((a, b) => a.z - b.z)
 
@@ -404,7 +424,7 @@ export function LivingCanvas({
     }
 
     animationIdRef.current = requestAnimationFrame(render)
-  }, [season, effects.stars, effects.shootingStars, effects.ambientDarkness, expressive, seasonalEffects.aurora, sunAltitude, sunAzimuth])
+  }, [season, effects.stars, effects.shootingStars, effects.ambientDarkness, effects.moon, expressive, seasonalEffects.aurora, seasonalEffects.harvestMoon, sunAltitude, sunAzimuth, moonAltitude, moonAzimuth, moonPhase, moonIllumination, moonPhaseAngle])
 
   // ============================================================================
   // RENDER FUNCTIONS
@@ -875,6 +895,150 @@ export function LivingCanvas({
       ctx.arc(sunX, sunY, baseSize, 0, Math.PI * 2)
       ctx.fill()
     }
+
+    ctx.restore()
+  }
+
+  /**
+   * Render moon with position based on altitude/azimuth and current phase
+   * - Correct phase rendering (new, crescent, quarter, gibbous, full)
+   * - Position tracks real lunar position
+   * - Soft glow effect
+   */
+  function renderMoon(
+    ctx: CanvasRenderingContext2D,
+    w: number,
+    h: number,
+    altitude: number,
+    azimuth: number,
+    _phase: string,
+    illumination: number,
+    phaseAngle: number,
+    _season: Season,
+    intensity: number,
+    harvestMoon: boolean
+  ) {
+    // Don't render if moon below horizon or intensity too low
+    if (altitude < -5 || intensity < 0.05) return
+
+    // Map azimuth to x position (same as sun)
+    const normalizedAzimuth = ((azimuth - 90) % 360) / 180
+    const moonX = w * (1 - Math.max(0, Math.min(1, normalizedAzimuth)))
+
+    // Map altitude to y position
+    const horizonY = h * 0.85
+    const zenithY = h * 0.05
+    const clampedAlt = Math.max(0, Math.min(90, altitude))
+    const moonY = horizonY - (clampedAlt / 90) * (horizonY - zenithY)
+
+    // Moon size - larger for harvest moon
+    const baseSize = harvestMoon ? 40 : 30
+
+    // Moon colors - slightly warm for harvest moon, cool blue-white otherwise
+    const moonColor = harvestMoon ? '#FCD34D' : '#F0F9FF'
+    const glowColor = harvestMoon ? 'rgba(251, 191, 36, 0.4)' : 'rgba(186, 230, 253, 0.35)'
+
+    ctx.save()
+    ctx.globalAlpha = intensity
+
+    // Outer glow
+    const glowGradient = ctx.createRadialGradient(
+      moonX, moonY, 0,
+      moonX, moonY, baseSize * 3
+    )
+    glowGradient.addColorStop(0, glowColor)
+    glowGradient.addColorStop(0.4, harvestMoon ? 'rgba(251, 191, 36, 0.15)' : 'rgba(186, 230, 253, 0.12)')
+    glowGradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
+
+    ctx.fillStyle = glowGradient
+    ctx.beginPath()
+    ctx.arc(moonX, moonY, baseSize * 3, 0, Math.PI * 2)
+    ctx.fill()
+
+    // Moon body - base circle
+    ctx.fillStyle = moonColor
+    ctx.beginPath()
+    ctx.arc(moonX, moonY, baseSize, 0, Math.PI * 2)
+    ctx.fill()
+
+    // Phase shadow overlay
+    // phaseAngle: 0 = new (shadow on right), 90 = first quarter, 180 = full, 270 = last quarter
+    if (illumination < 98) {
+      ctx.save()
+      ctx.globalCompositeOperation = 'destination-out'
+
+      // Determine shadow direction and size based on phase
+      const isWaxing = phaseAngle < 180 // Shadow moving from right to left
+
+      // Calculate the shadow ellipse width based on illumination
+      // 0% illumination = full shadow, 50% = half shadow, 100% = no shadow
+      const shadowFraction = (100 - illumination) / 100
+      const shadowOffset = baseSize * (1 - shadowFraction * 2)
+
+      ctx.beginPath()
+
+      if (isWaxing) {
+        // Waxing: shadow on the right side, shrinking toward center
+        if (illumination < 50) {
+          // Less than half lit - shadow larger than moon, draw from right
+          ctx.ellipse(
+            moonX + shadowOffset * 0.5,
+            moonY,
+            baseSize * shadowFraction,
+            baseSize,
+            0, 0, Math.PI * 2
+          )
+        } else {
+          // More than half lit - crescent shadow on right
+          // Use clipping to create crescent
+          ctx.arc(moonX, moonY, baseSize, 0, Math.PI * 2)
+          ctx.arc(moonX + baseSize * (1 - shadowFraction * 2), moonY, baseSize, 0, Math.PI * 2, true)
+        }
+      } else {
+        // Waning: shadow on the left side, growing from center
+        if (illumination < 50) {
+          // Less than half lit - shadow larger
+          ctx.ellipse(
+            moonX - shadowOffset * 0.5,
+            moonY,
+            baseSize * shadowFraction,
+            baseSize,
+            0, 0, Math.PI * 2
+          )
+        } else {
+          // More than half lit - crescent shadow on left
+          ctx.arc(moonX, moonY, baseSize, 0, Math.PI * 2)
+          ctx.arc(moonX - baseSize * (1 - shadowFraction * 2), moonY, baseSize, 0, Math.PI * 2, true)
+        }
+      }
+
+      ctx.fillStyle = 'black'
+      ctx.fill()
+      ctx.restore()
+    }
+
+    // Subtle surface texture/craters
+    ctx.globalAlpha = intensity * 0.15
+    ctx.fillStyle = harvestMoon ? '#B45309' : '#94A3B8'
+
+    // A few crater-like spots
+    const craters = [
+      { x: -0.3, y: -0.2, r: 0.15 },
+      { x: 0.2, y: 0.3, r: 0.12 },
+      { x: -0.1, y: 0.4, r: 0.08 },
+      { x: 0.35, y: -0.15, r: 0.1 },
+      { x: -0.25, y: 0.15, r: 0.18 }
+    ]
+
+    craters.forEach(crater => {
+      const cx = moonX + crater.x * baseSize
+      const cy = moonY + crater.y * baseSize
+      const cr = crater.r * baseSize
+
+      ctx.beginPath()
+      ctx.arc(cx, cy, cr, 0, Math.PI * 2)
+      ctx.fill()
+    })
 
     ctx.restore()
   }

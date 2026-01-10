@@ -376,3 +376,172 @@ export function calculateMaxSolarAltitude(
 
   return maxAltitude
 }
+
+// ============================================================================
+// LUNAR POSITION CALCULATION
+// ============================================================================
+
+/**
+ * Calculate moon position for a given location and time
+ * Returns altitude, azimuth, and whether moon is rising
+ *
+ * Based on simplified lunar position algorithms
+ * Accurate enough for visual purposes (within ~1°)
+ */
+export function calculateMoonPosition(
+  lat: number,
+  long: number,
+  date: Date = new Date()
+): { altitude: number; azimuth: number; isRising: boolean } {
+  const jd = toJulianDate(date)
+  const T = (jd - 2451545.0) / 36525 // Julian centuries from J2000
+
+  // Moon's mean longitude (degrees)
+  const L0 = (218.3164477 + 481267.88123421 * T - 0.0015786 * T * T) % 360
+
+  // Moon's mean anomaly (degrees)
+  const M = (134.9633964 + 477198.8675055 * T + 0.0087414 * T * T) % 360
+
+  // Moon's mean elongation (degrees)
+  const D = (297.8501921 + 445267.1114034 * T - 0.0018819 * T * T) % 360
+
+  // Moon's argument of latitude (degrees)
+  const F = (93.2720950 + 483202.0175233 * T - 0.0036539 * T * T) % 360
+
+  // Sun's mean anomaly (degrees)
+  const Ms = (357.5291092 + 35999.0502909 * T - 0.0001536 * T * T) % 360
+
+  // Longitude correction terms (simplified)
+  let dL = 0
+  dL += 6.289 * Math.sin(toRadians(M))
+  dL += 1.274 * Math.sin(toRadians(2 * D - M))
+  dL += 0.658 * Math.sin(toRadians(2 * D))
+  dL += 0.214 * Math.sin(toRadians(2 * M))
+  dL -= 0.186 * Math.sin(toRadians(Ms))
+  dL -= 0.114 * Math.sin(toRadians(2 * F))
+
+  // Moon's ecliptic longitude
+  const moonLong = (L0 + dL) % 360
+
+  // Latitude correction (simplified)
+  let dB = 0
+  dB += 5.128 * Math.sin(toRadians(F))
+  dB += 0.281 * Math.sin(toRadians(M + F))
+  dB += 0.278 * Math.sin(toRadians(M - F))
+
+  // Moon's ecliptic latitude
+  const moonLat = dB
+
+  // Obliquity of the ecliptic
+  const obliquity = 23.439 - 0.0000004 * (jd - 2451545.0)
+
+  // Convert ecliptic to equatorial coordinates
+  const sinLong = Math.sin(toRadians(moonLong))
+  const cosLong = Math.cos(toRadians(moonLong))
+  const sinLat = Math.sin(toRadians(moonLat))
+  const cosLat = Math.cos(toRadians(moonLat))
+  const sinObl = Math.sin(toRadians(obliquity))
+  const cosObl = Math.cos(toRadians(obliquity))
+
+  // Right Ascension
+  const ra = toDegrees(Math.atan2(
+    sinLong * cosObl - Math.tan(toRadians(moonLat)) * sinObl,
+    cosLong
+  ))
+
+  // Declination
+  const dec = toDegrees(Math.asin(
+    sinLat * cosObl + cosLat * sinObl * sinLong
+  ))
+
+  // Calculate Local Sidereal Time
+  const JD0 = Math.floor(jd - 0.5) + 0.5
+  const S = JD0 - 2451545.0
+  const T0 = S / 36525.0
+  let GST = 6.697374558 + 2400.051336 * T0 + 0.000025862 * T0 * T0
+  GST = GST % 24
+  if (GST < 0) GST += 24
+
+  const UT = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600
+  GST = (GST + UT * 1.002737909) % 24
+
+  const LST = (GST + long / 15) % 24
+  const LSTdeg = LST * 15
+
+  // Hour Angle
+  let HA = LSTdeg - ra
+  if (HA < -180) HA += 360
+  if (HA > 180) HA -= 360
+
+  // Convert to horizontal coordinates
+  const sinDec = Math.sin(toRadians(dec))
+  const cosDec = Math.cos(toRadians(dec))
+  const sinLat2 = Math.sin(toRadians(lat))
+  const cosLat2 = Math.cos(toRadians(lat))
+  const cosHA = Math.cos(toRadians(HA))
+
+  // Altitude
+  const altitude = toDegrees(Math.asin(
+    sinDec * sinLat2 + cosDec * cosLat2 * cosHA
+  ))
+
+  // Azimuth
+  let azimuth = toDegrees(Math.atan2(
+    Math.sin(toRadians(HA)),
+    cosHA * sinLat2 - Math.tan(toRadians(dec)) * cosLat2
+  ))
+  azimuth = (azimuth + 180) % 360
+
+  // Determine if moon is rising (hour angle approaching 0 from negative)
+  const isRising = HA < 0
+
+  return { altitude, azimuth, isRising }
+}
+
+/**
+ * Calculate moon phase for a given date
+ * Returns phase name and illumination percentage (0-100)
+ */
+export function calculateMoonPhase(date: Date = new Date()): {
+  phase: 'new' | 'waxing-crescent' | 'first-quarter' | 'waxing-gibbous' | 'full' | 'waning-gibbous' | 'last-quarter' | 'waning-crescent'
+  illumination: number
+  angle: number // Angle for rendering the shadow
+} {
+  // Calculate days since known new moon (Jan 6, 2000 18:14 UTC)
+  const knownNewMoon = new Date('2000-01-06T18:14:00Z')
+  const synodicMonth = 29.53058867 // Average length of lunar month in days
+
+  const daysSinceNewMoon = (date.getTime() - knownNewMoon.getTime()) / (1000 * 60 * 60 * 24)
+  const lunarAge = daysSinceNewMoon % synodicMonth
+
+  // Calculate illumination (0-100%)
+  // Illumination follows a cosine curve through the lunar cycle
+  const phaseAngle = (lunarAge / synodicMonth) * 2 * Math.PI
+  const illumination = Math.round((1 - Math.cos(phaseAngle)) / 2 * 100)
+
+  // Angle for rendering (0 = new moon shadow on right, 180 = full, 360 = new moon shadow on left)
+  const angle = (lunarAge / synodicMonth) * 360
+
+  // Determine phase name
+  let phase: 'new' | 'waxing-crescent' | 'first-quarter' | 'waxing-gibbous' | 'full' | 'waning-gibbous' | 'last-quarter' | 'waning-crescent'
+
+  if (lunarAge < 1.85) {
+    phase = 'new'
+  } else if (lunarAge < 7.38) {
+    phase = 'waxing-crescent'
+  } else if (lunarAge < 9.23) {
+    phase = 'first-quarter'
+  } else if (lunarAge < 14.77) {
+    phase = 'waxing-gibbous'
+  } else if (lunarAge < 16.61) {
+    phase = 'full'
+  } else if (lunarAge < 22.15) {
+    phase = 'waning-gibbous'
+  } else if (lunarAge < 23.99) {
+    phase = 'last-quarter'
+  } else {
+    phase = 'waning-crescent'
+  }
+
+  return { phase, illumination, angle }
+}

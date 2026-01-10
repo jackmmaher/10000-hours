@@ -214,6 +214,11 @@ export function LivingTheme({
           seasonalEffects={seasonalEffects}
           sunAltitude={themeState.sunAltitude}
           sunAzimuth={themeState.sunAzimuth}
+          moonAltitude={themeState.moonAltitude}
+          moonAzimuth={themeState.moonAzimuth}
+          moonPhase={themeState.moonPhase}
+          moonIllumination={themeState.moonIllumination}
+          moonPhaseAngle={themeState.moonPhaseAngle}
         />
 
         {/* App content */}
@@ -235,6 +240,11 @@ interface LivingThemeEffectsProps {
   seasonalEffects: SeasonalEffects
   sunAltitude: number
   sunAzimuth: number
+  moonAltitude: number
+  moonAzimuth: number
+  moonPhase: string
+  moonIllumination: number
+  moonPhaseAngle: number
 }
 
 /**
@@ -248,7 +258,12 @@ function LivingThemeEffects({
   expressive,
   seasonalEffects,
   sunAltitude,
-  sunAzimuth
+  sunAzimuth,
+  moonAltitude,
+  moonAzimuth,
+  moonPhase,
+  moonIllumination,
+  moonPhaseAngle
 }: LivingThemeEffectsProps) {
   const [mounted, setMounted] = useState(false)
 
@@ -289,12 +304,7 @@ function LivingThemeEffects({
         warmth={effects.directionalLight.warmth}
       />
 
-      {/* Moon - fade in based on effect intensity (keep as DOM) */}
-      {effects.moon > 0 && (
-        <Moon intensity={effects.moon} season={season} harvestMoon={seasonalEffects.harvestMoon} />
-      )}
-
-      {/* Level 2 Canvas Renderer - stars, particles, shooting stars, aurora, sun */}
+      {/* Level 2 Canvas Renderer - stars, particles, shooting stars, aurora, sun, moon */}
       <LivingCanvas
         season={season}
         timeOfDay={timeOfDay}
@@ -303,6 +313,11 @@ function LivingThemeEffects({
         seasonalEffects={seasonalEffects}
         sunAltitude={sunAltitude}
         sunAzimuth={sunAzimuth}
+        moonAltitude={moonAltitude}
+        moonAzimuth={moonAzimuth}
+        moonPhase={moonPhase}
+        moonIllumination={moonIllumination}
+        moonPhaseAngle={moonPhaseAngle}
       />
     </div>
   )
@@ -413,52 +428,6 @@ function DirectionalLight({
   )
 }
 
-function Moon({
-  intensity,
-  season,
-  harvestMoon
-}: {
-  intensity: number
-  season: Season
-  harvestMoon: boolean
-}) {
-  // Moon color varies slightly by season
-  const baseColor = harvestMoon ? '#FCD34D' :
-                    season === 'winter' ? '#E0F2FE' : '#FEF3C7'
-  const glowColor = harvestMoon ? 'rgba(251, 191, 36, 0.4)' :
-                    season === 'winter' ? 'rgba(186, 230, 253, 0.3)' : 'rgba(254, 243, 199, 0.3)'
-  const size = harvestMoon ? 80 : 60
-
-  return (
-    <div
-      className="absolute transition-opacity duration-[3000ms]"
-      style={{
-        top: '8%',
-        right: '15%',
-        width: `${size}px`,
-        height: `${size}px`,
-        opacity: intensity
-      }}
-    >
-      {/* Glow */}
-      <div
-        className="absolute inset-0 rounded-full"
-        style={{
-          background: `radial-gradient(circle, ${glowColor} 0%, transparent 70%)`,
-          transform: 'scale(2)'
-        }}
-      />
-      {/* Moon body */}
-      <div
-        className="absolute inset-0 rounded-full"
-        style={{
-          background: `radial-gradient(circle at 35% 35%, #FFFFFF 0%, ${baseColor} 50%, ${harvestMoon ? '#D97706' : '#FDE68A'} 100%)`,
-          boxShadow: `0 0 40px ${glowColor}`
-        }}
-      />
-    </div>
-  )
-}
 
 // ============================================================================
 // SOFT LIGHT RAYS (for daytime)
