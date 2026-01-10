@@ -22,6 +22,7 @@ import {
   useRef,
   ReactNode
 } from 'react'
+import { LivingCanvas } from './LivingCanvas'
 import {
   LivingThemeState,
   EffectIntensities,
@@ -244,62 +245,23 @@ function LivingThemeEffects({
   seasonalEffects
 }: LivingThemeEffectsProps) {
   const [mounted, setMounted] = useState(false)
-  const [windActive, setWindActive] = useState(false)
 
   useEffect(() => {
     setMounted(true)
-  }, [])
-
-  // Wind breath events
-  useEffect(() => {
-    const triggerWind = () => {
-      setWindActive(true)
-      setTimeout(() => setWindActive(false), 3000)
-    }
-
-    const initialDelay = 20000 + Math.random() * 20000
-    const initialTimeout = setTimeout(triggerWind, initialDelay)
-
-    const interval = setInterval(() => {
-      if (Math.random() > 0.3) triggerWind()
-    }, 45000 + Math.random() * 45000)
-
-    return () => {
-      clearTimeout(initialTimeout)
-      clearInterval(interval)
-    }
   }, [])
 
   if (!mounted) return null
 
   return (
     <div
-      className={`fixed inset-0 pointer-events-none overflow-hidden ${windActive ? 'wind-active' : ''}`}
+      className="fixed inset-0 pointer-events-none overflow-hidden"
       style={{ zIndex: 0 }}
     >
-      {/* Global styles for effects */}
+      {/* Global styles for moon glow */}
       <style>{`
-        @keyframes windShiver {
-          0% { transform: translateX(0) rotate(0deg); }
-          30% { transform: translateX(15px) rotate(0.3deg); }
-          60% { transform: translateX(8px) rotate(0.1deg); }
-          100% { transform: translateX(0) rotate(0deg); }
-        }
-        .wind-active .wind-affected { animation: windShiver 3s ease-out; }
-
-        @keyframes twinkle {
-          0%, 100% { opacity: 0.3; transform: scale(0.8); }
-          50% { opacity: 1; transform: scale(1.1); }
-        }
-
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-10px); }
-        }
-
-        @keyframes shootingStar {
-          0% { transform: translateX(0) translateY(0); opacity: 1; }
-          100% { transform: translateX(300px) translateY(300px); opacity: 0; }
         }
       `}</style>
 
@@ -321,32 +283,19 @@ function LivingThemeEffects({
         warmth={effects.directionalLight.warmth}
       />
 
-      {/* Stars - fade in based on effect intensity */}
-      {effects.stars > 0 && (
-        <Stars intensity={effects.stars} season={season} />
-      )}
-
-      {/* Moon - fade in based on effect intensity */}
+      {/* Moon - fade in based on effect intensity (keep as DOM) */}
       {effects.moon > 0 && (
         <Moon intensity={effects.moon} season={season} harvestMoon={seasonalEffects.harvestMoon} />
       )}
 
-      {/* Shooting stars - expressive only, night only */}
-      {effects.shootingStars > 0 && expressive && (
-        <ShootingStars intensity={effects.shootingStars} />
-      )}
-
-      {/* Seasonal particles */}
-      <SeasonalParticles
-        type={seasonalEffects.particleType}
-        intensity={effects.particles * seasonalEffects.particleMultiplier}
-        windActive={windActive}
+      {/* Level 2 Canvas Renderer - stars, particles, shooting stars, aurora */}
+      <LivingCanvas
+        season={season}
+        timeOfDay={timeOfDay}
+        effects={effects}
+        expressive={expressive}
+        seasonalEffects={seasonalEffects}
       />
-
-      {/* Aurora - winter night expressive */}
-      {seasonalEffects.aurora && effects.stars > 0.5 && (
-        <Aurora intensity={effects.stars} />
-      )}
     </div>
   )
 }
@@ -456,53 +405,6 @@ function DirectionalLight({
   )
 }
 
-// Stable star positions with z-depth for parallax
-const STARS = [...Array(25)].map((_, i) => ({
-  x: ((i * 17) % 100),
-  y: ((i * 23) % 80),
-  size: 1 + (i % 3),
-  delay: (i * 0.4) % 10,
-  twinkle: i % 4 === 0,
-  z: (i % 3) / 2  // 0, 0.5, 1 = far, mid, near (parallax depth)
-}))
-
-function Stars({ intensity, season }: { intensity: number; season: Season }) {
-  // Season-tinted star colors for subtle variation
-  const starColors: Record<Season, string> = {
-    winter: 'rgba(186, 230, 253, 0.9)',
-    summer: 'rgba(254, 243, 199, 0.9)',
-    spring: 'rgba(255, 255, 255, 0.9)',
-    autumn: 'rgba(255, 255, 255, 0.9)'
-  }
-  const starColor = starColors[season]
-
-  return (
-    <div
-      className="absolute inset-0 transition-opacity duration-[3000ms]"
-      style={{ opacity: intensity }}
-    >
-      {STARS.map((star, i) => (
-        <div
-          key={i}
-          className="absolute rounded-full"
-          style={{
-            left: `${star.x}%`,
-            top: `${star.y}%`,
-            width: `${star.size * (0.7 + star.z * 0.6)}px`,  // Near = larger
-            height: `${star.size * (0.7 + star.z * 0.6)}px`,
-            background: starColor,
-            boxShadow: `0 0 ${star.size * 2}px ${starColor}`,
-            opacity: 0.3 + (star.z * 0.5),  // Near = brighter
-            filter: star.z < 0.3 ? 'blur(0.5px)' : 'none',  // Far = slight blur
-            animation: star.twinkle ? `twinkle ${4 - star.z * 2}s ease-in-out infinite` : undefined,  // Near = faster twinkle
-            animationDelay: `${star.delay}s`
-          }}
-        />
-      ))}
-    </div>
-  )
-}
-
 function Moon({
   intensity,
   season,
@@ -544,276 +446,6 @@ function Moon({
         style={{
           background: `radial-gradient(circle at 35% 35%, #FFFFFF 0%, ${baseColor} 50%, ${harvestMoon ? '#D97706' : '#FDE68A'} 100%)`,
           boxShadow: `0 0 40px ${glowColor}`
-        }}
-      />
-    </div>
-  )
-}
-
-function ShootingStars({ intensity }: { intensity: number }) {
-  const [shooting, setShooting] = useState(false)
-  const [position, setPosition] = useState({ x: 20, y: 10 })
-
-  useEffect(() => {
-    const trigger = () => {
-      setPosition({
-        x: 10 + Math.random() * 50,
-        y: 5 + Math.random() * 30
-      })
-      setShooting(true)
-      setTimeout(() => setShooting(false), 1000)
-    }
-
-    // Random shooting stars every 15-45 seconds
-    const interval = setInterval(() => {
-      if (Math.random() > 0.5) trigger()
-    }, 15000 + Math.random() * 30000)
-
-    // Initial one after 5-10 seconds
-    const initial = setTimeout(trigger, 5000 + Math.random() * 5000)
-
-    return () => {
-      clearInterval(interval)
-      clearTimeout(initial)
-    }
-  }, [])
-
-  if (!shooting) return null
-
-  return (
-    <div
-      className="absolute"
-      style={{
-        left: `${position.x}%`,
-        top: `${position.y}%`,
-        width: '2px',
-        height: '2px',
-        background: 'white',
-        borderRadius: '50%',
-        boxShadow: '0 0 6px white, -20px -20px 10px rgba(255,255,255,0.5)',
-        animation: 'shootingStar 1s ease-out forwards',
-        opacity: intensity
-      }}
-    />
-  )
-}
-
-function SeasonalParticles({
-  type,
-  intensity,
-  windActive
-}: {
-  type: 'mist' | 'fireflies' | 'leaves' | 'snow' | 'none'
-  intensity: number
-  windActive: boolean
-}) {
-  if (type === 'none' || intensity < 0.1) return null
-
-  const count = Math.floor(6 * intensity)
-
-  switch (type) {
-    case 'mist':
-      return <MistParticles count={count} windActive={windActive} />
-    case 'fireflies':
-      return <FireflyParticles count={count} />
-    case 'leaves':
-      return <LeafParticles count={count} windActive={windActive} />
-    case 'snow':
-      return <SnowParticles count={count} />
-    default:
-      return null
-  }
-}
-
-function MistParticles({ count, windActive }: { count: number; windActive: boolean }) {
-  return (
-    <div className={`absolute inset-0 overflow-hidden ${windActive ? 'wind-affected' : ''}`}>
-      {[...Array(count)].map((_, i) => (
-        <div
-          key={i}
-          className="absolute"
-          style={{
-            left: `${(i * 20) % 100}%`,
-            top: `${40 + (i * 10) % 40}%`,
-            width: '120px',
-            height: '60px',
-            background: 'radial-gradient(ellipse at center, rgba(200, 200, 200, 0.1) 0%, transparent 70%)',
-            filter: 'blur(20px)',
-            animation: `float ${20 + i * 3}s ease-in-out infinite`,
-            animationDelay: `${i * 2}s`
-          }}
-        />
-      ))}
-    </div>
-  )
-}
-
-function FireflyParticles({ count }: { count: number }) {
-  return (
-    <div className="absolute inset-0 overflow-hidden">
-      {[...Array(count)].map((_, i) => (
-        <div
-          key={i}
-          className="absolute rounded-full"
-          style={{
-            left: `${(i * 17) % 90}%`,
-            top: `${30 + (i * 13) % 50}%`,
-            width: '4px',
-            height: '4px',
-            background: 'rgba(253, 224, 71, 0.9)',
-            boxShadow: '0 0 8px rgba(253, 224, 71, 0.8), 0 0 16px rgba(253, 224, 71, 0.4)',
-            animation: `twinkle ${3 + (i % 3)}s ease-in-out infinite, float ${8 + i * 2}s ease-in-out infinite`,
-            animationDelay: `${i * 0.5}s`
-          }}
-        />
-      ))}
-    </div>
-  )
-}
-
-function LeafParticles({ count, windActive }: { count: number; windActive: boolean }) {
-  // Pre-generate stable values for each leaf
-  const leafColors = ['#D97706', '#B45309', '#DC2626', '#CA8A04']  // Orange, brown, red, gold
-  const leaves = [...Array(count)].map((_, i) => ({
-    x: (i * 18) % 100,
-    driftX: ((i * 23) % 80) - 40,  // -40 to +40px drift (leaves drift more than snow)
-    z: (i % 3) / 2,  // 0, 0.5, 1 = far, mid, near
-    size: 6 + (i % 4) * 2,  // 6-12px
-    color: leafColors[i % leafColors.length],
-    duration: 15 + i * 3,
-    delay: i * 3,
-    rotations: 1 + (i % 3)  // 1-3 full rotations
-  }))
-
-  return (
-    <div className={`absolute inset-0 overflow-hidden ${windActive ? 'wind-affected' : ''}`}>
-      <style>{`
-        @keyframes leafFallDrift {
-          0% {
-            transform: translateY(-10%) translateX(0) rotate(0deg);
-            opacity: 0;
-          }
-          10% { opacity: var(--leaf-opacity, 0.8); }
-          25% {
-            transform: translateY(25vh) translateX(var(--drift-x, 20px)) rotate(calc(var(--rotations, 1) * 90deg));
-          }
-          50% {
-            transform: translateY(50vh) translateX(calc(var(--drift-x, 20px) * -0.5)) rotate(calc(var(--rotations, 1) * 180deg));
-          }
-          75% {
-            transform: translateY(75vh) translateX(var(--drift-x, 20px)) rotate(calc(var(--rotations, 1) * 270deg));
-          }
-          90% { opacity: calc(var(--leaf-opacity, 0.8) * 0.7); }
-          100% {
-            transform: translateY(110vh) translateX(calc(var(--drift-x, 20px) * 0.3)) rotate(calc(var(--rotations, 1) * 360deg));
-            opacity: 0;
-          }
-        }
-      `}</style>
-      {leaves.map((leaf, i) => (
-        <div
-          key={i}
-          className="absolute"
-          style={{
-            left: `${leaf.x}%`,
-            top: '-5%',
-            width: `${leaf.size * (0.7 + leaf.z * 0.5)}px`,  // Near = larger
-            height: `${leaf.size * (0.7 + leaf.z * 0.5) * 0.8}px`,
-            background: `linear-gradient(135deg, ${leaf.color} 0%, ${leaf.color}cc 100%)`,
-            borderRadius: '0 50% 50% 50%',
-            boxShadow: leaf.z > 0.5 ? `0 2px 4px rgba(0,0,0,0.2)` : 'none',
-            filter: leaf.z < 0.3 ? 'blur(0.5px)' : 'none',  // Far = slight blur
-            animation: `leafFallDrift ${leaf.duration * (1.3 - leaf.z * 0.5)}s ease-in-out infinite`,  // Near = faster
-            animationDelay: `${leaf.delay}s`,
-            ['--drift-x' as string]: `${leaf.driftX}px`,
-            ['--leaf-opacity' as string]: 0.5 + leaf.z * 0.4,  // Near = more opaque
-            ['--rotations' as string]: leaf.rotations
-          }}
-        />
-      ))}
-    </div>
-  )
-}
-
-function SnowParticles({ count }: { count: number }) {
-  // Pre-generate stable drift values for each particle
-  const particles = [...Array(count)].map((_, i) => ({
-    x: (i * 13) % 100,
-    driftX: ((i * 17) % 60) - 30,  // -30 to +30px drift
-    z: (i % 3) / 2,  // 0, 0.5, 1 = far, mid, near
-    size: 2 + (i % 3),
-    duration: 12 + i * 2,
-    delay: i * 2
-  }))
-
-  return (
-    <div className="absolute inset-0 overflow-hidden">
-      <style>{`
-        @keyframes snowFallDrift {
-          0% {
-            transform: translateY(-5%) translateX(0);
-            opacity: 0;
-          }
-          10% { opacity: var(--snow-opacity, 0.8); }
-          50% {
-            transform: translateY(50vh) translateX(var(--drift-x, 20px));
-          }
-          90% { opacity: calc(var(--snow-opacity, 0.8) * 0.7); }
-          100% {
-            transform: translateY(105vh) translateX(calc(var(--drift-x, 20px) * -0.5));
-            opacity: 0;
-          }
-        }
-      `}</style>
-      {particles.map((p, i) => (
-        <div
-          key={i}
-          className="absolute rounded-full"
-          style={{
-            left: `${p.x}%`,
-            top: '-3%',
-            width: `${p.size * (0.7 + p.z * 0.5)}px`,  // Near = larger
-            height: `${p.size * (0.7 + p.z * 0.5)}px`,
-            background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%)',
-            boxShadow: p.z > 0.5 ? '0 0 6px rgba(255, 255, 255, 0.6)' : '0 0 3px rgba(255, 255, 255, 0.3)',
-            filter: p.z < 0.3 ? 'blur(0.5px)' : 'none',  // Far = slight blur
-            animation: `snowFallDrift ${p.duration * (1.2 - p.z * 0.4)}s linear infinite`,  // Near = faster
-            animationDelay: `${p.delay}s`,
-            ['--drift-x' as string]: `${p.driftX}px`,
-            ['--snow-opacity' as string]: 0.4 + p.z * 0.5  // Near = more opaque
-          }}
-        />
-      ))}
-    </div>
-  )
-}
-
-function Aurora({ intensity }: { intensity: number }) {
-  return (
-    <div
-      className="absolute inset-0 overflow-hidden transition-opacity duration-[3000ms]"
-      style={{ opacity: intensity * 0.4 }}
-    >
-      <style>{`
-        @keyframes aurora {
-          0%, 100% { transform: translateX(-5%) scaleY(1); opacity: 0.3; }
-          50% { transform: translateX(5%) scaleY(1.2); opacity: 0.5; }
-        }
-      `}</style>
-      <div
-        className="absolute"
-        style={{
-          top: '0',
-          left: '10%',
-          right: '10%',
-          height: '40%',
-          background: `linear-gradient(180deg,
-            rgba(34, 211, 238, 0.2) 0%,
-            rgba(52, 211, 153, 0.15) 30%,
-            rgba(167, 139, 250, 0.1) 60%,
-            transparent 100%)`,
-          filter: 'blur(30px)',
-          animation: 'aurora 20s ease-in-out infinite'
         }}
       />
     </div>
