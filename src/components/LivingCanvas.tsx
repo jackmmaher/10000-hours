@@ -804,7 +804,8 @@ export function LivingCanvas({
     // Azimuth: 90° = East (right), 180° = South (center), 270° = West (left)
     // Normalize to 0-1 range where 0 = left edge, 1 = right edge
     // We want East (90°) on right, West (270°) on left
-    const normalizedAzimuth = ((azimuth - 90) % 360) / 180 // 0 at East, 1 at West
+    // Note: Add 360 before modulo to handle negative values (JS modulo can return negatives)
+    const normalizedAzimuth = (((azimuth - 90) % 360) + 360) % 360 / 180 // 0 at East, 1 at West
     const sunX = w * (1 - Math.max(0, Math.min(1, normalizedAzimuth)))
 
     // Map altitude to y position
@@ -922,7 +923,8 @@ export function LivingCanvas({
     if (altitude < -5 || intensity < 0.05) return
 
     // Map azimuth to x position (same as sun)
-    const normalizedAzimuth = ((azimuth - 90) % 360) / 180
+    // Note: Add 360 before modulo to handle negative values (JS modulo can return negatives)
+    const normalizedAzimuth = (((azimuth - 90) % 360) + 360) % 360 / 180
     const moonX = w * (1 - Math.max(0, Math.min(1, normalizedAzimuth)))
 
     // Map altitude to y position
