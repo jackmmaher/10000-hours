@@ -82,6 +82,24 @@ export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
                   ))}
                 </div>
               </div>
+              {/* Tier label and progress */}
+              <div className="mt-2">
+                <span
+                  className="text-sm font-medium"
+                  style={{ color: voice.total >= 70 ? 'var(--accent)' : 'var(--text-secondary)' }}
+                >
+                  {tier.label}
+                </span>
+                <span className="text-xs text-ink/40 ml-2">
+                  {tier.description}
+                </span>
+              </div>
+              {/* Progress to next tier */}
+              {nextTier && (
+                <p className="text-xs text-ink/40 mt-1">
+                  {nextTier.minScore - voice.total} points to {nextTier.label}
+                </p>
+              )}
             </div>
             <button
               onClick={onClose}
