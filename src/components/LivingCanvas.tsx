@@ -370,14 +370,8 @@ export function LivingCanvas({
     wind.gust += (wind.target - wind.gust) * 0.02
     wind.gust *= 0.995
 
-    // Clear with full opacity to prevent trail artifacts
-    // Use theme-aware background color based on darkness level
-    const darkness = effects.ambientDarkness
-    const r = Math.round(15 + (250 - 15) * (1 - darkness))
-    const g = Math.round(23 + (251 - 23) * (1 - darkness))
-    const b = Math.round(42 + (252 - 42) * (1 - darkness))
-    ctx.fillStyle = `rgb(${r}, ${g}, ${b})`
-    ctx.fillRect(0, 0, width, height)
+    // Clear canvas to transparent - DOM gradients render behind
+    ctx.clearRect(0, 0, width, height)
 
     // Render sun (behind particles)
     renderSun(ctx, width, height, sunAltitude, sunAzimuth, season)
@@ -424,7 +418,7 @@ export function LivingCanvas({
     }
 
     animationIdRef.current = requestAnimationFrame(render)
-  }, [season, effects.stars, effects.shootingStars, effects.ambientDarkness, effects.moon, expressive, seasonalEffects.aurora, seasonalEffects.harvestMoon, sunAltitude, sunAzimuth, moonAltitude, moonAzimuth, moonPhase, moonIllumination, moonPhaseAngle])
+  }, [season, effects.stars, effects.shootingStars, effects.moon, expressive, seasonalEffects.aurora, seasonalEffects.harvestMoon, sunAltitude, sunAzimuth, moonAltitude, moonAzimuth, moonPhase, moonIllumination, moonPhaseAngle])
 
   // ============================================================================
   // RENDER FUNCTIONS
