@@ -340,8 +340,9 @@ export function LivingCanvas({
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const width = canvas.offsetWidth
-    const height = canvas.offsetHeight
+    // Use window dimensions for full viewport coverage
+    const width = window.innerWidth
+    const height = window.innerHeight
     const noise = noiseRef.current
     const t = time * 0.001
 
@@ -355,8 +356,13 @@ export function LivingCanvas({
     wind.gust += (wind.target - wind.gust) * 0.02
     wind.gust *= 0.995
 
-    // Trail effect - semi-transparent clear for motion blur
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'
+    // Clear with full opacity to prevent trail artifacts
+    // Use theme-aware background color based on darkness level
+    const darkness = effects.ambientDarkness
+    const r = Math.round(15 + (250 - 15) * (1 - darkness))
+    const g = Math.round(23 + (251 - 23) * (1 - darkness))
+    const b = Math.round(42 + (252 - 42) * (1 - darkness))
+    ctx.fillStyle = `rgb(${r}, ${g}, ${b})`
     ctx.fillRect(0, 0, width, height)
 
     // Sort particles by z-depth (far to near)
@@ -391,7 +397,7 @@ export function LivingCanvas({
     }
 
     animationIdRef.current = requestAnimationFrame(render)
-  }, [season, effects.stars, effects.shootingStars, expressive, seasonalEffects.aurora])
+  }, [season, effects.stars, effects.shootingStars, effects.ambientDarkness, expressive, seasonalEffects.aurora])
 
   // ============================================================================
   // RENDER FUNCTIONS
@@ -759,13 +765,15 @@ export function LivingCanvas({
     if (!canvas) return
 
     const dpr = window.devicePixelRatio || 1
-    const rect = canvas.getBoundingClientRect()
-    canvas.width = rect.width * dpr
-    canvas.height = rect.height * dpr
+    // Use window dimensions for full viewport coverage
+    const width = window.innerWidth
+    const height = window.innerHeight
+    canvas.width = width * dpr
+    canvas.height = height * dpr
     const ctx = canvas.getContext('2d')
     if (ctx) ctx.scale(dpr, dpr)
 
-    createParticles(rect.width, rect.height)
+    createParticles(width, height)
     animationIdRef.current = requestAnimationFrame(render)
 
     return () => {
@@ -781,11 +789,8 @@ export function LivingCanvas({
 
     if (changed) {
       lastPropsRef.current = { season, timeOfDay, expressive }
-      const canvas = canvasRef.current
-      if (canvas) {
-        createParticles(canvas.offsetWidth, canvas.offsetHeight)
-        shootingStarsRef.current = []
-      }
+      createParticles(window.innerWidth, window.innerHeight)
+      shootingStarsRef.current = []
     }
   }, [season, timeOfDay, expressive, createParticles])
 
@@ -795,13 +800,14 @@ export function LivingCanvas({
       if (!canvas) return
 
       const dpr = window.devicePixelRatio || 1
-      const rect = canvas.getBoundingClientRect()
-      canvas.width = rect.width * dpr
-      canvas.height = rect.height * dpr
+      const width = window.innerWidth
+      const height = window.innerHeight
+      canvas.width = width * dpr
+      canvas.height = height * dpr
       const ctx = canvas.getContext('2d')
       if (ctx) ctx.scale(dpr, dpr)
 
-      createParticles(rect.width, rect.height)
+      createParticles(width, height)
     }
 
     window.addEventListener('resize', handleResize)
@@ -827,8 +833,15 @@ export function LivingCanvas({
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 w-full h-full pointer-events-none"
-      style={{ zIndex: 1 }}
+      className="pointer-events-none"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 1
+      }}
     />
   )
 }
