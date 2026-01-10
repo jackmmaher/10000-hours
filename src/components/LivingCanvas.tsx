@@ -204,7 +204,14 @@ export function LivingCanvas({
   const animationIdRef = useRef<number | null>(null)
   const noiseRef = useRef(new SimplexNoise())
   const windRef = useRef({ gust: 0, direction: 1, target: 0 })
-  const lastPropsRef = useRef({ season, timeOfDay, expressive })
+  const lastPropsRef = useRef({
+    season,
+    timeOfDay,
+    expressive,
+    // Track effects values that determine particle existence
+    starsVisible: effects.stars > 0,
+    particleType: seasonalEffects.particleType
+  })
   const frameCountRef = useRef(0)
 
   // Keep effects in a ref so render functions always use current values
@@ -213,12 +220,21 @@ export function LivingCanvas({
   effectsRef.current = effects
   seasonalEffectsRef.current = seasonalEffects
 
-  // Create particles
+  // ==========================================================================
+  // PARTICLE CREATION
+  // ==========================================================================
+  // Threshold design:
+  // - Stars: created when effects.stars > 0 (begin appearing at golden hour)
+  // - Seasonal particles: created when intensity >= 0.1 (prevents sparse fields)
+  // - Aurora: renders when effects.stars > 0.5 (deeper night only, dramatic effect)
+  // These thresholds are intentionally different to create layered atmosphere.
+  // ==========================================================================
+
   const createParticles = useCallback((width: number, height: number) => {
     const particles: Particle[] = []
     const now = Date.now()
 
-    // Stars
+    // Stars appear as soon as sky begins darkening (effects.stars > 0)
     if (effects.stars > 0) {
       const count = Math.floor(60 * effects.stars)
       for (let i = 0; i < count; i++) {
@@ -419,7 +435,8 @@ export function LivingCanvas({
       renderShootingStars(ctx, t, width, height, effectsRef.current.shootingStars)
     }
 
-    // Aurora
+    // Aurora - requires deeper night (stars > 0.5) for dramatic effect
+    // This is intentionally higher than star creation threshold (> 0)
     if (seasonalEffectsRef.current.aurora && effectsRef.current.stars > 0.5 && expressive) {
       renderAurora(ctx, t, width, height, noise)
     }
@@ -1055,17 +1072,32 @@ export function LivingCanvas({
   }, [createParticles, render])
 
   useEffect(() => {
-    const changed =
+    // Check for changes that require particle recreation
+    const currentStarsVisible = effects.stars > 0
+    const currentParticleType = seasonalEffects.particleType
+
+    const themeChanged =
       lastPropsRef.current.season !== season ||
       lastPropsRef.current.timeOfDay !== timeOfDay ||
       lastPropsRef.current.expressive !== expressive
 
-    if (changed) {
-      lastPropsRef.current = { season, timeOfDay, expressive }
+    // Particle existence changed (e.g., switching from day to night in manual mode)
+    const particleExistenceChanged =
+      lastPropsRef.current.starsVisible !== currentStarsVisible ||
+      lastPropsRef.current.particleType !== currentParticleType
+
+    if (themeChanged || particleExistenceChanged) {
+      lastPropsRef.current = {
+        season,
+        timeOfDay,
+        expressive,
+        starsVisible: currentStarsVisible,
+        particleType: currentParticleType
+      }
       createParticles(window.innerWidth, window.innerHeight)
       shootingStarsRef.current = []
     }
-  }, [season, timeOfDay, expressive, createParticles])
+  }, [season, timeOfDay, expressive, effects.stars, seasonalEffects.particleType, createParticles])
 
   useEffect(() => {
     const handleResize = () => {
