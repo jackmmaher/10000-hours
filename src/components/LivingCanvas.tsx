@@ -778,134 +778,99 @@ export function LivingCanvas({
   }
 
   /**
-   * Render sun with position based on altitude and azimuth
-   * - Above horizon: visible sun orb with glow
-   * - Near horizon (golden hour): larger, warmer, more diffuse
-   * - Below horizon (twilight): only horizon glow
+   * Render sun as ambient element in top-right corner
+   * - Fixed position for subtle, non-intrusive presence
+   * - Color warmth still responds to altitude (golden hour = warmer)
+   * - Fades in/out based on sun altitude thresholds
    */
   function renderSun(
     ctx: CanvasRenderingContext2D,
     w: number,
     h: number,
     altitude: number,
-    azimuth: number,
+    _azimuth: number,
     _season: Season
   ) {
     // Don't render sun at night (below civil twilight)
     if (altitude < -6) return
 
-    // Map azimuth to x position
-    // Azimuth: 90° = East (right), 180° = South (center), 270° = West (left)
-    // Normalize to 0-1 range where 0 = left edge, 1 = right edge
-    // We want East (90°) on right, West (270°) on left
-    // Note: Add 360 before modulo to handle negative values (JS modulo can return negatives)
-    const normalizedAzimuth = (((azimuth - 90) % 360) + 360) % 360 / 180 // 0 at East, 1 at West
-    const sunX = w * (1 - Math.max(0, Math.min(1, normalizedAzimuth)))
+    // Fixed ambient position - top-right corner
+    const sunX = w * 0.82
+    const sunY = h * 0.14
 
-    // Map altitude to y position
-    // Horizon at bottom 15% of screen, zenith (90°) at top
-    const horizonY = h * 0.85
-    const zenithY = h * 0.05
-    // Clamp altitude to 0-90 for above-horizon positioning
-    const clampedAlt = Math.max(0, Math.min(90, altitude))
-    const sunY = horizonY - (clampedAlt / 90) * (horizonY - zenithY)
+    // Subtle, fixed sizes for ambient presence
+    const baseSize = 18
+    const glowSize = 55
 
-    // Base sun size (larger near horizon due to atmospheric magnification illusion)
-    const horizonFactor = Math.max(0, 1 - altitude / 15) // 1 at horizon, 0 at 15°+
-    const baseSize = 25 + horizonFactor * 35 // 25-60px
+    // Color warmth based on altitude (golden hour = warmer)
+    // Clamp altitude for warmth calculation
+    const clampedAlt = Math.max(0, altitude)
+    const warmth = Math.max(0, 1 - clampedAlt / 15) // 1 at horizon, 0 at 15°+
 
-    // Color warmth (warmer = more orange/red near horizon)
-    const warmth = Math.max(0, 1 - altitude / 10) // 1 at horizon, 0 at 10°+
+    // Fade opacity based on altitude (dimmer near horizon, brighter when high)
+    const fadeIn = Math.min(1, Math.max(0, (altitude + 6) / 12)) // Fade in from -6° to 6°
+    const opacity = altitude > 0 ? 0.85 : fadeIn * 0.6
+
+    if (opacity < 0.05) return
 
     ctx.save()
+    ctx.globalAlpha = opacity
 
-    // Horizon glow (visible during golden hour and twilight)
-    if (altitude < 10) {
-      const glowIntensity = Math.max(0, 1 - Math.abs(altitude) / 10)
-      const glowHeight = h * 0.3
+    // Outer glow - soft ambient light
+    const sunGlow = ctx.createRadialGradient(
+      sunX, sunY, 0,
+      sunX, sunY, glowSize
+    )
 
-      // Radial glow at sun's x position on horizon
-      const horizonGlow = ctx.createRadialGradient(
-        sunX, horizonY, 0,
-        sunX, horizonY, w * 0.4
-      )
+    // Sun colors - warmer near horizon (golden hour)
+    const coreG = Math.round(255 - warmth * 55) // 255 → 200
+    const coreB = Math.round(240 - warmth * 140) // 240 → 100
+    const midG = Math.round(220 - warmth * 80) // 220 → 140
+    const midB = Math.round(180 - warmth * 130) // 180 → 50
 
-      // Color based on altitude
-      const r = 255
-      const g = Math.round(150 + altitude * 8) // More orange when lower
-      const b = Math.round(50 + altitude * 10)
+    sunGlow.addColorStop(0, `rgba(255, 255, 255, 0.95)`)
+    sunGlow.addColorStop(0.15, `rgba(255, ${coreG}, ${coreB}, 0.8)`)
+    sunGlow.addColorStop(0.4, `rgba(255, ${midG}, ${midB}, 0.35)`)
+    sunGlow.addColorStop(0.7, `rgba(255, ${150 - warmth * 50}, 80, 0.1)`)
+    sunGlow.addColorStop(1, 'rgba(255, 200, 100, 0)')
 
-      horizonGlow.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${glowIntensity * 0.4})`)
-      horizonGlow.addColorStop(0.3, `rgba(${r}, ${g - 30}, ${b}, ${glowIntensity * 0.2})`)
-      horizonGlow.addColorStop(0.6, `rgba(${r - 50}, ${g - 60}, ${b + 50}, ${glowIntensity * 0.1})`)
-      horizonGlow.addColorStop(1, 'rgba(0, 0, 0, 0)')
+    ctx.globalCompositeOperation = 'screen'
+    ctx.fillStyle = sunGlow
+    ctx.beginPath()
+    ctx.arc(sunX, sunY, glowSize, 0, Math.PI * 2)
+    ctx.fill()
 
-      ctx.fillStyle = horizonGlow
-      ctx.fillRect(0, horizonY - glowHeight, w, glowHeight + h * 0.15)
-    }
+    // Sun core - bright center
+    ctx.globalCompositeOperation = 'lighter'
+    const coreGradient = ctx.createRadialGradient(
+      sunX, sunY, 0,
+      sunX, sunY, baseSize
+    )
+    coreGradient.addColorStop(0, 'rgba(255, 255, 255, 1)')
+    coreGradient.addColorStop(0.5, `rgba(255, ${255 - warmth * 30}, ${220 - warmth * 100}, 0.85)`)
+    coreGradient.addColorStop(1, `rgba(255, ${200 - warmth * 50}, ${100 - warmth * 50}, 0)`)
 
-    // Only draw sun orb if above horizon
-    if (altitude > 0) {
-      // Outer glow
-      const glowSize = baseSize * (3 + horizonFactor * 2) // Bigger glow near horizon
-
-      const sunGlow = ctx.createRadialGradient(
-        sunX, sunY, 0,
-        sunX, sunY, glowSize
-      )
-
-      // Sun colors - warmer near horizon
-      const coreR = 255
-      const coreG = Math.round(255 - warmth * 55) // 255 → 200
-      const coreB = Math.round(240 - warmth * 140) // 240 → 100
-
-      const midR = 255
-      const midG = Math.round(220 - warmth * 80) // 220 → 140
-      const midB = Math.round(180 - warmth * 130) // 180 → 50
-
-      sunGlow.addColorStop(0, `rgba(255, 255, 255, ${0.95 - horizonFactor * 0.2})`)
-      sunGlow.addColorStop(0.1, `rgba(${coreR}, ${coreG}, ${coreB}, 0.9)`)
-      sunGlow.addColorStop(0.3, `rgba(${midR}, ${midG}, ${midB}, 0.5)`)
-      sunGlow.addColorStop(0.6, `rgba(255, ${150 - warmth * 50}, 50, 0.15)`)
-      sunGlow.addColorStop(1, 'rgba(255, 100, 0, 0)')
-
-      ctx.globalCompositeOperation = 'screen'
-      ctx.fillStyle = sunGlow
-      ctx.beginPath()
-      ctx.arc(sunX, sunY, glowSize, 0, Math.PI * 2)
-      ctx.fill()
-
-      // Sun core (bright white-yellow center)
-      ctx.globalCompositeOperation = 'lighter'
-      const coreGradient = ctx.createRadialGradient(
-        sunX, sunY, 0,
-        sunX, sunY, baseSize
-      )
-      coreGradient.addColorStop(0, 'rgba(255, 255, 255, 1)')
-      coreGradient.addColorStop(0.4, `rgba(255, ${255 - warmth * 30}, ${220 - warmth * 100}, 0.9)`)
-      coreGradient.addColorStop(1, `rgba(255, ${200 - warmth * 50}, ${100 - warmth * 50}, 0)`)
-
-      ctx.fillStyle = coreGradient
-      ctx.beginPath()
-      ctx.arc(sunX, sunY, baseSize, 0, Math.PI * 2)
-      ctx.fill()
-    }
+    ctx.fillStyle = coreGradient
+    ctx.beginPath()
+    ctx.arc(sunX, sunY, baseSize, 0, Math.PI * 2)
+    ctx.fill()
 
     ctx.restore()
   }
 
   /**
-   * Render moon with position based on altitude/azimuth and current phase
-   * - Correct phase rendering (new, crescent, quarter, gibbous, full)
-   * - Position tracks real lunar position
-   * - Soft glow effect
+   * Render moon as ambient element in top-right corner
+   * - Fixed position matching sun's ambient zone
+   * - Accurate phase rendering (waxing/waning crescents, quarters, full)
+   * - Soft ethereal glow matching sun's quality
+   * - Fades in/out based on moon intensity from Living Theme
    */
   function renderMoon(
     ctx: CanvasRenderingContext2D,
     w: number,
     h: number,
-    altitude: number,
-    azimuth: number,
+    _altitude: number,
+    _azimuth: number,
     _phase: string,
     illumination: number,
     phaseAngle: number,
@@ -913,128 +878,141 @@ export function LivingCanvas({
     intensity: number,
     harvestMoon: boolean
   ) {
-    // Don't render if moon below horizon or intensity too low
-    if (altitude < -5 || intensity < 0.05) return
+    // Don't render if intensity too low (Living Theme handles visibility)
+    if (intensity < 0.05) return
 
-    // Map azimuth to x position (same as sun)
-    // Note: Add 360 before modulo to handle negative values (JS modulo can return negatives)
-    const normalizedAzimuth = (((azimuth - 90) % 360) + 360) % 360 / 180
-    const moonX = w * (1 - Math.max(0, Math.min(1, normalizedAzimuth)))
+    // Fixed ambient position - same zone as sun (they never overlap due to intensity logic)
+    const moonX = w * 0.82
+    const moonY = h * 0.14
 
-    // Map altitude to y position
-    const horizonY = h * 0.85
-    const zenithY = h * 0.05
-    const clampedAlt = Math.max(0, Math.min(90, altitude))
-    const moonY = horizonY - (clampedAlt / 90) * (horizonY - zenithY)
+    // Subtle sizes for ambient presence
+    const baseSize = harvestMoon ? 22 : 18
+    const glowSize = harvestMoon ? 55 : 45
 
-    // Moon size - larger for harvest moon
-    const baseSize = harvestMoon ? 40 : 30
-
-    // Moon colors - slightly warm for harvest moon, cool blue-white otherwise
-    const moonColor = harvestMoon ? '#FCD34D' : '#F0F9FF'
-    const glowColor = harvestMoon ? 'rgba(251, 191, 36, 0.4)' : 'rgba(186, 230, 253, 0.35)'
+    // Moon colors - warm amber for harvest moon, cool silver-blue otherwise
+    const isHarvest = harvestMoon
 
     ctx.save()
     ctx.globalAlpha = intensity
 
-    // Outer glow
+    // Outer glow - ethereal ambient light (similar technique to sun)
     const glowGradient = ctx.createRadialGradient(
       moonX, moonY, 0,
-      moonX, moonY, baseSize * 3
+      moonX, moonY, glowSize
     )
-    glowGradient.addColorStop(0, glowColor)
-    glowGradient.addColorStop(0.4, harvestMoon ? 'rgba(251, 191, 36, 0.15)' : 'rgba(186, 230, 253, 0.12)')
-    glowGradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
 
+    if (isHarvest) {
+      // Harvest moon - warm amber glow
+      glowGradient.addColorStop(0, 'rgba(251, 191, 36, 0.5)')
+      glowGradient.addColorStop(0.3, 'rgba(251, 191, 36, 0.25)')
+      glowGradient.addColorStop(0.6, 'rgba(251, 191, 36, 0.08)')
+      glowGradient.addColorStop(1, 'rgba(251, 191, 36, 0)')
+    } else {
+      // Normal moon - cool silver-blue glow
+      glowGradient.addColorStop(0, 'rgba(226, 232, 240, 0.45)')
+      glowGradient.addColorStop(0.3, 'rgba(186, 230, 253, 0.2)')
+      glowGradient.addColorStop(0.6, 'rgba(186, 230, 253, 0.06)')
+      glowGradient.addColorStop(1, 'rgba(186, 230, 253, 0)')
+    }
+
+    ctx.globalCompositeOperation = 'screen'
     ctx.fillStyle = glowGradient
     ctx.beginPath()
-    ctx.arc(moonX, moonY, baseSize * 3, 0, Math.PI * 2)
+    ctx.arc(moonX, moonY, glowSize, 0, Math.PI * 2)
     ctx.fill()
 
-    // Moon body - base circle
-    ctx.fillStyle = moonColor
+    // Moon body - gradient for depth (not flat color)
+    ctx.globalCompositeOperation = 'source-over'
+    const bodyGradient = ctx.createRadialGradient(
+      moonX - baseSize * 0.3, moonY - baseSize * 0.3, 0,
+      moonX, moonY, baseSize
+    )
+
+    if (isHarvest) {
+      bodyGradient.addColorStop(0, '#FEF3C7')  // Warm highlight
+      bodyGradient.addColorStop(0.5, '#FCD34D') // Amber body
+      bodyGradient.addColorStop(1, '#D97706')   // Deeper edge
+    } else {
+      bodyGradient.addColorStop(0, '#F8FAFC')  // Bright highlight
+      bodyGradient.addColorStop(0.5, '#E2E8F0') // Silver body
+      bodyGradient.addColorStop(1, '#CBD5E1')   // Subtle edge
+    }
+
+    ctx.fillStyle = bodyGradient
     ctx.beginPath()
     ctx.arc(moonX, moonY, baseSize, 0, Math.PI * 2)
     ctx.fill()
 
-    // Phase shadow overlay
-    // phaseAngle: 0 = new (shadow on right), 90 = first quarter, 180 = full, 270 = last quarter
+    // Phase shadow - clean geometric approach
+    // phaseAngle: 0 = new, 90 = first quarter, 180 = full, 270 = last quarter
     if (illumination < 98) {
       ctx.save()
-      ctx.globalCompositeOperation = 'destination-out'
 
-      // Determine shadow direction and size based on phase
-      const isWaxing = phaseAngle < 180 // Shadow moving from right to left
-
-      // Calculate the shadow ellipse width based on illumination
-      // 0% illumination = full shadow, 50% = half shadow, 100% = no shadow
-      const shadowFraction = (100 - illumination) / 100
-      const shadowOffset = baseSize * (1 - shadowFraction * 2)
-
+      // Create clipping region for moon
       ctx.beginPath()
+      ctx.arc(moonX, moonY, baseSize, 0, Math.PI * 2)
+      ctx.clip()
 
-      if (isWaxing) {
-        // Waxing: shadow on the right side, shrinking toward center
-        if (illumination < 50) {
-          // Less than half lit - shadow larger than moon, draw from right
-          ctx.ellipse(
-            moonX + shadowOffset * 0.5,
-            moonY,
-            baseSize * shadowFraction,
-            baseSize,
-            0, 0, Math.PI * 2
-          )
-        } else {
-          // More than half lit - crescent shadow on right
-          // Use clipping to create crescent
-          ctx.arc(moonX, moonY, baseSize, 0, Math.PI * 2)
-          ctx.arc(moonX + baseSize * (1 - shadowFraction * 2), moonY, baseSize, 0, Math.PI * 2, true)
-        }
+      // Shadow color - dark but not pure black for subtlety
+      const shadowColor = isHarvest ? 'rgba(120, 53, 15, 0.85)' : 'rgba(30, 41, 59, 0.8)'
+
+      const isWaxing = phaseAngle < 180
+      const shadowFraction = (100 - illumination) / 100
+
+      // Calculate shadow ellipse position
+      // For waxing: shadow starts on right, moves left
+      // For waning: shadow starts on left, moves right
+      const shadowDirection = isWaxing ? 1 : -1
+      const shadowWidth = baseSize * Math.abs(1 - shadowFraction * 2)
+
+      ctx.fillStyle = shadowColor
+
+      if (illumination < 50) {
+        // More shadow than light - draw shadow ellipse
+        const ellipseX = moonX + shadowDirection * baseSize * (shadowFraction - 0.5)
+        ctx.beginPath()
+        ctx.ellipse(ellipseX, moonY, shadowWidth, baseSize, 0, 0, Math.PI * 2)
+        ctx.fill()
+
+        // Fill the far side completely
+        ctx.beginPath()
+        ctx.rect(
+          isWaxing ? moonX : moonX - baseSize,
+          moonY - baseSize,
+          baseSize,
+          baseSize * 2
+        )
+        ctx.fill()
       } else {
-        // Waning: shadow on the left side, growing from center
-        if (illumination < 50) {
-          // Less than half lit - shadow larger
-          ctx.ellipse(
-            moonX - shadowOffset * 0.5,
-            moonY,
-            baseSize * shadowFraction,
-            baseSize,
-            0, 0, Math.PI * 2
-          )
-        } else {
-          // More than half lit - crescent shadow on left
-          ctx.arc(moonX, moonY, baseSize, 0, Math.PI * 2)
-          ctx.arc(moonX - baseSize * (1 - shadowFraction * 2), moonY, baseSize, 0, Math.PI * 2, true)
-        }
+        // More light than shadow - draw crescent shadow
+        const crescentOffset = baseSize * (1 - shadowFraction * 2)
+        ctx.beginPath()
+        ctx.arc(moonX, moonY, baseSize, 0, Math.PI * 2)
+        ctx.arc(
+          moonX + shadowDirection * crescentOffset,
+          moonY,
+          baseSize,
+          0, Math.PI * 2, true
+        )
+        ctx.fill()
       }
 
-      ctx.fillStyle = 'black'
-      ctx.fill()
       ctx.restore()
     }
 
-    // Subtle surface texture/craters
-    ctx.globalAlpha = intensity * 0.15
-    ctx.fillStyle = harvestMoon ? '#B45309' : '#94A3B8'
+    // Subtle inner highlight for polish (no crude craters)
+    ctx.globalAlpha = intensity * 0.3
+    const highlightGradient = ctx.createRadialGradient(
+      moonX - baseSize * 0.4, moonY - baseSize * 0.4, 0,
+      moonX, moonY, baseSize * 0.8
+    )
+    highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)')
+    highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)')
 
-    // A few crater-like spots
-    const craters = [
-      { x: -0.3, y: -0.2, r: 0.15 },
-      { x: 0.2, y: 0.3, r: 0.12 },
-      { x: -0.1, y: 0.4, r: 0.08 },
-      { x: 0.35, y: -0.15, r: 0.1 },
-      { x: -0.25, y: 0.15, r: 0.18 }
-    ]
-
-    craters.forEach(crater => {
-      const cx = moonX + crater.x * baseSize
-      const cy = moonY + crater.y * baseSize
-      const cr = crater.r * baseSize
-
-      ctx.beginPath()
-      ctx.arc(cx, cy, cr, 0, Math.PI * 2)
-      ctx.fill()
-    })
+    ctx.fillStyle = highlightGradient
+    ctx.beginPath()
+    ctx.arc(moonX, moonY, baseSize, 0, Math.PI * 2)
+    ctx.fill()
 
     ctx.restore()
   }
