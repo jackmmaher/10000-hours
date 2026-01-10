@@ -70,9 +70,14 @@ class SimplexNoise {
     const ii = i & 255
     const jj = j & 255
 
-    const g0 = this.gradP[ii + this.perm[jj]]
-    const g1 = this.gradP[ii + i1 + this.perm[jj + j1]]
-    const g2 = this.gradP[ii + 1 + this.perm[jj + 1]]
+    // Safe gradient lookups with bounds checking
+    const idx0 = (ii + this.perm[jj]) & 511
+    const idx1 = (ii + i1 + this.perm[(jj + j1) & 511]) & 511
+    const idx2 = (ii + 1 + this.perm[(jj + 1) & 511]) & 511
+
+    const g0 = this.gradP[idx0] || { x: 0, y: 0 }
+    const g1 = this.gradP[idx1] || { x: 0, y: 0 }
+    const g2 = this.gradP[idx2] || { x: 0, y: 0 }
 
     let t0 = 0.5 - x0 * x0 - y0 * y0
     const n0 = t0 < 0 ? 0 : (t0 *= t0, t0 * t0 * (g0.x * x0 + g0.y * y0))
