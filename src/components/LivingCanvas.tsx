@@ -9,7 +9,7 @@
  * - Noise-based aurora waves
  */
 
-import { useEffect, useRef, useCallback, useState } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { Season, TimeOfDay } from '../lib/livingTheme'
 import type { EffectIntensities, SeasonalEffects } from '../lib/livingTheme'
 
@@ -215,10 +215,6 @@ export function LivingCanvas({
   })
   // Track whether initial particle creation has happened
   const hasInitializedRef = useRef(false)
-  // DEBUG: Track particle count for debugging
-  const [debugParticleCount, setDebugParticleCount] = useState(0)
-  const debugRenderRef = useRef({ frames: 0, starsInLoop: 0, loopRunning: false, error: '' })
-  const [, forceUpdate] = useState(0) // For debug refresh
 
   // Keep effects in a ref so render functions always use current values
   const effectsRef = useRef(effects)
@@ -286,8 +282,6 @@ export function LivingCanvas({
     }
 
     particlesRef.current = particles
-    // DEBUG: Update particle count for display
-    setDebugParticleCount(particles.length)
   }, [effects.stars, effects.particles, seasonalEffects.particleType, seasonalEffects.particleMultiplier])
 
   function createSnowParticle(w: number, h: number, init: boolean, now: number): SnowParticle {
@@ -372,15 +366,11 @@ export function LivingCanvas({
   // Main render loop
   const render = useCallback((time: number) => {
     const canvas = canvasRef.current
-    if (!canvas) { debugRenderRef.current.error = 'no canvas'; return }
+    if (!canvas) return
 
     const ctx = canvas.getContext('2d')
-    if (!ctx) { debugRenderRef.current.error = 'no ctx'; return }
+    if (!ctx) return
 
-    debugRenderRef.current.loopRunning = true
-    debugRenderRef.current.frames++
-    debugRenderRef.current.starsInLoop = effectsRef.current.stars
-    debugRenderRef.current.error = '' // Clear previous error
 
     // Use window dimensions for full viewport coverage
     const width = window.innerWidth
@@ -399,93 +389,54 @@ export function LivingCanvas({
     // Clear canvas to transparent - DOM gradients render behind
     ctx.clearRect(0, 0, width, height)
 
-    try {
-      // Render sun (behind particles)
-      renderSun(ctx, width, height, sunAltitude)
-    } catch (e) {
-      debugRenderRef.current.error = 'sun:' + String(e)
-    }
+    // Render sun (behind particles)
+    renderSun(ctx, width, height, sunAltitude)
 
-    try {
-      // Render moon (behind particles, with phase)
-      if (effectsRef.current.moon > 0) {
-        renderMoon(
-          ctx, width, height,
-          moonIllumination, moonPhaseAngle,
-          effectsRef.current.moon, seasonalEffectsRef.current.harvestMoon,
-          sunAltitude
-        )
-      }
-    } catch (e) {
-      debugRenderRef.current.error = 'moon:' + String(e)
+    // Render moon (behind particles, with phase)
+    if (effectsRef.current.moon > 0) {
+      renderMoon(
+        ctx, width, height,
+        moonIllumination, moonPhaseAngle,
+        effectsRef.current.moon, seasonalEffectsRef.current.harvestMoon,
+        sunAltitude
+      )
     }
 
     // Sort particles by z-depth (far to near)
-    const particles = particlesRef.current
+    const sorted = [...particlesRef.current].sort((a, b) => a.z - b.z)
 
-    // Debug: Check for undefined particles
-    const undefinedIdx = particles.findIndex(p => !p)
-    if (undefinedIdx >= 0) {
-      debugRenderRef.current.error = `undefined particle at ${undefinedIdx}`
-      animationIdRef.current = requestAnimationFrame(render)
-      return
+    // Render particles
+    sorted.forEach(p => {
+      const noiseX = noise.noise2D(p.noiseOffsetX + t * 0.5, p.y * 0.01) * 2
+      const noiseY = noise.noise2D(p.noiseOffsetY + t * 0.3, p.x * 0.01) * 0.5
+
+      switch (p.type) {
+        case 'star':
+          renderStar(ctx, p, season)
+          break
+        case 'snow':
+          renderSnow(ctx, p, t, width, height, wind.gust, noiseX, noiseY)
+          break
+        case 'leaf':
+          renderLeaf(ctx, p, width, height, wind.gust, noiseX, noiseY)
+          break
+        case 'firefly':
+          renderFirefly(ctx, p, width, height, noiseX, noiseY)
+          break
+        case 'mist':
+          renderMist(ctx, p, t, width, wind.gust)
+          break
+      }
+    })
+
+    // Shooting stars
+    if (expressive && effectsRef.current.shootingStars > 0) {
+      renderShootingStars(ctx, width, height, effectsRef.current.shootingStars)
     }
 
-    const sorted = [...particles].sort((a, b) => a.z - b.z)
-
-    // Render particles with individual error catching
-    for (let i = 0; i < sorted.length; i++) {
-      const p = sorted[i]
-      try {
-        // Guard against missing properties
-        if (typeof p.noiseOffsetX !== 'number' || typeof p.y !== 'number') {
-          debugRenderRef.current.error = `particle ${i} missing props: noiseOffsetX=${p.noiseOffsetX}, y=${p.y}`
-          continue
-        }
-
-        const noiseX = noise.noise2D(p.noiseOffsetX + t * 0.5, p.y * 0.01) * 2
-        const noiseY = noise.noise2D(p.noiseOffsetY + t * 0.3, p.x * 0.01) * 0.5
-
-        switch (p.type) {
-          case 'star':
-            renderStar(ctx, p, season)
-            break
-          case 'snow':
-            renderSnow(ctx, p, t, width, height, wind.gust, noiseX, noiseY)
-            break
-          case 'leaf':
-            renderLeaf(ctx, p, width, height, wind.gust, noiseX, noiseY)
-            break
-          case 'firefly':
-            renderFirefly(ctx, p, width, height, noiseX, noiseY)
-            break
-          case 'mist':
-            renderMist(ctx, p, t, width, wind.gust)
-            break
-        }
-      } catch (e) {
-        debugRenderRef.current.error = `particle[${i}] type=${p.type}: ${String(e)}`
-        // Continue rendering other particles
-      }
-    }
-
-    try {
-      // Shooting stars
-      if (expressive && effectsRef.current.shootingStars > 0) {
-        renderShootingStars(ctx, width, height, effectsRef.current.shootingStars)
-      }
-    } catch (e) {
-      debugRenderRef.current.error = 'shooting:' + String(e)
-    }
-
-    try {
-      // Aurora - requires deeper night (stars > 0.5) for dramatic effect
-      // This is intentionally higher than star creation threshold (> 0)
-      if (seasonalEffectsRef.current.aurora && effectsRef.current.stars > 0.5 && expressive) {
-        renderAurora(ctx, t, width, height, noise)
-      }
-    } catch (e) {
-      debugRenderRef.current.error = 'aurora:' + String(e)
+    // Aurora - requires deeper night (stars > 0.5) for dramatic effect
+    if (seasonalEffectsRef.current.aurora && effectsRef.current.stars > 0.5 && expressive) {
+      renderAurora(ctx, t, width, height, noise)
     }
 
     animationIdRef.current = requestAnimationFrame(render)
@@ -1189,42 +1140,17 @@ export function LivingCanvas({
   }, [render])
 
   return (
-    <>
-      <canvas
-        ref={canvasRef}
-        className="pointer-events-none"
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          zIndex: 1
-        }}
-      />
-      {/* DEBUG: Show particle count */}
-      <div
-        style={{
-          position: 'fixed',
-          bottom: 120,
-          left: 10,
-          background: 'rgba(255,0,0,0.8)',
-          color: 'white',
-          padding: 8,
-          fontSize: 10,
-          fontFamily: 'monospace',
-          zIndex: 9999,
-          borderRadius: 4
-        }}
-        onClick={() => forceUpdate(n => n + 1)}
-      >
-        <div>CANVAS (tap to refresh):</div>
-        <div>particles: {debugParticleCount}</div>
-        <div>frames: {debugRenderRef.current.frames}</div>
-        <div>loopRunning: {debugRenderRef.current.loopRunning ? 'YES' : 'NO'}</div>
-        <div>starsInLoop: {debugRenderRef.current.starsInLoop.toFixed(2)}</div>
-        <div>error: {debugRenderRef.current.error || 'none'}</div>
-      </div>
-    </>
+    <canvas
+      ref={canvasRef}
+      className="pointer-events-none"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 1
+      }}
+    />
   )
 }
