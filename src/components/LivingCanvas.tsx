@@ -191,10 +191,6 @@ export function LivingCanvas({
   expressive,
   seasonalEffects,
   sunAltitude,
-  sunAzimuth,
-  moonAltitude,
-  moonAzimuth,
-  moonPhase,
   moonIllumination,
   moonPhaseAngle
 }: LivingCanvasProps) {
@@ -214,7 +210,6 @@ export function LivingCanvas({
   })
   // Track whether initial particle creation has happened
   const hasInitializedRef = useRef(false)
-  const frameCountRef = useRef(0)
 
   // Keep effects in a ref so render functions always use current values
   const effectsRef = useRef(effects)
@@ -265,25 +260,18 @@ export function LivingCanvas({
     const intensity = effects.particles * seasonalEffects.particleMultiplier
 
     if (intensity >= 0.1) {
-      if (particleType === 'snow') {
-        const count = Math.floor(200 * intensity)
+      const particleConfig: Record<string, { count: number; create: () => Particle }> = {
+        snow: { count: 200, create: () => createSnowParticle(width, height, true, now) },
+        leaves: { count: 60, create: () => createLeafParticle(width, height, true, now) },
+        fireflies: { count: 40, create: () => createFireflyParticle(width, height, now) },
+        mist: { count: 50, create: () => createMistParticle(width, height, now) }
+      }
+
+      const config = particleConfig[particleType]
+      if (config) {
+        const count = Math.floor(config.count * intensity)
         for (let i = 0; i < count; i++) {
-          particles.push(createSnowParticle(width, height, true, now))
-        }
-      } else if (particleType === 'leaves') {
-        const count = Math.floor(60 * intensity)
-        for (let i = 0; i < count; i++) {
-          particles.push(createLeafParticle(width, height, true, now))
-        }
-      } else if (particleType === 'fireflies') {
-        const count = Math.floor(40 * intensity)
-        for (let i = 0; i < count; i++) {
-          particles.push(createFireflyParticle(width, height, now))
-        }
-      } else if (particleType === 'mist') {
-        const count = Math.floor(50 * intensity)
-        for (let i = 0; i < count; i++) {
-          particles.push(createMistParticle(width, height, now))
+          particles.push(config.create())
         }
       }
     }
@@ -384,8 +372,6 @@ export function LivingCanvas({
     const noise = noiseRef.current
     const t = time * 0.001
 
-    frameCountRef.current++
-
     // Wind physics - smooth organic gusts
     const wind = windRef.current
     if (Math.random() < 0.005) {
@@ -398,16 +384,15 @@ export function LivingCanvas({
     ctx.clearRect(0, 0, width, height)
 
     // Render sun (behind particles)
-    renderSun(ctx, width, height, sunAltitude, sunAzimuth, season)
+    renderSun(ctx, width, height, sunAltitude)
 
     // Render moon (behind particles, with phase)
     if (effectsRef.current.moon > 0) {
       renderMoon(
         ctx, width, height,
-        moonAltitude, moonAzimuth,
-        moonPhase, moonIllumination, moonPhaseAngle,
-        season, effectsRef.current.moon, seasonalEffectsRef.current.harvestMoon,
-        sunAltitude // Pass sun altitude to offset moon when sun is also visible
+        moonIllumination, moonPhaseAngle,
+        effectsRef.current.moon, seasonalEffectsRef.current.harvestMoon,
+        sunAltitude
       )
     }
 
@@ -419,22 +404,28 @@ export function LivingCanvas({
       const noiseX = noise.noise2D(p.noiseOffsetX + t * 0.5, p.y * 0.01) * 2
       const noiseY = noise.noise2D(p.noiseOffsetY + t * 0.3, p.x * 0.01) * 0.5
 
-      if (p.type === 'star') {
-        renderStar(ctx, p, t, width, height, season)
-      } else if (p.type === 'snow') {
-        renderSnow(ctx, p, t, width, height, wind.gust, noiseX, noiseY)
-      } else if (p.type === 'leaf') {
-        renderLeaf(ctx, p, t, width, height, wind.gust, noiseX, noiseY)
-      } else if (p.type === 'firefly') {
-        renderFirefly(ctx, p, t, width, height, noiseX, noiseY)
-      } else if (p.type === 'mist') {
-        renderMist(ctx, p, t, width, height, wind.gust)
+      switch (p.type) {
+        case 'star':
+          renderStar(ctx, p, season)
+          break
+        case 'snow':
+          renderSnow(ctx, p, t, width, height, wind.gust, noiseX, noiseY)
+          break
+        case 'leaf':
+          renderLeaf(ctx, p, width, height, wind.gust, noiseX, noiseY)
+          break
+        case 'firefly':
+          renderFirefly(ctx, p, width, height, noiseX, noiseY)
+          break
+        case 'mist':
+          renderMist(ctx, p, t, width, wind.gust)
+          break
       }
     })
 
     // Shooting stars
     if (expressive && effectsRef.current.shootingStars > 0) {
-      renderShootingStars(ctx, t, width, height, effectsRef.current.shootingStars)
+      renderShootingStars(ctx, width, height, effectsRef.current.shootingStars)
     }
 
     // Aurora - requires deeper night (stars > 0.5) for dramatic effect
@@ -444,7 +435,7 @@ export function LivingCanvas({
     }
 
     animationIdRef.current = requestAnimationFrame(render)
-  }, [season, effects.stars, effects.shootingStars, effects.moon, expressive, seasonalEffects.aurora, seasonalEffects.harvestMoon, sunAltitude, sunAzimuth, moonAltitude, moonAzimuth, moonPhase, moonIllumination, moonPhaseAngle])
+  }, [season, effects.stars, effects.shootingStars, effects.moon, expressive, seasonalEffects.aurora, seasonalEffects.harvestMoon, sunAltitude, moonIllumination, moonPhaseAngle])
 
   // ============================================================================
   // RENDER FUNCTIONS
@@ -453,9 +444,6 @@ export function LivingCanvas({
   function renderStar(
     ctx: CanvasRenderingContext2D,
     p: StarParticle,
-    _t: number,
-    _w: number,
-    _h: number,
     season: Season
   ) {
     p.twinklePhase += p.twinkleSpeed
@@ -537,7 +525,6 @@ export function LivingCanvas({
   function renderLeaf(
     ctx: CanvasRenderingContext2D,
     p: LeafParticle,
-    _t: number,
     w: number,
     h: number,
     wind: number,
@@ -594,7 +581,6 @@ export function LivingCanvas({
   function renderFirefly(
     ctx: CanvasRenderingContext2D,
     p: FireflyParticle,
-    _t: number,
     w: number,
     h: number,
     noiseX: number,
@@ -657,7 +643,6 @@ export function LivingCanvas({
     p: MistParticle,
     t: number,
     w: number,
-    _h: number,
     wind: number
   ) {
     // Slow ethereal drift
@@ -693,7 +678,6 @@ export function LivingCanvas({
 
   function renderShootingStars(
     ctx: CanvasRenderingContext2D,
-    _t: number,
     w: number,
     h: number,
     intensity: number
@@ -813,9 +797,7 @@ export function LivingCanvas({
     ctx: CanvasRenderingContext2D,
     w: number,
     h: number,
-    altitude: number,
-    _azimuth: number,
-    _season: Season
+    altitude: number
   ) {
     // Don't render sun at night (below civil twilight)
     if (altitude < -6) return
@@ -895,15 +877,11 @@ export function LivingCanvas({
     ctx: CanvasRenderingContext2D,
     w: number,
     h: number,
-    _altitude: number,
-    _azimuth: number,
-    _phase: string,
     illumination: number,
     phaseAngle: number,
-    _season: Season,
     intensity: number,
     harvestMoon: boolean,
-    sunAltitude: number = -10 // Default to sun below horizon
+    sunAltitude: number = -10
   ) {
     // Don't render if intensity too low (Living Theme handles visibility)
     if (intensity < 0.05) return

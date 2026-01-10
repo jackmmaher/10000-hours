@@ -299,14 +299,11 @@ function LivingThemeEffects({
       {/* Atmospheric gradient - blends based on darkness */}
       <AtmosphericGradient
         season={season}
-        timeOfDay={timeOfDay}
         darkness={effects.ambientDarkness}
       />
 
       {/* Directional light - fades based on sun position */}
       <DirectionalLight
-        season={season}
-        timeOfDay={timeOfDay}
         intensity={effects.directionalLight.intensity}
         warmth={effects.directionalLight.warmth}
       />
@@ -349,11 +346,9 @@ function GrainOverlay({ intensity }: { intensity: number }) {
 
 function AtmosphericGradient({
   season,
-  timeOfDay: _timeOfDay,
   darkness
 }: {
   season: Season
-  timeOfDay: TimeOfDay
   darkness: number
 }) {
   // Day and night gradients for each season
@@ -401,8 +396,6 @@ function DirectionalLight({
   intensity,
   warmth
 }: {
-  season: Season
-  timeOfDay: TimeOfDay
   intensity: number
   warmth: number
 }) {
