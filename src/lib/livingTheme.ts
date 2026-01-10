@@ -202,6 +202,7 @@ export interface LivingThemeState {
   // Source data
   location: { lat: number; long: number } | null
   sunAltitude: number
+  sunAzimuth: number
   isRising: boolean
   season: Season
   timeOfDay: TimeOfDay
@@ -224,7 +225,7 @@ export function calculateLivingTheme(
   expressive: boolean = false,
   breathingEnabled: boolean = true
 ): LivingThemeState {
-  const { altitude, isRising } = calculateSunPosition(location.lat, location.long, date)
+  const { altitude, azimuth, isRising } = calculateSunPosition(location.lat, location.long, date)
   const season = getSeason(date, location.lat < 0)
 
   // Calculate max solar altitude for this location/date for relative positioning
@@ -238,6 +239,7 @@ export function calculateLivingTheme(
   return {
     location,
     sunAltitude: altitude,
+    sunAzimuth: azimuth,
     isRising,
     season,
     timeOfDay,
@@ -483,7 +485,7 @@ export function calculateManualTheme(
   // Calculate static effects
   const effects = calculateManualEffects(timeOfDay, isNeutral, expressive)
 
-  // Simulate sun altitude based on time of day
+  // Simulate sun altitude and azimuth based on time of day
   const altitudeMap: Record<TimeOfDay, number> = {
     morning: 10,
     daytime: 45,
@@ -491,9 +493,18 @@ export function calculateManualTheme(
     night: -15
   }
 
+  // Azimuth: 90° = East, 180° = South, 270° = West
+  const azimuthMap: Record<TimeOfDay, number> = {
+    morning: 100,   // East, slightly south
+    daytime: 180,   // South (solar noon)
+    evening: 260,   // West, slightly south
+    night: 180      // Moon typically visible to south
+  }
+
   return {
     location: null, // No location in manual mode
     sunAltitude: altitudeMap[timeOfDay],
+    sunAzimuth: azimuthMap[timeOfDay],
     isRising: timeOfDay === 'morning',
     season: isNeutral ? 'winter' : (season as Season), // Default to winter for neutral
     timeOfDay,

@@ -212,6 +212,8 @@ export function LivingTheme({
           timeOfDay={themeState.timeOfDay}
           expressive={expressive}
           seasonalEffects={seasonalEffects}
+          sunAltitude={themeState.sunAltitude}
+          sunAzimuth={themeState.sunAzimuth}
         />
 
         {/* App content */}
@@ -231,6 +233,8 @@ interface LivingThemeEffectsProps {
   timeOfDay: TimeOfDay
   expressive: boolean
   seasonalEffects: SeasonalEffects
+  sunAltitude: number
+  sunAzimuth: number
 }
 
 /**
@@ -242,7 +246,9 @@ function LivingThemeEffects({
   season,
   timeOfDay,
   expressive,
-  seasonalEffects
+  seasonalEffects,
+  sunAltitude,
+  sunAzimuth
 }: LivingThemeEffectsProps) {
   const [mounted, setMounted] = useState(false)
 
@@ -288,13 +294,15 @@ function LivingThemeEffects({
         <Moon intensity={effects.moon} season={season} harvestMoon={seasonalEffects.harvestMoon} />
       )}
 
-      {/* Level 2 Canvas Renderer - stars, particles, shooting stars, aurora */}
+      {/* Level 2 Canvas Renderer - stars, particles, shooting stars, aurora, sun */}
       <LivingCanvas
         season={season}
         timeOfDay={timeOfDay}
         effects={effects}
         expressive={expressive}
         seasonalEffects={seasonalEffects}
+        sunAltitude={sunAltitude}
+        sunAzimuth={sunAzimuth}
       />
     </div>
   )

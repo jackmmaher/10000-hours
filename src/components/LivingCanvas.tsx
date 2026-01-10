@@ -97,6 +97,8 @@ interface LivingCanvasProps {
   effects: EffectIntensities
   expressive: boolean
   seasonalEffects: SeasonalEffects
+  sunAltitude: number
+  sunAzimuth: number
 }
 
 interface BaseParticle {
@@ -182,7 +184,9 @@ export function LivingCanvas({
   timeOfDay,
   effects,
   expressive,
-  seasonalEffects
+  seasonalEffects,
+  sunAltitude,
+  sunAzimuth
 }: LivingCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const particlesRef = useRef<Particle[]>([])
@@ -365,6 +369,9 @@ export function LivingCanvas({
     ctx.fillStyle = `rgb(${r}, ${g}, ${b})`
     ctx.fillRect(0, 0, width, height)
 
+    // Render sun (behind particles)
+    renderSun(ctx, width, height, sunAltitude, sunAzimuth, season)
+
     // Sort particles by z-depth (far to near)
     const sorted = [...particlesRef.current].sort((a, b) => a.z - b.z)
 
@@ -397,7 +404,7 @@ export function LivingCanvas({
     }
 
     animationIdRef.current = requestAnimationFrame(render)
-  }, [season, effects.stars, effects.shootingStars, effects.ambientDarkness, expressive, seasonalEffects.aurora])
+  }, [season, effects.stars, effects.shootingStars, effects.ambientDarkness, expressive, seasonalEffects.aurora, sunAltitude, sunAzimuth])
 
   // ============================================================================
   // RENDER FUNCTIONS
@@ -750,6 +757,122 @@ export function LivingCanvas({
       gradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
 
       ctx.fillStyle = gradient
+      ctx.fill()
+    }
+
+    ctx.restore()
+  }
+
+  /**
+   * Render sun with position based on altitude and azimuth
+   * - Above horizon: visible sun orb with glow
+   * - Near horizon (golden hour): larger, warmer, more diffuse
+   * - Below horizon (twilight): only horizon glow
+   */
+  function renderSun(
+    ctx: CanvasRenderingContext2D,
+    w: number,
+    h: number,
+    altitude: number,
+    azimuth: number,
+    _season: Season
+  ) {
+    // Don't render sun at night (below civil twilight)
+    if (altitude < -6) return
+
+    // Map azimuth to x position
+    // Azimuth: 90° = East (right), 180° = South (center), 270° = West (left)
+    // Normalize to 0-1 range where 0 = left edge, 1 = right edge
+    // We want East (90°) on right, West (270°) on left
+    const normalizedAzimuth = ((azimuth - 90) % 360) / 180 // 0 at East, 1 at West
+    const sunX = w * (1 - Math.max(0, Math.min(1, normalizedAzimuth)))
+
+    // Map altitude to y position
+    // Horizon at bottom 15% of screen, zenith (90°) at top
+    const horizonY = h * 0.85
+    const zenithY = h * 0.05
+    // Clamp altitude to 0-90 for above-horizon positioning
+    const clampedAlt = Math.max(0, Math.min(90, altitude))
+    const sunY = horizonY - (clampedAlt / 90) * (horizonY - zenithY)
+
+    // Base sun size (larger near horizon due to atmospheric magnification illusion)
+    const horizonFactor = Math.max(0, 1 - altitude / 15) // 1 at horizon, 0 at 15°+
+    const baseSize = 25 + horizonFactor * 35 // 25-60px
+
+    // Color warmth (warmer = more orange/red near horizon)
+    const warmth = Math.max(0, 1 - altitude / 10) // 1 at horizon, 0 at 10°+
+
+    ctx.save()
+
+    // Horizon glow (visible during golden hour and twilight)
+    if (altitude < 10) {
+      const glowIntensity = Math.max(0, 1 - Math.abs(altitude) / 10)
+      const glowHeight = h * 0.3
+
+      // Radial glow at sun's x position on horizon
+      const horizonGlow = ctx.createRadialGradient(
+        sunX, horizonY, 0,
+        sunX, horizonY, w * 0.4
+      )
+
+      // Color based on altitude
+      const r = 255
+      const g = Math.round(150 + altitude * 8) // More orange when lower
+      const b = Math.round(50 + altitude * 10)
+
+      horizonGlow.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${glowIntensity * 0.4})`)
+      horizonGlow.addColorStop(0.3, `rgba(${r}, ${g - 30}, ${b}, ${glowIntensity * 0.2})`)
+      horizonGlow.addColorStop(0.6, `rgba(${r - 50}, ${g - 60}, ${b + 50}, ${glowIntensity * 0.1})`)
+      horizonGlow.addColorStop(1, 'rgba(0, 0, 0, 0)')
+
+      ctx.fillStyle = horizonGlow
+      ctx.fillRect(0, horizonY - glowHeight, w, glowHeight + h * 0.15)
+    }
+
+    // Only draw sun orb if above horizon
+    if (altitude > 0) {
+      // Outer glow
+      const glowSize = baseSize * (3 + horizonFactor * 2) // Bigger glow near horizon
+
+      const sunGlow = ctx.createRadialGradient(
+        sunX, sunY, 0,
+        sunX, sunY, glowSize
+      )
+
+      // Sun colors - warmer near horizon
+      const coreR = 255
+      const coreG = Math.round(255 - warmth * 55) // 255 → 200
+      const coreB = Math.round(240 - warmth * 140) // 240 → 100
+
+      const midR = 255
+      const midG = Math.round(220 - warmth * 80) // 220 → 140
+      const midB = Math.round(180 - warmth * 130) // 180 → 50
+
+      sunGlow.addColorStop(0, `rgba(255, 255, 255, ${0.95 - horizonFactor * 0.2})`)
+      sunGlow.addColorStop(0.1, `rgba(${coreR}, ${coreG}, ${coreB}, 0.9)`)
+      sunGlow.addColorStop(0.3, `rgba(${midR}, ${midG}, ${midB}, 0.5)`)
+      sunGlow.addColorStop(0.6, `rgba(255, ${150 - warmth * 50}, 50, 0.15)`)
+      sunGlow.addColorStop(1, 'rgba(255, 100, 0, 0)')
+
+      ctx.globalCompositeOperation = 'screen'
+      ctx.fillStyle = sunGlow
+      ctx.beginPath()
+      ctx.arc(sunX, sunY, glowSize, 0, Math.PI * 2)
+      ctx.fill()
+
+      // Sun core (bright white-yellow center)
+      ctx.globalCompositeOperation = 'lighter'
+      const coreGradient = ctx.createRadialGradient(
+        sunX, sunY, 0,
+        sunX, sunY, baseSize
+      )
+      coreGradient.addColorStop(0, 'rgba(255, 255, 255, 1)')
+      coreGradient.addColorStop(0.4, `rgba(255, ${255 - warmth * 30}, ${220 - warmth * 100}, 0.9)`)
+      coreGradient.addColorStop(1, `rgba(255, ${200 - warmth * 50}, ${100 - warmth * 50}, 0)`)
+
+      ctx.fillStyle = coreGradient
+      ctx.beginPath()
+      ctx.arc(sunX, sunY, baseSize, 0, Math.PI * 2)
       ctx.fill()
     }
 
