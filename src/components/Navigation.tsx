@@ -107,7 +107,7 @@ export function Navigation() {
               }}
             >
               {item.icon}
-              <span className="text-[10px] mt-1 font-medium">
+              <span className="text-caption mt-1 font-medium">
                 {item.label}
               </span>
             </button>

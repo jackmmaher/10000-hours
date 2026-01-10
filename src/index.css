@@ -136,6 +136,37 @@
   --space-24: 96px;
   --space-32: 128px;
 
+  /* === TYPOGRAPHY SCALE === */
+  /* Exactly 5 semantic text styles per Human-Crafted Design */
+
+  /* Display - Hero text, total hours (72px / 1.0 / -0.02em) */
+  --text-display-size: 4.5rem;
+  --text-display-line: 1;
+  --text-display-tracking: -0.02em;
+
+  /* Heading - Section titles (24px / 1.2 / -0.01em) */
+  --text-heading-size: 1.5rem;
+  --text-heading-line: 1.2;
+  --text-heading-tracking: -0.01em;
+
+  /* Subheading - Card titles, labels (16px / 1.4 / 0) */
+  --text-subheading-size: 1rem;
+  --text-subheading-line: 1.4;
+  --text-subheading-tracking: 0;
+
+  /* Body - Primary content (14px / 1.5 / 0) */
+  --text-body-size: 0.875rem;
+  --text-body-line: 1.5;
+  --text-body-tracking: 0;
+
+  /* Caption - Metadata, hints (12px / 1.4 / 0.01em) */
+  --text-caption-size: 0.75rem;
+  --text-caption-line: 1.4;
+  --text-caption-tracking: 0.01em;
+
+  /* Label tracking - for uppercase labels */
+  --tracking-wide: 0.05em;
+
 }
 
 /* Theme transitions - smooth color changes */

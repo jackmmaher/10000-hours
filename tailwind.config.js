@@ -57,9 +57,33 @@ export default {
         sans: ['Raleway', 'system-ui', 'sans-serif'],
       },
       fontSize: {
-        'display': ['4.5rem', { lineHeight: '1', letterSpacing: '-0.02em' }],
+        // Semantic typography scale (5 styles - per Human-Crafted Design)
+        'display': ['var(--text-display-size)', {
+          lineHeight: 'var(--text-display-line)',
+          letterSpacing: 'var(--text-display-tracking)'
+        }],
+        'heading': ['var(--text-heading-size)', {
+          lineHeight: 'var(--text-heading-line)',
+          letterSpacing: 'var(--text-heading-tracking)'
+        }],
+        'subheading': ['var(--text-subheading-size)', {
+          lineHeight: 'var(--text-subheading-line)',
+          letterSpacing: 'var(--text-subheading-tracking)'
+        }],
+        'body': ['var(--text-body-size)', {
+          lineHeight: 'var(--text-body-line)',
+          letterSpacing: 'var(--text-body-tracking)'
+        }],
+        'caption': ['var(--text-caption-size)', {
+          lineHeight: 'var(--text-caption-line)',
+          letterSpacing: 'var(--text-caption-tracking)'
+        }],
+        // Legacy - keep for backward compatibility during migration
         'display-sm': ['3rem', { lineHeight: '1', letterSpacing: '-0.02em' }],
         'timer': ['2.5rem', { lineHeight: '1', letterSpacing: '0.02em' }],
+      },
+      letterSpacing: {
+        'label': 'var(--tracking-wide)', // For uppercase labels
       },
       animation: {
         'fade-in': 'fadeIn 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
