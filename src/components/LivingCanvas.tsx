@@ -9,7 +9,7 @@
  * - Noise-based aurora waves
  */
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import { Season, TimeOfDay } from '../lib/livingTheme'
 import type { EffectIntensities, SeasonalEffects } from '../lib/livingTheme'
 
@@ -210,6 +210,8 @@ export function LivingCanvas({
   })
   // Track whether initial particle creation has happened
   const hasInitializedRef = useRef(false)
+  // DEBUG: Track particle count for debugging
+  const [debugParticleCount, setDebugParticleCount] = useState(0)
 
   // Keep effects in a ref so render functions always use current values
   const effectsRef = useRef(effects)
@@ -277,6 +279,8 @@ export function LivingCanvas({
     }
 
     particlesRef.current = particles
+    // DEBUG: Update particle count for display
+    setDebugParticleCount(particles.length)
   }, [effects.stars, effects.particles, seasonalEffects.particleType, seasonalEffects.particleMultiplier])
 
   function createSnowParticle(w: number, h: number, init: boolean, now: number): SnowParticle {
@@ -1135,17 +1139,36 @@ export function LivingCanvas({
   }, [render])
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="pointer-events-none"
-      style={{
+    <>
+      <canvas
+        ref={canvasRef}
+        className="pointer-events-none"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          zIndex: 1
+        }}
+      />
+      {/* DEBUG: Show particle count */}
+      <div style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        zIndex: 1
-      }}
-    />
+        bottom: 120,
+        left: 10,
+        background: 'rgba(255,0,0,0.8)',
+        color: 'white',
+        padding: 8,
+        fontSize: 10,
+        fontFamily: 'monospace',
+        zIndex: 9999,
+        borderRadius: 4
+      }}>
+        <div>CANVAS DEBUG:</div>
+        <div>particles: {debugParticleCount}</div>
+        <div>initialized: {hasInitializedRef.current ? 'YES' : 'NO'}</div>
+      </div>
+    </>
   )
 }
