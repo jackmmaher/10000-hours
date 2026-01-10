@@ -5,12 +5,11 @@
  * - Saving as a draft (local, private, can resume later)
  * - Posting as a pearl (public, shared with community)
  *
- * Premium feature for posting.
+ * Requires sign-in to post.
  */
 
 import { useState, useCallback, useEffect } from 'react'
 import { useAuthStore } from '../stores/useAuthStore'
-import { usePremiumStore } from '../stores/usePremiumStore'
 import { createPearl } from '../lib/pearls'
 import { getPearlDraft, savePearlDraft, deletePearlDraft } from '../lib/db'
 import { AuthModal } from './AuthModal'
@@ -28,7 +27,6 @@ const MAX_PEARL_LENGTH = 280
 
 export function SharePearl({ insightId, insightText, isAlreadyShared, onClose, onSuccess, onDelete }: SharePearlProps) {
   const { user, isAuthenticated } = useAuthStore()
-  const { isPremium } = usePremiumStore()
   const [text, setText] = useState('') // Start empty - user extracts the pearl
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
@@ -100,11 +98,6 @@ export function SharePearl({ insightId, insightText, isAlreadyShared, onClose, o
       return
     }
 
-    if (!isPremium) {
-      setError('Premium required to post pearls')
-      return
-    }
-
     if (isEmpty || isOverLimit) return
 
     setIsSubmitting(true)
@@ -120,7 +113,7 @@ export function SharePearl({ insightId, insightText, isAlreadyShared, onClose, o
     } finally {
       setIsSubmitting(false)
     }
-  }, [isAuthenticated, user, isPremium, text, isEmpty, isOverLimit, insightId, onSuccess])
+  }, [isAuthenticated, user, text, isEmpty, isOverLimit, insightId, onSuccess])
 
   // Block swipe navigation when modal is open
   const handleTouchEvent = (e: React.TouchEvent) => {
@@ -264,13 +257,13 @@ export function SharePearl({ insightId, insightText, isAlreadyShared, onClose, o
               {isSavingDraft ? 'Saving...' : draftSaved ? 'Saved' : 'Save Draft'}
             </button>
 
-            {/* Post Pearl - requires premium */}
+            {/* Post Pearl - requires sign-in */}
             <button
               onClick={handleSubmit}
-              disabled={isSubmitting || isEmpty || isOverLimit || !isPremium}
+              disabled={isSubmitting || isEmpty || isOverLimit}
               className={`
                 flex-1 py-3.5 rounded-xl font-medium transition-all
-                ${isSubmitting || isEmpty || isOverLimit || !isPremium
+                ${isSubmitting || isEmpty || isOverLimit
                   ? 'bg-ink/20 text-ink/40'
                   : 'bg-ink text-cream active:scale-[0.98]'
                 }
@@ -279,13 +272,6 @@ export function SharePearl({ insightId, insightText, isAlreadyShared, onClose, o
               {isSubmitting ? 'Posting...' : 'Post Pearl'}
             </button>
           </div>
-
-          {/* Premium notice */}
-          {!isPremium && (
-            <p className="text-xs text-amber-600 text-center mb-2">
-              Premium required to post pearls
-            </p>
-          )}
 
           <p className="text-xs text-ink/30 text-center">
             Drafts are private. Posted pearls are shared anonymously.

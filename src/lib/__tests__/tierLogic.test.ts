@@ -1,12 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
-  isPremium,
   getDaysSinceFirstSession,
   getWeeklyRollingSeconds,
   getWeeklyRollingHours,
   getLastAchievedMilestone,
-  generateMilestones,
-  PremiumFeatures
+  generateMilestones
 } from '../tierLogic'
 import { Session } from '../db'
 
@@ -31,16 +29,6 @@ describe('tierLogic', () => {
 
   afterEach(() => {
     vi.useRealTimers()
-  })
-
-  describe('isPremium', () => {
-    it('should return true for premium tier', () => {
-      expect(isPremium('premium')).toBe(true)
-    })
-
-    it('should return false for free tier', () => {
-      expect(isPremium('free')).toBe(false)
-    })
   })
 
   describe('getDaysSinceFirstSession', () => {
@@ -143,33 +131,6 @@ describe('tierLogic', () => {
       const milestones = generateMilestones(50)
       expect(milestones[milestones.length - 1]).toBe(50)
       expect(milestones).not.toContain(100)
-    })
-  })
-
-  describe('PremiumFeatures', () => {
-    it('should gate whisperTranscription to premium', () => {
-      expect(PremiumFeatures.whisperTranscription('free')).toBe(false)
-      expect(PremiumFeatures.whisperTranscription('premium')).toBe(true)
-    })
-
-    it('should gate aiFormatting to premium', () => {
-      expect(PremiumFeatures.aiFormatting('free')).toBe(false)
-      expect(PremiumFeatures.aiFormatting('premium')).toBe(true)
-    })
-
-    it('should gate sharePearls to premium', () => {
-      expect(PremiumFeatures.sharePearls('free')).toBe(false)
-      expect(PremiumFeatures.sharePearls('premium')).toBe(true)
-    })
-
-    it('should gate impactStats to premium', () => {
-      expect(PremiumFeatures.impactStats('free')).toBe(false)
-      expect(PremiumFeatures.impactStats('premium')).toBe(true)
-    })
-
-    it('should gate cloudSync to premium', () => {
-      expect(PremiumFeatures.cloudSync('free')).toBe(false)
-      expect(PremiumFeatures.cloudSync('premium')).toBe(true)
     })
   })
 })

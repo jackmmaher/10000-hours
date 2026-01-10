@@ -1,33 +1,15 @@
 /**
- * Tier Logic - Value-add freemium model
+ * Tier Logic - Helper functions for sessions and milestones
  *
- * FREE tier: Full core functionality
- * - All meditation history (no fading)
- * - All stats windows
- * - Web Speech API transcription
- * - Read/vote/save pearls
- *
- * PREMIUM tier: Enhanced features ($4.99/year)
- * - Whisper API transcription (better accuracy)
- * - AI text formatting
- * - Share pearls to community
- * - Impact stats (karma, saves)
- * - Cloud backup & sync
+ * All features are free. Sign-in only required to create/share content.
  */
 
-import { Session, TierType } from './db'
+import { Session } from './db'
 import { MS_PER_DAY } from './constants'
 import { generateMilestones } from './milestones'
 
 // Re-export for backward compatibility
 export { generateMilestones, GOAL_PRESETS } from './milestones'
-
-/**
- * Determines if user has premium features
- */
-export function isPremium(tier: TierType): boolean {
-  return tier === 'premium'
-}
 
 /**
  * Calculates days since user's first session
@@ -78,23 +60,3 @@ export function getLastAchievedMilestone(
 
   return { achieved, name }
 }
-
-/**
- * Premium feature checks - used by components to gate features
- */
-export const PremiumFeatures = {
-  /** Whisper API for more accurate transcription */
-  whisperTranscription: (tier: TierType) => isPremium(tier),
-
-  /** AI formatting of raw transcriptions */
-  aiFormatting: (tier: TierType) => isPremium(tier),
-
-  /** Ability to share insights as pearls */
-  sharePearls: (tier: TierType) => isPremium(tier),
-
-  /** Impact stats (karma, total saves received) */
-  impactStats: (tier: TierType) => isPremium(tier),
-
-  /** Cloud backup and sync across devices */
-  cloudSync: (tier: TierType) => isPremium(tier),
-} as const

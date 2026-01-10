@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useSessionStore } from './stores/useSessionStore'
 import { useNavigationStore } from './stores/useNavigationStore'
-import { usePremiumStore } from './stores/usePremiumStore'
 import { useSettingsStore } from './stores/useSettingsStore'
 import { Timer } from './components/Timer'
 import { Calendar } from './components/Calendar'
@@ -17,26 +16,19 @@ import { Progress } from './components/Progress'
 import { SessionEditModal } from './components/SessionEditModal'
 import { useAuthStore } from './stores/useAuthStore'
 import { Onboarding, hasSeenOnboarding, markOnboardingSeen } from './components/Onboarding'
-import { PaywallPremium } from './components/PaywallPremium'
 import { MilestoneCelebration } from './components/MilestoneCelebration'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { LivingTheme } from './components/LivingTheme'
 import { PWAInstallPrompt } from './components/PWAInstallPrompt'
-import { purchasePremium, restorePurchases } from './lib/purchases'
 import type { Session } from './lib/db'
-
-type PaywallSource = 'settings' | 'progress' | 'calendar'
 
 function AppContent() {
   const { view, setView } = useNavigationStore()
   const { isLoading, hydrate } = useSessionStore()
-  const premiumStore = usePremiumStore()
   const settingsStore = useSettingsStore()
   const authStore = useAuthStore()
 
   const [showOnboarding, setShowOnboarding] = useState(false)
-  const [showPaywall, setShowPaywall] = useState(false)
-  const [paywallSource, setPaywallSource] = useState<PaywallSource>('settings')
   const [editingSession, setEditingSession] = useState<Session | null>(null)
   const [calendarRefreshKey, setCalendarRefreshKey] = useState(0)
   const hasInitialized = useRef(false)
@@ -48,7 +40,6 @@ function AppContent() {
 
     const init = async () => {
       await hydrate()
-      await premiumStore.hydrate()
       await settingsStore.hydrate()
       await authStore.initialize()
 
@@ -58,47 +49,13 @@ function AppContent() {
       }
     }
     init()
-  }, [hydrate, premiumStore, settingsStore, authStore])
+  }, [hydrate, settingsStore, authStore])
 
   // Handlers
   const handleOnboardingComplete = useCallback(() => {
     markOnboardingSeen()
     setShowOnboarding(false)
   }, [])
-
-  const handleShowPaywall = useCallback((source: PaywallSource = 'settings') => {
-    setPaywallSource(source)
-    setShowPaywall(true)
-  }, [])
-
-  const handlePaywallDismiss = useCallback(() => {
-    setShowPaywall(false)
-  }, [])
-
-  const handlePurchase = useCallback(async () => {
-    const result = await purchasePremium()
-    if (result.success) {
-      await premiumStore.setTier('premium')
-      // Set expiry to 1 year from now
-      const expiryDate = Date.now() + 365 * 24 * 60 * 60 * 1000
-      await premiumStore.setPremiumExpiry(expiryDate)
-      setShowPaywall(false)
-    } else {
-      // Handle error - could show a toast
-      console.error('Purchase failed:', result.error)
-    }
-  }, [premiumStore])
-
-  const handleRestore = useCallback(async () => {
-    const result = await restorePurchases()
-    if (result.success) {
-      await premiumStore.setTier('premium')
-      setShowPaywall(false)
-    } else {
-      // Handle error - could show a toast
-      console.error('Restore failed:', result.error)
-    }
-  }, [premiumStore])
 
   // Session editing handlers
   const handleEditSession = useCallback((session: Session) => {
@@ -124,7 +81,7 @@ function AppContent() {
   }, [hydrate])
 
   // Loading state
-  if (isLoading || premiumStore.isLoading || settingsStore.isLoading) {
+  if (isLoading || settingsStore.isLoading) {
     return (
       <div className="h-full bg-cream flex items-center justify-center">
         <div className="w-1 h-1 bg-indigo-deep/30 rounded-full animate-pulse" />
@@ -161,8 +118,6 @@ function AppContent() {
         {view === 'settings' && (
           <Settings
             onBack={() => setView('profile')}
-            onShowPaywall={() => handleShowPaywall('settings')}
-            onRestorePurchase={handleRestore}
           />
         )}
 
@@ -173,16 +128,6 @@ function AppContent() {
             onClose={handleSessionEditClose}
             onSave={handleSessionEditSave}
             onDelete={handleSessionEditDelete}
-          />
-        )}
-
-        {/* Paywall overlay */}
-        {showPaywall && (
-          <PaywallPremium
-            source={paywallSource}
-            onDismiss={handlePaywallDismiss}
-            onPurchase={handlePurchase}
-            onRestore={handleRestore}
           />
         )}
 

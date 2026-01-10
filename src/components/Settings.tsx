@@ -3,9 +3,10 @@
  *
  * Accessed from Profile page via gear icon.
  * Contains:
+ * - Account status (sign in to create)
  * - Theme selection (time of day × season)
  * - Display options (hide time / orb mode)
- * - Account actions (sign out)
+ * - Data export
  * - Legal links
  * - Version info
  */
@@ -13,7 +14,6 @@
 import { useState } from 'react'
 import { useSettingsStore } from '../stores/useSettingsStore'
 import { useAuthStore } from '../stores/useAuthStore'
-import { usePremiumStore } from '../stores/usePremiumStore'
 import { useThemeInfo } from '../hooks/useTheme'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import { useTapFeedback } from '../hooks/useTapFeedback'
@@ -25,8 +25,6 @@ import { AuthModal } from './AuthModal'
 
 interface SettingsProps {
   onBack: () => void
-  onShowPaywall: () => void
-  onRestorePurchase: () => void
 }
 
 const SEASON_OPTIONS: { value: SeasonOverride; label: string; icon: string }[] = [
@@ -53,7 +51,7 @@ const QUICK_PRESETS: { label: string; season: SeasonOverride; time: TimeOverride
   { label: 'Winter Night', season: 'winter', time: 'night' }
 ]
 
-export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsProps) {
+export function Settings({ onBack }: SettingsProps) {
   const {
     hideTimeDisplay, setHideTimeDisplay,
     skipInsightCapture, setSkipInsightCapture,
@@ -62,7 +60,6 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
     manualSeason, manualTime, setManualTheme
   } = useSettingsStore()
   const { user, isAuthenticated, signOut, isLoading: authLoading, refreshProfile } = useAuthStore()
-  const { tier, isPremium } = usePremiumStore()
   const { timeOfDay, season } = useThemeInfo()
   const haptic = useTapFeedback()
   const [showThemeDetail, setShowThemeDetail] = useState(false)
@@ -140,36 +137,47 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
 
         <h1 className="font-serif text-2xl text-ink mb-10">Settings</h1>
 
-        {/* Tier Status Banner */}
-        {tier === 'free' && (
-          <button
-            onClick={() => {
-              haptic.light()
-              onShowPaywall()
-            }}
-            className="w-full mb-8 p-5 bg-card/90 backdrop-blur-md border border-ink/5 shadow-sm
-              rounded-xl text-left hover:bg-card/95 hover:shadow-md transition-all active:scale-[0.99] touch-manipulation"
-          >
-            <p className="font-serif text-xs text-ink/40 tracking-wide mb-2">
-              Your Plan
-            </p>
-            <p className="text-lg text-ink font-medium">Free</p>
-            <p className="text-sm text-ink/40 mt-1">Full meditation tracking</p>
-            <div className="mt-4 py-2.5 px-4 bg-ink text-cream text-sm rounded-lg text-center">
-              Upgrade to Premium — $4.99/year
-            </div>
-          </button>
-        )}
+        {/* Account Status - at top */}
+        <div className="mb-8">
+          <p className="font-serif text-sm text-ink/50 tracking-wide mb-4">Account</p>
 
-        {isPremium && (
-          <div className="mb-8 p-5 bg-cream-warm rounded-xl">
-            <p className="font-serif text-xs text-ink/40 tracking-wide mb-2">
-              Your Plan
-            </p>
-            <p className="text-lg text-ink font-medium">Premium</p>
-            <p className="text-sm text-ink/40 mt-1">Enhanced features unlocked</p>
-          </div>
-        )}
+          {isAuthenticated && user ? (
+            <div className="p-5 bg-card/90 backdrop-blur-md border border-ink/5 shadow-sm rounded-xl">
+              <p className="text-sm text-ink/60 mb-2">{user.email}</p>
+              <p className="text-xs text-ink/40 mb-4">
+                You can create and share pearls
+              </p>
+              <button
+                onClick={() => {
+                  haptic.light()
+                  signOut()
+                }}
+                disabled={authLoading}
+                className="text-sm text-ink/50 hover:text-ink/70 transition-colors touch-manipulation"
+              >
+                {authLoading ? 'Signing out...' : 'Sign out'}
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                haptic.light()
+                setShowAuthModal(true)
+              }}
+              className="w-full p-5 bg-card/90 backdrop-blur-md border border-ink/5 shadow-sm
+                rounded-xl text-left hover:bg-card/95 hover:shadow-md transition-all
+                active:scale-[0.99] touch-manipulation"
+            >
+              <p className="text-sm text-ink font-medium">Sign in to create</p>
+              <p className="text-xs text-ink/40 mt-1">
+                Share pearls and guided meditations with the community
+              </p>
+              <div className="mt-4 py-2.5 px-4 bg-ink text-cream text-sm rounded-lg text-center">
+                Sign in
+              </div>
+            </button>
+          )}
+        </div>
 
         {/* Display Options */}
         <div className="mb-8">
@@ -458,39 +466,6 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
           </div>
         </div>
 
-        {/* Account */}
-        <div className="mb-8">
-          <p className="font-serif text-sm text-ink/50 tracking-wide mb-4">Account</p>
-          {isAuthenticated && user ? (
-            <div className="p-4 bg-cream-warm rounded-xl">
-              <p className="text-sm text-ink/60 mb-3">{user.email}</p>
-              <button
-                onClick={() => {
-                  haptic.light()
-                  signOut()
-                }}
-                disabled={authLoading}
-                className="text-sm text-ink/50 hover:text-ink/70 transition-colors touch-manipulation"
-              >
-                {authLoading ? 'Signing out...' : 'Sign out'}
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => {
-                haptic.light()
-                setShowAuthModal(true)
-              }}
-              className="w-full p-4 bg-cream-warm rounded-xl text-left hover:bg-cream-deep transition-colors active:scale-[0.99] touch-manipulation"
-            >
-              <p className="text-sm text-ink font-medium">Sign in</p>
-              <p className="text-xs text-ink/40 mt-1">
-                Sync your practice across devices
-              </p>
-            </button>
-          )}
-        </div>
-
         {/* Links */}
         <div className="space-y-1 mb-8">
           <a
@@ -505,15 +480,6 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
           >
             Terms of Service
           </a>
-          <button
-            onClick={() => {
-              haptic.light()
-              onRestorePurchase()
-            }}
-            className="block w-full text-left py-3 text-sm text-ink/50 hover:text-ink/70 transition-colors touch-manipulation"
-          >
-            Restore Purchase
-          </button>
         </div>
       </div>
 
@@ -528,8 +494,8 @@ export function Settings({ onBack, onShowPaywall, onRestorePurchase }: SettingsP
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
-        title="Sign in"
-        subtitle="Sync your practice across devices"
+        title="Sign in to create"
+        subtitle="Share pearls and guided meditations with the community"
       />
     </div>
   )
