@@ -14,9 +14,28 @@ import { formatDuration } from '../lib/format'
 
 interface InsightCaptureProps {
   sessionId?: string
+  sessionDuration?: number  // Duration in seconds for body awareness prompt
   onComplete: () => void
   onSkip: () => void
 }
+
+// Body awareness prompts - gentle, non-demanding
+const BODY_AWARENESS_PROMPTS = [
+  'Notice how your body feels right now.',
+  'Take a moment to feel your breath.',
+  'Observe any sensations in your body.',
+  'Notice where you hold tension.',
+  'Feel the weight of your body.',
+  'Sense the space around you.'
+]
+
+// Stretch suggestions for long sessions (30+ minutes)
+const STRETCH_SUGGESTIONS = [
+  'Consider a gentle neck roll.',
+  'Perhaps stretch your shoulders.',
+  'Maybe stand and stretch your legs.',
+  'A slow, mindful stretch may feel good.'
+]
 
 // Claude-style horizontal waveform visualizer
 function AudioWaveform({ level }: { level: number }) {
@@ -49,7 +68,7 @@ function AudioWaveform({ level }: { level: number }) {
   )
 }
 
-export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCaptureProps) {
+export function InsightCapture({ sessionId, sessionDuration, onComplete, onSkip }: InsightCaptureProps) {
   const {
     state,
     error,
@@ -66,19 +85,38 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
   const { audioLevel, startAnalyzing, stopAnalyzing } = useAudioLevel()
   const haptic = useTapFeedback()
   const [isSaving, setIsSaving] = useState(false)
+  const [showBodyAwareness, setShowBodyAwareness] = useState(true)
+  const [bodyAwarenessPrompt] = useState(() => {
+    // Pick random prompt, with stretch suggestion for long sessions
+    const isLongSession = sessionDuration && sessionDuration >= 1800 // 30+ minutes
+    const prompts = isLongSession
+      ? [...BODY_AWARENESS_PROMPTS, ...STRETCH_SUGGESTIONS]
+      : BODY_AWARENESS_PROMPTS
+    return prompts[Math.floor(Math.random() * prompts.length)]
+  })
 
-  // Auto-start recording on mount (after brief delay for UI to settle)
+  // Auto-start recording on mount (after body awareness prompt fades)
   useEffect(() => {
     let cancelled = false
-    const timer = setTimeout(async () => {
+
+    // Show body awareness for 2.5 seconds, then fade and start recording
+    const awarenessTimer = setTimeout(() => {
+      if (cancelled) return
+      setShowBodyAwareness(false)
+    }, 2500)
+
+    // Start recording after body awareness fades (additional 500ms for transition)
+    const recordingTimer = setTimeout(async () => {
       if (cancelled) return
       if (isSupported && state === 'idle') {
         startCapture()
       }
-    }, 500)
+    }, 3000)
+
     return () => {
       cancelled = true
-      clearTimeout(timer)
+      clearTimeout(awarenessTimer)
+      clearTimeout(recordingTimer)
     }
   }, [isSupported, state, startCapture])
 
@@ -194,6 +232,17 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
       onTouchEnd={handleTouchEvent}
       onTouchMove={handleTouchEvent}
     >
+      {/* Body awareness prompt - shown briefly before recording */}
+      {showBodyAwareness && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-cream animate-fade-in">
+          <div className="text-center px-8">
+            <p className="font-serif text-xl text-ink/70 leading-relaxed">
+              {bodyAwarenessPrompt}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex-none px-6 pt-8 pb-4">
         <button

@@ -13,13 +13,15 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { getMyTemplates } from '../lib/templates'
-import { calculateVoice, VoiceScore, VoiceInputs } from '../lib/voice'
+import { calculateVoice, VoiceScore, VoiceInputs, checkTierTransition, VoiceTierInfo } from '../lib/voice'
 import { updateVoiceScore } from '../lib/supabase'
 
 export interface UseVoiceResult {
   voice: VoiceScore | null
   inputs: VoiceInputs | null
   isLoading: boolean
+  tierUpgrade: VoiceTierInfo | null  // New tier if just upgraded
+  clearTierUpgrade: () => void       // Clear the tier upgrade state
   refresh: () => Promise<void>
 }
 
@@ -30,9 +32,16 @@ export function useVoice(): UseVoiceResult {
   const [voice, setVoice] = useState<VoiceScore | null>(null)
   const [inputs, setInputs] = useState<VoiceInputs | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [tierUpgrade, setTierUpgrade] = useState<VoiceTierInfo | null>(null)
 
   // Track last synced score to avoid unnecessary updates
   const lastSyncedScore = useRef<number | null>(null)
+  // Track previous score for tier transition detection
+  const previousScore = useRef<number | null>(null)
+
+  const clearTierUpgrade = useCallback(() => {
+    setTierUpgrade(null)
+  }, [])
 
   const calculateVoiceData = useCallback(async () => {
     setIsLoading(true)
@@ -119,6 +128,15 @@ export function useVoice(): UseVoiceResult {
       setInputs(voiceInputs)
       setVoice(voiceScore)
 
+      // Check for tier upgrade
+      if (previousScore.current !== null) {
+        const transition = checkTierTransition(previousScore.current, voiceScore.total)
+        if (transition && transition.upgraded) {
+          setTierUpgrade(transition.newTier)
+        }
+      }
+      previousScore.current = voiceScore.total
+
       // Sync to Supabase if authenticated and score changed
       if (isAuthenticated && user && voiceScore.total !== lastSyncedScore.current) {
         lastSyncedScore.current = voiceScore.total
@@ -143,6 +161,8 @@ export function useVoice(): UseVoiceResult {
     voice,
     inputs,
     isLoading,
+    tierUpgrade,
+    clearTierUpgrade,
     refresh: calculateVoiceData
   }
 }

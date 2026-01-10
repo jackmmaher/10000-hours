@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useMemo } from 'react'
+import { useEffect, useCallback, useMemo, useState } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useNavigationStore } from '../stores/useNavigationStore'
 import { useSettingsStore } from '../stores/useSettingsStore'
@@ -9,6 +9,8 @@ import { useAudioFeedback } from '../hooks/useAudioFeedback'
 import { useBreathPacing } from '../hooks/useBreathPacing'
 import { getBreathPattern } from '../lib/breathPacing'
 import { formatTimer, formatTotalHours, formatSessionAdded } from '../lib/format'
+import { getNearMissInfo } from '../lib/milestones'
+import { getUserPreferences } from '../lib/db'
 import { ZenMessage } from './ZenMessage'
 import { InsightCapture } from './InsightCapture'
 
@@ -34,6 +36,24 @@ export function Timer() {
   const audio = useAudioFeedback()
 
   const { elapsed, isRunning } = useTimer()
+
+  // Near-miss visibility (dopamine anticipation)
+  const [nearMiss, setNearMiss] = useState<{ hoursRemaining: number; nextMilestone: number } | null>(null)
+
+  // Load near-miss info when idle
+  useEffect(() => {
+    if (timerPhase === 'idle') {
+      const loadNearMiss = async () => {
+        const prefs = await getUserPreferences()
+        const currentHours = totalSeconds / 3600
+        const info = getNearMissInfo(currentHours, prefs?.practiceGoalHours)
+        setNearMiss(info)
+      }
+      loadNearMiss()
+    } else {
+      setNearMiss(null)
+    }
+  }, [timerPhase, totalSeconds])
 
   // Breath pacing (optional)
   const activePattern = useMemo(() => {
@@ -375,9 +395,19 @@ export function Timer() {
               </div>
             ) : (
               // Normal mode - show total or weekly hours based on tier
-              <p className="font-serif text-display text-indigo-deep tabular-nums">
-                {formatTotalHours(totalSeconds)}
-              </p>
+              <div className="flex flex-col items-center">
+                <p className="font-serif text-display text-indigo-deep tabular-nums">
+                  {formatTotalHours(totalSeconds)}
+                </p>
+                {/* Near-miss visibility - subtle anticipation trigger */}
+                {nearMiss && (
+                  <p className="text-xs text-indigo-deep/40 mt-2 animate-fade-in">
+                    {nearMiss.hoursRemaining < 0.1
+                      ? `Almost at ${nearMiss.nextMilestone}h`
+                      : `${(nearMiss.hoursRemaining * 60).toFixed(0)} min to ${nearMiss.nextMilestone}h`}
+                  </p>
+                )}
+              </div>
             )
           )}
         </div>
@@ -396,6 +426,7 @@ export function Timer() {
       {timerPhase === 'capture' && (
         <InsightCapture
           sessionId={lastSessionUuid || undefined}
+          sessionDuration={lastSessionDuration || undefined}
           onComplete={skipInsightCapture}
           onSkip={skipInsightCapture}
         />

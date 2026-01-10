@@ -7,7 +7,8 @@
  * Uses living theme colors with opacity variations for visual harmony.
  */
 
-import { VoiceScore, getVoiceVisual, VoiceLevel, getVoiceTier, getNextTier } from '../lib/voice'
+import { VoiceScore, getVoiceVisual, VoiceLevel, getVoiceTier, getNextTier, VoiceTier } from '../lib/voice'
+import { FEATURE_UNLOCKS, getUnlockedFeatures, getTierDisplayName } from '../lib/featureUnlocks'
 
 interface VoiceDetailModalProps {
   voice: VoiceScore
@@ -232,6 +233,9 @@ export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
             </FactorSection>
           </div>
 
+          {/* Feature Unlocks */}
+          <FeatureUnlocksSection currentTier={tier.tier} />
+
           {/* Explanation */}
           <div className="mt-6 p-4 bg-cream-deep rounded-xl">
             <p className="text-xs text-ink/50 leading-relaxed">
@@ -346,6 +350,74 @@ function Factor({
       <span className="text-xs text-ink/30 tabular-nums w-10 text-right">
         {score.toFixed(1)}
       </span>
+    </div>
+  )
+}
+
+/**
+ * Feature Unlocks Section
+ * Shows features unlocked at current tier and what's coming
+ */
+function FeatureUnlocksSection({ currentTier }: { currentTier: VoiceTier }) {
+  const unlockedFeatures = getUnlockedFeatures(currentTier)
+  const lockedFeatures = FEATURE_UNLOCKS.filter(f => !unlockedFeatures.some(u => u.id === f.id))
+
+  // Don't show if no features to display
+  if (FEATURE_UNLOCKS.length === 0) return null
+
+  return (
+    <div className="mt-6">
+      <p className="text-sm font-medium text-ink mb-3">Feature Unlocks</p>
+
+      {/* Unlocked features */}
+      {unlockedFeatures.length > 0 && (
+        <div className="space-y-2 mb-4">
+          {unlockedFeatures.map(feature => (
+            <div
+              key={feature.id}
+              className="flex items-start gap-3 p-3 bg-moss/10 rounded-xl"
+            >
+              <div
+                className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                style={{ backgroundColor: 'var(--accent)' }}
+              >
+                <svg className="w-3 h-3 text-cream" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm text-ink font-medium">{feature.name}</p>
+                <p className="text-xs text-ink/50">{feature.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Locked features (coming soon) */}
+      {lockedFeatures.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs text-ink/40 mb-2">Unlocks with higher Voice</p>
+          {lockedFeatures.map(feature => (
+            <div
+              key={feature.id}
+              className="flex items-start gap-3 p-3 bg-cream-deep rounded-xl opacity-70"
+            >
+              <div className="w-5 h-5 rounded-full bg-ink/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg className="w-3 h-3 text-ink/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm text-ink/60">{feature.name}</p>
+                <p className="text-xs text-ink/40">
+                  {feature.description} • Requires {getTierDisplayName(feature.requiredTier)}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
