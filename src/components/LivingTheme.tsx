@@ -212,6 +212,30 @@ export function LivingTheme({
           }
         `}</style>
 
+        {/* DEBUG OVERLAY - TEMPORARY */}
+        <div style={{
+          position: 'fixed',
+          bottom: 10,
+          left: 10,
+          background: 'rgba(0,0,0,0.8)',
+          color: 'lime',
+          padding: 8,
+          fontSize: 10,
+          fontFamily: 'monospace',
+          zIndex: 9999,
+          borderRadius: 4,
+          maxWidth: '90vw',
+          overflow: 'auto'
+        }}>
+          <div>mode: {isManualMode ? 'MANUAL' : 'AUTO'}</div>
+          <div>season: {themeState.season} | time: {themeState.timeOfDay}</div>
+          <div>sunAlt: {themeState.sunAltitude.toFixed(1)}°</div>
+          <div>stars: {themeState.effects.stars.toFixed(2)} | moon: {themeState.effects.moon.toFixed(2)}</div>
+          <div>particles: {themeState.effects.particles.toFixed(2)}</div>
+          <div>particleType: {seasonalEffects.particleType}</div>
+          <div>multiplier: {seasonalEffects.particleMultiplier}</div>
+        </div>
+
         {/* Visual effects layer */}
         <LivingThemeEffects
           effects={themeState.effects}
