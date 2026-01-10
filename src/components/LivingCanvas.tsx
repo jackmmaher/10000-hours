@@ -1,22 +1,6 @@
-/**
- * LivingCanvas - Premium Canvas-based atmospheric renderer
- *
- * Level 2 engine with premium visuals:
- * - Simplex noise for organic movement
- * - Trail effects for motion blur
- * - Proper glow effects with shadowBlur
- * - Layered depth rendering
- * - Noise-based aurora waves
- */
-
 import { useEffect, useRef, useCallback } from 'react'
 import { Season, TimeOfDay } from '../lib/livingTheme'
 import type { EffectIntensities, SeasonalEffects } from '../lib/livingTheme'
-
-// ============================================================================
-// SIMPLEX NOISE (inline implementation - no external dependency)
-// Based on Stefan Gustavson's implementation
-// ============================================================================
 
 class SimplexNoise {
   private perm: number[] = []
@@ -92,10 +76,6 @@ class SimplexNoise {
   }
 }
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
 interface LivingCanvasProps {
   season: Season
   timeOfDay: TimeOfDay
@@ -103,10 +83,6 @@ interface LivingCanvasProps {
   expressive: boolean
   seasonalEffects: SeasonalEffects
   sunAltitude: number
-  sunAzimuth: number
-  moonAltitude: number
-  moonAzimuth: number
-  moonPhase: string
   moonIllumination: number
   moonPhaseAngle: number
 }
@@ -170,10 +146,6 @@ interface ShootingStar {
   brightness: number
 }
 
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
 const LEAF_COLORS = [
   '#D97706', '#B45309', '#DC2626', '#CA8A04', '#92400E', '#991B1B'
 ]
@@ -184,10 +156,6 @@ const STAR_TEMPS: Record<Season, { cool: string; warm: string }> = {
   spring: { cool: 'rgba(233, 213, 255, 1)', warm: 'rgba(255, 255, 255, 1)' },
   autumn: { cool: 'rgba(255, 237, 213, 1)', warm: 'rgba(254, 215, 170, 1)' }
 }
-
-// ============================================================================
-// COMPONENT
-// ============================================================================
 
 export function LivingCanvas({
   season,
@@ -221,16 +189,6 @@ export function LivingCanvas({
   const seasonalEffectsRef = useRef(seasonalEffects)
   effectsRef.current = effects
   seasonalEffectsRef.current = seasonalEffects
-
-  // ==========================================================================
-  // PARTICLE CREATION
-  // ==========================================================================
-  // Threshold design:
-  // - Stars: created when effects.stars > 0 (begin appearing at golden hour)
-  // - Seasonal particles: created when intensity >= 0.1 (prevents sparse fields)
-  // - Aurora: renders when effects.stars > 0.5 (deeper night only, dramatic effect)
-  // These thresholds are intentionally different to create layered atmosphere.
-  // ==========================================================================
 
   const createParticles = useCallback((width: number, height: number) => {
     const particles: Particle[] = []
@@ -441,10 +399,6 @@ export function LivingCanvas({
 
     animationIdRef.current = requestAnimationFrame(render)
   }, [season, effects.stars, effects.shootingStars, effects.moon, expressive, seasonalEffects.aurora, seasonalEffects.harvestMoon, sunAltitude, moonIllumination, moonPhaseAngle])
-
-  // ============================================================================
-  // RENDER FUNCTIONS
-  // ============================================================================
 
   function renderStar(
     ctx: CanvasRenderingContext2D,
@@ -792,12 +746,6 @@ export function LivingCanvas({
     ctx.restore()
   }
 
-  /**
-   * Render sun as ambient element in top-right corner
-   * - Fixed position for subtle, non-intrusive presence
-   * - Color warmth still responds to altitude (golden hour = warmer)
-   * - Fades in/out based on sun altitude thresholds
-   */
   function renderSun(
     ctx: CanvasRenderingContext2D,
     w: number,
@@ -871,13 +819,6 @@ export function LivingCanvas({
     ctx.restore()
   }
 
-  /**
-   * Render moon as ambient element in top-right corner
-   * - Fixed position, offset from sun during twilight
-   * - Accurate phase rendering (waxing/waning crescents, quarters, full)
-   * - Soft ethereal glow matching sun's quality
-   * - Fades in/out based on moon intensity from Living Theme
-   */
   function renderMoon(
     ctx: CanvasRenderingContext2D,
     w: number,
@@ -1031,13 +972,6 @@ export function LivingCanvas({
     ctx.restore()
   }
 
-  // ============================================================================
-  // LIFECYCLE
-  // ============================================================================
-
-  // Canvas setup and animation lifecycle
-  // BUG FIX: Removed createParticles from dependencies to prevent double-creation
-  // Particle creation is handled entirely by the next effect
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -1059,8 +993,6 @@ export function LivingCanvas({
     }
   }, [render])
 
-  // Particle creation and recreation management
-  // BUG FIX: This is now the ONLY effect that creates particles, preventing double-creation
   useEffect(() => {
     const currentStarsVisible = effects.stars > 0
     const currentParticleType = seasonalEffects.particleType

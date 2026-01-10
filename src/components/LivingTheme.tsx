@@ -1,18 +1,3 @@
-/**
- * LivingTheme - Unified Living Theme Provider
- *
- * Single source of truth for the entire visual experience.
- * Sun altitude drives everything - colors AND effects - on the same curve.
- *
- * Usage:
- * <LivingTheme>
- *   <App />
- * </LivingTheme>
- *
- * Access theme data from any component:
- * const { sunAltitude, effects, colors } = useLivingTheme()
- */
-
 import {
   createContext,
   useContext,
@@ -40,13 +25,8 @@ import {
 } from '../lib/livingTheme'
 import { useSettingsStore } from '../stores/useSettingsStore'
 
-// ============================================================================
-// CONTEXT
-// ============================================================================
-
 interface LivingThemeContextValue extends LivingThemeState {
   seasonalEffects: SeasonalEffects
-  // For components that need to know the raw values
   debug: {
     sunAltitude: number
     location: { lat: number; long: number } | null
@@ -56,9 +36,6 @@ interface LivingThemeContextValue extends LivingThemeState {
 
 const LivingThemeContext = createContext<LivingThemeContextValue | null>(null)
 
-/**
- * Hook to access living theme data from any component
- */
 export function useLivingTheme(): LivingThemeContextValue {
   const context = useContext(LivingThemeContext)
   if (!context) {
@@ -67,38 +44,26 @@ export function useLivingTheme(): LivingThemeContextValue {
   return context
 }
 
-// ============================================================================
-// PROVIDER COMPONENT
-// ============================================================================
-
 interface LivingThemeProps {
   children: ReactNode
-  /** Override breathing intensity (default 0.015) */
   breathingIntensity?: number
 }
 
-// Update interval - every 60 seconds
 const UPDATE_INTERVAL = 60 * 1000
 
 export function LivingTheme({
   children,
   breathingIntensity = 0.015
 }: LivingThemeProps) {
-  // User preferences from settings
   const { visualEffects, themeMode, manualSeason, manualTime } = useSettingsStore()
   const expressive = visualEffects === 'expressive'
   const isManualMode = themeMode === 'manual'
 
-  // Location state (only used in auto mode)
   const [location, setLocation] = useState<{ lat: number; long: number } | null>(null)
   const locationFetched = useRef(false)
   const [lastUpdate, setLastUpdate] = useState(new Date())
 
-  // Theme state - respects manual mode from the start
   const [themeState, setThemeState] = useState<LivingThemeState>(() => {
-    // BUG FIX: Initialize respecting the current mode
-    // Note: On first render before hydration, themeMode defaults to 'auto'
-    // After hydration, updateTheme will be called if mode changed
     if (isManualMode) {
       return calculateManualTheme(manualSeason as SeasonOption, manualTime, expressive, true)
     }
@@ -106,9 +71,8 @@ export function LivingTheme({
     return calculateLivingTheme(fallback, new Date(), expressive, true)
   })
 
-  // Fetch location on mount (one-time, only in auto mode)
   useEffect(() => {
-    if (isManualMode) return // Skip location fetch in manual mode
+    if (isManualMode) return
     if (locationFetched.current) return
     locationFetched.current = true
 
@@ -119,13 +83,11 @@ export function LivingTheme({
       })
   }, [isManualMode])
 
-  // Update theme calculation - handles both auto and manual modes
   const updateTheme = useCallback(() => {
     const now = new Date()
 
     let newState: LivingThemeState
     if (isManualMode) {
-      // Manual mode: use user's selected season and time
       newState = calculateManualTheme(
         manualSeason as SeasonOption,
         manualTime,
@@ -133,7 +95,6 @@ export function LivingTheme({
         true
       )
     } else {
-      // Auto mode: calculate based on real sun position
       const currentLocation = location ?? estimateLocationFromTimezone()
       newState = calculateLivingTheme(currentLocation, now, expressive, true)
     }
@@ -143,34 +104,27 @@ export function LivingTheme({
     setLastUpdate(now)
   }, [location, expressive, isManualMode, manualSeason, manualTime])
 
-  // Initial theme application and updates when dependencies change
   useEffect(() => {
     updateTheme()
   }, [updateTheme])
 
-  // Periodic updates (only in auto mode)
   useEffect(() => {
-    if (isManualMode) return // No periodic updates in manual mode
+    if (isManualMode) return
 
     const interval = setInterval(updateTheme, UPDATE_INTERVAL)
     return () => clearInterval(interval)
   }, [updateTheme, isManualMode])
 
-  // Listen for theme reset events (from ThemePreview)
   useEffect(() => {
     const handleReset = () => updateTheme()
     window.addEventListener('themeReset', handleReset)
     return () => window.removeEventListener('themeReset', handleReset)
   }, [updateTheme])
 
-  // Calculate seasonal effects based on mode
-  // BUG FIX: Use manualTime directly in manual mode, not themeState.timeOfDay
-  // This ensures consistency before the first updateTheme() call
   const seasonalEffects = isManualMode
     ? getManualSeasonalEffects(manualSeason as SeasonOption, manualTime, expressive)
     : getSeasonalEffects(themeState.season, themeState.timeOfDay, expressive)
 
-  // Build context value
   const contextValue: LivingThemeContextValue = {
     ...themeState,
     seasonalEffects,
@@ -212,7 +166,6 @@ export function LivingTheme({
           }
         `}</style>
 
-        {/* Visual effects layer */}
         <LivingThemeEffects
           effects={themeState.effects}
           season={themeState.season}
@@ -220,24 +173,15 @@ export function LivingTheme({
           expressive={expressive}
           seasonalEffects={seasonalEffects}
           sunAltitude={themeState.sunAltitude}
-          sunAzimuth={themeState.sunAzimuth}
-          moonAltitude={themeState.moonAltitude}
-          moonAzimuth={themeState.moonAzimuth}
-          moonPhase={themeState.moonPhase}
           moonIllumination={themeState.moonIllumination}
           moonPhaseAngle={themeState.moonPhaseAngle}
         />
 
-        {/* App content */}
         {children}
       </div>
     </LivingThemeContext.Provider>
   )
 }
-
-// ============================================================================
-// EFFECTS RENDERER
-// ============================================================================
 
 interface LivingThemeEffectsProps {
   effects: EffectIntensities
@@ -246,18 +190,10 @@ interface LivingThemeEffectsProps {
   expressive: boolean
   seasonalEffects: SeasonalEffects
   sunAltitude: number
-  sunAzimuth: number
-  moonAltitude: number
-  moonAzimuth: number
-  moonPhase: string
   moonIllumination: number
   moonPhaseAngle: number
 }
 
-/**
- * Renders all visual effects with intensities driven by sun position
- * Effects fade in/out smoothly based on the unified intensity values
- */
 function LivingThemeEffects({
   effects,
   season,
@@ -265,10 +201,6 @@ function LivingThemeEffects({
   expressive,
   seasonalEffects,
   sunAltitude,
-  sunAzimuth,
-  moonAltitude,
-  moonAzimuth,
-  moonPhase,
   moonIllumination,
   moonPhaseAngle
 }: LivingThemeEffectsProps) {
@@ -285,7 +217,6 @@ function LivingThemeEffects({
       className="fixed inset-0 pointer-events-none overflow-hidden"
       style={{ zIndex: 0 }}
     >
-      {/* Global styles for moon glow */}
       <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
@@ -293,22 +224,18 @@ function LivingThemeEffects({
         }
       `}</style>
 
-      {/* Grain overlay - always present, boosted at night to reduce gradient banding */}
       <GrainOverlay intensity={effects.grain + (effects.ambientDarkness > 0.5 ? 0.02 : 0)} />
 
-      {/* Atmospheric gradient - blends based on darkness */}
       <AtmosphericGradient
         season={season}
         darkness={effects.ambientDarkness}
       />
 
-      {/* Directional light - fades based on sun position */}
       <DirectionalLight
         intensity={effects.directionalLight.intensity}
         warmth={effects.directionalLight.warmth}
       />
 
-      {/* Level 2 Canvas Renderer - stars, particles, shooting stars, aurora, sun, moon */}
       <LivingCanvas
         season={season}
         timeOfDay={timeOfDay}
@@ -316,20 +243,12 @@ function LivingThemeEffects({
         expressive={expressive}
         seasonalEffects={seasonalEffects}
         sunAltitude={sunAltitude}
-        sunAzimuth={sunAzimuth}
-        moonAltitude={moonAltitude}
-        moonAzimuth={moonAzimuth}
-        moonPhase={moonPhase}
         moonIllumination={moonIllumination}
         moonPhaseAngle={moonPhaseAngle}
       />
     </div>
   )
 }
-
-// ============================================================================
-// EFFECT COMPONENTS (with intensity-based rendering)
-// ============================================================================
 
 function GrainOverlay({ intensity }: { intensity: number }) {
   return (
@@ -351,7 +270,6 @@ function AtmosphericGradient({
   season: Season
   darkness: number
 }) {
-  // Day and night gradients for each season
   const dayGradients: Record<Season, string> = {
     winter: `radial-gradient(ellipse 100% 60% at 50% -10%, rgba(14, 165, 233, 0.08) 0%, transparent 50%)`,
     spring: `radial-gradient(ellipse 100% 60% at 50% -10%, rgba(34, 197, 94, 0.08) 0%, transparent 50%)`,
@@ -372,7 +290,6 @@ function AtmosphericGradient({
 
   return (
     <>
-      {/* Day gradient - fades out as darkness increases */}
       <div
         className="absolute inset-0 transition-opacity duration-[2000ms]"
         style={{
@@ -380,7 +297,6 @@ function AtmosphericGradient({
           opacity: 1 - darkness
         }}
       />
-      {/* Night gradient - fades in as darkness increases */}
       <div
         className="absolute inset-0 transition-opacity duration-[2000ms]"
         style={{
@@ -401,19 +317,12 @@ function DirectionalLight({
 }) {
   if (intensity < 0.05) return null
 
-  // Warm golden color when warmth is high, cool when low
   const coolColor = 'rgba(255, 255, 255, 0.15)'
   const warmColor = 'rgba(251, 191, 36, 0.25)'
-
-  // Interpolate color based on warmth
   const color = warmth > 0.5 ? warmColor : coolColor
   const finalOpacity = intensity * (warmth > 0.3 ? 0.9 : 0.6)
-
-  // Direction based on warmth (evening/sunset has high warmth)
   const isEvening = warmth > 0.3
   const angle = isEvening ? 'to top right' : 'to bottom left'
-
-  // Blend mode: screen for cool light, color-dodge for warm "hot" light
   const blendMode = warmth > 0.5 ? 'color-dodge' : 'screen'
 
   return (
@@ -427,11 +336,6 @@ function DirectionalLight({
     />
   )
 }
-
-
-// ============================================================================
-// SOFT LIGHT RAYS (for daytime)
-// ============================================================================
 
 export function SoftLightRays({
   color = 'rgba(255, 255, 255, 0.08)',

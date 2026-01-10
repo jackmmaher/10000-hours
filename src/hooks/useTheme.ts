@@ -170,7 +170,6 @@ export function useTheme(): ThemeState {
     return () => clearInterval(interval)
   }, [applyTheme, updateTheme, themeState.tokens])
 
-  // Listen for theme reset events (from ThemePreview)
   useEffect(() => {
     const handleReset = () => updateTheme()
     window.addEventListener('themeReset', handleReset)

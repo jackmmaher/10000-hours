@@ -165,8 +165,6 @@ export const SEASONAL_TIME_BOUNDARIES: Record<Season, {
   }
 }
 
-// Legacy export for backward compatibility
-export const TIME_BOUNDARIES = SEASONAL_TIME_BOUNDARIES.spring
 
 /**
  * Get current time of day - SEASON-AWARE
@@ -234,15 +232,6 @@ export function detectSouthernHemisphere(): boolean {
   }
 }
 
-// ============================================================================
-// WINTER THEME DEFINITIONS
-// ============================================================================
-
-/**
- * Winter Morning (5am - 11am)
- * Mood: Frost light through a window. Cold but awakening.
- * Light quality: Cool, clear, blue-tinted from low sun angle
- */
 const WINTER_MORNING: ThemeTokens = {
   // Backgrounds - Cool blue-gray tones
   bgBase: '#F0F4F8',
@@ -346,11 +335,6 @@ const WINTER_MORNING: ThemeTokens = {
   seasonalAccent: '#38BDF8'
 }
 
-/**
- * Winter Daytime (11am - 5pm)
- * Mood: Bright winter sun on snow. Crisp, high contrast, energizing.
- * Light quality: Brightest, neutral, highest contrast
- */
 const WINTER_DAYTIME: ThemeTokens = {
   // Backgrounds - Clean white, slight cool undertone
   bgBase: '#FAFBFC',
@@ -454,11 +438,6 @@ const WINTER_DAYTIME: ThemeTokens = {
   seasonalAccent: '#0EA5E9'
 }
 
-/**
- * Winter Evening (5pm - 9pm)
- * Mood: Indoor warmth against the cold outside. Candlelight, hygge.
- * Light quality: Golden hour, warm amber, soft contrasts
- */
 const WINTER_EVENING: ThemeTokens = {
   // Backgrounds - Warm cream
   bgBase: '#FDF8F3',
@@ -562,11 +541,6 @@ const WINTER_EVENING: ThemeTokens = {
   seasonalAccent: '#F59E0B'
 }
 
-/**
- * Winter Night (9pm - 5am)
- * Mood: Clear winter night sky. Moonlight on snow. Deep stillness.
- * Light quality: Deep blue-black, silver moonlight accents
- */
 const WINTER_NIGHT: ThemeTokens = {
   // Backgrounds - Deep blue-black
   bgBase: '#0F172A',
@@ -670,18 +644,6 @@ const WINTER_NIGHT: ThemeTokens = {
   seasonalAccent: '#22D3EE'
 }
 
-// ============================================================================
-// SPRING THEME DEFINITIONS
-// Mood: Renewal, awakening, fresh starts, gentle growth
-// Signature: Sage greens, morning mist, new growth, soft earth
-// Gen 2: Natural observation palettes - no pink, verdant awakening
-// ============================================================================
-
-/**
- * Spring Morning (5am - 11am)
- * Mood: Morning mist lifting. Dew on grass. Earth awakening.
- * Light quality: Soft, diffused, gentle - like looking through gauze
- */
 const SPRING_MORNING: ThemeTokens = {
   // Backgrounds - Oyster white, morning mist
   bgBase: '#F5F5F0',
@@ -785,11 +747,6 @@ const SPRING_MORNING: ThemeTokens = {
   seasonalAccent: '#7C9A6E'
 }
 
-/**
- * Spring Daytime (11am - 5pm)
- * Mood: Bright spring day. Clear air. Fresh growth visible.
- * Light quality: Bright natural white, clean and alive
- */
 const SPRING_DAYTIME: ThemeTokens = {
   // Backgrounds - Bright natural white
   bgBase: '#F8F9F4',
@@ -893,11 +850,6 @@ const SPRING_DAYTIME: ThemeTokens = {
   seasonalAccent: '#6B8F5E'
 }
 
-/**
- * Spring Evening (5pm - 9pm)
- * Mood: Soft evening light. Day settling. Gentle warmth fading.
- * Light quality: Soft stone, driftwood, weathered tones
- */
 const SPRING_EVENING: ThemeTokens = {
   // Backgrounds - Soft stone
   bgBase: '#EDE8E0',
@@ -1001,11 +953,6 @@ const SPRING_EVENING: ThemeTokens = {
   seasonalAccent: '#8B7B6B'
 }
 
-/**
- * Spring Night (9pm - 5am)
- * Mood: Forest at night. Gentle darkness. Rain on leaves.
- * Light quality: Deep forest green-black, calm and grounding
- */
 const SPRING_NIGHT: ThemeTokens = {
   // Backgrounds - Forest dark
   bgBase: '#1C1E1A',
@@ -1109,17 +1056,6 @@ const SPRING_NIGHT: ThemeTokens = {
   seasonalAccent: '#6B7C5F'
 }
 
-// ============================================================================
-// SUMMER THEME DEFINITIONS
-// Mood: Abundance, vitality, peak energy, golden warmth
-// Signature: Golden amber, warm orange, long golden hours
-// ============================================================================
-
-/**
- * Summer Morning (5am - 11am)
- * Mood: Golden sunrise. Warm and promising. Energy rising.
- * Light quality: Warm gold, soft orange, full of potential
- */
 const SUMMER_MORNING: ThemeTokens = {
   // Backgrounds - Warm cream with golden tint
   bgBase: '#FFFBEB',
@@ -1223,11 +1159,6 @@ const SUMMER_MORNING: ThemeTokens = {
   seasonalAccent: '#F59E0B'
 }
 
-/**
- * Summer Daytime (11am - 5pm)
- * Mood: Peak sun. Vibrant. High energy. Bright and alive.
- * Light quality: Bright, warm white, high contrast, energizing
- */
 const SUMMER_DAYTIME: ThemeTokens = {
   // Backgrounds - Bright, warm white
   bgBase: '#FFFDF7',
@@ -1331,11 +1262,6 @@ const SUMMER_DAYTIME: ThemeTokens = {
   seasonalAccent: '#EA580C'
 }
 
-/**
- * Summer Evening (5pm - 9pm)
- * Mood: Long golden hour. Everything bathed in amber. Magic hour.
- * Light quality: Deep golden, rich amber, dramatic and beautiful
- */
 const SUMMER_EVENING: ThemeTokens = {
   // Backgrounds - Rich amber cream
   bgBase: '#FEF7E8',
@@ -1439,11 +1365,6 @@ const SUMMER_EVENING: ThemeTokens = {
   seasonalAccent: '#D97706'
 }
 
-/**
- * Summer Night (9pm - 5am)
- * Mood: Warm summer night. Fireflies. Stars through warm air.
- * Light quality: Deep warm indigo, amber accents, magical
- */
 const SUMMER_NIGHT: ThemeTokens = {
   // Backgrounds - Warm indigo-brown
   bgBase: '#1C1917',
@@ -1547,17 +1468,6 @@ const SUMMER_NIGHT: ThemeTokens = {
   seasonalAccent: '#FBBF24'
 }
 
-// ============================================================================
-// AUTUMN THEME DEFINITIONS
-// Mood: Harvest, letting go, gratitude, gentle release
-// Signature: Burnt orange, copper, burgundy, harvest gold
-// ============================================================================
-
-/**
- * Autumn Morning (5am - 11am)
- * Mood: Misty morning. Golden fog. Crisp air. Peaceful.
- * Light quality: Soft amber through mist, gentle and contemplative
- */
 const AUTUMN_MORNING: ThemeTokens = {
   // Backgrounds - Soft misty cream
   bgBase: '#FAF7F2',
@@ -1661,11 +1571,6 @@ const AUTUMN_MORNING: ThemeTokens = {
   seasonalAccent: '#CA8A04'
 }
 
-/**
- * Autumn Daytime (11am - 5pm)
- * Mood: Crisp autumn day. Clear blue sky. Leaves turning. Invigorating.
- * Light quality: Clear, high contrast, amber-tinted
- */
 const AUTUMN_DAYTIME: ThemeTokens = {
   // Backgrounds - Crisp cream
   bgBase: '#FBF8F3',
@@ -1769,11 +1674,6 @@ const AUTUMN_DAYTIME: ThemeTokens = {
   seasonalAccent: '#C2410C'
 }
 
-/**
- * Autumn Evening (5pm - 9pm)
- * Mood: Golden hour. Harvest moon rising. Deep gratitude. Letting go.
- * Light quality: Deep copper, rich amber, dramatic and warm
- */
 const AUTUMN_EVENING: ThemeTokens = {
   // Backgrounds - Rich warm cream
   bgBase: '#FDF4E8',
@@ -1877,11 +1777,6 @@ const AUTUMN_EVENING: ThemeTokens = {
   seasonalAccent: '#B45309'
 }
 
-/**
- * Autumn Night (9pm - 5am)
- * Mood: Deep rest. Harvest complete. Warm blankets. Woodsmoke.
- * Light quality: Rich burgundy-brown, warm and cozy darkness
- */
 const AUTUMN_NIGHT: ThemeTokens = {
   // Backgrounds - Deep warm brown
   bgBase: '#1A1412',
@@ -1985,15 +1880,6 @@ const AUTUMN_NIGHT: ThemeTokens = {
   seasonalAccent: '#F59E0B'
 }
 
-// ============================================================================
-// NEUTRAL THEMES
-// ============================================================================
-
-/**
- * Neutral Light
- * Mood: Clean, focused, distraction-free. A calm canvas for concentration.
- * Design: Slate-based neutrals with no seasonal character. Pure functionality.
- */
 export const NEUTRAL_LIGHT: ThemeTokens = {
   // Backgrounds - Clean slate
   bgBase: '#F8FAFC',
@@ -2097,11 +1983,6 @@ export const NEUTRAL_LIGHT: ThemeTokens = {
   seasonalAccent: '#475569'
 }
 
-/**
- * Neutral Dark
- * Mood: Focused nighttime work. Easy on the eyes. Zero distraction.
- * Design: Deep slate with subtle elevation. Professional and calm.
- */
 export const NEUTRAL_DARK: ThemeTokens = {
   // Backgrounds - Deep slate
   bgBase: '#0F172A',
@@ -2205,13 +2086,6 @@ export const NEUTRAL_DARK: ThemeTokens = {
   seasonalAccent: '#94A3B8'
 }
 
-// ============================================================================
-// THEME TABLES
-// ============================================================================
-
-/**
- * Winter theme lookup table
- */
 const WINTER_THEMES: Record<TimeOfDay, ThemeTokens> = {
   morning: WINTER_MORNING,
   daytime: WINTER_DAYTIME,
@@ -2219,9 +2093,6 @@ const WINTER_THEMES: Record<TimeOfDay, ThemeTokens> = {
   night: WINTER_NIGHT
 }
 
-/**
- * Spring theme lookup table
- */
 const SPRING_THEMES: Record<TimeOfDay, ThemeTokens> = {
   morning: SPRING_MORNING,
   daytime: SPRING_DAYTIME,
@@ -2229,9 +2100,6 @@ const SPRING_THEMES: Record<TimeOfDay, ThemeTokens> = {
   night: SPRING_NIGHT
 }
 
-/**
- * Summer theme lookup table
- */
 const SUMMER_THEMES: Record<TimeOfDay, ThemeTokens> = {
   morning: SUMMER_MORNING,
   daytime: SUMMER_DAYTIME,
@@ -2239,9 +2107,6 @@ const SUMMER_THEMES: Record<TimeOfDay, ThemeTokens> = {
   night: SUMMER_NIGHT
 }
 
-/**
- * Autumn theme lookup table
- */
 const AUTUMN_THEMES: Record<TimeOfDay, ThemeTokens> = {
   morning: AUTUMN_MORNING,
   daytime: AUTUMN_DAYTIME,
@@ -2249,9 +2114,6 @@ const AUTUMN_THEMES: Record<TimeOfDay, ThemeTokens> = {
   night: AUTUMN_NIGHT
 }
 
-/**
- * All seasons theme table - FULLY DEFINED
- */
 const SEASON_THEMES: Record<Season, Record<TimeOfDay, ThemeTokens>> = {
   winter: WINTER_THEMES,
   spring: SPRING_THEMES,
@@ -2259,13 +2121,6 @@ const SEASON_THEMES: Record<Season, Record<TimeOfDay, ThemeTokens>> = {
   autumn: AUTUMN_THEMES
 }
 
-// ============================================================================
-// PUBLIC API
-// ============================================================================
-
-/**
- * Get theme tokens for a specific time and season
- */
 export function getThemeTokens(
   timeOfDay: TimeOfDay = getTimeOfDay(),
   season: Season = getSeason()
@@ -2273,9 +2128,6 @@ export function getThemeTokens(
   return SEASON_THEMES[season][timeOfDay]
 }
 
-/**
- * Calculate current theme based on time and location
- */
 export function calculateTheme(
   timeOfDay: TimeOfDay = getTimeOfDay(),
   season: Season = getSeason()
@@ -2283,48 +2135,14 @@ export function calculateTheme(
   return getThemeTokens(timeOfDay, season)
 }
 
-// ============================================================================
-// SOLAR-AWARE THEME CALCULATION
-// ============================================================================
-
-/**
- * Sun altitude thresholds for theme blending
- *
- * Based on astronomical definitions:
- * - Civil twilight: 0° to -6° (still functional outdoor light)
- * - Nautical twilight: -6° to -12° (horizon visible at sea)
- * - Astronomical twilight: -12° to -18° (sky not fully dark)
- * - Night: below -18° (full darkness)
- *
- * For theme purposes, we use simplified ranges that feel right visually.
- */
 const SOLAR_THRESHOLDS = {
   HIGH_SUN: 15,        // Above this: pure daytime (fallback for equatorial/summer)
   HORIZON: 0,          // Sunrise/sunset moment
   CIVIL_TWILIGHT: -6,  // Below this: full night
 }
 
-// Relative threshold for "daytime" - when sun is at 85% of its max altitude for that day
 const RELATIVE_DAYTIME_THRESHOLD = 0.85
 
-/**
- * Calculate theme by sun altitude - continuous blending based on actual sun position
- *
- * This replaces hard time boundaries with smooth solar-aware transitions.
- * The existing 16 themes become "anchor points" that we blend between.
- *
- * NEW: Latitude-aware relative positioning
- * When maxSolarAltitude is provided, thresholds are calculated relative to the
- * maximum possible sun height for that location/date. This ensures:
- * - Dublin in January (max 13°) experiences full daytime theme at ~11°
- * - Sydney in January (max 80°) experiences full daytime theme at ~68°
- * - Everyone gets the full emotional range relative to THEIR sky
- *
- * @param altitude - Sun altitude in degrees (90 = overhead, 0 = horizon, negative = below horizon)
- * @param isRising - Whether sun is rising (morning) or setting (evening)
- * @param season - Current season for theme palette selection
- * @param maxSolarAltitude - Optional: Maximum sun altitude for this location/date (enables relative positioning)
- */
 export function calculateThemeBySunPosition(
   altitude: number,
   isRising: boolean,
@@ -2379,18 +2197,9 @@ export function calculateThemeBySunPosition(
     }
   }
 
-  // Fallback (shouldn't reach here)
   return themes.night
 }
 
-/**
- * Get the current time of day label based on sun position
- * Used for display purposes and ambient effects selection
- *
- * @param altitude - Current sun altitude in degrees
- * @param isRising - Whether sun is rising
- * @param maxSolarAltitude - Optional: Maximum sun altitude for relative positioning
- */
 export function getTimeOfDayFromSunPosition(
   altitude: number,
   isRising: boolean,
@@ -2408,13 +2217,9 @@ export function getTimeOfDayFromSunPosition(
     return isRising ? 'morning' : 'evening'
   }
 
-  // Twilight
   return isRising ? 'morning' : 'night'
 }
 
-/**
- * Convert theme tokens to CSS custom properties
- */
 export function themeToCSSProperties(tokens: ThemeTokens): Record<string, string> {
   return {
     // Backgrounds
@@ -2423,7 +2228,6 @@ export function themeToCSSProperties(tokens: ThemeTokens): Record<string, string
     '--bg-deep': tokens.bgDeep,
     '--bg-overlay': tokens.bgOverlay,
 
-    // Legacy aliases for backward compatibility
     '--bg-warm': tokens.bgElevated,
 
     // Text
@@ -2438,7 +2242,6 @@ export function themeToCSSProperties(tokens: ThemeTokens): Record<string, string
     '--accent-muted': tokens.accentMuted,
     '--accent-glow': tokens.accentGlow,
 
-    // Legacy alias
     '--accent-warm': tokens.accentHover,
 
     // Orb
@@ -2448,7 +2251,6 @@ export function themeToCSSProperties(tokens: ThemeTokens): Record<string, string
     '--orb-glow': tokens.orbGlow,
     '--orb-atmosphere': tokens.orbAtmosphere,
 
-    // Legacy orb aliases
     '--orb-primary': tokens.orbEdge,
     '--orb-secondary': tokens.orbGlow,
 
@@ -2524,14 +2326,10 @@ export function themeToCSSProperties(tokens: ThemeTokens): Record<string, string
     '--voice-new-text': tokens.voiceNewText,
     '--voice-new-dot': tokens.voiceNewDot,
 
-    // Seasonal accent
     '--seasonal-accent': tokens.seasonalAccent
   }
 }
 
-/**
- * Get theme name for display
- */
 export function getThemeName(timeOfDay: TimeOfDay, season: Season): string {
   const timeNames: Record<TimeOfDay, string> = {
     morning: 'Morning',
@@ -2548,38 +2346,6 @@ export function getThemeName(timeOfDay: TimeOfDay, season: Season): string {
   return `${seasonNames[season]} ${timeNames[timeOfDay]}`
 }
 
-/**
- * Check if currently in a transition period - SEASON-AWARE
- * Returns true within 30 minutes of any boundary
- */
-export function isTransitionPeriod(date: Date = new Date(), season?: Season): boolean {
-  const hour = date.getHours()
-  const minute = date.getMinutes()
-  const totalMinutes = hour * 60 + minute
-
-  const currentSeason = season ?? getSeason(date)
-  const bounds = SEASONAL_TIME_BOUNDARIES[currentSeason]
-
-  // Convert boundaries to minutes (handling decimal hours)
-  const boundaries = [
-    bounds.morning.start * 60,
-    bounds.daytime.start * 60,
-    bounds.evening.start * 60,
-    bounds.night.start * 60
-  ]
-
-  // Check if within 30 minutes of any boundary
-  return boundaries.some(b => {
-    const diff = Math.abs(totalMinutes - b)
-    // Handle midnight wraparound
-    const wrappedDiff = Math.min(diff, 24 * 60 - diff)
-    return wrappedDiff <= 30
-  })
-}
-
-// ============================================================================
-// COLOR INTERPOLATION FOR SMOOTH TRANSITIONS
-// ============================================================================
 
 /**
  * Parse hex color to RGB
@@ -2719,63 +2485,6 @@ function interpolateColor(color1: string, color2: string, t: number): string {
   return t < 0.5 ? color1 : color2
 }
 
-/**
- * Get the previous time of day in sequence
- */
-function getPrevTimeOfDay(current: TimeOfDay): TimeOfDay {
-  const order: TimeOfDay[] = ['morning', 'daytime', 'evening', 'night']
-  const idx = order.indexOf(current)
-  return order[(idx - 1 + order.length) % order.length]
-}
-
-/**
- * Calculate transition progress (0-1) towards the next time period
- * Returns null if not in a transition period
- */
-export function getTransitionProgress(date: Date = new Date(), season?: Season): {
-  progress: number
-  fromTime: TimeOfDay
-  toTime: TimeOfDay
-} | null {
-  const currentSeason = season ?? getSeason(date)
-  const bounds = SEASONAL_TIME_BOUNDARIES[currentSeason]
-  const hour = date.getHours() + date.getMinutes() / 60
-
-  const transitionDuration = 0.5 // 30 minutes in hours
-
-  // Check each boundary
-  const boundaries: { time: TimeOfDay; startHour: number }[] = [
-    { time: 'morning', startHour: bounds.morning.start },
-    { time: 'daytime', startHour: bounds.daytime.start },
-    { time: 'evening', startHour: bounds.evening.start },
-    { time: 'night', startHour: bounds.night.start }
-  ]
-
-  for (const boundary of boundaries) {
-    const boundaryHour = boundary.startHour
-    let diff = hour - boundaryHour
-
-    // Handle midnight wraparound
-    if (diff > 12) diff -= 24
-    if (diff < -12) diff += 24
-
-    // Check if we're in the transition window (30 min before to 30 min after)
-    if (Math.abs(diff) <= transitionDuration) {
-      const fromTime = getPrevTimeOfDay(boundary.time)
-      const toTime = boundary.time
-
-      // Progress: -0.5 to +0.5 hours maps to 0 to 1
-      const progress = (diff + transitionDuration) / (2 * transitionDuration)
-      return {
-        progress: Math.max(0, Math.min(1, progress)),
-        fromTime,
-        toTime
-      }
-    }
-  }
-
-  return null
-}
 
 /**
  * Interpolate between two theme token sets
@@ -2941,41 +2650,3 @@ export function interpolateThemes(from: ThemeTokens, to: ThemeTokens, t: number)
   }
 }
 
-/**
- * Calculate theme with optional interpolation during transitions
- */
-export function calculateThemeWithTransition(
-  date: Date = new Date(),
-  season?: Season
-): { tokens: ThemeTokens; isTransitioning: boolean; progress: number } {
-  const currentSeason = season ?? getSeason(date)
-  const transition = getTransitionProgress(date, currentSeason)
-
-  if (transition) {
-    const fromTokens = getThemeTokens(transition.fromTime, currentSeason)
-    const toTokens = getThemeTokens(transition.toTime, currentSeason)
-    const interpolatedTokens = interpolateThemes(fromTokens, toTokens, transition.progress)
-
-    return {
-      tokens: interpolatedTokens,
-      isTransitioning: true,
-      progress: transition.progress
-    }
-  }
-
-  const timeOfDay = getTimeOfDay(date, currentSeason)
-  return {
-    tokens: getThemeTokens(timeOfDay, currentSeason),
-    isTransitioning: false,
-    progress: 0
-  }
-}
-
-// Legacy exports for backward compatibility
-export type ThemeValues = ThemeTokens
-export type ThemeState = {
-  timeOfDay: TimeOfDay
-  season: Season
-  values: ThemeTokens
-  isTransitioning: boolean
-}
