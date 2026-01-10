@@ -212,6 +212,7 @@ export function LivingCanvas({
   const hasInitializedRef = useRef(false)
   // DEBUG: Track particle count for debugging
   const [debugParticleCount, setDebugParticleCount] = useState(0)
+  const [debugRenderInfo, setDebugRenderInfo] = useState({ frames: 0, lastStarAlpha: 0 })
 
   // Keep effects in a ref so render functions always use current values
   const effectsRef = useRef(effects)
@@ -402,6 +403,14 @@ export function LivingCanvas({
 
     // Sort particles by z-depth (far to near)
     const sorted = [...particlesRef.current].sort((a, b) => a.z - b.z)
+
+    // DEBUG: Update debug info every 60 frames
+    if (Math.floor(t) % 1 === 0 && Math.floor(t * 60) % 60 === 0) {
+      setDebugRenderInfo({
+        frames: Math.floor(t),
+        lastStarAlpha: effectsRef.current.stars
+      })
+    }
 
     // Render particles
     sorted.forEach(p => {
@@ -1168,6 +1177,9 @@ export function LivingCanvas({
         <div>CANVAS DEBUG:</div>
         <div>particles: {debugParticleCount}</div>
         <div>initialized: {hasInitializedRef.current ? 'YES' : 'NO'}</div>
+        <div>renderFrames: {debugRenderInfo.frames}</div>
+        <div>starsAlpha: {debugRenderInfo.lastStarAlpha.toFixed(2)}</div>
+        <div>effectsRef.stars: {effectsRef.current.stars.toFixed(2)}</div>
       </div>
     </>
   )
