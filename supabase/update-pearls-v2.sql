@@ -257,3 +257,106 @@ INSERT INTO pearls (user_id, text, upvotes, saves, created_at) VALUES
   (NULL, 'In a world of noise, silence is a superpower.', 234, 167, '2025-10-10T11:02:02.579Z'),
   (NULL, 'The teacher is already within you. Meditation is just listening.', 178, 134, '2025-11-10T11:02:02.579Z'),
   (NULL, 'One breath at a time. One moment at a time. This is the practice.', 198, 156, '2025-12-08T11:02:02.579Z');
+
+-- ===========================================
+-- STEP 3: Apply intent_tags based on keyword matching
+-- Uses the 8 Pareto-aligned intents from INTENT_OPTIONS
+-- Added 2026-01-10 to fix missing intent_tags
+-- ===========================================
+
+-- Anxiety-related pearls
+UPDATE public.pearls SET intent_tags = array_append(COALESCE(intent_tags, '{}'), 'anxiety')
+WHERE user_id IS NULL
+  AND NOT ('anxiety' = ANY(COALESCE(intent_tags, '{}')))
+  AND (
+    LOWER(text) LIKE '%anxiety%' OR
+    LOWER(text) LIKE '%anxious%' OR
+    LOWER(text) LIKE '%worry%' OR
+    LOWER(text) LIKE '%panic%' OR
+    LOWER(text) LIKE '%fear%' OR
+    LOWER(text) LIKE '%nervous%'
+  );
+
+-- Stress-related pearls
+UPDATE public.pearls SET intent_tags = array_append(COALESCE(intent_tags, '{}'), 'stress')
+WHERE user_id IS NULL
+  AND NOT ('stress' = ANY(COALESCE(intent_tags, '{}')))
+  AND (
+    LOWER(text) LIKE '%stress%' OR
+    LOWER(text) LIKE '%tension%' OR
+    LOWER(text) LIKE '%pressure%' OR
+    LOWER(text) LIKE '%overwhelm%' OR
+    LOWER(text) LIKE '%burnout%'
+  );
+
+-- Sleep-related pearls
+UPDATE public.pearls SET intent_tags = array_append(COALESCE(intent_tags, '{}'), 'sleep')
+WHERE user_id IS NULL
+  AND NOT ('sleep' = ANY(COALESCE(intent_tags, '{}')))
+  AND (
+    LOWER(text) LIKE '%sleep%' OR
+    LOWER(text) LIKE '%rest%' OR
+    LOWER(text) LIKE '%tired%' OR
+    LOWER(text) LIKE '%night%' OR
+    LOWER(text) LIKE '%calm%'
+  );
+
+-- Focus-related pearls
+UPDATE public.pearls SET intent_tags = array_append(COALESCE(intent_tags, '{}'), 'focus')
+WHERE user_id IS NULL
+  AND NOT ('focus' = ANY(COALESCE(intent_tags, '{}')))
+  AND (
+    LOWER(text) LIKE '%focus%' OR
+    LOWER(text) LIKE '%concentrat%' OR
+    LOWER(text) LIKE '%attention%' OR
+    LOWER(text) LIKE '%distract%' OR
+    LOWER(text) LIKE '%wander%' OR
+    LOWER(text) LIKE '%clarity%'
+  );
+
+-- Beginners-related pearls
+UPDATE public.pearls SET intent_tags = array_append(COALESCE(intent_tags, '{}'), 'beginners')
+WHERE user_id IS NULL
+  AND NOT ('beginners' = ANY(COALESCE(intent_tags, '{}')))
+  AND (
+    LOWER(text) LIKE '%beginner%' OR
+    LOWER(text) LIKE '%start%' OR
+    LOWER(text) LIKE '%first%' OR
+    LOWER(text) LIKE '%simple%' OR
+    LOWER(text) LIKE '%basic%'
+  );
+
+-- Body-awareness related pearls
+UPDATE public.pearls SET intent_tags = array_append(COALESCE(intent_tags, '{}'), 'body-awareness')
+WHERE user_id IS NULL
+  AND NOT ('body-awareness' = ANY(COALESCE(intent_tags, '{}')))
+  AND (
+    LOWER(text) LIKE '%body%' OR
+    LOWER(text) LIKE '%breath%' OR
+    LOWER(text) LIKE '%physical%' OR
+    LOWER(text) LIKE '%sensation%'
+  );
+
+-- Self-compassion related pearls
+UPDATE public.pearls SET intent_tags = array_append(COALESCE(intent_tags, '{}'), 'self-compassion')
+WHERE user_id IS NULL
+  AND NOT ('self-compassion' = ANY(COALESCE(intent_tags, '{}')))
+  AND (
+    LOWER(text) LIKE '%compassion%' OR
+    LOWER(text) LIKE '%kind%' OR
+    LOWER(text) LIKE '%accept%' OR
+    LOWER(text) LIKE '%forgive%' OR
+    LOWER(text) LIKE '%worthy%'
+  );
+
+-- Letting-go related pearls
+UPDATE public.pearls SET intent_tags = array_append(COALESCE(intent_tags, '{}'), 'letting-go')
+WHERE user_id IS NULL
+  AND NOT ('letting-go' = ANY(COALESCE(intent_tags, '{}')))
+  AND (
+    LOWER(text) LIKE '%let go%' OR
+    LOWER(text) LIKE '%letting go%' OR
+    LOWER(text) LIKE '%release%' OR
+    LOWER(text) LIKE '%surrender%' OR
+    LOWER(text) LIKE '%attach%'
+  );
