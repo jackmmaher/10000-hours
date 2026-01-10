@@ -5,16 +5,16 @@
 ## Languages
 
 **Primary:**
-- TypeScript 5.5 - All application code (`package.json`, `tsconfig.json`)
+- TypeScript 5.5.3 - All application code
 
 **Secondary:**
-- JavaScript - Build scripts, config files
+- JavaScript - Build configs, PostCSS config
 
 ## Runtime
 
 **Environment:**
-- Browser (PWA) - Mobile-first meditation app
-- Vite dev server for development
+- Node.js (development/build)
+- Browser (production PWA)
 
 **Package Manager:**
 - npm
@@ -23,53 +23,52 @@
 ## Frameworks
 
 **Core:**
-- React 18.3 - UI framework (`package.json`)
-- Zustand 4.5 - State management (`src/stores/*.ts`)
-- Dexie 4.0 - IndexedDB wrapper for local storage (`src/lib/db.ts`)
+- React 18.3.1 - UI framework
+- Zustand 4.5.2 - State management
 
 **Testing:**
-- Vitest 4.0 - Unit tests (`vitest.config.ts`)
-- @testing-library/react 16.3 - Component testing
+- Vitest 4.0.16 - Unit tests
+- Testing Library React 16.3.1 - Component testing
+- fake-indexeddb 6.2.5 - IndexedDB mocking
 
 **Build/Dev:**
-- Vite 5.3 - Build tool and dev server (`vite.config.ts`)
-- TypeScript 5.5 - Compilation
-- vite-plugin-pwa 0.20 - PWA generation with Workbox
+- Vite 5.3.4 - Build tool and dev server
+- TypeScript 5.5.3 - Type checking
+- vite-plugin-pwa 0.20.0 - PWA generation
 
 ## Key Dependencies
 
 **Critical:**
-- @supabase/supabase-js 2.89 - Backend services, auth, cloud sync (`src/lib/supabase.ts`)
-- date-fns 3.6 - Date manipulation for meditation planning
-- uuid 13.0 - Session and entity ID generation
-- dexie-react-hooks 1.1 - React hooks for Dexie live queries
+- Supabase 2.89.0 - Backend as a service (auth, database) - `src/lib/supabase.ts`
+- Dexie 4.0.4 - IndexedDB wrapper for offline storage - `src/lib/db.ts`
+- date-fns 3.6.0 - Date manipulation - used throughout app
 
 **Infrastructure:**
-- Tailwind CSS 3.4 - Styling (`tailwind.config.js`, `postcss.config.js`)
-- autoprefixer 10.4 - CSS vendor prefixes
+- uuid 13.0.0 - ID generation
+- Tailwind CSS 3.4.4 - Styling
 
 ## Configuration
 
 **Environment:**
-- `.env` files for Supabase configuration (gitignored)
-- VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY required
+- `.env.local` for Supabase credentials
+- `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` required
 
 **Build:**
-- `vite.config.ts` - Vite and PWA configuration
-- `tsconfig.json` - TypeScript with ES2020 target, strict mode
-- `tailwind.config.js` - Custom theme configuration
-- `vitest.config.ts` - Test runner with jsdom environment
+- `vite.config.ts` - Vite configuration
+- `tsconfig.json` - TypeScript compiler options
+- `tailwind.config.js` - Tailwind CSS customization
+- `vitest.config.ts` - Test runner configuration
 
 ## Platform Requirements
 
 **Development:**
 - Any platform with Node.js
-- No external dependencies (IndexedDB for local storage)
+- No external dependencies required
 
 **Production:**
-- PWA deployed to static hosting
-- Works offline-first with Workbox service worker
-- Syncs to Supabase when online
+- Progressive Web App (PWA)
+- Works offline via service worker
+- Deployed as static files
 
 ---
 

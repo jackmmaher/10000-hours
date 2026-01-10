@@ -4,130 +4,194 @@
 
 ## Pattern Overview
 
-**Overall:** Offline-First PWA with Feature-Based Components
+**Overall:** React SPA with PWA Capabilities + Supabase Backend
 
 **Key Characteristics:**
-- Mobile-first meditation app
-- Offline-first with IndexedDB as primary data store
-- Optional cloud sync to Supabase
-- Component-based UI with Zustand for global state
-- Tab-based navigation (Timer, Journey, Explore, Profile)
+- Single-page React application with tab-based navigation
+- Offline-first with IndexedDB local storage
+- Supabase for authentication and cloud sync
+- Community content with local fallbacks
+
+## Core Feature: Explore Tab & Meditation Cards
+
+### Explore Tab (`src/components/Explore.tsx`)
+
+**Purpose:** Community discovery feed for meditation templates and wisdom pearls
+
+**Content Types:**
+- **SessionCards** - Guided meditation templates (from `src/data/sessions.json` or Supabase)
+- **PearlCards** - Wisdom snippets from community members
+
+**Feed Algorithm:**
+- Mixed organic randomization: 3-5 pearls → 1-2 sessions → 2-3 pearls → 1 course
+- Intent-based filtering: anxiety, stress, sleep, focus, beginners, body-awareness, self-compassion, letting-go
+- Sorting: rising, new, top
+
+### Meditation Card System
+
+**Card Components:**
+- `src/components/SessionCard.tsx` - Renders meditation template
+- `src/components/Card.tsx` - Base card with glassmorphism styling
+- `src/components/SessionDetailModal.tsx` - Full details + adopt flow
+
+**Card Data (`src/data/sessions.json`):**
+```json
+{
+  "id": "uuid",
+  "title": "First Breath Awakening",
+  "discipline": "Breath Awareness",
+  "recommended_after_hours": 0,  // Experience prerequisite
+  "intent_tags": ["focus", "beginners"],
+  "karma": 156,
+  "saves": 234,
+  "completions": 1567
+}
+```
+
+### Experience-Based Recommendations
+
+**The `recommendedAfterHours` System:**
+
+Distribution in seed data:
+- **0 hours (42 sessions)** - Beginner-friendly, no prerequisite
+- **10+ hours (29 sessions)** - Some foundation needed
+- **50+ hours (25 sessions)** - Intermediate practices
+- **100+ hours (13 sessions)** - Advanced techniques
+- **500+ hours (1 session)** - Master-level
+
+**Filtering Logic (`src/lib/recommendations.ts`):**
+```typescript
+// Hard filter - users can't see sessions above their experience level
+if (session.recommendedAfterHours > inputs.totalHours) {
+  return { score: -1, reasons: ['Experience level too high'] }
+}
+```
+
+**Display Logic (`src/components/SessionDetailModal.tsx`):**
+```typescript
+// Only shows badge if prerequisite > 0
+{session.recommendedAfterHours > 0 && (
+  <div>Recommended after {session.recommendedAfterHours}+ hours of practice</div>
+)}
+```
 
 ## Layers
 
-**UI Layer (Components):**
-- Purpose: React components for user interface
-- Contains: Feature components, shared UI elements
+**UI Layer:**
+- Purpose: React components with tab-based navigation
+- Contains: Tab components (Home, Explore, Journey, Timer, Me)
 - Location: `src/components/*.tsx`
-- Depends on: Stores (state), Lib (utilities/db)
-- Used by: `src/App.tsx` (main router)
+- Depends on: State hooks, service layer
 
-**State Layer (Stores):**
-- Purpose: Global state management with Zustand
-- Contains: Session state, auth state, navigation, settings, premium status
-- Location: `src/stores/*.ts`
-- Depends on: Lib (db, calculations)
-- Used by: Components
-
-**Data Layer (Lib):**
-- Purpose: Database operations, business logic, utilities
-- Contains: Dexie database, calculations, formatting, types
+**Service Layer:**
+- Purpose: Business logic and data operations
+- Contains: Database operations, recommendations, voice scoring
 - Location: `src/lib/*.ts`
-- Depends on: Dexie, Supabase client
-- Used by: Stores, Components
+- Depends on: IndexedDB, Supabase client
 
-**Services Layer:**
-- Purpose: External service integrations
-- Contains: Voice recording, transcription
-- Location: `src/services/*.ts`
-- Depends on: Browser APIs
-- Used by: Components (Timer, InsightCapture)
+**Data Layer:**
+- Purpose: Persistent storage
+- Contains: IndexedDB schemas, Supabase tables, JSON seeds
+- Location: `src/lib/db.ts`, `src/data/*.json`
 
 ## Data Flow
 
-**Meditation Session Flow:**
+### Meditation Discovery → Practice Flow
 
-1. User starts timer on Timer tab (`src/components/Timer.tsx`)
-2. Timer runs via `useTimer` hook (`src/hooks/useTimer.ts`)
-3. User stops timer → `completeSession()` called on session store (`src/stores/useSessionStore.ts`)
-4. Session saved to IndexedDB (`src/lib/db.ts` → `addSession()`)
-5. Auto-linking: `linkSessionToPlan()` finds any planned session for today and marks it completed
-6. UI refreshes via Zustand reactivity
+1. **Explore Tab** loads sessions from Supabase (fallback to JSON)
+2. **Filter** by intent tags and experience level
+3. **User browses** SessionCards with vote/save/view actions
+4. **SessionDetailModal** shows full details + "Adopt" button
+5. **Adopt** creates PlannedSession in IndexedDB
+6. **Journey Tab** shows saved meditations and planned sessions
+7. **Timer Tab** executes the meditation
 
-**Planned Session Flow:**
+### State Management
 
-1. User opens Journey tab → `JourneyNextSession` component shows next planned session (`src/components/JourneyNextSession.tsx`)
-2. Data fetched via `getNextPlannedSession()` in `src/lib/db.ts`
-3. User clicks "Plan" → `MeditationPlanner` modal opens (`src/components/MeditationPlanner.tsx`)
-4. User saves plan → `addPlannedSession()` or `updatePlannedSession()` in db
-5. Journey tab refreshes via `plansRefreshKey` state
+**Local Storage (IndexedDB via `src/lib/db.ts`):**
+- Sessions, SessionInsights, PlannedSessions
+- SavedPearls, SavedTemplates, TemplateDrafts
 
-**State Management:**
-- Zustand stores for: sessions, auth, navigation, settings, premium
-- IndexedDB (Dexie) for: persistent data (sessions, insights, plans, achievements)
-- Local component state for: UI interactions, form state
+**Remote Storage (Supabase):**
+- session_templates, session_template_votes
+- pearls, pearl_votes
+- User profiles
 
 ## Key Abstractions
 
-**Session:**
-- Purpose: Completed meditation record
-- Examples: `src/lib/db.ts` → `Session` interface
-- Pattern: IndexedDB table with UUID primary key
+**SessionTemplate:**
+- Purpose: Community meditation blueprint
+- Examples: "First Breath Awakening", "Loving-Kindness for Self"
+- Contains: guidance, duration, discipline, recommendedAfterHours
 
-**PlannedSession:**
-- Purpose: Future meditation plan
-- Examples: `src/lib/db.ts` → `PlannedSession` interface
-- Pattern: Links to Session when completed via `linkedSessionUuid`
+**Pearl:**
+- Purpose: Wisdom nugget shared by practitioners
+- Contains: text, upvotes, saves, intentTags, creatorVoiceScore
 
-**Insight:**
-- Purpose: Voice-captured post-meditation reflection
-- Examples: `src/lib/db.ts` → `Insight` interface
-- Pattern: Linked to session, can be shared as Pearl
-
-**Store:**
-- Purpose: Global state container
-- Examples: `useSessionStore`, `useAuthStore`, `useNavigationStore`, `useSettingsStore`
-- Pattern: Zustand with async actions for DB operations
+**Voice Score (`src/lib/voice.ts`):**
+- Purpose: Credibility metric for content creators
+- Formula: Weighs hours, karma, saves, completions
+- Used on: Card badges to show creator credibility
 
 ## Entry Points
 
 **App Entry:**
-- Location: `src/main.tsx`
-- Triggers: Browser loads the PWA
-- Responsibilities: Mount React app, register service worker
-
-**App Router:**
 - Location: `src/App.tsx`
-- Triggers: Navigation between tabs
-- Responsibilities: Render current view based on navigation state
+- Triggers: User loads app
+- Responsibilities: Auth check, route to tabs, PWA setup
 
-## Error Handling
+**Tab Navigation:**
+- Location: `src/components/TabBar.tsx`
+- Tabs: Home, Explore, Journey, Timer, Me
 
-**Strategy:** Try/catch at async boundaries, console logging
+## Living Theme System
 
-**Patterns:**
-- Async operations wrapped in try/catch
-- Errors logged to console
-- UI shows loading states during operations
-- Graceful degradation for optional features (auth, sync)
+**Purpose:** Dynamic visual atmosphere that changes with time of day, season, and weather
+
+**Core Files:**
+- `src/components/LivingTheme.tsx` - React context provider + DOM effects renderer
+- `src/lib/livingTheme.ts` - Theme state calculations
+- `src/lib/themeEngine.ts` - Core theme calculations (90k+ lines of logic)
+- `src/lib/solarPosition.ts` - Real-time sun altitude calculations
+- `src/components/AmbientAtmosphere.tsx` - Gen 2 particle system
+
+**Architecture:**
+```
+LivingTheme.tsx (brain)
+    ├─→ Calculates sun altitude via solarPosition.ts
+    ├─→ Determines season, time of day, effects
+    ├─→ Provides LivingThemeContext to all components
+    └─→ Renders visual effects:
+        ├─→ Stars (parallax depth layers)
+        ├─→ Snow/leaves (per-particle drift)
+        ├─→ Directional light (blend modes)
+        └─→ Grain overlay
+```
+
+**Effect Levels:**
+- **Level 1 (Current)**: DOM-based CSS animations (~25 particles)
+- **Level 2 (Planned)**: Canvas-based physics engine (~150 particles)
+
+**Standalone Testing:**
+- `theme-comparison.html` - Side-by-side Level 1 vs Level 2 comparison
 
 ## Cross-Cutting Concerns
 
-**Logging:**
-- Console.log for development
-- Console.error for errors
-- No structured logging library
-
-**Validation:**
-- TypeScript interfaces for type safety
-- Runtime validation minimal (trusts own data)
-
 **Offline Support:**
-- IndexedDB as source of truth
-- Supabase sync optional and additive
-- PWA service worker for asset caching
+- IndexedDB for local storage
+- Fallback JSON when Supabase unavailable
+- Sync on reconnect
+
+**Recommendations:**
+- `src/lib/recommendations.ts` - Personalized suggestions
+- Based on: discipline, intent, time of day, experience level
+
+**Theming:**
+- LivingTheme context provides colors/effects globally
+- CSS variables for dynamic theming
+- Tailwind for component styling
 
 ---
 
 *Architecture analysis: 2026-01-10*
-*Update when major patterns change*
+*Includes: Explore tab, meditation cards, Living Theme atmosphere*
