@@ -366,7 +366,6 @@ export function LivingCanvas({
 
   // Main render loop
   const render = useCallback((time: number) => {
-    try {
     const canvas = canvasRef.current
     if (!canvas) { debugRenderRef.current.error = 'no canvas'; return }
 
@@ -376,6 +375,7 @@ export function LivingCanvas({
     debugRenderRef.current.loopRunning = true
     debugRenderRef.current.frames++
     debugRenderRef.current.starsInLoop = effectsRef.current.stars
+    debugRenderRef.current.error = '' // Clear previous error
 
     // Use window dimensions for full viewport coverage
     const width = window.innerWidth
@@ -394,61 +394,96 @@ export function LivingCanvas({
     // Clear canvas to transparent - DOM gradients render behind
     ctx.clearRect(0, 0, width, height)
 
-    // Render sun (behind particles)
-    renderSun(ctx, width, height, sunAltitude)
+    try {
+      // Render sun (behind particles)
+      renderSun(ctx, width, height, sunAltitude)
+    } catch (e) {
+      debugRenderRef.current.error = 'sun:' + String(e)
+    }
 
-    // Render moon (behind particles, with phase)
-    if (effectsRef.current.moon > 0) {
-      renderMoon(
-        ctx, width, height,
-        moonIllumination, moonPhaseAngle,
-        effectsRef.current.moon, seasonalEffectsRef.current.harvestMoon,
-        sunAltitude
-      )
+    try {
+      // Render moon (behind particles, with phase)
+      if (effectsRef.current.moon > 0) {
+        renderMoon(
+          ctx, width, height,
+          moonIllumination, moonPhaseAngle,
+          effectsRef.current.moon, seasonalEffectsRef.current.harvestMoon,
+          sunAltitude
+        )
+      }
+    } catch (e) {
+      debugRenderRef.current.error = 'moon:' + String(e)
     }
 
     // Sort particles by z-depth (far to near)
-    const sorted = [...particlesRef.current].sort((a, b) => a.z - b.z)
+    const particles = particlesRef.current
 
-    // Render particles
-    sorted.forEach(p => {
-      const noiseX = noise.noise2D(p.noiseOffsetX + t * 0.5, p.y * 0.01) * 2
-      const noiseY = noise.noise2D(p.noiseOffsetY + t * 0.3, p.x * 0.01) * 0.5
-
-      switch (p.type) {
-        case 'star':
-          renderStar(ctx, p, season)
-          break
-        case 'snow':
-          renderSnow(ctx, p, t, width, height, wind.gust, noiseX, noiseY)
-          break
-        case 'leaf':
-          renderLeaf(ctx, p, width, height, wind.gust, noiseX, noiseY)
-          break
-        case 'firefly':
-          renderFirefly(ctx, p, width, height, noiseX, noiseY)
-          break
-        case 'mist':
-          renderMist(ctx, p, t, width, wind.gust)
-          break
-      }
-    })
-
-    // Shooting stars
-    if (expressive && effectsRef.current.shootingStars > 0) {
-      renderShootingStars(ctx, width, height, effectsRef.current.shootingStars)
+    // Debug: Check for undefined particles
+    const undefinedIdx = particles.findIndex(p => !p)
+    if (undefinedIdx >= 0) {
+      debugRenderRef.current.error = `undefined particle at ${undefinedIdx}`
+      animationIdRef.current = requestAnimationFrame(render)
+      return
     }
 
-    // Aurora - requires deeper night (stars > 0.5) for dramatic effect
-    // This is intentionally higher than star creation threshold (> 0)
-    if (seasonalEffectsRef.current.aurora && effectsRef.current.stars > 0.5 && expressive) {
-      renderAurora(ctx, t, width, height, noise)
+    const sorted = [...particles].sort((a, b) => a.z - b.z)
+
+    // Render particles with individual error catching
+    for (let i = 0; i < sorted.length; i++) {
+      const p = sorted[i]
+      try {
+        // Guard against missing properties
+        if (typeof p.noiseOffsetX !== 'number' || typeof p.y !== 'number') {
+          debugRenderRef.current.error = `particle ${i} missing props: noiseOffsetX=${p.noiseOffsetX}, y=${p.y}`
+          continue
+        }
+
+        const noiseX = noise.noise2D(p.noiseOffsetX + t * 0.5, p.y * 0.01) * 2
+        const noiseY = noise.noise2D(p.noiseOffsetY + t * 0.3, p.x * 0.01) * 0.5
+
+        switch (p.type) {
+          case 'star':
+            renderStar(ctx, p, season)
+            break
+          case 'snow':
+            renderSnow(ctx, p, t, width, height, wind.gust, noiseX, noiseY)
+            break
+          case 'leaf':
+            renderLeaf(ctx, p, width, height, wind.gust, noiseX, noiseY)
+            break
+          case 'firefly':
+            renderFirefly(ctx, p, width, height, noiseX, noiseY)
+            break
+          case 'mist':
+            renderMist(ctx, p, t, width, wind.gust)
+            break
+        }
+      } catch (e) {
+        debugRenderRef.current.error = `particle[${i}] type=${p.type}: ${String(e)}`
+        // Continue rendering other particles
+      }
+    }
+
+    try {
+      // Shooting stars
+      if (expressive && effectsRef.current.shootingStars > 0) {
+        renderShootingStars(ctx, width, height, effectsRef.current.shootingStars)
+      }
+    } catch (e) {
+      debugRenderRef.current.error = 'shooting:' + String(e)
+    }
+
+    try {
+      // Aurora - requires deeper night (stars > 0.5) for dramatic effect
+      // This is intentionally higher than star creation threshold (> 0)
+      if (seasonalEffectsRef.current.aurora && effectsRef.current.stars > 0.5 && expressive) {
+        renderAurora(ctx, t, width, height, noise)
+      }
+    } catch (e) {
+      debugRenderRef.current.error = 'aurora:' + String(e)
     }
 
     animationIdRef.current = requestAnimationFrame(render)
-    } catch (e) {
-      debugRenderRef.current.error = String(e)
-    }
   }, [season, effects.stars, effects.shootingStars, effects.moon, expressive, seasonalEffects.aurora, seasonalEffects.harvestMoon, sunAltitude, moonIllumination, moonPhaseAngle])
 
   // ============================================================================
