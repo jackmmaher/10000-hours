@@ -38,6 +38,19 @@ export default {
         // Card backgrounds (glassmorphism-ready)
         'card': 'var(--card-bg)',
       },
+      spacing: {
+        // Design system spacing (prefer these)
+        'ds-1': 'var(--space-1)',   // 4px
+        'ds-2': 'var(--space-2)',   // 8px
+        'ds-3': 'var(--space-3)',   // 12px
+        'ds-4': 'var(--space-4)',   // 16px
+        'ds-6': 'var(--space-6)',   // 24px
+        'ds-8': 'var(--space-8)',   // 32px
+        'ds-12': 'var(--space-12)', // 48px
+        'ds-16': 'var(--space-16)', // 64px
+        'ds-24': 'var(--space-24)', // 96px
+        'ds-32': 'var(--space-32)', // 128px
+      },
       fontFamily: {
         // Pair 1: Palatino + Raleway (from font-pairs.html)
         serif: ['Palatino Linotype', 'Book Antiqua', 'Palatino', 'Georgia', 'serif'],
