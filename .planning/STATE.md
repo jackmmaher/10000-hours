@@ -1,13 +1,13 @@
 # Project State
 
 **Last Updated:** 2026-01-10
-**Current Phase:** 01-haptic-vocabulary (planning)
+**Current Phase:** 08-design-system-refinement (planned)
 
 ## Position
 
 - **Milestone:** v2.0 - DOSE Enhancement
-- **Phase:** 01 - Haptic Vocabulary Expansion
-- **Status:** Planning
+- **Phase:** 08 - Design System Refinement
+- **Status:** Plans created, ready for execution
 
 ## Accumulated Decisions
 
@@ -25,6 +25,23 @@
 2. **Audio** - Web Audio API with silent mode respect
 3. **Notifications** - Local/in-app only (no push notification infrastructure)
 
+### From SWOT Analysis (2026-01-10)
+
+1. **Spacing scale** - Adopt constrained scale: 4, 8, 12, 16, 24, 32, 48, 64, 96, 128px
+2. **Typography** - Consolidate to 5 semantic styles (display, heading, subheading, body, caption)
+3. **Button component** - Extract with complete states (hover, active, focus-visible, disabled)
+4. **Transition timing** - Standardize to fast (150ms), base (200ms), slow (300ms)
+5. **Backward compatibility** - Add new tokens alongside existing, don't break current styles
+
+## Phase 08 Plans
+
+| Plan | Name | Tasks | Status |
+|------|------|-------|--------|
+| 08-01 | Spacing System Formalization | 3 | Ready |
+| 08-02 | Typography Consolidation | 3 | Ready |
+| 08-03 | Button Component Extraction | 3 | Ready |
+| 08-04 | Transition & Animation Tokens | 3 | Ready |
+
 ## Deferred Issues
 
 None yet.
@@ -35,7 +52,7 @@ None yet.
 
 ## Alignment Status
 
-**On track** - Planning phase, no implementation started.
+**On track** - Phase 08 plans created based on SWOT analysis of Human-Crafted Design skill.
 
 ---
 

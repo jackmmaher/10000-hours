@@ -1,7 +1,7 @@
 # DOSE Enhancement Roadmap
 
 **Milestone:** v2.0 - Neurochemical Wellbeing Enhancement
-**Phases:** 7
+**Phases:** 8
 **Depth:** Comprehensive
 
 ## Overview
@@ -120,6 +120,28 @@ Sequential implementation of happiness chemical optimizations, ordered by:
 
 ---
 
+## Phase 08: Design System Refinement
+
+**Goal:** Formalize design tokens and extract reusable components per Human-Crafted Design skill
+
+**Deliverables:**
+- Spacing CSS variables with constrained scale (4, 8, 12, 16, 24, 32, 48, 64, 96, 128)
+- Typography consolidated to 5 semantic styles (display, heading, subheading, body, caption)
+- Button component with complete interactive states (hover, active, focus-visible, disabled)
+- Transition timing tokens (fast: 150ms, base: 200ms, slow: 300ms)
+- Design system documentation (SPACING.md, ANIMATION.md)
+
+**Tasks:** ~10 tasks (4 plans)
+**Research:** No (applies existing Human-Crafted Design skill)
+
+**Context:** Based on SWOT analysis of codebase against Human-Crafted Design skill. Addresses:
+- Spacing values outside constrained scale (px-5=20px, mb-10=40px)
+- Typography variations exceeding 5 styles (text-[10px] arbitrary)
+- Inconsistent button states across components
+- Non-standard transition timing (400ms, 600ms)
+
+---
+
 ## Domain Expertise
 
 Load these skills when planning phases:
@@ -163,8 +185,9 @@ This order:
 | 05 | None |
 | 06 | 01 (haptics for breath sync) |
 | 07 | None |
+| 08 | None (independent design refinement) |
 
 ---
 
 *Roadmap created: 2026-01-10*
-*Estimated total tasks: ~35 across 7 phases*
+*Estimated total tasks: ~45 across 8 phases*
