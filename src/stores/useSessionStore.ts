@@ -31,6 +31,9 @@ interface SessionState {
   // Last session ID for insight linking
   lastSessionUuid: string | null
 
+  // Plan refresh trigger (timestamp updated when plans change)
+  lastPlanChange: number
+
   // Actions
   hydrate: () => Promise<void>
   startPreparing: () => void
@@ -56,6 +59,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   justReachedEnlightenment: false,
   justAchievedMilestone: null,
   lastSessionUuid: null,
+  lastPlanChange: 0,
 
   hydrate: async () => {
     const [sessions, appState] = await Promise.all([
@@ -115,6 +119,11 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     const todayStart = new Date(sessionStartTime)
     todayStart.setHours(0, 0, 0, 0)
     const linkedPlan = await linkSessionToPlan(sessionUuid, todayStart.getTime())
+
+    // Trigger plan refresh so Journey tab updates immediately
+    if (linkedPlan) {
+      set({ lastPlanChange: Date.now() })
+    }
 
     // Track community template completion if this session was linked to a community template
     if (linkedPlan?.sourceTemplateId && supabase) {

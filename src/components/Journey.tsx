@@ -51,7 +51,7 @@ function getMondayOfWeek(): Date {
 type JourneySubTab = 'sessions' | 'saved' | 'pearls'
 
 export function Journey() {
-  const { sessions } = useSessionStore()
+  const { sessions, lastPlanChange } = useSessionStore()
   const { setView } = useNavigationStore()
   const { user } = useAuthStore()
   const [subTab, setSubTab] = useState<JourneySubTab>('sessions')
@@ -188,7 +188,7 @@ export function Journey() {
       setNextPlannedSession(nextPlan || null)
     }
     loadNextPlan()
-  }, [sessions, plansRefreshKey])
+  }, [sessions, plansRefreshKey, lastPlanChange])
 
   return (
     <div

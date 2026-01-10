@@ -659,6 +659,8 @@ export async function getNextPlannedSession(afterDate?: number): Promise<Planned
   return plans
     .filter(p => {
       if (p.completed || p.linkedSessionUuid) return false
+      // Defensive check: exclude plans from past days (handles edge cases)
+      if (p.date < todayTime) return false
       // If afterDate provided, skip plans on that same calendar day
       if (afterDate !== undefined && isSameDay(p.date, afterDate)) return false
       return true
