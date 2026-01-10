@@ -212,6 +212,8 @@ export function LivingCanvas({
     starsVisible: effects.stars > 0,
     particleType: seasonalEffects.particleType
   })
+  // Track whether initial particle creation has happened
+  const hasInitializedRef = useRef(false)
   const frameCountRef = useRef(0)
 
   // Keep effects in a ref so render functions always use current values
@@ -1050,6 +1052,9 @@ export function LivingCanvas({
   // LIFECYCLE
   // ============================================================================
 
+  // Canvas setup and animation lifecycle
+  // BUG FIX: Removed createParticles from dependencies to prevent double-creation
+  // Particle creation is handled entirely by the next effect
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -1063,19 +1068,35 @@ export function LivingCanvas({
     const ctx = canvas.getContext('2d')
     if (ctx) ctx.scale(dpr, dpr)
 
-    createParticles(width, height)
+    // Start animation loop (particles are created by the particle management effect)
     animationIdRef.current = requestAnimationFrame(render)
 
     return () => {
       if (animationIdRef.current) cancelAnimationFrame(animationIdRef.current)
     }
-  }, [createParticles, render])
+  }, [render])
 
+  // Particle creation and recreation management
+  // BUG FIX: This is now the ONLY effect that creates particles, preventing double-creation
   useEffect(() => {
-    // Check for changes that require particle recreation
     const currentStarsVisible = effects.stars > 0
     const currentParticleType = seasonalEffects.particleType
 
+    // On first run, always create particles (initial setup)
+    if (!hasInitializedRef.current) {
+      hasInitializedRef.current = true
+      lastPropsRef.current = {
+        season,
+        timeOfDay,
+        expressive,
+        starsVisible: currentStarsVisible,
+        particleType: currentParticleType
+      }
+      createParticles(window.innerWidth, window.innerHeight)
+      return
+    }
+
+    // Check for changes that require particle recreation
     const themeChanged =
       lastPropsRef.current.season !== season ||
       lastPropsRef.current.timeOfDay !== timeOfDay ||

@@ -94,9 +94,14 @@ export function LivingTheme({
   const locationFetched = useRef(false)
   const [lastUpdate, setLastUpdate] = useState(new Date())
 
-  // Theme state
+  // Theme state - respects manual mode from the start
   const [themeState, setThemeState] = useState<LivingThemeState>(() => {
-    // Initial state using timezone fallback
+    // BUG FIX: Initialize respecting the current mode
+    // Note: On first render before hydration, themeMode defaults to 'auto'
+    // After hydration, updateTheme will be called if mode changed
+    if (isManualMode) {
+      return calculateManualTheme(manualSeason as SeasonOption, manualTime, expressive, true)
+    }
     const fallback = estimateLocationFromTimezone()
     return calculateLivingTheme(fallback, new Date(), expressive, true)
   })
@@ -159,8 +164,10 @@ export function LivingTheme({
   }, [updateTheme])
 
   // Calculate seasonal effects based on mode
+  // BUG FIX: Use manualTime directly in manual mode, not themeState.timeOfDay
+  // This ensures consistency before the first updateTheme() call
   const seasonalEffects = isManualMode
-    ? getManualSeasonalEffects(manualSeason as SeasonOption, themeState.timeOfDay, expressive)
+    ? getManualSeasonalEffects(manualSeason as SeasonOption, manualTime, expressive)
     : getSeasonalEffects(themeState.season, themeState.timeOfDay, expressive)
 
   // Build context value
