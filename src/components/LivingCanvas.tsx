@@ -207,6 +207,12 @@ export function LivingCanvas({
   const lastPropsRef = useRef({ season, timeOfDay, expressive })
   const frameCountRef = useRef(0)
 
+  // Keep effects in a ref so render functions always use current values
+  const effectsRef = useRef(effects)
+  const seasonalEffectsRef = useRef(seasonalEffects)
+  effectsRef.current = effects
+  seasonalEffectsRef.current = seasonalEffects
+
   // Create particles
   const createParticles = useCallback((width: number, height: number) => {
     const particles: Particle[] = []
@@ -377,12 +383,13 @@ export function LivingCanvas({
     renderSun(ctx, width, height, sunAltitude, sunAzimuth, season)
 
     // Render moon (behind particles, with phase)
-    if (effects.moon > 0) {
+    if (effectsRef.current.moon > 0) {
       renderMoon(
         ctx, width, height,
         moonAltitude, moonAzimuth,
         moonPhase, moonIllumination, moonPhaseAngle,
-        season, effects.moon, seasonalEffects.harvestMoon
+        season, effectsRef.current.moon, seasonalEffectsRef.current.harvestMoon,
+        sunAltitude // Pass sun altitude to offset moon when sun is also visible
       )
     }
 
@@ -408,12 +415,12 @@ export function LivingCanvas({
     })
 
     // Shooting stars
-    if (expressive && effects.shootingStars > 0) {
-      renderShootingStars(ctx, t, width, height, effects.shootingStars)
+    if (expressive && effectsRef.current.shootingStars > 0) {
+      renderShootingStars(ctx, t, width, height, effectsRef.current.shootingStars)
     }
 
     // Aurora
-    if (seasonalEffects.aurora && effects.stars > 0.5 && expressive) {
+    if (seasonalEffectsRef.current.aurora && effectsRef.current.stars > 0.5 && expressive) {
       renderAurora(ctx, t, width, height, noise)
     }
 
@@ -442,7 +449,7 @@ export function LivingCanvas({
     const temps = STAR_TEMPS[season]
     const color = p.colorTemp > 0.5 ? temps.warm : temps.cool
     const depthAlpha = 0.3 + p.z * 0.7
-    const finalAlpha = p.alpha * twinkle * depthAlpha * effects.stars
+    const finalAlpha = p.alpha * twinkle * depthAlpha * effectsRef.current.stars
 
     // Outer glow
     ctx.save()
@@ -860,7 +867,7 @@ export function LivingCanvas({
 
   /**
    * Render moon as ambient element in top-right corner
-   * - Fixed position matching sun's ambient zone
+   * - Fixed position, offset from sun during twilight
    * - Accurate phase rendering (waxing/waning crescents, quarters, full)
    * - Soft ethereal glow matching sun's quality
    * - Fades in/out based on moon intensity from Living Theme
@@ -876,14 +883,19 @@ export function LivingCanvas({
     phaseAngle: number,
     _season: Season,
     intensity: number,
-    harvestMoon: boolean
+    harvestMoon: boolean,
+    sunAltitude: number = -10 // Default to sun below horizon
   ) {
     // Don't render if intensity too low (Living Theme handles visibility)
     if (intensity < 0.05) return
 
-    // Fixed ambient position - same zone as sun (they never overlap due to intensity logic)
-    const moonX = w * 0.82
-    const moonY = h * 0.14
+    // Check if sun is also visible (above -6°)
+    const sunVisible = sunAltitude > -6
+
+    // Offset moon position when sun is visible to avoid overlap
+    // Moon moves to lower-left of the ambient zone during twilight
+    const moonX = sunVisible ? w * 0.72 : w * 0.82
+    const moonY = sunVisible ? h * 0.22 : h * 0.14
 
     // Subtle sizes for ambient presence
     const baseSize = harvestMoon ? 22 : 18
