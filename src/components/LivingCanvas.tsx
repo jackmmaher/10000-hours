@@ -1,161 +1,24 @@
 import { useEffect, useRef, useCallback } from 'react'
-import { Season, TimeOfDay } from '../lib/livingTheme'
-import type { EffectIntensities, SeasonalEffects } from '../lib/livingTheme'
-
-class SimplexNoise {
-  private perm: number[] = []
-  private gradP: { x: number; y: number }[] = []
-
-  private grad3 = [
-    { x: 1, y: 1 }, { x: -1, y: 1 }, { x: 1, y: -1 }, { x: -1, y: -1 },
-    { x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }
-  ]
-
-  constructor(seed = Math.random() * 256) {
-    const p = []
-    for (let i = 0; i < 256; i++) p[i] = i
-
-    // Shuffle using seed
-    let n = seed
-    for (let i = 255; i > 0; i--) {
-      n = (n * 16807) % 2147483647
-      const j = n % (i + 1)
-      ;[p[i], p[j]] = [p[j], p[i]]
-    }
-
-    for (let i = 0; i < 512; i++) {
-      this.perm[i] = p[i & 255]
-      this.gradP[i] = this.grad3[this.perm[i] % 8]
-    }
-  }
-
-  noise2D(x: number, y: number): number {
-    const F2 = 0.5 * (Math.sqrt(3) - 1)
-    const G2 = (3 - Math.sqrt(3)) / 6
-
-    const s = (x + y) * F2
-    const i = Math.floor(x + s)
-    const j = Math.floor(y + s)
-    const t = (i + j) * G2
-
-    const X0 = i - t
-    const Y0 = j - t
-    const x0 = x - X0
-    const y0 = y - Y0
-
-    const i1 = x0 > y0 ? 1 : 0
-    const j1 = x0 > y0 ? 0 : 1
-
-    const x1 = x0 - i1 + G2
-    const y1 = y0 - j1 + G2
-    const x2 = x0 - 1 + 2 * G2
-    const y2 = y0 - 1 + 2 * G2
-
-    const ii = i & 255
-    const jj = j & 255
-
-    // Safe gradient lookups with bounds checking
-    const idx0 = (ii + this.perm[jj]) & 511
-    const idx1 = (ii + i1 + this.perm[(jj + j1) & 511]) & 511
-    const idx2 = (ii + 1 + this.perm[(jj + 1) & 511]) & 511
-
-    const g0 = this.gradP[idx0] || { x: 0, y: 0 }
-    const g1 = this.gradP[idx1] || { x: 0, y: 0 }
-    const g2 = this.gradP[idx2] || { x: 0, y: 0 }
-
-    let t0 = 0.5 - x0 * x0 - y0 * y0
-    const n0 = t0 < 0 ? 0 : (t0 *= t0, t0 * t0 * (g0.x * x0 + g0.y * y0))
-
-    let t1 = 0.5 - x1 * x1 - y1 * y1
-    const n1 = t1 < 0 ? 0 : (t1 *= t1, t1 * t1 * (g1.x * x1 + g1.y * y1))
-
-    let t2 = 0.5 - x2 * x2 - y2 * y2
-    const n2 = t2 < 0 ? 0 : (t2 *= t2, t2 * t2 * (g2.x * x2 + g2.y * y2))
-
-    return 70 * (n0 + n1 + n2)
-  }
-}
-
-interface LivingCanvasProps {
-  season: Season
-  timeOfDay: TimeOfDay
-  effects: EffectIntensities
-  expressive: boolean
-  seasonalEffects: SeasonalEffects
-  sunAltitude: number
-  moonIllumination: number
-  moonPhaseAngle: number
-}
-
-interface BaseParticle {
-  x: number
-  y: number
-  z: number
-  size: number
-  speedX: number
-  speedY: number
-  noiseOffsetX: number
-  noiseOffsetY: number
-  alpha: number
-  birthTime: number
-}
-
-interface StarParticle extends BaseParticle {
-  type: 'star'
-  twinklePhase: number
-  twinkleSpeed: number
-  colorTemp: number // 0 = cool blue, 1 = warm yellow
-}
-
-interface SnowParticle extends BaseParticle {
-  type: 'snow'
-  sparkle: number
-  tumble: number
-}
-
-interface LeafParticle extends BaseParticle {
-  type: 'leaf'
-  rotation: number
-  rotationSpeed: number
-  color: string
-  flutter: number
-}
-
-interface FireflyParticle extends BaseParticle {
-  type: 'firefly'
-  glowPhase: number
-  glowSpeed: number
-  pulseOffset: number
-}
-
-interface MistParticle extends BaseParticle {
-  type: 'mist'
-  opacity: number
-  driftPhase: number
-}
-
-type Particle = StarParticle | SnowParticle | LeafParticle | FireflyParticle | MistParticle
-
-interface ShootingStar {
-  x: number
-  y: number
-  speedX: number
-  speedY: number
-  life: number
-  length: number
-  brightness: number
-}
-
-const LEAF_COLORS = [
-  '#D97706', '#B45309', '#DC2626', '#CA8A04', '#92400E', '#991B1B'
-]
-
-const STAR_TEMPS: Record<Season, { cool: string; warm: string }> = {
-  winter: { cool: 'rgba(186, 230, 253, 1)', warm: 'rgba(224, 242, 254, 1)' },
-  summer: { cool: 'rgba(254, 243, 199, 1)', warm: 'rgba(253, 224, 71, 1)' },
-  spring: { cool: 'rgba(233, 213, 255, 1)', warm: 'rgba(255, 255, 255, 1)' },
-  autumn: { cool: 'rgba(255, 237, 213, 1)', warm: 'rgba(254, 215, 170, 1)' }
-}
+import { Season } from '../lib/livingTheme'
+import { SimplexNoise } from '../lib/noise/SimplexNoise'
+import type { LivingCanvasProps, Particle, ShootingStar } from './canvas/types'
+import { STAR_TEMPS } from './canvas/constants'
+import {
+  createSnowParticle,
+  createLeafParticle,
+  createFireflyParticle,
+  createMistParticle,
+} from './canvas/particles'
+import {
+  renderSnow,
+  renderLeaf,
+  renderFirefly,
+  renderMist,
+  renderShootingStars,
+  renderAurora,
+  renderSun,
+  renderMoon,
+} from './canvas/renderers'
 
 export function LivingCanvas({
   season,
@@ -165,7 +28,7 @@ export function LivingCanvas({
   seasonalEffects,
   sunAltitude,
   moonIllumination,
-  moonPhaseAngle
+  moonPhaseAngle,
 }: LivingCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const particlesRef = useRef<Particle[]>([])
@@ -177,11 +40,9 @@ export function LivingCanvas({
     season,
     timeOfDay,
     expressive,
-    // Track effects values that determine particle existence
     starsVisible: effects.stars > 0,
-    particleType: seasonalEffects.particleType
+    particleType: seasonalEffects.particleType,
   })
-  // Track whether initial particle creation has happened
   const hasInitializedRef = useRef(false)
 
   // Keep effects in a ref so render functions always use current values
@@ -190,219 +51,82 @@ export function LivingCanvas({
   effectsRef.current = effects
   seasonalEffectsRef.current = seasonalEffects
 
-  const createParticles = useCallback((width: number, height: number) => {
-    const particles: Particle[] = []
-    const now = Date.now()
+  const createParticles = useCallback(
+    (width: number, height: number) => {
+      const particles: Particle[] = []
+      const now = Date.now()
 
-    // Stars appear as soon as sky begins darkening (effects.stars > 0)
-    if (effects.stars > 0) {
-      const count = Math.floor(60 * effects.stars)
-      for (let i = 0; i < count; i++) {
-        const z = Math.random()
-        particles.push({
-          type: 'star',
-          x: Math.random() * width,
-          y: Math.random() * height * 0.75,
-          z,
-          size: 0.5 + Math.random() * 2.5,
-          speedX: 0,
-          speedY: 0,
-          noiseOffsetX: Math.random() * 1000,
-          noiseOffsetY: Math.random() * 1000,
-          alpha: 0.2 + Math.random() * 0.8,
-          birthTime: now,
-          twinklePhase: Math.random() * Math.PI * 2,
-          twinkleSpeed: 0.01 + Math.random() * 0.04,
-          colorTemp: Math.random()
-        })
-      }
-    }
-
-    // Seasonal particles
-    const particleType = seasonalEffects.particleType
-    const intensity = effects.particles * seasonalEffects.particleMultiplier
-
-    if (intensity >= 0.1) {
-      const particleConfig: Record<string, { count: number; create: () => Particle }> = {
-        snow: { count: 200, create: () => createSnowParticle(width, height, true, now) },
-        leaves: { count: 60, create: () => createLeafParticle(width, height, true, now) },
-        fireflies: { count: 40, create: () => createFireflyParticle(width, height, now) },
-        mist: { count: 50, create: () => createMistParticle(width, height, now) }
-      }
-
-      const config = particleConfig[particleType]
-      if (config) {
-        const count = Math.floor(config.count * intensity)
+      // Stars appear as soon as sky begins darkening (effects.stars > 0)
+      if (effects.stars > 0) {
+        const count = Math.floor(60 * effects.stars)
         for (let i = 0; i < count; i++) {
-          particles.push(config.create())
+          const z = Math.random()
+          particles.push({
+            type: 'star',
+            x: Math.random() * width,
+            y: Math.random() * height * 0.75,
+            z,
+            size: 0.5 + Math.random() * 2.5,
+            speedX: 0,
+            speedY: 0,
+            noiseOffsetX: Math.random() * 1000,
+            noiseOffsetY: Math.random() * 1000,
+            alpha: 0.2 + Math.random() * 0.8,
+            birthTime: now,
+            twinklePhase: Math.random() * Math.PI * 2,
+            twinkleSpeed: 0.01 + Math.random() * 0.04,
+            colorTemp: Math.random(),
+          })
         }
       }
-    }
 
-    particlesRef.current = particles
-  }, [effects.stars, effects.particles, seasonalEffects.particleType, seasonalEffects.particleMultiplier])
+      // Seasonal particles
+      const particleType = seasonalEffects.particleType
+      const intensity = effects.particles * seasonalEffects.particleMultiplier
 
-  function createSnowParticle(w: number, h: number, init: boolean, now: number): SnowParticle {
-    const z = Math.random()
-    return {
-      type: 'snow',
-      x: Math.random() * w,
-      y: init ? Math.random() * h : -20 - Math.random() * 50,
-      z,
-      size: 1 + Math.random() * 4 + z * 2,
-      speedX: (Math.random() - 0.5) * 0.3,
-      speedY: 0.3 + Math.random() * 1.2 + z * 0.5,
-      noiseOffsetX: Math.random() * 1000,
-      noiseOffsetY: Math.random() * 1000,
-      alpha: 0.3 + Math.random() * 0.5 + z * 0.2,
-      birthTime: now,
-      sparkle: Math.random(),
-      tumble: Math.random() * Math.PI * 2
-    }
-  }
+      if (intensity >= 0.1) {
+        const particleConfig: Record<string, { count: number; create: () => Particle }> = {
+          snow: {
+            count: 200,
+            create: () => createSnowParticle(width, height, true, now),
+          },
+          leaves: {
+            count: 60,
+            create: () => createLeafParticle(width, height, true, now),
+          },
+          fireflies: {
+            count: 40,
+            create: () => createFireflyParticle(width, height, now),
+          },
+          mist: {
+            count: 50,
+            create: () => createMistParticle(width, height, now),
+          },
+        }
 
-  function createLeafParticle(w: number, h: number, init: boolean, now: number): LeafParticle {
-    const z = Math.random()
-    return {
-      type: 'leaf',
-      x: Math.random() * w,
-      y: init ? Math.random() * h : -30 - Math.random() * 50,
-      z,
-      size: 6 + Math.random() * 10 + z * 4,
-      speedX: (Math.random() - 0.5) * 1.5,
-      speedY: 0.8 + Math.random() * 1.5 + z * 0.8,
-      noiseOffsetX: Math.random() * 1000,
-      noiseOffsetY: Math.random() * 1000,
-      alpha: 0.5 + Math.random() * 0.4 + z * 0.1,
-      birthTime: now,
-      rotation: Math.random() * Math.PI * 2,
-      rotationSpeed: (Math.random() - 0.5) * 0.08,
-      color: LEAF_COLORS[Math.floor(Math.random() * LEAF_COLORS.length)],
-      flutter: Math.random() * Math.PI * 2
-    }
-  }
-
-  function createFireflyParticle(w: number, h: number, now: number): FireflyParticle {
-    const z = Math.random()
-    return {
-      type: 'firefly',
-      x: Math.random() * w,
-      y: h * 0.25 + Math.random() * h * 0.55,
-      z,
-      size: 2 + Math.random() * 3,
-      speedX: (Math.random() - 0.5) * 0.2,
-      speedY: (Math.random() - 0.5) * 0.2,
-      noiseOffsetX: Math.random() * 1000,
-      noiseOffsetY: Math.random() * 1000,
-      alpha: 0.8,
-      birthTime: now,
-      glowPhase: Math.random() * Math.PI * 2,
-      glowSpeed: 0.015 + Math.random() * 0.025,
-      pulseOffset: Math.random() * 1000
-    }
-  }
-
-  function createMistParticle(w: number, h: number, now: number): MistParticle {
-    const z = Math.random()
-    return {
-      type: 'mist',
-      x: Math.random() * w,
-      y: h * 0.35 + Math.random() * h * 0.45,
-      z,
-      size: 80 + Math.random() * 160 + z * 60,
-      speedX: (Math.random() - 0.5) * 0.15,
-      speedY: (Math.random() - 0.5) * 0.05,
-      noiseOffsetX: Math.random() * 1000,
-      noiseOffsetY: Math.random() * 1000,
-      alpha: 0.04 + Math.random() * 0.08,
-      birthTime: now,
-      opacity: 0.03 + Math.random() * 0.07,
-      driftPhase: Math.random() * Math.PI * 2
-    }
-  }
-
-  // Main render loop
-  const render = useCallback((time: number) => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-
-    // Use window dimensions for full viewport coverage
-    const width = window.innerWidth
-    const height = window.innerHeight
-    const noise = noiseRef.current
-    const t = time * 0.001
-
-    // Wind physics - smooth organic gusts
-    const wind = windRef.current
-    if (Math.random() < 0.005) {
-      wind.target = (Math.random() - 0.5) * 6
-    }
-    wind.gust += (wind.target - wind.gust) * 0.02
-    wind.gust *= 0.995
-
-    // Clear canvas to transparent - DOM gradients render behind
-    ctx.clearRect(0, 0, width, height)
-
-    // Render sun (behind particles)
-    renderSun(ctx, width, height, sunAltitude)
-
-    // Render moon (behind particles, with phase)
-    if (effectsRef.current.moon > 0) {
-      renderMoon(
-        ctx, width, height,
-        moonIllumination, moonPhaseAngle,
-        effectsRef.current.moon, seasonalEffectsRef.current.harvestMoon,
-        sunAltitude
-      )
-    }
-
-    // Sort particles by z-depth (far to near)
-    const sorted = [...particlesRef.current].sort((a, b) => a.z - b.z)
-
-    // Render particles
-    sorted.forEach(p => {
-      const noiseX = noise.noise2D(p.noiseOffsetX + t * 0.5, p.y * 0.01) * 2
-      const noiseY = noise.noise2D(p.noiseOffsetY + t * 0.3, p.x * 0.01) * 0.5
-
-      switch (p.type) {
-        case 'star':
-          renderStar(ctx, p, season)
-          break
-        case 'snow':
-          renderSnow(ctx, p, t, width, height, wind.gust, noiseX, noiseY)
-          break
-        case 'leaf':
-          renderLeaf(ctx, p, width, height, wind.gust, noiseX, noiseY)
-          break
-        case 'firefly':
-          renderFirefly(ctx, p, width, height, noiseX, noiseY)
-          break
-        case 'mist':
-          renderMist(ctx, p, t, width, wind.gust)
-          break
+        const config = particleConfig[particleType]
+        if (config) {
+          const count = Math.floor(config.count * intensity)
+          for (let i = 0; i < count; i++) {
+            particles.push(config.create())
+          }
+        }
       }
-    })
 
-    // Shooting stars
-    if (expressive && effectsRef.current.shootingStars > 0) {
-      renderShootingStars(ctx, width, height, effectsRef.current.shootingStars)
-    }
+      particlesRef.current = particles
+    },
+    [
+      effects.stars,
+      effects.particles,
+      seasonalEffects.particleType,
+      seasonalEffects.particleMultiplier,
+    ]
+  )
 
-    // Aurora - requires deeper night (stars > 0.5) for dramatic effect
-    if (seasonalEffectsRef.current.aurora && effectsRef.current.stars > 0.5 && expressive) {
-      renderAurora(ctx, t, width, height, noise)
-    }
-
-    animationIdRef.current = requestAnimationFrame(render)
-  }, [season, effects.stars, effects.shootingStars, effects.moon, expressive, seasonalEffects.aurora, seasonalEffects.harvestMoon, sunAltitude, moonIllumination, moonPhaseAngle])
-
+  // Inline star renderer (needs access to effectsRef)
   function renderStar(
     ctx: CanvasRenderingContext2D,
-    p: StarParticle,
+    p: Particle & { type: 'star' },
     season: Season
   ) {
     p.twinklePhase += p.twinkleSpeed
@@ -436,548 +160,106 @@ export function LivingCanvas({
     ctx.restore()
   }
 
-  function renderSnow(
-    ctx: CanvasRenderingContext2D,
-    p: SnowParticle,
-    t: number,
-    w: number,
-    h: number,
-    wind: number,
-    noiseX: number,
-    noiseY: number
-  ) {
-    // Physics with noise-based organic movement
-    p.y += p.speedY * (0.6 + p.z * 0.6)
-    p.x += p.speedX + wind * p.z * 0.8 + noiseX * (0.3 + p.z * 0.3)
-    p.tumble += 0.02 + noiseY * 0.01
+  // Main render loop
+  const render = useCallback(
+    (time: number) => {
+      const canvas = canvasRef.current
+      if (!canvas) return
 
-    // Wrap
-    if (p.y > h + 20) { p.y = -20; p.x = Math.random() * w }
-    if (p.x > w + 20) p.x = -20
-    if (p.x < -20) p.x = w + 20
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
 
-    const depthAlpha = 0.4 + p.z * 0.6
-    const sparkleFlash = Math.sin(t * 3 + p.sparkle * 10) > 0.95 ? 1.5 : 1
+      const width = window.innerWidth
+      const height = window.innerHeight
+      const noise = noiseRef.current
+      const t = time * 0.001
 
-    ctx.save()
+      // Wind physics - smooth organic gusts
+      const wind = windRef.current
+      if (Math.random() < 0.005) {
+        wind.target = (Math.random() - 0.5) * 6
+      }
+      wind.gust += (wind.target - wind.gust) * 0.02
+      wind.gust *= 0.995
 
-    // Soft glow for depth
-    if (p.z > 0.5) {
-      ctx.shadowColor = 'rgba(255, 255, 255, 0.8)'
-      ctx.shadowBlur = p.size * 2
-    }
+      // Clear canvas to transparent - DOM gradients render behind
+      ctx.clearRect(0, 0, width, height)
 
-    // Gradient snowflake
-    const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * (0.6 + p.z * 0.5))
-    gradient.addColorStop(0, `rgba(255, 255, 255, ${p.alpha * depthAlpha * sparkleFlash})`)
-    gradient.addColorStop(0.4, `rgba(255, 255, 255, ${p.alpha * depthAlpha * 0.6})`)
-    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)')
+      // Render sun (behind particles)
+      renderSun(ctx, width, height, sunAltitude)
 
-    ctx.globalAlpha = 1
-    ctx.fillStyle = gradient
-    ctx.beginPath()
-    ctx.arc(p.x, p.y, p.size * (0.6 + p.z * 0.5), 0, Math.PI * 2)
-    ctx.fill()
-    ctx.restore()
-  }
+      // Render moon (behind particles, with phase)
+      if (effectsRef.current.moon > 0) {
+        renderMoon(
+          ctx,
+          width,
+          height,
+          moonIllumination,
+          moonPhaseAngle,
+          effectsRef.current.moon,
+          seasonalEffectsRef.current.harvestMoon,
+          sunAltitude
+        )
+      }
 
-  function renderLeaf(
-    ctx: CanvasRenderingContext2D,
-    p: LeafParticle,
-    w: number,
-    h: number,
-    wind: number,
-    noiseX: number,
-    noiseY: number
-  ) {
-    // Physics with flutter
-    p.flutter += 0.05 + Math.abs(noiseX) * 0.02
-    const flutter = Math.sin(p.flutter) * 15 * (0.5 + p.z * 0.5)
+      // Sort particles by z-depth (far to near)
+      const sorted = [...particlesRef.current].sort((a, b) => a.z - b.z)
 
-    p.y += p.speedY * (0.5 + p.z * 0.6)
-    p.x += p.speedX + wind * p.z * 1.2 + flutter * 0.1 + noiseX * 0.5
-    p.rotation += p.rotationSpeed + noiseY * 0.02 + (wind * 0.01)
+      // Render particles
+      sorted.forEach((p) => {
+        const noiseX = noise.noise2D(p.noiseOffsetX + t * 0.5, p.y * 0.01) * 2
+        const noiseY = noise.noise2D(p.noiseOffsetY + t * 0.3, p.x * 0.01) * 0.5
 
-    // Wrap
-    if (p.y > h + 30) { p.y = -30; p.x = Math.random() * w }
-    if (p.x > w + 30) p.x = -30
-    if (p.x < -30) p.x = w + 30
-
-    const depthAlpha = 0.5 + p.z * 0.5
-    const size = p.size * (0.5 + p.z * 0.6)
-
-    ctx.save()
-    ctx.translate(p.x, p.y)
-    ctx.rotate(p.rotation)
-    ctx.globalAlpha = p.alpha * depthAlpha
-
-    // Shadow for depth
-    if (p.z > 0.6) {
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)'
-      ctx.shadowBlur = 4
-      ctx.shadowOffsetY = 2
-    }
-
-    // Leaf shape using bezier curves
-    ctx.fillStyle = p.color
-    ctx.beginPath()
-    ctx.moveTo(0, -size * 0.5)
-    ctx.bezierCurveTo(size * 0.5, -size * 0.3, size * 0.5, size * 0.3, 0, size * 0.5)
-    ctx.bezierCurveTo(-size * 0.5, size * 0.3, -size * 0.5, -size * 0.3, 0, -size * 0.5)
-    ctx.fill()
-
-    // Leaf vein
-    ctx.strokeStyle = `rgba(0, 0, 0, 0.2)`
-    ctx.lineWidth = 0.5
-    ctx.beginPath()
-    ctx.moveTo(0, -size * 0.4)
-    ctx.lineTo(0, size * 0.4)
-    ctx.stroke()
-
-    ctx.restore()
-  }
-
-  function renderFirefly(
-    ctx: CanvasRenderingContext2D,
-    p: FireflyParticle,
-    w: number,
-    h: number,
-    noiseX: number,
-    noiseY: number
-  ) {
-    // Organic wandering with noise
-    p.speedX += noiseX * 0.003
-    p.speedY += noiseY * 0.003
-    p.speedX *= 0.98
-    p.speedY *= 0.98
-    p.x += p.speedX
-    p.y += p.speedY
-
-    // Soft bounds
-    if (p.x < w * 0.05) p.speedX += 0.02
-    if (p.x > w * 0.95) p.speedX -= 0.02
-    if (p.y < h * 0.15) p.speedY += 0.02
-    if (p.y > h * 0.85) p.speedY -= 0.02
-
-    // Multi-phase glow for organic pulsing
-    p.glowPhase += p.glowSpeed
-    const glow1 = Math.sin(p.glowPhase) * 0.5 + 0.5
-    const glow2 = Math.sin(p.glowPhase * 0.7 + p.pulseOffset) * 0.3 + 0.7
-    const glow = glow1 * glow2
-    const glowPow = Math.pow(glow, 2) // Sharper on/off
-
-    if (glowPow < 0.1) return // Don't render when dim
-
-    ctx.save()
-
-    // Outer atmospheric glow
-    ctx.globalAlpha = glowPow * 0.3
-    ctx.shadowColor = 'rgba(253, 224, 71, 1)'
-    ctx.shadowBlur = p.size * 12
-    ctx.fillStyle = 'rgba(253, 224, 71, 0.6)'
-    ctx.beginPath()
-    ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2)
-    ctx.fill()
-
-    // Inner glow
-    ctx.shadowBlur = p.size * 6
-    ctx.globalAlpha = glowPow * 0.6
-    ctx.beginPath()
-    ctx.arc(p.x, p.y, p.size * 1.5, 0, Math.PI * 2)
-    ctx.fill()
-
-    // Bright core
-    ctx.shadowBlur = 0
-    ctx.globalAlpha = glowPow * 0.9
-    ctx.fillStyle = 'rgba(255, 255, 230, 1)'
-    ctx.beginPath()
-    ctx.arc(p.x, p.y, p.size * 0.5, 0, Math.PI * 2)
-    ctx.fill()
-
-    ctx.restore()
-  }
-
-  function renderMist(
-    ctx: CanvasRenderingContext2D,
-    p: MistParticle,
-    t: number,
-    w: number,
-    wind: number
-  ) {
-    // Slow ethereal drift
-    p.driftPhase += 0.003
-    const drift = Math.sin(p.driftPhase) * 20
-
-    p.x += p.speedX + wind * 0.3 + drift * 0.01
-    p.y += p.speedY + Math.sin(t * 0.2 + p.noiseOffsetY) * 0.1
-
-    // Wrap horizontally
-    if (p.x > w + p.size) p.x = -p.size
-    if (p.x < -p.size) p.x = w + p.size
-
-    const depthAlpha = 0.5 + p.z * 0.5
-
-    // Multi-layer gradient for volumetric feel
-    const gradient = ctx.createRadialGradient(
-      p.x + drift * 0.5, p.y,
-      0,
-      p.x, p.y,
-      p.size
-    )
-    gradient.addColorStop(0, `rgba(180, 180, 190, ${p.opacity * depthAlpha})`)
-    gradient.addColorStop(0.5, `rgba(160, 160, 170, ${p.opacity * depthAlpha * 0.5})`)
-    gradient.addColorStop(1, 'rgba(150, 150, 160, 0)')
-
-    ctx.globalAlpha = 1
-    ctx.fillStyle = gradient
-    ctx.beginPath()
-    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
-    ctx.fill()
-  }
-
-  function renderShootingStars(
-    ctx: CanvasRenderingContext2D,
-    w: number,
-    h: number,
-    intensity: number
-  ) {
-    const stars = shootingStarsRef.current
-
-    // Spawn
-    if (Math.random() < 0.003 * intensity) {
-      stars.push({
-        x: Math.random() * w * 0.6 + w * 0.1,
-        y: Math.random() * h * 0.25,
-        speedX: 10 + Math.random() * 12,
-        speedY: 4 + Math.random() * 6,
-        life: 1,
-        length: 60 + Math.random() * 40,
-        brightness: 0.7 + Math.random() * 0.3
+        switch (p.type) {
+          case 'star':
+            renderStar(ctx, p, season)
+            break
+          case 'snow':
+            renderSnow(ctx, p, t, width, height, wind.gust, noiseX, noiseY)
+            break
+          case 'leaf':
+            renderLeaf(ctx, p, width, height, wind.gust, noiseX, noiseY)
+            break
+          case 'firefly':
+            renderFirefly(ctx, p, width, height, noiseX, noiseY)
+            break
+          case 'mist':
+            renderMist(ctx, p, t, width, wind.gust)
+            break
+        }
       })
-    }
 
-    // Update and render
-    shootingStarsRef.current = stars.filter(s => {
-      s.x += s.speedX
-      s.y += s.speedY
-      s.life -= 0.015
-
-      if (s.life <= 0) return false
-
-      ctx.save()
-
-      // Gradient trail
-      const tailX = s.x - s.length * s.life * (s.speedX / 15)
-      const tailY = s.y - s.length * s.life * (s.speedY / 15)
-      const gradient = ctx.createLinearGradient(s.x, s.y, tailX, tailY)
-      gradient.addColorStop(0, `rgba(255, 255, 255, ${s.life * s.brightness * intensity})`)
-      gradient.addColorStop(0.3, `rgba(200, 220, 255, ${s.life * s.brightness * intensity * 0.5})`)
-      gradient.addColorStop(1, 'rgba(150, 180, 255, 0)')
-
-      ctx.strokeStyle = gradient
-      ctx.lineWidth = 2.5 * s.life
-      ctx.lineCap = 'round'
-      ctx.beginPath()
-      ctx.moveTo(s.x, s.y)
-      ctx.lineTo(tailX, tailY)
-      ctx.stroke()
-
-      // Bright head
-      ctx.shadowColor = 'white'
-      ctx.shadowBlur = 8
-      ctx.fillStyle = `rgba(255, 255, 255, ${s.life * s.brightness})`
-      ctx.beginPath()
-      ctx.arc(s.x, s.y, 2 * s.life, 0, Math.PI * 2)
-      ctx.fill()
-
-      ctx.restore()
-      return true
-    })
-  }
-
-  function renderAurora(
-    ctx: CanvasRenderingContext2D,
-    t: number,
-    w: number,
-    h: number,
-    noise: SimplexNoise
-  ) {
-    const auroraHeight = h * 0.45
-
-    ctx.save()
-    ctx.globalCompositeOperation = 'screen'
-
-    // Multiple wave bands
-    for (let band = 0; band < 3; band++) {
-      const bandOffset = band * 0.3
-      const baseIntensity = 0.08 - band * 0.02
-
-      ctx.beginPath()
-      ctx.moveTo(0, 0)
-
-      // Noise-based wavy top edge
-      for (let x = 0; x <= w; x += 4) {
-        const noiseVal = noise.noise2D(x * 0.003 + t * 0.2 + bandOffset, t * 0.1 + band)
-        const waveHeight = auroraHeight * (0.3 + noiseVal * 0.4 + band * 0.15)
-        ctx.lineTo(x, waveHeight)
+      // Shooting stars
+      if (expressive && effectsRef.current.shootingStars > 0) {
+        renderShootingStars(ctx, shootingStarsRef, width, height, effectsRef.current.shootingStars)
       }
 
-      ctx.lineTo(w, 0)
-      ctx.closePath()
-
-      // Gradient fill
-      const gradient = ctx.createLinearGradient(0, 0, 0, auroraHeight)
-      const phase = t * 0.3 + band * 2
-
-      // Color cycle through cyan -> green -> purple
-      const r = Math.sin(phase) * 30 + 40
-      const g = Math.sin(phase + 1) * 80 + 180
-      const b = Math.sin(phase + 2) * 50 + 200
-
-      gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${baseIntensity})`)
-      gradient.addColorStop(0.4, `rgba(${r + 20}, ${g - 30}, ${b - 50}, ${baseIntensity * 0.7})`)
-      gradient.addColorStop(0.7, `rgba(${r + 100}, ${g - 80}, ${b}, ${baseIntensity * 0.4})`)
-      gradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
-
-      ctx.fillStyle = gradient
-      ctx.fill()
-    }
-
-    ctx.restore()
-  }
-
-  function renderSun(
-    ctx: CanvasRenderingContext2D,
-    w: number,
-    h: number,
-    altitude: number
-  ) {
-    // Don't render sun at night (below civil twilight)
-    if (altitude < -6) return
-
-    // Fixed ambient position - top-right corner
-    const sunX = w * 0.82
-    const sunY = h * 0.14
-
-    // Subtle, fixed sizes for ambient presence
-    const baseSize = 18
-    const glowSize = 55
-
-    // Color warmth based on altitude (golden hour = warmer)
-    // Clamp altitude for warmth calculation
-    const clampedAlt = Math.max(0, altitude)
-    const warmth = Math.max(0, 1 - clampedAlt / 15) // 1 at horizon, 0 at 15°+
-
-    // Fade opacity based on altitude (dimmer near horizon, brighter when high)
-    const fadeIn = Math.min(1, Math.max(0, (altitude + 6) / 12)) // Fade in from -6° to 6°
-    const opacity = altitude > 0 ? 0.85 : fadeIn * 0.6
-
-    if (opacity < 0.05) return
-
-    ctx.save()
-    ctx.globalAlpha = opacity
-
-    // Outer glow - soft ambient light
-    const sunGlow = ctx.createRadialGradient(
-      sunX, sunY, 0,
-      sunX, sunY, glowSize
-    )
-
-    // Sun colors - warmer near horizon (golden hour)
-    const coreG = Math.round(255 - warmth * 55) // 255 → 200
-    const coreB = Math.round(240 - warmth * 140) // 240 → 100
-    const midG = Math.round(220 - warmth * 80) // 220 → 140
-    const midB = Math.round(180 - warmth * 130) // 180 → 50
-
-    sunGlow.addColorStop(0, `rgba(255, 255, 255, 0.95)`)
-    sunGlow.addColorStop(0.15, `rgba(255, ${coreG}, ${coreB}, 0.8)`)
-    sunGlow.addColorStop(0.4, `rgba(255, ${midG}, ${midB}, 0.35)`)
-    sunGlow.addColorStop(0.7, `rgba(255, ${150 - warmth * 50}, 80, 0.1)`)
-    sunGlow.addColorStop(1, 'rgba(255, 200, 100, 0)')
-
-    ctx.globalCompositeOperation = 'screen'
-    ctx.fillStyle = sunGlow
-    ctx.beginPath()
-    ctx.arc(sunX, sunY, glowSize, 0, Math.PI * 2)
-    ctx.fill()
-
-    // Sun core - bright center
-    ctx.globalCompositeOperation = 'lighter'
-    const coreGradient = ctx.createRadialGradient(
-      sunX, sunY, 0,
-      sunX, sunY, baseSize
-    )
-    coreGradient.addColorStop(0, 'rgba(255, 255, 255, 1)')
-    coreGradient.addColorStop(0.5, `rgba(255, ${255 - warmth * 30}, ${220 - warmth * 100}, 0.85)`)
-    coreGradient.addColorStop(1, `rgba(255, ${200 - warmth * 50}, ${100 - warmth * 50}, 0)`)
-
-    ctx.fillStyle = coreGradient
-    ctx.beginPath()
-    ctx.arc(sunX, sunY, baseSize, 0, Math.PI * 2)
-    ctx.fill()
-
-    ctx.restore()
-  }
-
-  function renderMoon(
-    ctx: CanvasRenderingContext2D,
-    w: number,
-    h: number,
-    illumination: number,
-    phaseAngle: number,
-    intensity: number,
-    harvestMoon: boolean,
-    sunAltitude: number = -10
-  ) {
-    // Don't render if intensity too low (Living Theme handles visibility)
-    if (intensity < 0.05) return
-
-    // Check if sun is also visible (above -6°)
-    const sunVisible = sunAltitude > -6
-
-    // Offset moon position when sun is visible to avoid overlap
-    // Moon moves to lower-left of the ambient zone during twilight
-    const moonX = sunVisible ? w * 0.72 : w * 0.82
-    const moonY = sunVisible ? h * 0.22 : h * 0.14
-
-    // Subtle sizes for ambient presence
-    const baseSize = harvestMoon ? 22 : 18
-    const glowSize = harvestMoon ? 55 : 45
-
-    // Moon colors - warm amber for harvest moon, cool silver-blue otherwise
-    const isHarvest = harvestMoon
-
-    ctx.save()
-    ctx.globalAlpha = intensity
-
-    // Outer glow - ethereal ambient light (similar technique to sun)
-    const glowGradient = ctx.createRadialGradient(
-      moonX, moonY, 0,
-      moonX, moonY, glowSize
-    )
-
-    if (isHarvest) {
-      // Harvest moon - warm amber glow
-      glowGradient.addColorStop(0, 'rgba(251, 191, 36, 0.5)')
-      glowGradient.addColorStop(0.3, 'rgba(251, 191, 36, 0.25)')
-      glowGradient.addColorStop(0.6, 'rgba(251, 191, 36, 0.08)')
-      glowGradient.addColorStop(1, 'rgba(251, 191, 36, 0)')
-    } else {
-      // Normal moon - cool silver-blue glow
-      glowGradient.addColorStop(0, 'rgba(226, 232, 240, 0.45)')
-      glowGradient.addColorStop(0.3, 'rgba(186, 230, 253, 0.2)')
-      glowGradient.addColorStop(0.6, 'rgba(186, 230, 253, 0.06)')
-      glowGradient.addColorStop(1, 'rgba(186, 230, 253, 0)')
-    }
-
-    ctx.globalCompositeOperation = 'screen'
-    ctx.fillStyle = glowGradient
-    ctx.beginPath()
-    ctx.arc(moonX, moonY, glowSize, 0, Math.PI * 2)
-    ctx.fill()
-
-    // Moon body - gradient for depth (not flat color)
-    ctx.globalCompositeOperation = 'source-over'
-    const bodyGradient = ctx.createRadialGradient(
-      moonX - baseSize * 0.3, moonY - baseSize * 0.3, 0,
-      moonX, moonY, baseSize
-    )
-
-    if (isHarvest) {
-      bodyGradient.addColorStop(0, '#FEF3C7')  // Warm highlight
-      bodyGradient.addColorStop(0.5, '#FCD34D') // Amber body
-      bodyGradient.addColorStop(1, '#D97706')   // Deeper edge
-    } else {
-      bodyGradient.addColorStop(0, '#F8FAFC')  // Bright highlight
-      bodyGradient.addColorStop(0.5, '#E2E8F0') // Silver body
-      bodyGradient.addColorStop(1, '#CBD5E1')   // Subtle edge
-    }
-
-    ctx.fillStyle = bodyGradient
-    ctx.beginPath()
-    ctx.arc(moonX, moonY, baseSize, 0, Math.PI * 2)
-    ctx.fill()
-
-    // Phase shadow - clean geometric approach
-    // phaseAngle: 0 = new, 90 = first quarter, 180 = full, 270 = last quarter
-    if (illumination < 98) {
-      ctx.save()
-
-      // Create clipping region for moon
-      ctx.beginPath()
-      ctx.arc(moonX, moonY, baseSize, 0, Math.PI * 2)
-      ctx.clip()
-
-      // Shadow color - dark but not pure black for subtlety
-      const shadowColor = isHarvest ? 'rgba(120, 53, 15, 0.85)' : 'rgba(30, 41, 59, 0.8)'
-
-      const isWaxing = phaseAngle < 180
-      const shadowFraction = (100 - illumination) / 100
-
-      // Calculate shadow ellipse position
-      // For waxing: shadow starts on right, moves left
-      // For waning: shadow starts on left, moves right
-      const shadowDirection = isWaxing ? 1 : -1
-      const shadowWidth = baseSize * Math.abs(1 - shadowFraction * 2)
-
-      ctx.fillStyle = shadowColor
-
-      if (illumination < 50) {
-        // More shadow than light - draw shadow ellipse
-        const ellipseX = moonX + shadowDirection * baseSize * (shadowFraction - 0.5)
-        ctx.beginPath()
-        ctx.ellipse(ellipseX, moonY, shadowWidth, baseSize, 0, 0, Math.PI * 2)
-        ctx.fill()
-
-        // Fill the far side completely
-        ctx.beginPath()
-        ctx.rect(
-          isWaxing ? moonX : moonX - baseSize,
-          moonY - baseSize,
-          baseSize,
-          baseSize * 2
-        )
-        ctx.fill()
-      } else {
-        // More light than shadow - draw crescent shadow
-        const crescentOffset = baseSize * (1 - shadowFraction * 2)
-        ctx.beginPath()
-        ctx.arc(moonX, moonY, baseSize, 0, Math.PI * 2)
-        ctx.arc(
-          moonX + shadowDirection * crescentOffset,
-          moonY,
-          baseSize,
-          0, Math.PI * 2, true
-        )
-        ctx.fill()
+      // Aurora - requires deeper night (stars > 0.5) for dramatic effect
+      if (seasonalEffectsRef.current.aurora && effectsRef.current.stars > 0.5 && expressive) {
+        renderAurora(ctx, t, width, height, noise)
       }
 
-      ctx.restore()
-    }
-
-    // Subtle inner highlight for polish (no crude craters)
-    ctx.globalAlpha = intensity * 0.3
-    const highlightGradient = ctx.createRadialGradient(
-      moonX - baseSize * 0.4, moonY - baseSize * 0.4, 0,
-      moonX, moonY, baseSize * 0.8
-    )
-    highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)')
-    highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)')
-
-    ctx.fillStyle = highlightGradient
-    ctx.beginPath()
-    ctx.arc(moonX, moonY, baseSize, 0, Math.PI * 2)
-    ctx.fill()
-
-    ctx.restore()
-  }
+      animationIdRef.current = requestAnimationFrame(render)
+    },
+    [
+      season,
+      effects.stars,
+      effects.shootingStars,
+      effects.moon,
+      expressive,
+      seasonalEffects.aurora,
+      seasonalEffects.harvestMoon,
+      sunAltitude,
+      moonIllumination,
+      moonPhaseAngle,
+    ]
+  )
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
 
     const dpr = window.devicePixelRatio || 1
-    // Use window dimensions for full viewport coverage
     const width = window.innerWidth
     const height = window.innerHeight
     canvas.width = width * dpr
@@ -985,7 +267,7 @@ export function LivingCanvas({
     const ctx = canvas.getContext('2d')
     if (ctx) ctx.scale(dpr, dpr)
 
-    // Start animation loop (particles are created by the particle management effect)
+    // Start animation loop
     animationIdRef.current = requestAnimationFrame(render)
 
     return () => {
@@ -1005,7 +287,7 @@ export function LivingCanvas({
         timeOfDay,
         expressive,
         starsVisible: currentStarsVisible,
-        particleType: currentParticleType
+        particleType: currentParticleType,
       }
       createParticles(window.innerWidth, window.innerHeight)
       return
@@ -1017,7 +299,7 @@ export function LivingCanvas({
       lastPropsRef.current.timeOfDay !== timeOfDay ||
       lastPropsRef.current.expressive !== expressive
 
-    // Particle existence changed (e.g., switching from day to night in manual mode)
+    // Particle existence changed
     const particleExistenceChanged =
       lastPropsRef.current.starsVisible !== currentStarsVisible ||
       lastPropsRef.current.particleType !== currentParticleType
@@ -1028,7 +310,7 @@ export function LivingCanvas({
         timeOfDay,
         expressive,
         starsVisible: currentStarsVisible,
-        particleType: currentParticleType
+        particleType: currentParticleType,
       }
       createParticles(window.innerWidth, window.innerHeight)
       shootingStarsRef.current = []
@@ -1081,7 +363,7 @@ export function LivingCanvas({
         left: 0,
         width: '100vw',
         height: '100vh',
-        zIndex: 1
+        zIndex: 1,
       }}
     />
   )
