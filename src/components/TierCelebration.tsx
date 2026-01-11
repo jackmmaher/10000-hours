@@ -54,13 +54,17 @@ export function TierCelebration({ tier, onDismiss }: TierCelebrationProps) {
     <div
       className={`
         fixed inset-0 z-50 flex items-center justify-center
-        bg-cream/90 backdrop-blur-sm
+        backdrop-blur-sm
         transition-opacity duration-300
         ${isVisible ? 'opacity-100' : 'opacity-0'}
       `}
+      style={{ background: 'var(--bg-overlay)' }}
       onClick={handleTap}
     >
-      <div className="text-center p-8">
+      <div
+        className="text-center p-8 rounded-2xl mx-4"
+        style={{ background: 'var(--bg-elevated)' }}
+      >
         {/* Subtle accent dot */}
         <div
           className="w-2 h-2 rounded-full mx-auto mb-6"
@@ -68,17 +72,26 @@ export function TierCelebration({ tier, onDismiss }: TierCelebrationProps) {
         />
 
         {/* Tier name - the main event */}
-        <p className="text-4xl font-serif text-indigo-deep mb-4">
+        <p
+          className="text-4xl font-serif mb-4"
+          style={{ color: 'var(--text-primary)' }}
+        >
           {tier.label}
         </p>
 
         {/* Tier description */}
-        <p className="text-sm text-indigo-deep/60">
+        <p
+          className="text-sm"
+          style={{ color: 'var(--text-secondary)' }}
+        >
           {tier.description}
         </p>
 
         {/* Context line */}
-        <p className="text-xs text-indigo-deep/40 mt-8">
+        <p
+          className="text-xs mt-8"
+          style={{ color: 'var(--text-muted)' }}
+        >
           Your voice in the community
         </p>
       </div>

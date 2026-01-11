@@ -26,7 +26,7 @@ export interface UseVoiceResult {
 }
 
 export function useVoice(): UseVoiceResult {
-  const { sessions, totalSeconds } = useSessionStore()
+  const { sessions, totalSeconds, isLoading: sessionsLoading } = useSessionStore()
   const { user, profile, isAuthenticated } = useAuthStore()
 
   const [voice, setVoice] = useState<VoiceScore | null>(null)
@@ -38,6 +38,8 @@ export function useVoice(): UseVoiceResult {
   const lastSyncedScore = useRef<number | null>(null)
   // Track previous score for tier transition detection
   const previousScore = useRef<number | null>(null)
+  // Track if initial hydration is complete (prevents false tier upgrades on app load)
+  const hasHydrated = useRef(false)
 
   const clearTierUpgrade = useCallback(() => {
     setTierUpgrade(null)
@@ -128,14 +130,22 @@ export function useVoice(): UseVoiceResult {
       setInputs(voiceInputs)
       setVoice(voiceScore)
 
-      // Check for tier upgrade
-      if (previousScore.current !== null) {
-        const transition = checkTierTransition(previousScore.current, voiceScore.total)
-        if (transition && transition.upgraded) {
-          setTierUpgrade(transition.newTier)
+      // Check for tier upgrade - but only AFTER initial hydration is complete
+      // This prevents false tier celebrations when app loads and score jumps from 0 to actual
+      if (!sessionsLoading) {
+        if (!hasHydrated.current) {
+          // First calculation after sessions have loaded - record baseline score, don't check transitions
+          hasHydrated.current = true
+          previousScore.current = voiceScore.total
+        } else if (previousScore.current !== null) {
+          // Subsequent calculations - check for real tier transitions from user actions
+          const transition = checkTierTransition(previousScore.current, voiceScore.total)
+          if (transition && transition.upgraded) {
+            setTierUpgrade(transition.newTier)
+          }
+          previousScore.current = voiceScore.total
         }
       }
-      previousScore.current = voiceScore.total
 
       // Sync to Supabase if authenticated and score changed
       if (isAuthenticated && user && voiceScore.total !== lastSyncedScore.current) {
