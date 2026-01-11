@@ -14,28 +14,9 @@ import { formatDuration } from '../lib/format'
 
 interface InsightCaptureProps {
   sessionId?: string
-  sessionDuration?: number  // Duration in seconds for body awareness prompt
   onComplete: () => void
   onSkip: () => void
 }
-
-// Body awareness prompts - gentle, non-demanding
-const BODY_AWARENESS_PROMPTS = [
-  'Notice how your body feels right now.',
-  'Take a moment to feel your breath.',
-  'Observe any sensations in your body.',
-  'Notice where you hold tension.',
-  'Feel the weight of your body.',
-  'Sense the space around you.'
-]
-
-// Stretch suggestions for long sessions (30+ minutes)
-const STRETCH_SUGGESTIONS = [
-  'Consider a gentle neck roll.',
-  'Perhaps stretch your shoulders.',
-  'Maybe stand and stretch your legs.',
-  'A slow, mindful stretch may feel good.'
-]
 
 // Claude-style horizontal waveform visualizer
 function AudioWaveform({ level }: { level: number }) {
@@ -68,7 +49,7 @@ function AudioWaveform({ level }: { level: number }) {
   )
 }
 
-export function InsightCapture({ sessionId, sessionDuration, onComplete, onSkip }: InsightCaptureProps) {
+export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCaptureProps) {
   const {
     state,
     error,
@@ -85,40 +66,6 @@ export function InsightCapture({ sessionId, sessionDuration, onComplete, onSkip 
   const { audioLevel, startAnalyzing, stopAnalyzing } = useAudioLevel()
   const haptic = useTapFeedback()
   const [isSaving, setIsSaving] = useState(false)
-  const [showBodyAwareness, setShowBodyAwareness] = useState(true)
-  const [bodyAwarenessPrompt] = useState(() => {
-    // Pick random prompt, with stretch suggestion for long sessions
-    const isLongSession = sessionDuration && sessionDuration >= 1800 // 30+ minutes
-    const prompts = isLongSession
-      ? [...BODY_AWARENESS_PROMPTS, ...STRETCH_SUGGESTIONS]
-      : BODY_AWARENESS_PROMPTS
-    return prompts[Math.floor(Math.random() * prompts.length)]
-  })
-
-  // Auto-start recording on mount (after body awareness prompt fades)
-  useEffect(() => {
-    let cancelled = false
-
-    // Show body awareness for 2.5 seconds, then fade and start recording
-    const awarenessTimer = setTimeout(() => {
-      if (cancelled) return
-      setShowBodyAwareness(false)
-    }, 2500)
-
-    // Start recording after body awareness fades (additional 500ms for transition)
-    const recordingTimer = setTimeout(async () => {
-      if (cancelled) return
-      if (isSupported && state === 'idle') {
-        startCapture()
-      }
-    }, 3000)
-
-    return () => {
-      cancelled = true
-      clearTimeout(awarenessTimer)
-      clearTimeout(recordingTimer)
-    }
-  }, [isSupported, state, startCapture])
 
   // Start audio level analysis when recording begins
   useEffect(() => {
@@ -232,17 +179,6 @@ export function InsightCapture({ sessionId, sessionDuration, onComplete, onSkip 
       onTouchEnd={handleTouchEvent}
       onTouchMove={handleTouchEvent}
     >
-      {/* Body awareness prompt - shown briefly before recording */}
-      {showBodyAwareness && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-cream animate-fade-in">
-          <div className="text-center px-8">
-            <p className="font-serif text-xl text-ink/70 leading-relaxed">
-              {bodyAwarenessPrompt}
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* Header */}
       <div className="flex-none px-6 pt-8 pb-4">
         <button
@@ -271,6 +207,18 @@ export function InsightCapture({ sessionId, sessionDuration, onComplete, onSkip 
           ) : state === 'requesting' ? (
             <div className="flex flex-col items-center">
               <div className="w-8 h-8 border-2 border-ink/30 border-t-ink rounded-full animate-spin" />
+            </div>
+          ) : state === 'idle' ? (
+            <div className="flex flex-col items-center">
+              <svg className="w-12 h-12 text-ink/30 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+              <button
+                onClick={() => startCapture()}
+                className="py-3 px-6 rounded-xl font-medium bg-ink text-cream active:scale-[0.98]"
+              >
+                Start Recording
+              </button>
             </div>
           ) : (
             <div className="flex flex-col items-center">
