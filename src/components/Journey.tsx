@@ -25,6 +25,7 @@ import { InsightStream } from './InsightStream'
 import { Calendar } from './Calendar'
 import { JourneySavedContent } from './JourneySavedContent'
 import { JourneyMyPearls } from './JourneyMyPearls'
+import { InsightModal } from './InsightModal'
 import {
   getPlannedSessionsForWeek,
   getNextPlannedSession,
@@ -51,8 +52,17 @@ function getMondayOfWeek(): Date {
 type JourneySubTab = 'sessions' | 'saved' | 'pearls'
 
 export function Journey() {
-  const { sessions, lastPlanChange } = useSessionStore()
-  const { setView } = useNavigationStore()
+  const { sessions, lastPlanChange, createInsightReminder } = useSessionStore()
+  const {
+    setView,
+    pendingInsightSessionId,
+    pendingInsightSessionDuration,
+    pendingMilestone,
+    showInsightModal,
+    showInsightCaptureModal,
+    hideInsightCaptureModal,
+    clearPostSessionState
+  } = useNavigationStore()
   const { user } = useAuthStore()
   const [subTab, setSubTab] = useState<JourneySubTab>('sessions')
   const [weekPlans, setWeekPlans] = useState<PlannedSession[]>([])
@@ -184,6 +194,16 @@ export function Journey() {
     }
     loadNextPlan()
   }, [sessions, plansRefreshKey, lastPlanChange])
+
+  // Show insight modal after stats animation settles (for post-session flow)
+  useEffect(() => {
+    if (pendingInsightSessionId && !showInsightModal) {
+      const timer = setTimeout(() => {
+        showInsightCaptureModal()
+      }, 1500) // Wait for stats animation
+      return () => clearTimeout(timer)
+    }
+  }, [pendingInsightSessionId, showInsightModal, showInsightCaptureModal])
 
   return (
     <div
@@ -360,6 +380,30 @@ export function Journey() {
             // Could show a success message or navigate somewhere
           }}
           creatorHours={totalHours}
+        />
+      )}
+
+      {/* Post-session insight capture modal */}
+      {showInsightModal && pendingInsightSessionId && (
+        <InsightModal
+          sessionId={pendingInsightSessionId}
+          sessionDuration={pendingInsightSessionDuration}
+          milestoneMessage={pendingMilestone}
+          onComplete={() => {
+            hideInsightCaptureModal()
+            clearPostSessionState()
+            // Refresh insight stream
+            setInsightStreamKey(k => k + 1)
+          }}
+          onSkip={() => {
+            hideInsightCaptureModal()
+            clearPostSessionState()
+          }}
+          onRemindLater={async () => {
+            await createInsightReminder(pendingInsightSessionId)
+            hideInsightCaptureModal()
+            clearPostSessionState()
+          }}
         />
       )}
     </div>
