@@ -18,23 +18,26 @@ import { useTapFeedback } from '../hooks/useTapFeedback'
 interface NotificationCenterProps {
   isOpen: boolean
   onClose: () => void
+  onInsightReminderClick?: (sessionId: string) => void
 }
 
 const NOTIFICATION_ICONS: Record<NotificationType, string> = {
   attribution: '\u{1F49D}',      // Heart with ribbon for "your content helped"
   milestone: '\u{2728}',         // Sparkles for achievement
   gentle_reminder: '\u{1F9D8}',  // Person meditating for reminder
-  content_reported: '\u{1F4CB}'  // Clipboard for content review
+  content_reported: '\u{1F4CB}', // Clipboard for content review
+  insight_reminder: '\u{1F4AD}'  // Thought balloon for insight
 }
 
 const NOTIFICATION_COLORS: Record<NotificationType, string> = {
   attribution: 'bg-pink-500/10',
   milestone: 'bg-amber-500/10',
   gentle_reminder: 'bg-blue-500/10',
-  content_reported: 'bg-orange-500/10'
+  content_reported: 'bg-orange-500/10',
+  insight_reminder: 'bg-indigo-500/10'
 }
 
-export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps) {
+export function NotificationCenter({ isOpen, onClose, onInsightReminderClick }: NotificationCenterProps) {
   const [notifications, setNotifications] = useState<InAppNotification[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const haptic = useTapFeedback()
@@ -117,6 +120,15 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
                 key={notification.id}
                 notification={notification}
                 onDismiss={() => handleDismiss(notification.id)}
+                onClick={
+                  notification.type === 'insight_reminder' && notification.metadata?.sessionId
+                    ? () => {
+                        onInsightReminderClick?.(notification.metadata!.sessionId!)
+                        handleDismiss(notification.id)
+                        onClose()
+                      }
+                    : undefined
+                }
               />
             ))
           )}
@@ -132,9 +144,10 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
 interface NotificationItemProps {
   notification: InAppNotification
   onDismiss: () => void
+  onClick?: () => void
 }
 
-function NotificationItem({ notification, onDismiss }: NotificationItemProps) {
+function NotificationItem({ notification, onDismiss, onClick }: NotificationItemProps) {
   const icon = NOTIFICATION_ICONS[notification.type]
   const bgColor = NOTIFICATION_COLORS[notification.type]
 
@@ -153,8 +166,13 @@ function NotificationItem({ notification, onDismiss }: NotificationItemProps) {
     return new Date(timestamp).toLocaleDateString()
   }
 
+  const Wrapper = onClick ? 'button' : 'div'
+
   return (
-    <div className={`flex items-start gap-3 p-4 rounded-xl ${bgColor}`}>
+    <Wrapper
+      className={`flex items-start gap-3 p-4 rounded-xl ${bgColor} ${onClick ? 'w-full text-left cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+      onClick={onClick}
+    >
       {/* Icon */}
       <span className="text-xl flex-shrink-0">{icon}</span>
 
@@ -167,7 +185,10 @@ function NotificationItem({ notification, onDismiss }: NotificationItemProps) {
 
       {/* Dismiss button */}
       <button
-        onClick={onDismiss}
+        onClick={(e) => {
+          e.stopPropagation()
+          onDismiss()
+        }}
         className="flex-shrink-0 p-1 text-ink/30 hover:text-ink/50 transition-colors touch-manipulation"
         aria-label="Dismiss notification"
       >
@@ -175,6 +196,6 @@ function NotificationItem({ notification, onDismiss }: NotificationItemProps) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
-    </div>
+    </Wrapper>
   )
 }
