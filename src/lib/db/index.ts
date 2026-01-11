@@ -61,6 +61,7 @@ export {
   snoozeNotification,
   getUnreadNotificationCount,
   deleteNotification,
+  hasNotificationWithTitle,
 } from './notifications'
 
 // Achievements

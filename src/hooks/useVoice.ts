@@ -18,7 +18,7 @@ import { useAuthStore } from '../stores/useAuthStore'
 import { getMyTemplates } from '../lib/templates'
 import { calculateVoice, VoiceScore, VoiceInputs } from '../lib/voice'
 import { updateVoiceScore } from '../lib/supabase'
-import { addNotification } from '../lib/db'
+import { addNotification, hasNotificationWithTitle } from '../lib/db'
 import { InAppNotification } from '../lib/notifications'
 
 // Voice thresholds and their quiet recognition messages
@@ -69,13 +69,11 @@ export function useVoice(): UseVoiceResult {
       const totalSessions = sessions.length
 
       // Average session length in minutes
-      const avgSessionMinutes = totalSessions > 0
-        ? (totalSeconds / totalSessions) / 60
-        : 0
+      const avgSessionMinutes = totalSessions > 0 ? totalSeconds / totalSessions / 60 : 0
 
       // Sessions per week (rolling 4-week average)
-      const fourWeeksAgo = Date.now() - (28 * 24 * 60 * 60 * 1000)
-      const recentSessions = sessions.filter(s => s.startTime >= fourWeeksAgo)
+      const fourWeeksAgo = Date.now() - 28 * 24 * 60 * 60 * 1000
+      const recentSessions = sessions.filter((s) => s.startTime >= fourWeeksAgo)
       const sessionsPerWeekAvg = recentSessions.length / 4
 
       // ============================================
@@ -131,7 +129,7 @@ export function useVoice(): UseVoiceResult {
         meditationCompletions,
         karmaGiven,
         savesMade,
-        completionsPerformed
+        completionsPerformed,
       }
 
       const voiceScore = calculateVoice(voiceInputs)
@@ -147,7 +145,7 @@ export function useVoice(): UseVoiceResult {
           hasHydrated.current = true
           previousScore.current = voiceScore.total
           // Don't notify for thresholds already passed
-          VOICE_THRESHOLDS.forEach(t => {
+          VOICE_THRESHOLDS.forEach((t) => {
             if (voiceScore.total >= t.score) {
               notifiedThresholds.current.add(t.score)
             }
@@ -163,16 +161,25 @@ export function useVoice(): UseVoiceResult {
             ) {
               notifiedThresholds.current.add(threshold.score)
               // Create quiet notification - no fanfare, just acknowledgment
-              const notification: InAppNotification = {
-                id: crypto.randomUUID(),
-                type: 'milestone', // Reuse milestone type for voice growth
-                title: `Voice: ${Math.round(voiceScore.total)}`,
-                body: threshold.message,
-                createdAt: Date.now()
-              }
-              addNotification(notification).catch(err => {
-                console.warn('Failed to create voice growth notification:', err)
-              })
+              // Check DB to prevent duplicates across app sessions
+              const notificationTitle = `Voice: ${threshold.score}`
+              hasNotificationWithTitle(notificationTitle)
+                .then((exists) => {
+                  if (exists) return // Already notified in a previous session
+                  const notification: InAppNotification = {
+                    id: crypto.randomUUID(),
+                    type: 'milestone', // Reuse milestone type for voice growth
+                    title: notificationTitle,
+                    body: threshold.message,
+                    createdAt: Date.now(),
+                  }
+                  addNotification(notification).catch((err) => {
+                    console.warn('Failed to create voice growth notification:', err)
+                  })
+                })
+                .catch((err) => {
+                  console.warn('Failed to check for existing notification:', err)
+                })
             }
           }
           previousScore.current = voiceScore.total
@@ -183,7 +190,7 @@ export function useVoice(): UseVoiceResult {
       if (isAuthenticated && user && voiceScore.total !== lastSyncedScore.current) {
         lastSyncedScore.current = voiceScore.total
         // Fire and forget - don't block on this
-        updateVoiceScore(user.id, voiceScore.total).catch(err => {
+        updateVoiceScore(user.id, voiceScore.total).catch((err) => {
           console.warn('Failed to sync Voice score to Supabase:', err)
         })
       }
@@ -203,7 +210,7 @@ export function useVoice(): UseVoiceResult {
     voice,
     inputs,
     isLoading,
-    refresh: calculateVoiceData
+    refresh: calculateVoiceData,
   }
 }
 
@@ -217,10 +224,10 @@ export function useVoiceLocal(): VoiceScore | null {
   if (sessions.length === 0) return null
 
   const totalHours = totalSeconds / 3600
-  const avgSessionMinutes = (totalSeconds / sessions.length) / 60
+  const avgSessionMinutes = totalSeconds / sessions.length / 60
 
-  const fourWeeksAgo = Date.now() - (28 * 24 * 60 * 60 * 1000)
-  const recentSessions = sessions.filter(s => s.startTime >= fourWeeksAgo)
+  const fourWeeksAgo = Date.now() - 28 * 24 * 60 * 60 * 1000
+  const recentSessions = sessions.filter((s) => s.startTime >= fourWeeksAgo)
   const sessionsPerWeekAvg = recentSessions.length / 4
 
   // Simplified inputs (without async data - practice only)
@@ -236,7 +243,7 @@ export function useVoiceLocal(): VoiceScore | null {
     meditationCompletions: 0,
     karmaGiven: 0,
     savesMade: 0,
-    completionsPerformed: 0
+    completionsPerformed: 0,
   }
 
   return calculateVoice(inputs)

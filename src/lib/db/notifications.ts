@@ -43,3 +43,11 @@ export async function getUnreadNotificationCount(): Promise<number> {
 export async function deleteNotification(id: string): Promise<void> {
   await db.notifications.delete(id)
 }
+
+/**
+ * Check if a notification with matching title exists (for deduplication)
+ */
+export async function hasNotificationWithTitle(title: string): Promise<boolean> {
+  const count = await db.notifications.filter((n) => n.title === title).count()
+  return count > 0
+}
