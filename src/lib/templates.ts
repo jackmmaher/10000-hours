@@ -28,7 +28,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
     promise,
     new Promise<T>((_, reject) =>
       setTimeout(() => reject(new Error(`Request timed out after ${ms}ms`)), ms)
-    )
+    ),
   ])
 }
 
@@ -49,7 +49,10 @@ export async function createTemplate(
   console.log('Creating template:', { title: template.title, userId })
 
   try {
-    const supabasePromise = new Promise<{ data: Record<string, unknown> | null; error: { message: string } | null }>((resolve) => {
+    const supabasePromise = new Promise<{
+      data: Record<string, unknown> | null
+      error: { message: string } | null
+    }>((resolve) => {
       supabase!
         .from('session_templates')
         .insert({
@@ -64,9 +67,9 @@ export async function createTemplate(
           guidance_notes: template.guidanceNotes,
           intention: template.intention,
           recommended_after_hours: template.recommendedAfterHours || 0,
-          tags: [],  // Deprecated - using intent_tags only
+          tags: [], // Deprecated - using intent_tags only
           intent_tags: template.intentTags || [],
-          creator_hours: creatorHours
+          creator_hours: creatorHours,
         })
         .select()
         .single()
@@ -89,16 +92,22 @@ export async function createTemplate(
     // Auto-add creator's vote and save (triggers will update counts)
     // These are fire-and-forget - don't fail creation if they fail
     await Promise.all([
-      supabase.from('session_template_votes').insert({ template_id: data.id, user_id: userId }).then(() => {}),
-      supabase.from('session_template_saves').insert({ template_id: data.id, user_id: userId }).then(() => {})
-    ]).catch(err => console.warn('Auto-vote/save failed (non-critical):', err))
+      supabase
+        .from('session_template_votes')
+        .insert({ template_id: data.id, user_id: userId })
+        .then(() => {}),
+      supabase
+        .from('session_template_saves')
+        .insert({ template_id: data.id, user_id: userId })
+        .then(() => {}),
+    ]).catch((err) => console.warn('Auto-vote/save failed (non-critical):', err))
 
     const result = mapTemplateFromDb(data)
     // Override with correct initial values since triggers will have run
     return {
       ...result,
-      karma: 1,  // Creator's vote
-      saves: 1   // Creator's save
+      karma: 1, // Creator's vote
+      saves: 1, // Creator's save
     }
   } catch (err) {
     console.error('Create template failed:', err)
@@ -172,7 +181,8 @@ export async function updateTemplate(
   if (updates.environment !== undefined) dbUpdates.environment = updates.environment
   if (updates.guidanceNotes !== undefined) dbUpdates.guidance_notes = updates.guidanceNotes
   if (updates.intention !== undefined) dbUpdates.intention = updates.intention
-  if (updates.recommendedAfterHours !== undefined) dbUpdates.recommended_after_hours = updates.recommendedAfterHours
+  if (updates.recommendedAfterHours !== undefined)
+    dbUpdates.recommended_after_hours = updates.recommendedAfterHours
   if (updates.intentTags !== undefined) dbUpdates.intent_tags = updates.intentTags
 
   const { error } = await supabase
@@ -228,7 +238,6 @@ function mapTemplateFromDb(row: Record<string, unknown>): SessionTemplate {
     guidanceNotes: row.guidance_notes as string,
     intention: row.intention as string,
     recommendedAfterHours: (row.recommended_after_hours as number) || 0,
-    tags: (row.tags as string[]) || [],
     intentTags: (row.intent_tags as string[]) || [],
     karma: (row.karma as number) || 0,
     saves: (row.saves as number) || 0,
@@ -236,7 +245,7 @@ function mapTemplateFromDb(row: Record<string, unknown>): SessionTemplate {
     creatorHours: (row.creator_hours as number) || 0,
     creatorVoiceScore: (row.creator_voice_score as number) || 0,
     courseId: row.course_id as string | undefined,
-    coursePosition: row.course_position as number | undefined
+    coursePosition: row.course_position as number | undefined,
   }
 }
 
@@ -262,13 +271,11 @@ export async function recordTemplateCompletion(
     return false
   }
 
-  const { error } = await supabase
-    .from('session_template_completions')
-    .insert({
-      template_id: templateId,
-      user_id: userId,
-      session_uuid: sessionUuid || null
-    })
+  const { error } = await supabase.from('session_template_completions').insert({
+    template_id: templateId,
+    user_id: userId,
+    session_uuid: sessionUuid || null,
+  })
 
   if (error) {
     // Duplicate completion is allowed (users can complete same template multiple times)
@@ -308,7 +315,7 @@ export async function getTemplateStats(
   return {
     karma: data.karma || 0,
     saves: data.saves || 0,
-    completions: data.completions || 0
+    completions: data.completions || 0,
   }
 }
 
@@ -321,12 +328,10 @@ export async function voteTemplate(templateId: string, userId: string): Promise<
     return false
   }
 
-  const { error } = await supabase
-    .from('session_template_votes')
-    .insert({
-      template_id: templateId,
-      user_id: userId
-    })
+  const { error } = await supabase.from('session_template_votes').insert({
+    template_id: templateId,
+    user_id: userId,
+  })
 
   if (error) {
     // Already voted (duplicate key) is not an error for the user
@@ -372,12 +377,10 @@ export async function saveTemplate(templateId: string, userId: string): Promise<
     return false
   }
 
-  const { error } = await supabase
-    .from('session_template_saves')
-    .insert({
-      template_id: templateId,
-      user_id: userId
-    })
+  const { error } = await supabase.from('session_template_saves').insert({
+    template_id: templateId,
+    user_id: userId,
+  })
 
   if (error) {
     // Already saved (duplicate key) is not an error for the user
@@ -487,13 +490,11 @@ export async function reportTemplate(
     }
 
     // Create the report
-    const { error: reportError } = await supabase
-      .from('template_reports')
-      .insert({
-        template_id: templateId,
-        reporter_id: reporterId,
-        reason: reason
-      })
+    const { error: reportError } = await supabase.from('template_reports').insert({
+      template_id: templateId,
+      reporter_id: reporterId,
+      reason: reason,
+    })
 
     if (reportError) {
       // Check for duplicate report
@@ -507,7 +508,7 @@ export async function reportTemplate(
 
     return {
       success: true,
-      creatorId: template?.user_id
+      creatorId: template?.user_id,
     }
   } catch (err) {
     console.error('Report template failed:', err)
@@ -535,7 +536,7 @@ export async function getTemplatesForUser(
     p_discipline: null,
     p_difficulty: null,
     p_limit: limit,
-    p_offset: offset
+    p_offset: offset,
   })
 
   if (error) {
@@ -547,6 +548,6 @@ export async function getTemplatesForUser(
     ...mapTemplateFromDb(row),
     hasVoted: row.has_voted as boolean,
     hasSaved: row.has_saved as boolean,
-    hasCompleted: row.has_completed as boolean
+    hasCompleted: row.has_completed as boolean,
   }))
 }

@@ -55,17 +55,18 @@ function transformSession(raw: ExtractedSession): SessionTemplate {
     guidanceNotes: raw.guidance_notes,
     intention: raw.intention,
     recommendedAfterHours: raw.recommended_after_hours,
-    tags: raw.tags,
     intentTags: raw.intent_tags,
     karma: raw.karma,
     saves: raw.saves,
     completions: raw.completions,
-    creatorHours: raw.creator_hours
+    creatorHours: raw.creator_hours,
   }
 }
 
 // All available sessions as SessionTemplate
-const ALL_SESSIONS: SessionTemplate[] = (extractedSessions as ExtractedSession[]).map(transformSession)
+const ALL_SESSIONS: SessionTemplate[] = (extractedSessions as ExtractedSession[]).map(
+  transformSession
+)
 
 export interface RecommendationInputs {
   // From local session history
@@ -102,12 +103,9 @@ export async function analyzeUserPatterns(): Promise<RecommendationInputs> {
 
   // Calculate discipline frequency
   const disciplineFrequency = new Map<string, number>()
-  sessions.forEach(s => {
+  sessions.forEach((s) => {
     if (s.discipline) {
-      disciplineFrequency.set(
-        s.discipline,
-        (disciplineFrequency.get(s.discipline) || 0) + 1
-      )
+      disciplineFrequency.set(s.discipline, (disciplineFrequency.get(s.discipline) || 0) + 1)
     }
   })
 
@@ -122,7 +120,7 @@ export async function analyzeUserPatterns(): Promise<RecommendationInputs> {
   const totalHours = totalMinutes / 60
 
   // Get saved template IDs
-  const savedTemplateIds = new Set(savedTemplates.map(t => t.templateId))
+  const savedTemplateIds = new Set(savedTemplates.map((t) => t.templateId))
 
   // Aggregate intent tags from saved templates
   const savedIntentTags = aggregateSavedIntentTags(savedTemplateIds)
@@ -133,19 +131,21 @@ export async function analyzeUserPatterns(): Promise<RecommendationInputs> {
     timeOfDayPattern,
     totalHours,
     savedTemplateIds,
-    savedIntentTags
+    savedIntentTags,
   }
 }
 
 /**
  * Analyze what time of day the user typically practices
  */
-function analyzeTimeOfDay(sessions: Session[]): 'morning' | 'midday' | 'evening' | 'night' | 'mixed' {
+function analyzeTimeOfDay(
+  sessions: Session[]
+): 'morning' | 'midday' | 'evening' | 'night' | 'mixed' {
   if (sessions.length === 0) return 'mixed'
 
   const counts = { morning: 0, midday: 0, evening: 0, night: 0 }
 
-  sessions.forEach(s => {
+  sessions.forEach((s) => {
     const hour = new Date(s.startTime).getHours()
     if (hour >= 5 && hour < 12) counts.morning++
     else if (hour >= 12 && hour < 17) counts.midday++
@@ -170,9 +170,9 @@ function analyzeTimeOfDay(sessions: Session[]): 'morning' | 'midday' | 'evening'
 function aggregateSavedIntentTags(savedIds: Set<string>): string[] {
   const tagCounts = new Map<string, number>()
 
-  ALL_SESSIONS.forEach(session => {
+  ALL_SESSIONS.forEach((session) => {
     if (savedIds.has(session.id) && session.intentTags) {
-      session.intentTags.forEach(tag => {
+      session.intentTags.forEach((tag) => {
         tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1)
       })
     }
@@ -216,9 +216,7 @@ function scoreSession(
 
   // 4. Intent tag overlap (0-25 points)
   if (session.intentTags && inputs.savedIntentTags.length > 0) {
-    const overlap = session.intentTags.filter(t =>
-      inputs.savedIntentTags.includes(t)
-    ).length
+    const overlap = session.intentTags.filter((t) => inputs.savedIntentTags.includes(t)).length
     const intentScore = Math.min(overlap * 8, 25)
     score += intentScore
     if (overlap > 0) {
@@ -235,10 +233,7 @@ function scoreSession(
 
   // 6. Community validation boost (0-20 points)
   // Higher karma + saves = more validated content
-  const validationScore = Math.min(
-    Math.sqrt(session.karma) + Math.sqrt(session.saves),
-    20
-  )
+  const validationScore = Math.min(Math.sqrt(session.karma) + Math.sqrt(session.saves), 20)
   score += validationScore
 
   // 7. Slight randomness for variety (0-10 points)
@@ -269,12 +264,11 @@ export async function getRecommendedMeditation(): Promise<SessionRecommendation 
   const inputs = await analyzeUserPatterns()
 
   // Score all sessions
-  const scored = ALL_SESSIONS
-    .map(session => {
-      const { score, reasons } = scoreSession(session, inputs)
-      return { session, score, reasons }
-    })
-    .filter(s => s.score >= 0) // Remove excluded sessions
+  const scored = ALL_SESSIONS.map((session) => {
+    const { score, reasons } = scoreSession(session, inputs)
+    return { session, score, reasons }
+  })
+    .filter((s) => s.score >= 0) // Remove excluded sessions
     .sort((a, b) => b.score - a.score)
 
   if (scored.length === 0) return null
@@ -283,7 +277,7 @@ export async function getRecommendedMeditation(): Promise<SessionRecommendation 
   return {
     session: top.session,
     score: top.score,
-    reason: top.reasons[0] || 'Recommended for you'
+    reason: top.reasons[0] || 'Recommended for you',
   }
 }
 
@@ -297,7 +291,7 @@ export function getRelatedMeditation(
   savedIds: Set<string>
 ): SessionTemplate | null {
   // Find sessions with same discipline or related intent tags
-  const candidates = ALL_SESSIONS.filter(s => {
+  const candidates = ALL_SESSIONS.filter((s) => {
     if (s.recommendedAfterHours > totalHours) return false
     if (savedIds.has(s.id)) return false
     return s.discipline === completedDiscipline
@@ -326,7 +320,7 @@ export function getTimeBasedSuggestion(
   else timeKeyword = 'sleep'
 
   // Find matching sessions
-  const candidates = ALL_SESSIONS.filter(s => {
+  const candidates = ALL_SESSIONS.filter((s) => {
     if (s.recommendedAfterHours > totalHours) return false
     if (savedIds.has(s.id)) return false
     const lower = s.bestTime.toLowerCase()

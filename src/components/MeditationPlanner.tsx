@@ -21,7 +21,7 @@ import {
   deletePlannedSession,
   getInsightsBySessionId,
   updateSession,
-  getSessionByUuid
+  getSessionByUuid,
 } from '../lib/db'
 import { SessionDetailModal, SessionTemplate } from './SessionDetailModal'
 import { POSE_GROUPS, DISCIPLINE_GROUPS, DURATION_CATEGORIES } from '../lib/meditation-options'
@@ -31,7 +31,7 @@ import extractedSessions from '../data/sessions.json'
 
 interface MeditationPlannerProps {
   date: Date
-  sessions: Session[]  // All sessions for this date (may be empty for future dates)
+  sessions: Session[] // All sessions for this date (may be empty for future dates)
   onClose: () => void
   onSave: () => void
 }
@@ -60,7 +60,7 @@ function formatDateForDisplay(date: Date): string {
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     })
   }
 }
@@ -85,7 +85,7 @@ function formatTimeFromTimestamp(timestamp: number): string {
   return date.toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
-    hour12: true
+    hour12: true,
   })
 }
 
@@ -137,7 +137,7 @@ interface ExtractedSession {
 
 // Look up a session template by ID and transform to SessionTemplate format
 function getTemplateById(templateId: string): SessionTemplate | null {
-  const raw = (extractedSessions as ExtractedSession[]).find(s => s.id === templateId)
+  const raw = (extractedSessions as ExtractedSession[]).find((s) => s.id === templateId)
   if (!raw) return null
   return {
     id: raw.id,
@@ -151,13 +151,12 @@ function getTemplateById(templateId: string): SessionTemplate | null {
     guidanceNotes: raw.guidance_notes,
     intention: raw.intention,
     recommendedAfterHours: raw.recommended_after_hours,
-    tags: raw.tags,
     karma: raw.karma,
     saves: raw.saves,
     completions: raw.completions,
     creatorHours: raw.creator_hours,
     courseId: raw.course_id,
-    coursePosition: raw.course_position
+    coursePosition: raw.course_position,
   }
 }
 
@@ -206,44 +205,53 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
   const notes = isSessionMode ? (currentEdits?.notes ?? '') : planNotes
 
   // Update edits - routes to correct state based on mode
-  const setPose = useCallback((value: string) => {
-    if (isSessionMode && session) {
-      setSessionEdits(prev => {
-        const newMap = new Map(prev)
-        const existing = newMap.get(session.uuid) || { pose: '', discipline: '', notes: '' }
-        newMap.set(session.uuid, { ...existing, pose: value })
-        return newMap
-      })
-    } else {
-      setPlanPose(value)
-    }
-  }, [isSessionMode, session])
+  const setPose = useCallback(
+    (value: string) => {
+      if (isSessionMode && session) {
+        setSessionEdits((prev) => {
+          const newMap = new Map(prev)
+          const existing = newMap.get(session.uuid) || { pose: '', discipline: '', notes: '' }
+          newMap.set(session.uuid, { ...existing, pose: value })
+          return newMap
+        })
+      } else {
+        setPlanPose(value)
+      }
+    },
+    [isSessionMode, session]
+  )
 
-  const setDiscipline = useCallback((value: string) => {
-    if (isSessionMode && session) {
-      setSessionEdits(prev => {
-        const newMap = new Map(prev)
-        const existing = newMap.get(session.uuid) || { pose: '', discipline: '', notes: '' }
-        newMap.set(session.uuid, { ...existing, discipline: value })
-        return newMap
-      })
-    } else {
-      setPlanDiscipline(value)
-    }
-  }, [isSessionMode, session])
+  const setDiscipline = useCallback(
+    (value: string) => {
+      if (isSessionMode && session) {
+        setSessionEdits((prev) => {
+          const newMap = new Map(prev)
+          const existing = newMap.get(session.uuid) || { pose: '', discipline: '', notes: '' }
+          newMap.set(session.uuid, { ...existing, discipline: value })
+          return newMap
+        })
+      } else {
+        setPlanDiscipline(value)
+      }
+    },
+    [isSessionMode, session]
+  )
 
-  const setNotes = useCallback((value: string) => {
-    if (isSessionMode && session) {
-      setSessionEdits(prev => {
-        const newMap = new Map(prev)
-        const existing = newMap.get(session.uuid) || { pose: '', discipline: '', notes: '' }
-        newMap.set(session.uuid, { ...existing, notes: value })
-        return newMap
-      })
-    } else {
-      setPlanNotes(value)
-    }
-  }, [isSessionMode, session])
+  const setNotes = useCallback(
+    (value: string) => {
+      if (isSessionMode && session) {
+        setSessionEdits((prev) => {
+          const newMap = new Map(prev)
+          const existing = newMap.get(session.uuid) || { pose: '', discipline: '', notes: '' }
+          newMap.set(session.uuid, { ...existing, notes: value })
+          return newMap
+        })
+      } else {
+        setPlanNotes(value)
+      }
+    },
+    [isSessionMode, session]
+  )
 
   // Fetch insight and session metadata when session changes
   // Only load from DB if we don't already have local edits for this session
@@ -258,12 +266,12 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
         // This preserves user edits when switching between sessions
         if (!sessionEdits.has(session.uuid)) {
           const freshSession = await getSessionByUuid(session.uuid)
-          setSessionEdits(prev => {
+          setSessionEdits((prev) => {
             const newMap = new Map(prev)
             newMap.set(session.uuid, {
               pose: freshSession?.pose || '',
               discipline: freshSession?.discipline || '',
-              notes: freshSession?.notes || ''
+              notes: freshSession?.notes || '',
             })
             return newMap
           })
@@ -289,7 +297,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
         setDuration(existing.duration || null)
         // Set duration category based on existing duration
         if (existing.duration) {
-          const cat = DURATION_CATEGORIES.find(c => c.durations.includes(existing.duration!))
+          const cat = DURATION_CATEGORIES.find((c) => c.durations.includes(existing.duration!))
           if (cat) {
             setDurationCategory(cat.label)
             setShowCustomDuration(false)
@@ -343,7 +351,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
             updateSession(uuid, {
               pose: edits.pose || undefined,
               discipline: edits.discipline || undefined,
-              notes: edits.notes || undefined
+              notes: edits.notes || undefined,
             })
           )
         })
@@ -359,7 +367,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
             pose: planPose || undefined,
             discipline: planDiscipline || undefined,
             notes: planNotes || undefined,
-            sourceTemplateId: planSourceTemplateId
+            sourceTemplateId: planSourceTemplateId,
           })
         } else {
           await addPlannedSession({
@@ -370,7 +378,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
             pose: planPose || undefined,
             discipline: planDiscipline || undefined,
             notes: planNotes || undefined,
-            sourceTemplateId: planSourceTemplateId
+            sourceTemplateId: planSourceTemplateId,
           })
         }
       }
@@ -381,7 +389,21 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
     } finally {
       setIsSaving(false)
     }
-  }, [selectedDate, existingPlan, plannedTime, duration, planTitle, planPose, planDiscipline, planNotes, planSourceTemplateId, onSave, onClose, isSessionMode, sessionEdits])
+  }, [
+    selectedDate,
+    existingPlan,
+    plannedTime,
+    duration,
+    planTitle,
+    planPose,
+    planDiscipline,
+    planNotes,
+    planSourceTemplateId,
+    onSave,
+    onClose,
+    isSessionMode,
+    sessionEdits,
+  ])
 
   const handleDelete = useCallback(async () => {
     if (!existingPlan?.id) return
@@ -421,17 +443,13 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
           <div className="flex items-start justify-between">
             <div>
               <h2 className="font-serif text-xl text-indigo-deep">
-                {isSessionMode ? 'Session Details' : (planTitle || 'Plan Meditation')}
+                {isSessionMode ? 'Session Details' : planTitle || 'Plan Meditation'}
               </h2>
               {isSessionMode && (
-                <p className="text-sm text-ink-soft mt-1">
-                  {formatDateForDisplay(date)}
-                </p>
+                <p className="text-sm text-ink-soft mt-1">{formatDateForDisplay(date)}</p>
               )}
               {!isSessionMode && planTitle && (
-                <p className="text-sm text-ink-soft mt-1">
-                  Guided meditation
-                </p>
+                <p className="text-sm text-ink-soft mt-1">Guided meditation</p>
               )}
             </div>
             <button
@@ -439,8 +457,19 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
               aria-label="Close modal"
               className="p-2 -mr-2 text-ink/40 hover:text-ink/60 transition-colors"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -467,9 +496,10 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                         onClick={() => setSelectedSessionIndex(index)}
                         className={`
                           px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-all min-h-[44px]
-                          ${selectedSessionIndex === index
-                            ? 'bg-accent text-on-accent'
-                            : 'bg-elevated text-ink/60 hover:bg-deep'
+                          ${
+                            selectedSessionIndex === index
+                              ? 'bg-accent text-on-accent'
+                              : 'bg-elevated text-ink/60 hover:bg-deep'
                           }
                         `}
                       >
@@ -518,9 +548,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
               {/* Plan mode: Show editable date picker */}
               {!isSessionMode && (
                 <div className="w-full">
-                  <label className="text-xs text-ink-soft block mb-2">
-                    Date
-                  </label>
+                  <label className="text-xs text-ink-soft block mb-2">Date</label>
                   <div className="relative w-full">
                     <input
                       type="date"
@@ -547,7 +575,12 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                       viewBox="0 0 24 24"
                       stroke="currentColor"
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
                     </svg>
                   </div>
                 </div>
@@ -563,7 +596,12 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                   className="flex items-center gap-2 text-sm text-accent hover:text-accent-hover transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                    />
                   </svg>
                   <span>From guided meditation · View full guidance →</span>
                 </button>
@@ -574,9 +612,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                 <>
                   {/* Time */}
                   <div className="w-full">
-                    <label className="text-xs text-ink-soft block mb-2">
-                      Time
-                    </label>
+                    <label className="text-xs text-ink-soft block mb-2">Time</label>
                     <div className="relative w-full">
                       <input
                         type="time"
@@ -591,7 +627,12 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                         viewBox="0 0 24 24"
                         stroke="currentColor"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
                       </svg>
                       {!plannedTime && (
                         <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-ink-soft font-medium pointer-events-none">
@@ -603,9 +644,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
 
                   {/* Duration - Progressive disclosure */}
                   <div>
-                    <label className="text-xs text-ink-soft block mb-2">
-                      Duration
-                    </label>
+                    <label className="text-xs text-ink-soft block mb-2">Duration</label>
 
                     {/* Tier 1: Categories */}
                     <div className="flex gap-2">
@@ -657,7 +696,9 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                     {/* Tier 2: Specific durations within category */}
                     {durationCategory && durationCategory !== 'custom' && (
                       <div className="flex gap-2 mt-3 animate-fade-in">
-                        {DURATION_CATEGORIES.find(c => c.label === durationCategory)?.durations.map((d) => (
+                        {DURATION_CATEGORIES.find(
+                          (c) => c.label === durationCategory
+                        )?.durations.map((d) => (
                           <button
                             key={d}
                             onClick={() => setDuration(duration === d ? null : d)}
@@ -678,7 +719,10 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                       <div className="mt-3 animate-fade-in">
                         <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
                           {/* Sensible increments: short sessions, then standard, then extended */}
-                          {[1, 2, 3, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 120, 150, 180].map((d) => (
+                          {[
+                            1, 2, 3, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 120,
+                            150, 180,
+                          ].map((d) => (
                             <button
                               key={d}
                               onClick={() => setDuration(duration === d ? null : d)}
@@ -700,9 +744,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
 
               {/* Position - horizontal scroll with groups */}
               <div>
-                <label className="text-xs text-ink-soft block mb-2">
-                  Position
-                </label>
+                <label className="text-xs text-ink-soft block mb-2">Position</label>
                 <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
                   {POSE_GROUPS.map((group, groupIndex) => (
                     <div key={group.label} className="flex gap-2 items-center">
@@ -729,9 +771,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
 
               {/* Technique - horizontal scroll with groups */}
               <div>
-                <label className="text-xs text-ink-soft block mb-2">
-                  Technique
-                </label>
+                <label className="text-xs text-ink-soft block mb-2">Technique</label>
                 <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
                   {DISCIPLINE_GROUPS.map((group, groupIndex) => (
                     <div key={group.label} className="flex gap-2 items-center">
@@ -764,7 +804,11 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder={isSessionMode ? "What was your intention for this session?" : "Set your intention for this session..."}
+                  placeholder={
+                    isSessionMode
+                      ? 'What was your intention for this session?'
+                      : 'Set your intention for this session...'
+                  }
                   className="w-full h-24 px-4 py-3 rounded-xl bg-deep/50 text-ink placeholder:text-ink/30 resize-none focus:outline-none focus:ring-2 focus:ring-accent/20"
                 />
               </div>
@@ -772,9 +816,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
               {/* Insight display - show in session mode (with content or empty state) */}
               {isSessionMode && (
                 <div>
-                  <label className="text-xs text-ink-soft block mb-2">
-                    Insight captured
-                  </label>
+                  <label className="text-xs text-ink-soft block mb-2">Insight captured</label>
                   {insight ? (
                     <div className="bg-accent/5 rounded-xl p-4 border border-accent/10">
                       <p className="text-ink text-sm whitespace-pre-wrap">
@@ -785,7 +827,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                           month: 'short',
                           day: 'numeric',
                           hour: 'numeric',
-                          minute: '2-digit'
+                          minute: '2-digit',
                         })}
                       </p>
                     </div>
@@ -809,7 +851,13 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
             disabled={isSaving || isLoading}
             className="w-full py-3 rounded-xl text-sm font-medium bg-accent text-on-accent hover:opacity-90 transition-opacity active:scale-[0.98] disabled:opacity-50"
           >
-            {isSaving ? 'Saving...' : isSessionMode ? 'Save Details' : existingPlan ? 'Update Plan' : 'Save Plan'}
+            {isSaving
+              ? 'Saving...'
+              : isSessionMode
+                ? 'Save Details'
+                : existingPlan
+                  ? 'Update Plan'
+                  : 'Save Plan'}
           </button>
 
           {existingPlan && !isSessionMode && (

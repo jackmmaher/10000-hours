@@ -18,7 +18,7 @@ import {
   savePearl,
   unsavePearl,
   Pearl,
-  PearlFilter
+  PearlFilter,
 } from '../lib/pearls'
 import { AuthModal } from './AuthModal'
 import { SessionCard } from './SessionCard'
@@ -77,19 +77,20 @@ function transformSession(raw: ExtractedSession): SessionTemplate {
     guidanceNotes: raw.guidance_notes,
     intention: raw.intention,
     recommendedAfterHours: raw.recommended_after_hours,
-    tags: raw.tags,
     intentTags: raw.intent_tags,
     karma: raw.karma,
     saves: raw.saves,
     completions: raw.completions,
     creatorHours: raw.creator_hours,
     courseId: raw.course_id,
-    coursePosition: raw.course_position
+    coursePosition: raw.course_position,
   }
 }
 
 // Offline fallback sessions (from JSON - used when Supabase unavailable)
-const FALLBACK_SESSIONS: SessionTemplate[] = (extractedSessions as ExtractedSession[]).map(transformSession)
+const FALLBACK_SESSIONS: SessionTemplate[] = (extractedSessions as ExtractedSession[]).map(
+  transformSession
+)
 
 type FilterType = 'all' | 'pearls' | 'meditations'
 type SortType = 'rising' | 'new' | 'top' | 'saved'
@@ -103,10 +104,10 @@ const INTENT_OPTIONS = [
   'beginners',
   'body-awareness',
   'self-compassion',
-  'letting-go'
+  'letting-go',
 ] as const
 
-type IntentType = typeof INTENT_OPTIONS[number] | null
+type IntentType = (typeof INTENT_OPTIONS)[number] | null
 
 // Extended session template with user interaction flags
 interface SessionWithStatus extends SessionTemplate {
@@ -147,7 +148,8 @@ export function Explore() {
     setIsLoading(true)
     try {
       // Map sort type to filters
-      const pearlFilter: PearlFilter = sortType === 'new' ? 'new' : sortType === 'top' ? 'top' : 'rising'
+      const pearlFilter: PearlFilter =
+        sortType === 'new' ? 'new' : sortType === 'top' ? 'top' : 'rising'
       const templateFilter = sortType === 'new' ? 'new' : sortType === 'top' ? 'top' : 'rising'
 
       const [pearlData, templateData] = await Promise.all([
@@ -155,7 +157,7 @@ export function Explore() {
         // Fetch all templates with user's vote/save status if authenticated
         user?.id
           ? getTemplatesForUser(user.id, templateFilter, 100)
-          : getTemplatesForUser('00000000-0000-0000-0000-000000000000', templateFilter, 100)
+          : getTemplatesForUser('00000000-0000-0000-0000-000000000000', templateFilter, 100),
       ])
       setPearls(pearlData)
       setSessions(templateData)
@@ -181,16 +183,16 @@ export function Explore() {
     let filteredSessions = allSessions
 
     if (intentFilter) {
-      filteredPearls = pearls.filter(p => p.intentTags?.includes(intentFilter))
-      filteredSessions = allSessions.filter(s => s.intentTags?.includes(intentFilter))
+      filteredPearls = pearls.filter((p) => p.intentTags?.includes(intentFilter))
+      filteredSessions = allSessions.filter((s) => s.intentTags?.includes(intentFilter))
     }
 
     // If filtering to specific type, show only that type
     if (filterType === 'pearls') {
-      return filteredPearls.map(p => ({ type: 'pearl' as FeedItemType, id: p.id, data: p }))
+      return filteredPearls.map((p) => ({ type: 'pearl' as FeedItemType, id: p.id, data: p }))
     }
     if (filterType === 'meditations') {
-      return filteredSessions.map(s => ({ type: 'session' as FeedItemType, id: s.id, data: s }))
+      return filteredSessions.map((s) => ({ type: 'session' as FeedItemType, id: s.id, data: s }))
     }
 
     // Mixed feed pattern: pearls → session → pearls → session
@@ -200,37 +202,61 @@ export function Explore() {
     // Add initial pearls (3-5)
     const initialPearls = 3 + Math.floor(Math.random() * 3)
     for (let i = 0; i < initialPearls && pearlIndex < filteredPearls.length; i++) {
-      items.push({ type: 'pearl', id: filteredPearls[pearlIndex].id, data: filteredPearls[pearlIndex] })
+      items.push({
+        type: 'pearl',
+        id: filteredPearls[pearlIndex].id,
+        data: filteredPearls[pearlIndex],
+      })
       pearlIndex++
     }
 
     // Add session
     if (sessionIndex < filteredSessions.length) {
-      items.push({ type: 'session', id: filteredSessions[sessionIndex].id, data: filteredSessions[sessionIndex] })
+      items.push({
+        type: 'session',
+        id: filteredSessions[sessionIndex].id,
+        data: filteredSessions[sessionIndex],
+      })
       sessionIndex++
     }
 
     // Add more pearls (2-3)
     const morePearls = 2 + Math.floor(Math.random() * 2)
     for (let i = 0; i < morePearls && pearlIndex < filteredPearls.length; i++) {
-      items.push({ type: 'pearl', id: filteredPearls[pearlIndex].id, data: filteredPearls[pearlIndex] })
+      items.push({
+        type: 'pearl',
+        id: filteredPearls[pearlIndex].id,
+        data: filteredPearls[pearlIndex],
+      })
       pearlIndex++
     }
 
     // Add another session
     if (sessionIndex < filteredSessions.length) {
-      items.push({ type: 'session', id: filteredSessions[sessionIndex].id, data: filteredSessions[sessionIndex] })
+      items.push({
+        type: 'session',
+        id: filteredSessions[sessionIndex].id,
+        data: filteredSessions[sessionIndex],
+      })
       sessionIndex++
     }
 
     // Add remaining pearls with sessions interspersed
     while (pearlIndex < filteredPearls.length) {
-      items.push({ type: 'pearl', id: filteredPearls[pearlIndex].id, data: filteredPearls[pearlIndex] })
+      items.push({
+        type: 'pearl',
+        id: filteredPearls[pearlIndex].id,
+        data: filteredPearls[pearlIndex],
+      })
       pearlIndex++
 
       // Insert remaining sessions periodically
       if (pearlIndex % 4 === 0 && sessionIndex < filteredSessions.length) {
-        items.push({ type: 'session', id: filteredSessions[sessionIndex].id, data: filteredSessions[sessionIndex] })
+        items.push({
+          type: 'session',
+          id: filteredSessions[sessionIndex].id,
+          data: filteredSessions[sessionIndex],
+        })
         sessionIndex++
       }
     }
@@ -269,11 +295,13 @@ export function Explore() {
       await unvoteTemplate(sessionId, user.id)
     }
     // Update local state optimistically
-    setSessions(prev => prev.map(s =>
-      s.id === sessionId
-        ? { ...s, hasVoted: shouldVote, karma: s.karma + (shouldVote ? 1 : -1) }
-        : s
-    ))
+    setSessions((prev) =>
+      prev.map((s) =>
+        s.id === sessionId
+          ? { ...s, hasVoted: shouldVote, karma: s.karma + (shouldVote ? 1 : -1) }
+          : s
+      )
+    )
     refreshProfile()
   }
 
@@ -285,11 +313,11 @@ export function Explore() {
     isPulling,
     isRefreshing,
     pullDistance,
-    handlers: pullHandlers
+    handlers: pullHandlers,
   } = usePullToRefresh({
     onRefresh: async () => {
       await loadContent()
-    }
+    },
   })
 
   // Swipe navigation
@@ -301,7 +329,7 @@ export function Explore() {
       }
     },
     onSwipeRight: () => setView('journey'),
-    onSwipeLeft: () => setView('progress')
+    onSwipeLeft: () => setView('progress'),
   })
 
   return (
@@ -324,7 +352,7 @@ export function Explore() {
         className="flex justify-center overflow-hidden transition-all duration-200"
         style={{
           height: isPulling || isRefreshing ? Math.min(pullDistance, 80) : 0,
-          opacity: isPulling || isRefreshing ? 1 : 0
+          opacity: isPulling || isRefreshing ? 1 : 0,
         }}
       >
         <div className="flex items-center gap-2 py-2">
@@ -338,25 +366,31 @@ export function Explore() {
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 14l-7 7m0 0l-7-7m7 7V3"
+              />
             </svg>
           )}
           <span className="text-sm text-indigo-deep">
-            {isRefreshing ? 'Refreshing...' : pullDistance >= 80 ? 'Release to refresh' : 'Pull to refresh'}
+            {isRefreshing
+              ? 'Refreshing...'
+              : pullDistance >= 80
+                ? 'Release to refresh'
+                : 'Pull to refresh'}
           </span>
         </div>
       </div>
       <div className="px-6 py-8 max-w-lg mx-auto">
         {/* Header */}
         <header className="mb-6">
-          <h1 className="font-serif text-2xl text-indigo-deep">
-            Explore
-          </h1>
+          <h1 className="font-serif text-2xl text-indigo-deep">Explore</h1>
           <p className="text-sm text-ink/40 mt-1">
             {intentFilter
               ? `Content for ${intentFilter}`
-              : 'Wisdom and meditations from the community'
-            }
+              : 'Wisdom and meditations from the community'}
           </p>
         </header>
 
@@ -371,9 +405,10 @@ export function Explore() {
               }}
               className={`
                 px-3 py-1.5 text-sm rounded-full whitespace-nowrap transition-all
-                ${filterType === f
-                  ? 'bg-ink text-cream'
-                  : 'bg-cream-deep text-ink/50 hover:text-ink/70'
+                ${
+                  filterType === f
+                    ? 'bg-ink text-cream'
+                    : 'bg-cream-deep text-ink/50 hover:text-ink/70'
                 }
               `}
             >
@@ -398,7 +433,12 @@ export function Explore() {
               <span className="flex items-center gap-1 bg-ink text-cream px-2 py-0.5 rounded-full">
                 {intentFilter}
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </span>
             )}
@@ -413,9 +453,10 @@ export function Explore() {
                 }}
                 className={`
                   px-2.5 py-1 text-xs rounded-full transition-all
-                  ${intentFilter === intent
-                    ? 'bg-ink text-cream'
-                    : 'bg-cream-deep text-ink/50 hover:text-ink/70'
+                  ${
+                    intentFilter === intent
+                      ? 'bg-ink text-cream'
+                      : 'bg-cream-deep text-ink/50 hover:text-ink/70'
                   }
                 `}
               >
@@ -436,10 +477,7 @@ export function Explore() {
               }}
               className={`
                 flex-1 py-2 px-3 text-sm rounded-md transition-all capitalize
-                ${sortType === s
-                  ? 'bg-cream text-ink shadow-sm'
-                  : 'text-ink/50 hover:text-ink/70'
-                }
+                ${sortType === s ? 'bg-cream text-ink shadow-sm' : 'text-ink/50 hover:text-ink/70'}
               `}
             >
               {s}
@@ -549,11 +587,13 @@ export function Explore() {
           onVote={handleSessionVote}
           onSaveChange={(sessionId, shouldSave) => {
             // Update local state when modal saves
-            setSessions(prev => prev.map(s =>
-              s.id === sessionId
-                ? { ...s, hasSaved: shouldSave, saves: s.saves + (shouldSave ? 1 : -1) }
-                : s
-            ))
+            setSessions((prev) =>
+              prev.map((s) =>
+                s.id === sessionId
+                  ? { ...s, hasSaved: shouldSave, saves: s.saves + (shouldSave ? 1 : -1) }
+                  : s
+              )
+            )
           }}
           isAuthenticated={isAuthenticated}
           onRequireAuth={() => setShowAuthModal(true)}
@@ -593,7 +633,7 @@ function PearlCardExplore({
   onSave,
   onRequireAuth,
   isAuthenticated,
-  currentUserId
+  currentUserId,
 }: {
   pearl: Pearl
   onVote: (id: string, hasVoted: boolean) => void
@@ -628,13 +668,13 @@ function PearlCardExplore({
     setIsVoting(true)
     const newVoted = !localVoted
     setLocalVoted(newVoted)
-    setLocalUpvotes(prev => newVoted ? prev + 1 : prev - 1)
+    setLocalUpvotes((prev) => (newVoted ? prev + 1 : prev - 1))
 
     try {
       await onVote(pearl.id, newVoted)
     } catch {
       setLocalVoted(!newVoted)
-      setLocalUpvotes(prev => newVoted ? prev - 1 : prev + 1)
+      setLocalUpvotes((prev) => (newVoted ? prev - 1 : prev + 1))
     } finally {
       setIsVoting(false)
     }
@@ -652,13 +692,13 @@ function PearlCardExplore({
     setIsSaving(true)
     const newSaved = !localSaved
     setLocalSaved(newSaved)
-    setLocalSaves(prev => newSaved ? prev + 1 : prev - 1)
+    setLocalSaves((prev) => (newSaved ? prev + 1 : prev - 1))
 
     try {
       await onSave(pearl.id, newSaved)
     } catch {
       setLocalSaved(!newSaved)
-      setLocalSaves(prev => newSaved ? prev - 1 : prev + 1)
+      setLocalSaves((prev) => (newSaved ? prev - 1 : prev + 1))
     } finally {
       setIsSaving(false)
     }
@@ -675,9 +715,7 @@ function PearlCardExplore({
 
       {/* Pearl text */}
       <CardBody>
-        <p className="font-serif text-ink leading-relaxed text-[15px]">
-          "{pearl.text}"
-        </p>
+        <p className="font-serif text-ink leading-relaxed text-[15px]">"{pearl.text}"</p>
       </CardBody>
 
       {/* Actions row - disable for own content */}

@@ -852,5 +852,155 @@
     ],
     "karma": 178,
     "saves": 345
+  },
+  {
+    "id": "aea55591-363c-4128-a3b5-f0fb877e3c1a",
+    "title": "Satipaṭṭhāna: Foundations of Presence",
+    "description": "Begin the classical Buddhist meditation path. These 5 sessions introduce the four foundations of mindfulness: body, feelings, mind, and phenomena. No experience required—just curiosity and willingness to sit.",
+    "session_count": 5,
+    "difficulty": "beginner",
+    "session_ids": [
+      "894cacc0-2b2b-479a-a56e-1f060eb77d5f",
+      "b4f9b6a2-0728-4dfb-b64a-699d313090d3",
+      "bd4db33a-cada-423d-88d1-42b35a1e8680",
+      "8e62e5d9-a6a7-43d1-9389-57d1689bdb89",
+      "1554eb64-81a0-4f0a-b697-5feb97edd461"
+    ],
+    "karma": 0,
+    "saves": 0
+  },
+  {
+    "id": "68943f9d-90da-4edd-a0ad-8bd88f3d6045",
+    "title": "Satipaṭṭhāna: The Complete Breath Path",
+    "description": "Master ānāpānasati—the Buddha's complete breath meditation system. These 8 sessions progressively deepen from basic breath awareness to whole-body breathing, joy, and profound stillness. 5+ hours recommended.",
+    "session_count": 8,
+    "difficulty": "beginner",
+    "session_ids": [
+      "d3523dac-9234-4f40-a9b3-e6e1469b2417",
+      "82306811-38ed-48e7-ac9c-5dac04e82199",
+      "11903496-046f-46be-813c-eb95b4b2a2e6",
+      "043805c6-eb47-40f8-ac20-822272ce7b4a",
+      "c06533bb-00f8-4ac9-92b1-21cbe9e27c47",
+      "ee75236f-649b-49f4-b7c6-0101cf393318",
+      "6fe54d01-4014-439f-9ddc-96a85a0596b7",
+      "8f13a170-29ca-4912-ad87-dc88baa584ce"
+    ],
+    "karma": 0,
+    "saves": 0
+  },
+  {
+    "id": "ffee7fb1-bf6f-4c2f-85ba-5a23e8b6d1b6",
+    "title": "Satipaṭṭhāna: The Body Awakens",
+    "description": "Develop intimate knowledge of the body through the first foundation of mindfulness. These 6 sessions move from posture awareness through the elements to classical contemplations that reveal the body's true nature. 10+ hours recommended.",
+    "session_count": 6,
+    "difficulty": "intermediate",
+    "session_ids": [
+      "d0da3c75-445c-452d-b18d-b7feb16c59e0",
+      "e75a8a9b-8167-4afd-bd7d-a12b94b07eea",
+      "df5836ef-d43f-4728-9d14-91976c4e419d",
+      "e2c97726-299a-4464-b00f-767e72f03eaf",
+      "d779da8d-bab4-4477-9f74-85c7177599b9",
+      "6f6599d4-f105-4657-8d91-7295b798418b"
+    ],
+    "karma": 0,
+    "saves": 0
+  },
+  {
+    "id": "b36f8f18-638f-4426-98ca-2ad9a276dee9",
+    "title": "Satipaṭṭhāna: The Open Heart",
+    "description": "Cultivate the four brahmavihāras—loving-kindness, compassion, appreciative joy, and equanimity. These 6 sessions systematically open the heart and develop boundless goodwill toward all beings. 10+ hours recommended.",
+    "session_count": 6,
+    "difficulty": "intermediate",
+    "session_ids": [
+      "086b2d5d-e459-4ec0-ba28-79d82ba48614",
+      "13f3327d-8597-4b12-b216-72fa6f743a57",
+      "562615e4-882a-44b8-8215-716039379d81",
+      "381c5550-28c9-4ca7-97c2-066618fc4324",
+      "abb1bdbf-a010-4d76-b8b4-0949579d189a",
+      "8677ed85-d81b-42ff-94e4-47e6584903a6"
+    ],
+    "karma": 0,
+    "saves": 0
+  },
+  {
+    "id": "1dd85887-5d88-43f0-aeec-ef5513017b45",
+    "title": "Satipaṭṭhāna: Knowing Mind",
+    "description": "Explore cittānupassanā—contemplation of the mind. These 6 sessions develop the capacity to recognize mental states as they arise: contracted or expansive, concentrated or scattered, liberated or bound. 20+ hours recommended.",
+    "session_count": 6,
+    "difficulty": "intermediate",
+    "session_ids": [
+      "deead261-4d65-4686-bcf0-c9b237ac58f7",
+      "6a99d585-5b41-465e-93ca-57d6ccc2f7bc",
+      "4e500d0e-7c5d-449f-a244-0805b58f2666",
+      "5e28a076-efed-4ef4-95d2-0371c00d5067",
+      "3b166906-85c0-4bac-b9da-80da405975e1",
+      "d1753962-35a1-4250-90dc-7410d9671131"
+    ],
+    "karma": 0,
+    "saves": 0
+  },
+  {
+    "id": "cac7b1c9-5b8a-4434-acfb-c39d51d74c62",
+    "title": "Satipaṭṭhāna: The Concentration Path",
+    "description": "Develop samādhi through the jhāna factors. These 5 sessions systematically cultivate applied and sustained attention, joy, happiness, and one-pointed stillness. For dedicated practitioners ready to go deep. 50+ hours recommended.",
+    "session_count": 5,
+    "difficulty": "advanced",
+    "session_ids": [
+      "fbf08369-1038-4871-9eae-7ceff4e27ccc",
+      "eed417ab-0080-4db5-a824-f2143dbc68fc",
+      "8965fad0-7558-40b3-8614-3c6e4016a898",
+      "f9d95a79-040d-422b-ad8a-ff78a79e2a8b",
+      "679669cb-391b-4b15-9783-e15cc03610fe"
+    ],
+    "karma": 0,
+    "saves": 0
+  },
+  {
+    "id": "41ef7ffa-ca13-40ba-ac39-06d678da7e8b",
+    "title": "Satipaṭṭhāna: The Insight Path",
+    "description": "Develop vipassanā through the fourth foundation—contemplation of phenomena. These 6 sessions work with the five hindrances, the aggregates, and the three characteristics to reveal the nature of experience. 50+ hours recommended.",
+    "session_count": 6,
+    "difficulty": "advanced",
+    "session_ids": [
+      "4cdbc3b8-098f-4fb8-9665-b7aca3c045d8",
+      "b9f3ef6e-9108-4535-a70a-b7742af86d49",
+      "177a5b67-8e7d-4198-8004-300d4a9130fb",
+      "b240aa81-e2c8-47a7-8a59-14fbb0f236b4",
+      "8f713a16-5cea-4a92-83a8-afd88292599a",
+      "ee83185d-6e04-4209-80f0-2bc90dfe4c32"
+    ],
+    "karma": 0,
+    "saves": 0
+  },
+  {
+    "id": "66da1244-94c0-489a-80a4-64ff6306abed",
+    "title": "Satipaṭṭhāna: The Awakening Factors",
+    "description": "Cultivate the seven bojjhaṅgas—mindfulness, investigation, energy, joy, tranquility, concentration, and equanimity. These 5 sessions develop the qualities that lead to awakening. 100+ hours recommended.",
+    "session_count": 5,
+    "difficulty": "advanced",
+    "session_ids": [
+      "db8f3bc2-f7ec-43d5-add1-86d97758e760",
+      "3c986d1e-e3b3-4bb1-9932-613528967507",
+      "3bedfc25-67af-44bc-beae-532ac9141243",
+      "994cdffb-6482-4bbf-9fed-4181a48bbc8f",
+      "ec604c19-4c31-4fb9-8571-0f6d373fc4b1"
+    ],
+    "karma": 0,
+    "saves": 0
+  },
+  {
+    "id": "5396aafc-1705-41d0-8cc0-c1e530d8b8b1",
+    "title": "Satipaṭṭhāna: Living the Path",
+    "description": "Integrate formal practice with daily life. These 4 sessions bridge the cushion and the world—bringing mindfulness to relationships, work, and ordinary moments. Suitable at any point in the journey.",
+    "session_count": 4,
+    "difficulty": "intermediate",
+    "session_ids": [
+      "904e0079-d4a6-4800-94e9-5a4b9725bff8",
+      "34e4d988-d69d-4349-bebe-b1f2a2f5d7bd",
+      "25a87790-3cea-408e-9b57-35d6d3e10c72",
+      "0559d262-9ab2-4947-982e-3f369a321c2c"
+    ],
+    "karma": 0,
+    "saves": 0
   }
 ]
