@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useMemo, useState } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useNavigationStore } from '../stores/useNavigationStore'
 import { useSettingsStore } from '../stores/useSettingsStore'
@@ -6,8 +6,6 @@ import { useTimer, useWakeLock } from '../hooks/useTimer'
 import { useSwipe } from '../hooks/useSwipe'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 import { useAudioFeedback } from '../hooks/useAudioFeedback'
-import { useBreathPacing } from '../hooks/useBreathPacing'
-import { getBreathPattern } from '../lib/breathPacing'
 import { formatTimer, formatTotalHours, formatSessionAdded } from '../lib/format'
 import { getNearMissInfo } from '../lib/milestones'
 import { getUserPreferences } from '../lib/db'
@@ -31,7 +29,7 @@ export function Timer() {
   } = useSessionStore()
   const { setView } = useNavigationStore()
 
-  const { hideTimeDisplay, skipInsightCapture: skipInsightSetting, breathPacingEnabled, breathPatternId } = useSettingsStore()
+  const { hideTimeDisplay, skipInsightCapture: skipInsightSetting } = useSettingsStore()
   const haptic = useTapFeedback()
   const audio = useAudioFeedback()
 
@@ -54,38 +52,6 @@ export function Timer() {
       setNearMiss(null)
     }
   }, [timerPhase, totalSeconds])
-
-  // Breath pacing (optional)
-  const activePattern = useMemo(() => {
-    if (breathPacingEnabled && breathPatternId) {
-      return getBreathPattern(breathPatternId)
-    }
-    return null
-  }, [breathPacingEnabled, breathPatternId])
-
-  const breathState = useBreathPacing(activePattern, isRunning)
-
-  // Calculate orb scale based on breath phase
-  const getOrbScale = useCallback(() => {
-    if (!breathState) return 1  // No pacing, default scale
-
-    const { phase, progress } = breathState
-
-    switch (phase) {
-      case 'inhale':
-        return 1 + (progress * 0.12)  // Scale from 1.0 to 1.12
-      case 'exhale':
-        return 1.12 - (progress * 0.12)  // Scale from 1.12 to 1.0
-      case 'hold':
-        return 1.12  // Hold at expanded
-      case 'holdEmpty':
-        return 1.0  // Hold at contracted
-      default:
-        return 1
-    }
-  }, [breathState])
-
-  const orbScale = getOrbScale()
 
   // Hide time if setting is enabled
   const shouldHideTime = hideTimeDisplay
@@ -240,9 +206,7 @@ export function Timer() {
                 className="relative flex items-center justify-center"
                 style={{
                   width: '200px',
-                  height: '200px',
-                  transform: `scale(${orbScale})`,
-                  transition: 'transform 0.1s ease-out'
+                  height: '200px'
                 }}
               >
                 {/* Layer 1: Ambient atmosphere - largest, most subtle */}
@@ -327,15 +291,6 @@ export function Timer() {
                   />
                 </div>
 
-                {/* Breath phase indicator (when pacing enabled) */}
-                {breathState && (
-                  <p className="absolute -bottom-8 text-xs text-indigo-deep/40 text-center whitespace-nowrap">
-                    {breathState.phase === 'inhale' && 'Breathe in...'}
-                    {breathState.phase === 'exhale' && 'Breathe out...'}
-                    {breathState.phase === 'hold' && 'Hold...'}
-                    {breathState.phase === 'holdEmpty' && 'Empty...'}
-                  </p>
-                )}
               </div>
             ) : (
               // Normal mode - show elapsed timer with breathing animation

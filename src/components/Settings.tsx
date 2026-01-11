@@ -22,7 +22,6 @@ import { trackHideTimeToggle } from '../lib/analytics'
 import { SeasonOverride, TimeOverride } from '../lib/db'
 import { getThemeName } from '../lib/themeEngine'
 import { downloadJSON, downloadCSV } from '../lib/export'
-import { getAllBreathPatterns } from '../lib/breathPacing'
 import { AuthModal } from './AuthModal'
 
 interface SettingsProps {
@@ -61,9 +60,7 @@ export function Settings({ onBack }: SettingsProps) {
     visualEffects, setVisualEffects,
     audioFeedbackEnabled, setAudioFeedbackEnabled,
     notificationPreferences, setNotificationPreferences,
-    manualSeason, manualTime, setManualTheme,
-    breathPacingEnabled, breathPatternId, breathHapticsEnabled,
-    setBreathPacing, setBreathHapticsEnabled
+    manualSeason, manualTime, setManualTheme
   } = useSettingsStore()
   const { user, isAuthenticated, signOut, isLoading: authLoading, refreshProfile } = useAuthStore()
   const { timeOfDay, season } = useThemeInfo()
@@ -71,10 +68,6 @@ export function Settings({ onBack }: SettingsProps) {
   const audio = useAudioFeedback()
   const [showThemeDetail, setShowThemeDetail] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
-  const [showBreathPacing, setShowBreathPacing] = useState(false)
-
-  // Get breath patterns for selection
-  const breathPatterns = getAllBreathPatterns()
 
   // Pull-to-refresh
   const {
@@ -320,129 +313,6 @@ export function Settings({ onBack }: SettingsProps) {
               />
             </div>
           </button>
-        </div>
-
-        {/* Breath Pacing */}
-        <div className="mb-8">
-          <p className="font-serif text-sm text-ink/50 tracking-wide mb-4">Breath Pacing</p>
-
-          {/* Enable breath pacing */}
-          <button
-            onClick={() => {
-              haptic.light()
-              setBreathPacing(!breathPacingEnabled, breathPatternId)
-            }}
-            className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform touch-manipulation"
-          >
-            <div className="text-left">
-              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Guided breathing</p>
-              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                Visual orb syncs with breath pattern
-              </p>
-            </div>
-            <div
-              className="relative w-12 h-7 rounded-full transition-colors duration-300"
-              style={{ background: breathPacingEnabled ? 'var(--toggle-on)' : 'var(--toggle-off)' }}
-            >
-              <div
-                className={`
-                  absolute top-1 w-5 h-5 rounded-full shadow-sm
-                  transition-transform duration-300
-                  ${breathPacingEnabled ? 'translate-x-6' : 'translate-x-1'}
-                `}
-                style={{ background: 'var(--toggle-thumb)' }}
-              />
-            </div>
-          </button>
-
-          {/* Breath pattern selection - only show when enabled */}
-          {breathPacingEnabled && (
-            <>
-              <button
-                onClick={() => {
-                  haptic.light()
-                  setShowBreathPacing(!showBreathPacing)
-                }}
-                className="w-full flex items-center justify-between py-4 touch-manipulation"
-              >
-                <div className="text-left">
-                  <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Pattern</p>
-                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                    {breathPatterns.find(p => p.id === breathPatternId)?.name || 'Simple'}
-                  </p>
-                </div>
-                <svg
-                  className={`w-5 h-5 transition-transform ${showBreathPacing ? 'rotate-180' : ''}`}
-                  style={{ color: 'var(--text-muted)' }}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {showBreathPacing && (
-                <div className="mt-2 space-y-2">
-                  {breathPatterns.map((pattern) => {
-                    const isActive = breathPatternId === pattern.id
-                    return (
-                      <button
-                        key={pattern.id}
-                        onClick={() => {
-                          haptic.light()
-                          setBreathPacing(true, pattern.id)
-                        }}
-                        className={`
-                          w-full p-3 rounded-xl text-left transition-all duration-200 touch-manipulation active:scale-[0.97]
-                          ${isActive
-                            ? 'bg-moss text-cream'
-                            : 'bg-cream-warm text-ink hover:bg-cream-deep'
-                          }
-                        `}
-                      >
-                        <p className={`text-sm font-medium ${isActive ? 'text-cream' : ''}`}>
-                          {pattern.name}
-                        </p>
-                        <p className={`text-xs mt-0.5 ${isActive ? 'text-cream/70' : 'text-ink/50'}`}>
-                          {pattern.description}
-                        </p>
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-
-              {/* Haptic feedback for breath */}
-              <button
-                onClick={() => {
-                  haptic.light()
-                  setBreathHapticsEnabled(!breathHapticsEnabled)
-                }}
-                className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform touch-manipulation"
-              >
-                <div className="text-left">
-                  <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Breath haptics</p>
-                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                    Subtle vibration on inhale/exhale
-                  </p>
-                </div>
-                <div
-                  className="relative w-12 h-7 rounded-full transition-colors duration-300"
-                  style={{ background: breathHapticsEnabled ? 'var(--toggle-on)' : 'var(--toggle-off)' }}
-                >
-                  <div
-                    className={`
-                      absolute top-1 w-5 h-5 rounded-full shadow-sm
-                      transition-transform duration-300
-                      ${breathHapticsEnabled ? 'translate-x-6' : 'translate-x-1'}
-                    `}
-                    style={{ background: 'var(--toggle-thumb)' }}
-                  />
-                </div>
-              </button>
-            </>
-          )}
         </div>
 
         {/* Notifications */}
