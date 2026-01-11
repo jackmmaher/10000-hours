@@ -20,7 +20,6 @@ import { SessionEditModal } from './components/SessionEditModal'
 import { useAuthStore } from './stores/useAuthStore'
 import { Onboarding, hasSeenOnboarding, markOnboardingSeen } from './components/Onboarding'
 import { MilestoneCelebration } from './components/MilestoneCelebration'
-import { TierCelebration } from './components/TierCelebration'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { LivingTheme } from './components/LivingTheme'
 import { PWAInstallPrompt } from './components/PWAInstallPrompt'
@@ -31,7 +30,9 @@ function AppContent() {
   const { isLoading, hydrate } = useSessionStore()
   const settingsStore = useSettingsStore()
   const authStore = useAuthStore()
-  const { tierUpgrade, clearTierUpgrade } = useVoice()
+
+  // Initialize voice tracking (handles quiet growth notifications internally)
+  useVoice()
 
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [editingSession, setEditingSession] = useState<Session | null>(null)
@@ -168,14 +169,6 @@ function AppContent() {
 
         {/* Milestone celebration overlay */}
         <MilestoneCelebration />
-
-        {/* Tier upgrade celebration overlay */}
-        {tierUpgrade && (
-          <TierCelebration
-            tier={tierUpgrade}
-            onDismiss={clearTierUpgrade}
-          />
-        )}
 
         {/* Bottom navigation */}
         <Navigation />

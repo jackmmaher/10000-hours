@@ -7,21 +7,33 @@
  * - Supabase templates: meditations created, completions received
  *
  * Two-way validation: rewards both giving AND receiving community engagement
+ *
+ * Voice growth is recognized quietly via notifications, not celebrations.
+ * The way a teacher might leave a note - acknowledgment without fanfare.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { getMyTemplates } from '../lib/templates'
-import { calculateVoice, VoiceScore, VoiceInputs, checkTierTransition, VoiceTierInfo } from '../lib/voice'
+import { calculateVoice, VoiceScore, VoiceInputs } from '../lib/voice'
 import { updateVoiceScore } from '../lib/supabase'
+import { addNotification } from '../lib/db'
+import { InAppNotification } from '../lib/notifications'
+
+// Voice thresholds and their quiet recognition messages
+// Written as a teacher might observe, not celebrate
+const VOICE_THRESHOLDS = [
+  { score: 20, message: 'Your voice carries further now.' },
+  { score: 45, message: 'A steady presence. Your practice speaks.' },
+  { score: 70, message: 'Wisdom recognized. Continue.' },
+  { score: 85, message: 'Your path guides others now.' },
+] as const
 
 export interface UseVoiceResult {
   voice: VoiceScore | null
   inputs: VoiceInputs | null
   isLoading: boolean
-  tierUpgrade: VoiceTierInfo | null  // New tier if just upgraded
-  clearTierUpgrade: () => void       // Clear the tier upgrade state
   refresh: () => Promise<void>
 }
 
@@ -32,18 +44,15 @@ export function useVoice(): UseVoiceResult {
   const [voice, setVoice] = useState<VoiceScore | null>(null)
   const [inputs, setInputs] = useState<VoiceInputs | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [tierUpgrade, setTierUpgrade] = useState<VoiceTierInfo | null>(null)
 
   // Track last synced score to avoid unnecessary updates
   const lastSyncedScore = useRef<number | null>(null)
-  // Track previous score for tier transition detection
+  // Track previous score for threshold crossing detection
   const previousScore = useRef<number | null>(null)
-  // Track if initial hydration is complete (prevents false tier upgrades on app load)
+  // Track if initial hydration is complete (prevents false notifications on app load)
   const hasHydrated = useRef(false)
-
-  const clearTierUpgrade = useCallback(() => {
-    setTierUpgrade(null)
-  }, [])
+  // Track which thresholds have been notified (persisted in ref to avoid duplicates in session)
+  const notifiedThresholds = useRef<Set<number>>(new Set())
 
   const calculateVoiceData = useCallback(async () => {
     setIsLoading(true)
@@ -130,18 +139,41 @@ export function useVoice(): UseVoiceResult {
       setInputs(voiceInputs)
       setVoice(voiceScore)
 
-      // Check for tier upgrade - but only AFTER initial hydration is complete
-      // This prevents false tier celebrations when app loads and score jumps from 0 to actual
+      // Check for voice growth - but only AFTER initial hydration is complete
+      // This prevents false notifications when app loads and score jumps from 0 to actual
       if (!sessionsLoading) {
         if (!hasHydrated.current) {
-          // First calculation after sessions have loaded - record baseline score, don't check transitions
+          // First calculation after sessions have loaded - record baseline, mark existing thresholds as notified
           hasHydrated.current = true
           previousScore.current = voiceScore.total
+          // Don't notify for thresholds already passed
+          VOICE_THRESHOLDS.forEach(t => {
+            if (voiceScore.total >= t.score) {
+              notifiedThresholds.current.add(t.score)
+            }
+          })
         } else if (previousScore.current !== null) {
-          // Subsequent calculations - check for real tier transitions from user actions
-          const transition = checkTierTransition(previousScore.current, voiceScore.total)
-          if (transition && transition.upgraded) {
-            setTierUpgrade(transition.newTier)
+          // Subsequent calculations - check for threshold crossings
+          for (const threshold of VOICE_THRESHOLDS) {
+            // Crossed this threshold AND haven't notified yet
+            if (
+              previousScore.current < threshold.score &&
+              voiceScore.total >= threshold.score &&
+              !notifiedThresholds.current.has(threshold.score)
+            ) {
+              notifiedThresholds.current.add(threshold.score)
+              // Create quiet notification - no fanfare, just acknowledgment
+              const notification: InAppNotification = {
+                id: crypto.randomUUID(),
+                type: 'milestone', // Reuse milestone type for voice growth
+                title: `Voice: ${Math.round(voiceScore.total)}`,
+                body: threshold.message,
+                createdAt: Date.now()
+              }
+              addNotification(notification).catch(err => {
+                console.warn('Failed to create voice growth notification:', err)
+              })
+            }
           }
           previousScore.current = voiceScore.total
         }
@@ -160,7 +192,7 @@ export function useVoice(): UseVoiceResult {
     } finally {
       setIsLoading(false)
     }
-  }, [sessions, totalSeconds, isAuthenticated, user, profile])
+  }, [sessions, totalSeconds, sessionsLoading, isAuthenticated, user, profile])
 
   // Calculate on mount and when dependencies change
   useEffect(() => {
@@ -171,8 +203,6 @@ export function useVoice(): UseVoiceResult {
     voice,
     inputs,
     isLoading,
-    tierUpgrade,
-    clearTierUpgrade,
     refresh: calculateVoiceData
   }
 }
