@@ -1,17 +1,7 @@
 /**
- * Database Module
+ * Database Module - Barrel Export
  *
- * Comprehensive local database using Dexie (IndexedDB wrapper).
- *
- * Architecture:
- * - Session storage with metadata
- * - User profile and settings
- * - Insights and pearls
- * - Planned sessions and courses
- * - Wellbeing tracking
- *
- * This file is a barrel re-export for backward compatibility.
- * See src/lib/db/ for the modular implementation.
+ * Re-exports all database types, schema, and helper functions.
  */
 
 // Types
@@ -36,13 +26,13 @@ export type {
   WellbeingDimension,
   WellbeingCheckIn,
   WellbeingSettings,
-} from './db/index'
+} from './types'
 
 // Schema and db instance
-export { MeditationDB, db } from './db/index'
+export { MeditationDB, db } from './schema'
 
 // App State
-export { initAppState, markEnlightenmentReached } from './db/index'
+export { initAppState, markEnlightenmentReached } from './appState'
 
 // Sessions
 export {
@@ -53,13 +43,13 @@ export {
   deleteSession,
   updateSessionFull,
   getTotalSeconds,
-} from './db/index'
+} from './sessions'
 
 // Profile
-export { getProfile, updateProfile, setFirstSessionDate } from './db/index'
+export { getProfile, updateProfile, setFirstSessionDate } from './profile'
 
 // Settings
-export { getSettings, updateSettings } from './db/index'
+export { getSettings, updateSettings } from './settings'
 
 // Notifications
 export {
@@ -71,10 +61,10 @@ export {
   snoozeNotification,
   getUnreadNotificationCount,
   deleteNotification,
-} from './db/index'
+} from './notifications'
 
 // Achievements
-export { getAchievements, addAchievement, recordMilestoneIfNew } from './db/index'
+export { getAchievements, addAchievement, recordMilestoneIfNew } from './achievements'
 
 // Insights
 export {
@@ -90,7 +80,7 @@ export {
   getSharedInsights,
   getInsightsBySessionId,
   getLatestInsight,
-} from './db/index'
+} from './insights'
 
 // Plans
 export {
@@ -107,7 +97,7 @@ export {
   getAllPlannedSessions,
   relinkOrphanedPlans,
   markPlanCompleted,
-} from './db/index'
+} from './plans'
 
 // Courses
 export {
@@ -119,7 +109,7 @@ export {
   markCourseSessionComplete,
   pauseCourse,
   completeCourse,
-} from './db/index'
+} from './courses'
 
 // Templates
 export {
@@ -135,10 +125,10 @@ export {
   getTemplateDraft,
   deleteTemplateDraft,
   hasTemplateDraft,
-} from './db/index'
+} from './templates'
 
 // Preferences
-export { getUserPreferences, updateUserPreferences } from './db/index'
+export { getUserPreferences, updateUserPreferences } from './preferences'
 
 // Wellbeing
 export {
@@ -155,4 +145,4 @@ export {
   getAllCheckIns,
   getCheckInHistory,
   getImprovementForDimension,
-} from './db/index'
+} from './wellbeing'
