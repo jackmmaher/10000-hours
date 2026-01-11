@@ -684,6 +684,12 @@ export async function getPlannedSession(date: number): Promise<PlannedSession | 
   return db.plannedSessions.where('date').equals(date).first()
 }
 
+export async function getIncompletePlansForDate(date: number): Promise<PlannedSession[]> {
+  // Get all incomplete (not yet done) plans for a specific date
+  const plans = await db.plannedSessions.where('date').equals(date).toArray()
+  return plans.filter(p => !p.completed && !p.linkedSessionUuid)
+}
+
 export async function getPlannedSessionsForWeek(weekStartDate: number): Promise<PlannedSession[]> {
   const weekEndDate = weekStartDate + 7 * 24 * 60 * 60 * 1000
   return db.plannedSessions

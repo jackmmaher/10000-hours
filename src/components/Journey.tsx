@@ -142,12 +142,12 @@ export function Journey() {
       dayDate.setDate(monday.getDate() + i)
 
       const hasSession = dateHasSession(sessions, dayDate)
-      const plan = weekPlans.find(p => {
+      // Check if there's ANY incomplete plan for this day (handles multiple plans per day)
+      const hasPlan = weekPlans.some(p => {
         const planDate = new Date(p.date)
         planDate.setHours(0, 0, 0, 0)
-        return planDate.getTime() === dayDate.getTime()
+        return planDate.getTime() === dayDate.getTime() && !p.completed
       })
-      const hasPlan = !!plan && !plan.completed // Only count incomplete plans
 
       // Compare dates directly
       const isToday = dayDate.getTime() === todayStart.getTime()
@@ -178,13 +178,8 @@ export function Journey() {
 
   useEffect(() => {
     const loadNextPlan = async () => {
-      const now = new Date()
-      now.setHours(0, 0, 0, 0)
-      const todayHasSession = dateHasSession(sessions, now)
-
-      // If today has a session, skip today's plans
-      const skipDate = todayHasSession ? now.getTime() : undefined
-      const nextPlan = await getNextPlannedSession(skipDate)
+      // Get the next incomplete planned session (don't skip today - users may plan multiple sessions per day)
+      const nextPlan = await getNextPlannedSession()
       setNextPlannedSession(nextPlan || null)
     }
     loadNextPlan()

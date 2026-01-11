@@ -58,10 +58,12 @@ export function Calendar({ embedded = false, onDateClick, refreshKey, onEditSess
     loadPlans()
   }, [currentYear, currentMonth, refreshKey])
 
-  // Get planned dates for current month
+  // Get planned dates for current month (only incomplete plans)
   const plannedDates = useMemo(() => {
     const dates = new Set<number>()
     plannedSessions.forEach(p => {
+      // Only include incomplete plans (not already done)
+      if (p.completed) return
       const planDate = new Date(p.date)
       if (planDate.getMonth() === currentMonth && planDate.getFullYear() === currentYear) {
         dates.add(planDate.getDate())

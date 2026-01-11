@@ -16,6 +16,7 @@ import {
   Insight,
   addPlannedSession,
   getPlannedSession,
+  getIncompletePlansForDate,
   updatePlannedSession,
   deletePlannedSession,
   getInsightsBySessionId,
@@ -171,6 +172,7 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [existingPlan, setExistingPlan] = useState<PlannedSession | null>(null)
+  const [pendingPlans, setPendingPlans] = useState<PlannedSession[]>([]) // Incomplete plans for this date
   const [insight, setInsight] = useState<Insight | null>(null)
 
   // Form state - selectedDate can be changed by user
@@ -316,6 +318,17 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
     }
     load()
   }, [selectedDate, isSessionMode])
+
+  // Load pending (incomplete) plans for this date - especially important in session mode
+  // to show "you also have a meditation planned for later"
+  useEffect(() => {
+    async function loadPendingPlans() {
+      const dateStart = getStartOfDay(date)
+      const plans = await getIncompletePlansForDate(dateStart)
+      setPendingPlans(plans)
+    }
+    loadPendingPlans()
+  }, [date])
 
   const handleSave = useCallback(async () => {
     setIsSaving(true)
@@ -482,6 +495,23 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                       {formatDurationMinutes(session.durationSeconds)}
                     </span>
                   </div>
+                </div>
+              )}
+
+              {/* Session mode: Show pending plans for this day */}
+              {isSessionMode && pendingPlans.length > 0 && (
+                <div className="bg-accent/10 rounded-xl p-4">
+                  <p className="text-xs text-ink-soft mb-2">Also planned for today</p>
+                  {pendingPlans.map((plan) => (
+                    <div key={plan.id} className="flex justify-between items-center">
+                      <span className="text-sm text-ink">
+                        {plan.title || plan.discipline || 'Meditation'}
+                      </span>
+                      <span className="text-sm text-accent font-medium">
+                        {plan.plannedTime || 'Anytime'}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               )}
 
