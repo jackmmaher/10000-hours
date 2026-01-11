@@ -55,7 +55,6 @@ const QUICK_PRESETS: { label: string; season: SeasonOverride; time: TimeOverride
 export function Settings({ onBack }: SettingsProps) {
   const {
     hideTimeDisplay, setHideTimeDisplay,
-    skipInsightCapture, setSkipInsightCapture,
     themeMode, setThemeMode,
     visualEffects, setVisualEffects,
     audioFeedbackEnabled, setAudioFeedbackEnabled,
@@ -211,36 +210,6 @@ export function Settings({ onBack }: SettingsProps) {
                   absolute top-1 w-5 h-5 rounded-full shadow-sm
                   transition-transform duration-300
                   ${hideTimeDisplay ? 'translate-x-6' : 'translate-x-1'}
-                `}
-                style={{ background: 'var(--toggle-thumb)' }}
-              />
-            </div>
-          </button>
-
-          {/* Skip Insight Capture */}
-          <button
-            onClick={() => {
-              haptic.light()
-              setSkipInsightCapture(!skipInsightCapture)
-            }}
-            className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform touch-manipulation"
-          >
-            <div className="text-left">
-              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Skip insight capture</p>
-              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                Go straight to timer after sessions
-              </p>
-            </div>
-            {/* Custom organic toggle - theme aware */}
-            <div
-              className="relative w-12 h-7 rounded-full transition-colors duration-300"
-              style={{ background: skipInsightCapture ? 'var(--toggle-on)' : 'var(--toggle-off)' }}
-            >
-              <div
-                className={`
-                  absolute top-1 w-5 h-5 rounded-full shadow-sm
-                  transition-transform duration-300
-                  ${skipInsightCapture ? 'translate-x-6' : 'translate-x-1'}
                 `}
                 style={{ background: 'var(--toggle-thumb)' }}
               />

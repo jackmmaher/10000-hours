@@ -15,7 +15,6 @@ import { NotificationPreferences, DEFAULT_NOTIFICATION_PREFERENCES } from '../li
 interface SettingsState {
   // State
   hideTimeDisplay: boolean
-  skipInsightCapture: boolean
   themeMode: ThemeMode
   visualEffects: VisualEffects
   audioFeedbackEnabled: boolean
@@ -27,7 +26,6 @@ interface SettingsState {
   // Actions
   hydrate: () => Promise<void>
   setHideTimeDisplay: (value: boolean) => Promise<void>
-  setSkipInsightCapture: (value: boolean) => Promise<void>
   setThemeMode: (value: ThemeMode) => Promise<void>
   setVisualEffects: (value: VisualEffects) => Promise<void>
   setAudioFeedbackEnabled: (value: boolean) => Promise<void>
@@ -38,7 +36,6 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>((set, get) => ({
   // Initial state
   hideTimeDisplay: false,
-  skipInsightCapture: false,
   themeMode: 'auto',
   visualEffects: 'calm',
   audioFeedbackEnabled: false,
@@ -51,7 +48,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const settings = await getSettings()
     set({
       hideTimeDisplay: settings.hideTimeDisplay,
-      skipInsightCapture: settings.skipInsightCapture,
       themeMode: settings.themeMode,
       visualEffects: settings.visualEffects,
       audioFeedbackEnabled: settings.audioFeedbackEnabled,
@@ -65,11 +61,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   setHideTimeDisplay: async (value) => {
     await updateSettings({ hideTimeDisplay: value })
     set({ hideTimeDisplay: value })
-  },
-
-  setSkipInsightCapture: async (value) => {
-    await updateSettings({ skipInsightCapture: value })
-    set({ skipInsightCapture: value })
   },
 
   setThemeMode: async (value) => {
