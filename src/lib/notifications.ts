@@ -14,7 +14,7 @@
  * - Notifications are helpers, not nags
  */
 
-export type NotificationType = 'attribution' | 'milestone' | 'gentle_reminder' | 'content_reported'
+export type NotificationType = 'attribution' | 'milestone' | 'gentle_reminder' | 'content_reported' | 'insight_reminder'
 
 export interface InAppNotification {
   id: string
@@ -30,6 +30,7 @@ export interface InAppNotification {
     contentId?: string      // Pearl or template ID
     helpedCount?: number    // How many people it helped
     timeframe?: string      // "this week", "today"
+    sessionId?: string      // For insight_reminder - links to session
   }
 }
 
