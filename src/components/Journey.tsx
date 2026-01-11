@@ -61,7 +61,11 @@ export function Journey() {
     showInsightModal,
     showInsightCaptureModal,
     hideInsightCaptureModal,
-    clearPostSessionState
+    clearPostSessionState,
+    // CTA navigation intents
+    journeySubTab: navSubTab,
+    openPlanningModal: navOpenPlanning,
+    clearNavigationIntent
   } = useNavigationStore()
   const { user } = useAuthStore()
   const [subTab, setSubTab] = useState<JourneySubTab>('sessions')
@@ -204,6 +208,23 @@ export function Journey() {
       return () => clearTimeout(timer)
     }
   }, [pendingInsightSessionId, showInsightModal, showInsightCaptureModal])
+
+  // Consume navigation intents (from Progress tab CTAs)
+  useEffect(() => {
+    if (navSubTab) {
+      setSubTab(navSubTab)
+      clearNavigationIntent()
+    }
+  }, [navSubTab, clearNavigationIntent])
+
+  useEffect(() => {
+    if (navOpenPlanning) {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      setPlanningDate(today)
+      clearNavigationIntent()
+    }
+  }, [navOpenPlanning, clearNavigationIntent])
 
   return (
     <div

@@ -116,7 +116,7 @@ interface SessionWithStatus extends SessionTemplate {
 }
 
 export function Explore() {
-  const { setView } = useNavigationStore()
+  const { setView, exploreFilter, clearNavigationIntent } = useNavigationStore()
   const { user, isAuthenticated, refreshProfile } = useAuthStore()
   const haptic = useTapFeedback()
   const [pearls, setPearls] = useState<Pearl[]>([])
@@ -127,6 +127,14 @@ export function Explore() {
   const [sortType, setSortType] = useState<SortType>('rising')
   const [intentFilter, setIntentFilter] = useState<IntentType>(null)
   const [selectedSession, setSelectedSession] = useState<SessionWithStatus | null>(null)
+
+  // Consume navigation intent (from Progress tab CTAs)
+  useEffect(() => {
+    if (exploreFilter) {
+      setFilterType(exploreFilter)
+      clearNavigationIntent()
+    }
+  }, [exploreFilter, clearNavigationIntent])
 
   // All sessions - from Supabase with fallback to JSON
   const allSessions = useMemo(() => {

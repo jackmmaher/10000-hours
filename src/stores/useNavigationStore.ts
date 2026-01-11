@@ -31,6 +31,10 @@ interface NavigationState {
   showInsightModal: boolean                     // Whether to show insight modal
   pendingInsightSessionDuration: number | null  // Duration for body awareness prompt
   pendingMilestone: string | null               // Milestone message to show in modal header
+  // CTA navigation intents - consumed and cleared by target views
+  exploreFilter: 'all' | 'pearls' | 'meditations' | null
+  journeySubTab: 'sessions' | 'saved' | 'pearls' | null
+  openPlanningModal: boolean
   // Actions
   setView: (view: AppView) => void
   setViewWithVoiceModal: () => void
@@ -42,6 +46,11 @@ interface NavigationState {
   clearPostSessionState: () => void
   // For notification deep-link
   navigateToInsightCapture: (sessionId: string) => void
+  // CTA navigation actions
+  navigateToExploreWithFilter: (filter: 'meditations' | 'pearls') => void
+  navigateToJourneyTab: (subTab: 'sessions' | 'saved' | 'pearls') => void
+  navigateToJourneyPlanning: () => void
+  clearNavigationIntent: () => void
 }
 
 export const useNavigationStore = create<NavigationState>((set) => ({
@@ -51,6 +60,10 @@ export const useNavigationStore = create<NavigationState>((set) => ({
   showInsightModal: false,
   pendingInsightSessionDuration: null,
   pendingMilestone: null,
+  // CTA navigation intents
+  exploreFilter: null,
+  journeySubTab: null,
+  openPlanningModal: false,
 
   setView: (view) => set({ view }),
   setViewWithVoiceModal: () => set({ view: 'progress', openVoiceModal: true }),
@@ -84,5 +97,27 @@ export const useNavigationStore = create<NavigationState>((set) => ({
     pendingInsightSessionDuration: null,
     pendingMilestone: null,
     showInsightModal: true  // Show immediately for notification tap
+  }),
+
+  // CTA navigation actions - consumed and cleared by target views
+  navigateToExploreWithFilter: (filter) => set({
+    view: 'explore',
+    exploreFilter: filter
+  }),
+
+  navigateToJourneyTab: (subTab) => set({
+    view: 'journey',
+    journeySubTab: subTab
+  }),
+
+  navigateToJourneyPlanning: () => set({
+    view: 'journey',
+    openPlanningModal: true
+  }),
+
+  clearNavigationIntent: () => set({
+    exploreFilter: null,
+    journeySubTab: null,
+    openPlanningModal: false
   })
 }))

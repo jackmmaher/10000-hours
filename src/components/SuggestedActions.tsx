@@ -16,7 +16,12 @@ interface SuggestedActionsProps {
 }
 
 export function SuggestedActions({ actions }: SuggestedActionsProps) {
-  const { setView } = useNavigationStore()
+  const {
+    setView,
+    navigateToExploreWithFilter,
+    navigateToJourneyTab,
+    navigateToJourneyPlanning
+  } = useNavigationStore()
   const haptic = useTapFeedback()
 
   if (actions.length === 0) {
@@ -25,6 +30,34 @@ export function SuggestedActions({ actions }: SuggestedActionsProps) {
 
   const handleActionClick = (action: SuggestedAction) => {
     haptic.light()
+
+    // Handle specific CTAs with direct navigation
+    switch (action.id) {
+      case 'explore-templates':
+        // "Discover guided meditations" → Explore filtered to meditations
+        navigateToExploreWithFilter('meditations')
+        return
+      case 'record-insights':
+        // "Capture post-session insights" → Journey on Insights tab
+        navigateToJourneyTab('sessions')
+        return
+      case 'unshared-insights':
+        // "X insights could become pearls" → Journey on Insights tab
+        navigateToJourneyTab('sessions')
+        return
+      case 'unused-templates':
+        // "X saved meditations you haven't tried" → Journey on Meditations tab
+        navigateToJourneyTab('saved')
+        return
+    }
+
+    // Course-related actions → open planning modal
+    if (action.id.startsWith('course-')) {
+      navigateToJourneyPlanning()
+      return
+    }
+
+    // Default fallback to simple view navigation
     if (action.actionView) {
       setView(action.actionView)
     }
