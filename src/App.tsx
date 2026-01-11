@@ -3,7 +3,11 @@ import { useSessionStore } from './stores/useSessionStore'
 import { useNavigationStore } from './stores/useNavigationStore'
 import { useSettingsStore } from './stores/useSettingsStore'
 import { useVoice } from './hooks/useVoice'
-import { generateAttributionNotification, shouldCheckAttribution, markAttributionChecked } from './lib/attribution'
+import {
+  generateAttributionNotification,
+  shouldCheckAttribution,
+  markAttributionChecked,
+} from './lib/attribution'
 import { checkAndCreateReminders } from './lib/reminders'
 import { Timer } from './components/Timer'
 import { Calendar } from './components/Calendar'
@@ -23,6 +27,7 @@ import { MilestoneCelebration } from './components/MilestoneCelebration'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { LivingTheme } from './components/LivingTheme'
 import { PWAInstallPrompt } from './components/PWAInstallPrompt'
+import { ToastContainer } from './components/Toast'
 import type { Session } from './lib/db'
 
 function AppContent() {
@@ -106,14 +111,14 @@ function AppContent() {
     setEditingSession(null)
     // Refresh sessions from DB
     await hydrate()
-    setCalendarRefreshKey(k => k + 1)
+    setCalendarRefreshKey((k) => k + 1)
   }, [hydrate])
 
   const handleSessionEditDelete = useCallback(async () => {
     setEditingSession(null)
     // Refresh sessions from DB
     await hydrate()
-    setCalendarRefreshKey(k => k + 1)
+    setCalendarRefreshKey((k) => k + 1)
   }, [hydrate])
 
   // Loading state
@@ -137,25 +142,14 @@ function AppContent() {
         {view === 'journey' && <Journey />}
         {view === 'progress' && <Progress />}
         {view === 'calendar' && (
-          <Calendar
-            refreshKey={calendarRefreshKey}
-            onEditSession={handleEditSession}
-          />
+          <Calendar refreshKey={calendarRefreshKey} onEditSession={handleEditSession} />
         )}
         {view === 'insights' && <Insights />}
         {view === 'pearls' && <PearlsFeed />}
         {view === 'explore' && <Explore />}
         {view === 'saved-pearls' && <SavedPearls />}
-        {view === 'profile' && (
-          <Profile
-            onNavigateToSettings={() => setView('settings')}
-          />
-        )}
-        {view === 'settings' && (
-          <Settings
-            onBack={() => setView('profile')}
-          />
-        )}
+        {view === 'profile' && <Profile onNavigateToSettings={() => setView('settings')} />}
+        {view === 'settings' && <Settings onBack={() => setView('profile')} />}
 
         {/* Session edit modal */}
         {editingSession && (
@@ -169,6 +163,9 @@ function AppContent() {
 
         {/* Milestone celebration overlay */}
         <MilestoneCelebration />
+
+        {/* Toast notifications */}
+        <ToastContainer />
 
         {/* Bottom navigation */}
         <Navigation />

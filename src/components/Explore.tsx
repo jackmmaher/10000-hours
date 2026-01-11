@@ -26,6 +26,7 @@ import { SessionDetailModal, SessionTemplate } from './SessionDetailModal'
 import { getIntentionGradient } from '../lib/animations'
 import { getTemplatesForUser, voteTemplate, unvoteTemplate } from '../lib/templates'
 import { Card, CardHeader, CardBody, CardEngagement, PearlOrb } from './Card'
+import { useToast } from '../stores/useErrorStore'
 
 // Import extracted data
 import extractedSessions from '../data/sessions.json'
@@ -649,6 +650,7 @@ function PearlCardExplore({
   const [localUpvotes, setLocalUpvotes] = useState(pearl.upvotes)
   const [localSaves, setLocalSaves] = useState(pearl.saves || 0)
   const haptic = useTapFeedback()
+  const toast = useToast()
 
   // Check if this is the user's own content (can't vote/save own content)
   const isOwnContent = !!(currentUserId && pearl.userId === currentUserId)
@@ -672,9 +674,10 @@ function PearlCardExplore({
 
     try {
       await onVote(pearl.id, newVoted)
-    } catch {
+    } catch (err) {
       setLocalVoted(!newVoted)
       setLocalUpvotes((prev) => (newVoted ? prev - 1 : prev + 1))
+      toast.fromCatch(err, 'VOTE_FAILED')
     } finally {
       setIsVoting(false)
     }
@@ -696,9 +699,10 @@ function PearlCardExplore({
 
     try {
       await onSave(pearl.id, newSaved)
-    } catch {
+    } catch (err) {
       setLocalSaved(!newSaved)
       setLocalSaves((prev) => (newSaved ? prev - 1 : prev + 1))
+      toast.fromCatch(err, 'SAVE_FAILED')
     } finally {
       setIsSaving(false)
     }

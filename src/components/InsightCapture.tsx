@@ -11,6 +11,7 @@ import { useAudioLevel } from '../hooks/useAudioLevel'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 import { addInsight } from '../lib/db'
 import { formatDuration } from '../lib/format'
+import { useToast } from '../stores/useErrorStore'
 
 interface InsightCaptureProps {
   sessionId?: string
@@ -31,7 +32,7 @@ function AudioWaveform({ level }: { level: number }) {
         // Base height + audio-responsive height
         const minHeight = 12
         const maxHeight = 100
-        const height = minHeight + (level * sensitivity * (maxHeight - minHeight))
+        const height = minHeight + level * sensitivity * (maxHeight - minHeight)
 
         return (
           <div
@@ -39,7 +40,7 @@ function AudioWaveform({ level }: { level: number }) {
             className="w-1 rounded-full transition-all duration-75"
             style={{
               height: `${height}%`,
-              opacity: 0.6 + (level * sensitivity * 0.4),
+              opacity: 0.6 + level * sensitivity * 0.4,
               background: 'var(--accent)',
             }}
           />
@@ -60,11 +61,12 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
     mediaStream,
     startCapture,
     stopCapture,
-    cancelCapture
+    cancelCapture,
   } = useVoiceCapture()
 
   const { audioLevel, startAnalyzing, stopAnalyzing } = useAudioLevel()
   const haptic = useTapFeedback()
+  const toast = useToast()
   const [isSaving, setIsSaving] = useState(false)
 
   // Start audio level analysis when recording begins
@@ -92,20 +94,22 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
       const result = await stopCapture()
 
       // Save insight - use transcript or placeholder if empty
-      const textToSave = result?.transcript?.trim() || displayText?.trim() || '[Voice note captured]'
+      const textToSave =
+        result?.transcript?.trim() || displayText?.trim() || '[Voice note captured]'
       await addInsight({
         sessionId: sessionId || null,
-        rawText: textToSave
+        rawText: textToSave,
       })
 
       onComplete()
     } catch (err) {
       console.error('Failed to save insight:', err)
-      onComplete() // Continue anyway
+      toast.error('INSIGHT_SAVE_FAILED')
+      // Don't call onComplete - let user retry or skip
     } finally {
       setIsSaving(false)
     }
-  }, [isRecording, stopCapture, sessionId, onComplete, displayText, stopAnalyzing, haptic])
+  }, [isRecording, stopCapture, sessionId, onComplete, displayText, stopAnalyzing, haptic, toast])
 
   // Handle skip
   const handleSkip = useCallback(() => {
@@ -131,9 +135,7 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
         onTouchEnd={handleTouchEvent}
         onTouchMove={handleTouchEvent}
       >
-        <p className="font-serif text-xl text-ink mb-4">
-          Voice capture not supported
-        </p>
+        <p className="font-serif text-xl text-ink mb-4">Voice capture not supported</p>
         <p className="text-sm text-ink/50 mb-8 text-center">
           Your browser doesn't support voice recording. Try Chrome or Safari.
         </p>
@@ -156,12 +158,8 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
         onTouchEnd={handleTouchEvent}
         onTouchMove={handleTouchEvent}
       >
-        <p className="font-serif text-xl text-ink mb-4">
-          Couldn't access microphone
-        </p>
-        <p className="text-sm text-ink/50 mb-8 text-center max-w-xs">
-          {error}
-        </p>
+        <p className="font-serif text-xl text-ink mb-4">Couldn't access microphone</p>
+        <p className="text-sm text-ink/50 mb-8 text-center max-w-xs">{error}</p>
         <button
           onClick={handleSkip}
           className="py-3 px-6 text-ink/60 hover:text-ink transition-colors touch-manipulation"
@@ -210,8 +208,18 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
             </div>
           ) : state === 'idle' ? (
             <div className="flex flex-col items-center">
-              <svg className="w-12 h-12 text-ink/30 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              <svg
+                className="w-12 h-12 text-ink/30 mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                />
               </svg>
               <button
                 onClick={() => startCapture()}
@@ -222,8 +230,18 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
             </div>
           ) : (
             <div className="flex flex-col items-center">
-              <svg className="w-12 h-12 text-ink/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              <svg
+                className="w-12 h-12 text-ink/30"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                />
               </svg>
             </div>
           )}
@@ -248,16 +266,12 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
         {/* Transcription display */}
         <div className="w-full max-w-md min-h-[100px] mb-6">
           {displayText ? (
-            <p className="text-ink/70 leading-relaxed text-center">
-              {displayText}
-            </p>
+            <p className="text-ink/70 leading-relaxed text-center">{displayText}</p>
           ) : isRecording ? (
             <p className="text-ink/30 text-center text-sm">
               Speak now — your voice is being captured
               <br />
-              <span className="text-ink/20 text-xs">
-                (Transcription may vary by device)
-              </span>
+              <span className="text-ink/20 text-xs">(Transcription may vary by device)</span>
             </p>
           ) : null}
         </div>
@@ -271,10 +285,7 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
             disabled={isSaving}
             className={`
               w-full py-4 rounded-xl font-medium transition-all touch-manipulation
-              ${isSaving
-                ? 'bg-ink/20 text-ink/40'
-                : 'bg-ink text-cream active:scale-[0.98]'
-              }
+              ${isSaving ? 'bg-ink/20 text-ink/40' : 'bg-ink text-cream active:scale-[0.98]'}
             `}
           >
             {isSaving ? 'Saving...' : 'Done'}
