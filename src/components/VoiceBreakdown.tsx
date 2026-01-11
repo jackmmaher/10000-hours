@@ -76,7 +76,7 @@ export function VoiceBreakdown({ inputs }: VoiceBreakdownProps) {
           >
             {voice.total}
           </div>
-          <VoiceBadge score={voice.total} />
+          <VoiceBadge score={voice.total} showLabel />
         </div>
       </div>
 

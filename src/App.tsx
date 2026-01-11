@@ -4,6 +4,7 @@ import { useNavigationStore } from './stores/useNavigationStore'
 import { useSettingsStore } from './stores/useSettingsStore'
 import { useVoice } from './hooks/useVoice'
 import { generateAttributionNotification, shouldCheckAttribution, markAttributionChecked } from './lib/attribution'
+import { checkAndCreateReminders } from './lib/reminders'
 import { Timer } from './components/Timer'
 import { Calendar } from './components/Calendar'
 import { Settings } from './components/Settings'
@@ -70,6 +71,20 @@ function AppContent() {
       return () => clearTimeout(timeout)
     }
   }, [authStore.user])
+
+  // Gentle reminder check (runs on load and every 5 minutes)
+  useEffect(() => {
+    // Check on load (after short delay)
+    const initialCheck = setTimeout(checkAndCreateReminders, 3000)
+
+    // Check periodically (every 5 minutes)
+    const interval = setInterval(checkAndCreateReminders, 5 * 60 * 1000)
+
+    return () => {
+      clearTimeout(initialCheck)
+      clearInterval(interval)
+    }
+  }, [])
 
   // Handlers
   const handleOnboardingComplete = useCallback(() => {

@@ -304,7 +304,7 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
               }}
               className="flex flex-col items-center active:scale-[0.97] transition-transform touch-manipulation"
             >
-              <VoiceBadge score={voice.total} showScore />
+              <VoiceBadge score={voice.total} showScore showLabel />
               <span className="text-[10px] text-ink/30 mt-1">Voice</span>
             </button>
           )}

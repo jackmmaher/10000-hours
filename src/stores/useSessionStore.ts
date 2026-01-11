@@ -1,8 +1,9 @@
 import { create } from 'zustand'
-import { Session, Achievement, addSession, getAllSessions, initAppState, markEnlightenmentReached, recordMilestoneIfNew, linkSessionToPlan, getUserPreferences } from '../lib/db'
+import { Session, Achievement, addSession, getAllSessions, initAppState, markEnlightenmentReached, recordMilestoneIfNew, linkSessionToPlan, getUserPreferences, getSettings, addNotification } from '../lib/db'
 import { generateMilestones, checkSessionMilestone, checkWeeklyFirst, SessionMilestone, WeeklyFirstMilestone } from '../lib/milestones'
 import { recordTemplateCompletion } from '../lib/templates'
 import { supabase } from '../lib/supabase'
+import { InAppNotification } from '../lib/notifications'
 
 // Re-export AppView from navigation store for backwards compatibility during migration
 export type { AppView } from './useNavigationStore'
@@ -163,6 +164,39 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
     // Priority: hour milestone > session count > weekly first
     const achievedMilestone = hourMilestone || sessionMilestone || weeklyMilestone
+
+    // Create notification for milestone (if enabled in settings)
+    if (achievedMilestone) {
+      try {
+        const settings = await getSettings()
+        if (settings.notificationPreferences?.milestoneEnabled) {
+          // Determine notification content based on milestone type
+          let title = ''
+          let body = ''
+
+          if ('type' in achievedMilestone) {
+            // SessionMilestone or WeeklyFirstMilestone
+            title = achievedMilestone.label
+            body = achievedMilestone.zenMessage
+          } else {
+            // Achievement (hour milestone)
+            title = `${achievedMilestone.hours} hours reached`
+            body = `You've reached ${achievedMilestone.name} of practice`
+          }
+
+          const notification: InAppNotification = {
+            id: crypto.randomUUID(),
+            type: 'milestone',
+            title,
+            body,
+            createdAt: Date.now()
+          }
+          await addNotification(notification)
+        }
+      } catch (err) {
+        console.warn('Failed to create milestone notification:', err)
+      }
+    }
 
     // Check if we just crossed the enlightenment threshold
     // Only trigger enlightenment if user has explicit goal AND reached it
