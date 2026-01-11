@@ -6,9 +6,11 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { getIntentionGradient } from '../lib/animations'
-import { saveTemplate as saveTemplateLocal, unsaveTemplate as unsaveTemplateLocal, isTemplateSaved, addPlannedSession } from '../lib/db'
-import { getTemplateStats, saveTemplate as saveTemplateRemote, unsaveTemplate as unsaveTemplateRemote } from '../lib/templates'
+import { saveTemplate as saveTemplateLocal, unsaveTemplate as unsaveTemplateLocal, isTemplateSaved, addPlannedSession, addNotification } from '../lib/db'
+import { getTemplateStats, saveTemplate as saveTemplateRemote, unsaveTemplate as unsaveTemplateRemote, reportTemplate } from '../lib/templates'
 import { SessionTemplate } from '../lib/types'
+import { ReportModal } from './ReportModal'
+import { InAppNotification } from '../lib/notifications'
 
 // Re-export for backward compatibility with existing imports
 export type { SessionTemplate } from '../lib/types'
@@ -89,6 +91,9 @@ export function SessionDetailModal({
 
   // Live stats (fetched from Supabase)
   const [liveStats, setLiveStats] = useState<{ karma: number; saves: number; completions: number } | null>(null)
+
+  // Report modal state
+  const [showReportModal, setShowReportModal] = useState(false)
 
   // Get gradient based on intention or use fallback
   const gradient = getIntentionGradient(session.intention)
@@ -226,6 +231,32 @@ export function SessionDetailModal({
     }
   }
 
+  // Handle report submission
+  const handleReport = useCallback(async (reason: string) => {
+    if (!currentUserId) return
+
+    const result = await reportTemplate(session.id, currentUserId, reason)
+
+    if (result.success && result.creatorId) {
+      // Create notification for the content creator
+      const notification: InAppNotification = {
+        id: `report-${session.id}-${Date.now()}`,
+        type: 'content_reported',
+        title: 'Content Under Review',
+        body: `Your meditation "${session.title}" has been flagged for review. You'll receive an email once the review is complete.`,
+        createdAt: Date.now(),
+        metadata: {
+          contentId: session.id
+        }
+      }
+      await addNotification(notification)
+    }
+
+    if (!result.success) {
+      throw new Error('Failed to submit report')
+    }
+  }, [currentUserId, session.id, session.title])
+
   // Block swipe navigation when modal is open
   const handleTouchEvent = (e: React.TouchEvent) => {
     e.stopPropagation()
@@ -241,16 +272,31 @@ export function SessionDetailModal({
       <div className="h-full overflow-y-auto">
         {/* Hero section - single unified header */}
         <div className={`relative bg-gradient-to-br ${gradient} px-6 pt-14 pb-6`}>
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors z-10"
-            aria-label="Close modal"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          {/* Header buttons */}
+          <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+            {/* Report button - only for other users' content */}
+            {!isOwnContent && (
+              <button
+                onClick={() => setShowReportModal(true)}
+                className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+                aria-label="Report issue"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+                </svg>
+              </button>
+            )}
+            {/* Close button */}
+            <button
+              onClick={onClose}
+              className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+              aria-label="Close modal"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
 
           {/* Title and tagline */}
           <p className="font-serif text-2xl text-white drop-shadow-sm">
@@ -498,6 +544,15 @@ export function SessionDetailModal({
           </div>
         </div>
       </div>
+
+      {/* Report Modal */}
+      {showReportModal && (
+        <ReportModal
+          contentTitle={session.title}
+          onClose={() => setShowReportModal(false)}
+          onSubmit={handleReport}
+        />
+      )}
     </div>
   )
 }

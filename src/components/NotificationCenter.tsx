@@ -23,13 +23,15 @@ interface NotificationCenterProps {
 const NOTIFICATION_ICONS: Record<NotificationType, string> = {
   attribution: '\u{1F49D}',      // Heart with ribbon for "your content helped"
   milestone: '\u{2728}',         // Sparkles for achievement
-  gentle_reminder: '\u{1F9D8}'   // Person meditating for reminder
+  gentle_reminder: '\u{1F9D8}',  // Person meditating for reminder
+  content_reported: '\u{1F4CB}'  // Clipboard for content review
 }
 
 const NOTIFICATION_COLORS: Record<NotificationType, string> = {
   attribution: 'bg-pink-500/10',
   milestone: 'bg-amber-500/10',
-  gentle_reminder: 'bg-blue-500/10'
+  gentle_reminder: 'bg-blue-500/10',
+  content_reported: 'bg-orange-500/10'
 }
 
 export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps) {
