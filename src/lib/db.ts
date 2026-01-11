@@ -1,41 +1,45 @@
 import Dexie, { Table } from 'dexie'
-import { InAppNotification, NotificationPreferences, DEFAULT_NOTIFICATION_PREFERENCES } from './notifications'
+import {
+  InAppNotification,
+  NotificationPreferences,
+  DEFAULT_NOTIFICATION_PREFERENCES,
+} from './notifications'
 
 export interface Session {
   id?: number
   uuid: string
-  startTime: number  // Unix timestamp (ms)
-  endTime: number    // Unix timestamp (ms)
+  startTime: number // Unix timestamp (ms)
+  endTime: number // Unix timestamp (ms)
   durationSeconds: number
   // Per-session metadata (added in v7)
-  pose?: string             // Seating position/pose
-  discipline?: string       // Meditation technique
-  notes?: string            // Intention or notes for this session
+  pose?: string // Seating position/pose
+  discipline?: string // Meditation technique
+  notes?: string // Intention or notes for this session
 }
 
 export interface AppState {
   id: string
-  hasReachedEnlightenment: boolean  // True once 10,000 hours reached
-  enlightenmentReachedAt?: number   // Timestamp when crossed threshold
+  hasReachedEnlightenment: boolean // True once 10,000 hours reached
+  enlightenmentReachedAt?: number // Timestamp when crossed threshold
 }
 
 export type TierType = 'free' | 'premium'
 
 export interface Achievement {
-  hours: number                     // Milestone value (2, 5, 10, 25, etc.)
-  achievedAt: number                // Timestamp when achieved
-  name: string                      // Display name ("2 hours", "5 hours", etc.)
+  hours: number // Milestone value (2, 5, 10, 25, etc.)
+  achievedAt: number // Timestamp when achieved
+  name: string // Display name ("2 hours", "5 hours", etc.)
 }
 
 export interface UserProfile {
   id: 1
   tier: TierType
-  premiumExpiryDate?: number        // When premium subscription expires
-  originalPurchaseDate?: number     // First purchase date
-  firstSessionDate?: number         // For Day 31 trigger calculation
-  trialExpired: boolean             // Has seen Day 31 banner
-  trialEndDate?: number             // When trial ended (for adaptive goal)
-  achievements?: Achievement[]      // Recorded milestone achievements
+  premiumExpiryDate?: number // When premium subscription expires
+  originalPurchaseDate?: number // First purchase date
+  firstSessionDate?: number // For Day 31 trigger calculation
+  trialExpired: boolean // Has seen Day 31 banner
+  trialEndDate?: number // When trial ended (for adaptive goal)
+  achievements?: Achievement[] // Recorded milestone achievements
 }
 
 export type ThemeMode = 'auto' | 'manual'
@@ -46,11 +50,11 @@ export type TimeOverride = 'morning' | 'daytime' | 'evening' | 'night'
 export interface UserSettings {
   id: 1
   hideTimeDisplay: boolean
-  skipInsightCapture: boolean  // Skip post-session insight recording prompt
+  skipInsightCapture: boolean // Skip post-session insight recording prompt
   themeMode: ThemeMode
   visualEffects: VisualEffects
-  audioFeedbackEnabled: boolean  // Play subtle sounds on complete/milestone
-  notificationPreferences: NotificationPreferences  // In-app notification settings
+  audioFeedbackEnabled: boolean // Play subtle sounds on complete/milestone
+  notificationPreferences: NotificationPreferences // In-app notification settings
   // Manual theme overrides (only used when themeMode === 'manual')
   manualSeason?: SeasonOverride
   manualTime?: TimeOverride
@@ -65,56 +69,56 @@ export interface Insight {
   sessionId: string | null
   rawText: string
   formattedText: string | null
-  sharedPearlId: string | null  // Links to Supabase pearl if shared
+  sharedPearlId: string | null // Links to Supabase pearl if shared
   createdAt: Date
   updatedAt: Date | null
 }
 
 export interface PlannedSession {
   id?: number
-  date: number              // Date timestamp (start of day)
-  plannedTime?: string      // "07:30" format
-  duration?: number         // Planned duration in minutes
-  title?: string            // Session title (e.g., "First Breath Awakening")
-  pose?: string             // Seating position/pose
-  discipline?: string       // Meditation discipline (e.g., "Vipassana", "Zen")
-  notes?: string            // Guidance notes
+  date: number // Date timestamp (start of day)
+  plannedTime?: string // "07:30" format
+  duration?: number // Planned duration in minutes
+  title?: string // Session title (e.g., "First Breath Awakening")
+  pose?: string // Seating position/pose
+  discipline?: string // Meditation discipline (e.g., "Vipassana", "Zen")
+  notes?: string // Guidance notes
   createdAt: number
-  completed?: boolean       // Marked when session is done
+  completed?: boolean // Marked when session is done
   // v6 additions for session linking
-  linkedSessionUuid?: string      // Link to actual Session when completed
-  sourceTemplateId?: string       // If adopted from community template
-  courseId?: string               // If part of a course
-  coursePosition?: number         // Position in course (1 of 5)
+  linkedSessionUuid?: string // Link to actual Session when completed
+  sourceTemplateId?: string // If adopted from community template
+  courseId?: string // If part of a course
+  coursePosition?: number // Position in course (1 of 5)
 }
 
 export interface UserCourseProgress {
-  id: string                      // UUID
-  courseId: string                // References Supabase course
-  sessionsCompleted: number[]     // Array of completed session positions
-  startedAt: number               // Timestamp when course started
-  lastActivityAt: number          // Last activity timestamp
+  id: string // UUID
+  courseId: string // References Supabase course
+  sessionsCompleted: number[] // Array of completed session positions
+  startedAt: number // Timestamp when course started
+  lastActivityAt: number // Last activity timestamp
   status: 'active' | 'paused' | 'completed'
 }
 
 export interface SavedTemplate {
-  id: string                      // UUID
-  templateId: string              // References Supabase session_template
-  savedAt: number                 // Timestamp when saved
+  id: string // UUID
+  templateId: string // References Supabase session_template
+  savedAt: number // Timestamp when saved
 }
 
 // Pearl draft - work in progress before posting to community
 export interface PearlDraft {
-  id: string                      // UUID
-  insightId: string               // Source insight
-  text: string                    // Draft pearl text (≤280 chars)
-  createdAt: number               // When draft started
-  updatedAt: number               // Last edit
+  id: string // UUID
+  insightId: string // Source insight
+  text: string // Draft pearl text (≤280 chars)
+  createdAt: number // When draft started
+  updatedAt: number // Last edit
 }
 
 // Template draft - work in progress before publishing to community
 export interface TemplateDraft {
-  id: string                      // Always 'current' - only one draft at a time
+  id: string // Always 'current' - only one draft at a time
   title: string
   tagline: string
   durationGuidance: string
@@ -125,7 +129,7 @@ export interface TemplateDraft {
   guidanceNotes: string
   intention: string
   recommendedAfterHours: number
-  intentTags: string[]            // Intent-based tags for filtering
+  intentTags: string[] // Intent-based tags for filtering
   createdAt: number
   updatedAt: number
 }
@@ -134,11 +138,11 @@ export interface TemplateDraft {
 export interface UserPreferences {
   id: 1
   displayName?: string
-  avatarUrl?: string               // URL or base64 data URI
-  preferredPosture?: string        // 'seated-cushion' | 'seated-chair' | 'lying' | 'walking' | 'varies'
-  preferredDiscipline?: string     // 'open' | 'breath' | 'vipassana' | 'zen' | 'loving-kindness' | 'body-scan' | 'varies'
-  preferredDuration?: string       // '5-10' | '15-20' | '30+' | 'varies'
-  preferredTime?: string           // 'morning' | 'afternoon' | 'evening' | 'varies'
+  avatarUrl?: string // URL or base64 data URI
+  preferredPosture?: string // 'seated-cushion' | 'seated-chair' | 'lying' | 'walking' | 'varies'
+  preferredDiscipline?: string // 'open' | 'breath' | 'vipassana' | 'zen' | 'loving-kindness' | 'body-scan' | 'varies'
+  preferredDuration?: string // '5-10' | '15-20' | '30+' | 'varies'
+  preferredTime?: string // 'morning' | 'afternoon' | 'evening' | 'varies'
   /**
    * User's practice goal in hours.
    * - undefined/null = infinite mode (no ceiling, milestones continue forever)
@@ -150,31 +154,31 @@ export interface UserPreferences {
 
 // Wellbeing dimension being tracked
 export interface WellbeingDimension {
-  id: string                       // UUID
-  name: string                     // 'anxiety' | 'stress' | 'low-mood' | custom
-  label: string                    // Display label (e.g., "Anxiety", "Work Stress")
-  description?: string             // Optional description
-  isCustom: boolean                // True if user-defined
+  id: string // UUID
+  name: string // 'anxiety' | 'stress' | 'low-mood' | custom
+  label: string // Display label (e.g., "Anxiety", "Work Stress")
+  description?: string // Optional description
+  isCustom: boolean // True if user-defined
   createdAt: number
-  archivedAt?: number              // Soft delete - when user stops tracking
+  archivedAt?: number // Soft delete - when user stops tracking
 }
 
 // A single check-in entry for a dimension
 export interface WellbeingCheckIn {
-  id: string                       // UUID
-  dimensionId: string              // References WellbeingDimension
-  score: number                    // 1-10 scale
-  note?: string                    // Optional journal note
+  id: string // UUID
+  dimensionId: string // References WellbeingDimension
+  score: number // 1-10 scale
+  note?: string // Optional journal note
   createdAt: number
 }
 
 // Wellbeing tracking settings
 export interface WellbeingSettings {
   id: 1
-  checkInFrequencyDays: number     // 7-30, how often to prompt
-  lastCheckInPrompt?: number       // Timestamp of last prompt
-  nextCheckInDue?: number          // When next check-in is due
-  isEnabled: boolean               // Master toggle for wellbeing tracking
+  checkInFrequencyDays: number // 7-30, how often to prompt
+  lastCheckInPrompt?: number // Timestamp of last prompt
+  nextCheckInDue?: number // When next check-in is due
+  isEnabled: boolean // Master toggle for wellbeing tracking
 }
 
 class MeditationDB extends Dexie {
@@ -200,34 +204,36 @@ class MeditationDB extends Dexie {
     // v1: Original schema
     this.version(1).stores({
       sessions: '++id, uuid, startTime, endTime',
-      appState: 'id'
+      appState: 'id',
     })
 
     // v2: Add profile and settings tables for tier logic
-    this.version(2).stores({
-      sessions: '++id, uuid, startTime, endTime',
-      appState: 'id',
-      profile: 'id',
-      settings: 'id'
-    }).upgrade(async tx => {
-      // Backfill firstSessionDate from earliest session
-      const sessions = await tx.table('sessions').orderBy('startTime').first()
-      const firstSessionDate = sessions?.startTime ?? undefined
-
-      // Initialize profile with defaults
-      await tx.table('profile').put({
-        id: 1,
-        tier: 'free',
-        firstSessionDate,
-        trialExpired: false
+    this.version(2)
+      .stores({
+        sessions: '++id, uuid, startTime, endTime',
+        appState: 'id',
+        profile: 'id',
+        settings: 'id',
       })
+      .upgrade(async (tx) => {
+        // Backfill firstSessionDate from earliest session
+        const sessions = await tx.table('sessions').orderBy('startTime').first()
+        const firstSessionDate = sessions?.startTime ?? undefined
 
-      // Initialize settings with defaults
-      await tx.table('settings').put({
-        id: 1,
-        hideTimeDisplay: false
+        // Initialize profile with defaults
+        await tx.table('profile').put({
+          id: 1,
+          tier: 'free',
+          firstSessionDate,
+          trialExpired: false,
+        })
+
+        // Initialize settings with defaults
+        await tx.table('settings').put({
+          id: 1,
+          hideTimeDisplay: false,
+        })
       })
-    })
 
     // v3: Add insights table for voice note capture
     this.version(3).stores({
@@ -235,22 +241,27 @@ class MeditationDB extends Dexie {
       appState: 'id',
       profile: 'id',
       settings: 'id',
-      insights: 'id, sessionId, createdAt'
+      insights: 'id, sessionId, createdAt',
     })
 
     // v4: Add sharedPearlId to insights for tracking shared pearls
-    this.version(4).stores({
-      sessions: '++id, uuid, startTime, endTime',
-      appState: 'id',
-      profile: 'id',
-      settings: 'id',
-      insights: 'id, sessionId, createdAt, sharedPearlId'
-    }).upgrade(async tx => {
-      // Backfill existing insights with null sharedPearlId
-      await tx.table('insights').toCollection().modify(insight => {
-        insight.sharedPearlId = null
+    this.version(4)
+      .stores({
+        sessions: '++id, uuid, startTime, endTime',
+        appState: 'id',
+        profile: 'id',
+        settings: 'id',
+        insights: 'id, sessionId, createdAt, sharedPearlId',
       })
-    })
+      .upgrade(async (tx) => {
+        // Backfill existing insights with null sharedPearlId
+        await tx
+          .table('insights')
+          .toCollection()
+          .modify((insight) => {
+            insight.sharedPearlId = null
+          })
+      })
 
     // v5: Add plannedSessions table for meditation planning
     this.version(5).stores({
@@ -259,28 +270,33 @@ class MeditationDB extends Dexie {
       profile: 'id',
       settings: 'id',
       insights: 'id, sessionId, createdAt, sharedPearlId',
-      plannedSessions: '++id, date, createdAt'
+      plannedSessions: '++id, date, createdAt',
     })
 
     // v6: Extend plannedSessions with session linking, add course progress and saved templates
-    this.version(6).stores({
-      sessions: '++id, uuid, startTime, endTime',
-      appState: 'id',
-      profile: 'id',
-      settings: 'id',
-      insights: 'id, sessionId, createdAt, sharedPearlId',
-      plannedSessions: '++id, date, createdAt, linkedSessionUuid, courseId',
-      courseProgress: 'id, courseId, status',
-      savedTemplates: 'id, templateId, savedAt'
-    }).upgrade(async tx => {
-      // Backfill existing planned sessions with null linking fields
-      await tx.table('plannedSessions').toCollection().modify(plan => {
-        plan.linkedSessionUuid = plan.linkedSessionUuid ?? null
-        plan.sourceTemplateId = plan.sourceTemplateId ?? null
-        plan.courseId = plan.courseId ?? null
-        plan.coursePosition = plan.coursePosition ?? null
+    this.version(6)
+      .stores({
+        sessions: '++id, uuid, startTime, endTime',
+        appState: 'id',
+        profile: 'id',
+        settings: 'id',
+        insights: 'id, sessionId, createdAt, sharedPearlId',
+        plannedSessions: '++id, date, createdAt, linkedSessionUuid, courseId',
+        courseProgress: 'id, courseId, status',
+        savedTemplates: 'id, templateId, savedAt',
       })
-    })
+      .upgrade(async (tx) => {
+        // Backfill existing planned sessions with null linking fields
+        await tx
+          .table('plannedSessions')
+          .toCollection()
+          .modify((plan) => {
+            plan.linkedSessionUuid = plan.linkedSessionUuid ?? null
+            plan.sourceTemplateId = plan.sourceTemplateId ?? null
+            plan.courseId = plan.courseId ?? null
+            plan.coursePosition = plan.coursePosition ?? null
+          })
+      })
 
     // v7: Add per-session metadata (pose, discipline, notes) to sessions
     // No index changes needed - fields are optional and stored directly on session
@@ -292,7 +308,7 @@ class MeditationDB extends Dexie {
       insights: 'id, sessionId, createdAt, sharedPearlId',
       plannedSessions: '++id, date, createdAt, linkedSessionUuid, courseId',
       courseProgress: 'id, courseId, status',
-      savedTemplates: 'id, templateId, savedAt'
+      savedTemplates: 'id, templateId, savedAt',
     })
 
     // v8: Add pearl drafts table for work-in-progress pearls
@@ -305,7 +321,7 @@ class MeditationDB extends Dexie {
       plannedSessions: '++id, date, createdAt, linkedSessionUuid, courseId',
       courseProgress: 'id, courseId, status',
       savedTemplates: 'id, templateId, savedAt',
-      pearlDrafts: 'id, insightId, updatedAt'
+      pearlDrafts: 'id, insightId, updatedAt',
     })
 
     // v9: Add template drafts table for work-in-progress templates
@@ -319,7 +335,7 @@ class MeditationDB extends Dexie {
       courseProgress: 'id, courseId, status',
       savedTemplates: 'id, templateId, savedAt',
       pearlDrafts: 'id, insightId, updatedAt',
-      templateDrafts: 'id, updatedAt'
+      templateDrafts: 'id, updatedAt',
     })
 
     // v10: Add user preferences, wellbeing tracking tables
@@ -337,7 +353,7 @@ class MeditationDB extends Dexie {
       userPreferences: 'id',
       wellbeingDimensions: 'id, name, createdAt',
       wellbeingCheckIns: 'id, dimensionId, createdAt',
-      wellbeingSettings: 'id'
+      wellbeingSettings: 'id',
     })
 
     // v11: Add notifications table for in-app notification center
@@ -356,7 +372,7 @@ class MeditationDB extends Dexie {
       wellbeingDimensions: 'id, name, createdAt',
       wellbeingCheckIns: 'id, dimensionId, createdAt',
       wellbeingSettings: 'id',
-      notifications: 'id, type, createdAt, readAt'
+      notifications: 'id, type, createdAt, readAt',
     })
   }
 }
@@ -377,7 +393,7 @@ export async function markEnlightenmentReached(): Promise<void> {
   await db.appState.put({
     id: 'main',
     hasReachedEnlightenment: true,
-    enlightenmentReachedAt: Date.now()
+    enlightenmentReachedAt: Date.now(),
   })
 }
 
@@ -412,7 +428,9 @@ export async function deleteSession(uuid: string): Promise<void> {
 
 export async function updateSessionFull(
   uuid: string,
-  updates: Partial<Pick<Session, 'startTime' | 'endTime' | 'durationSeconds' | 'pose' | 'discipline' | 'notes'>>
+  updates: Partial<
+    Pick<Session, 'startTime' | 'endTime' | 'durationSeconds' | 'pose' | 'discipline' | 'notes'>
+  >
 ): Promise<void> {
   const session = await db.sessions.where('uuid').equals(uuid).first()
   if (session && session.id) {
@@ -435,7 +453,7 @@ export async function getProfile(): Promise<UserProfile> {
       id: 1,
       tier: 'free',
       firstSessionDate: firstSession?.startTime,
-      trialExpired: false
+      trialExpired: false,
     }
     await db.profile.put(profile)
   }
@@ -464,7 +482,7 @@ export async function getSettings(): Promise<UserSettings> {
       themeMode: 'auto',
       visualEffects: 'calm',
       audioFeedbackEnabled: false,
-      notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES
+      notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES,
     }
     await db.settings.put(settings)
   }
@@ -507,16 +525,13 @@ export async function addNotification(notification: InAppNotification): Promise<
 
 export async function getUnreadNotifications(): Promise<InAppNotification[]> {
   return db.notifications
-    .filter(n => !n.readAt && !n.dismissedAt && (!n.snoozedUntil || n.snoozedUntil < Date.now()))
+    .filter((n) => !n.readAt && !n.dismissedAt && (!n.snoozedUntil || n.snoozedUntil < Date.now()))
     .sortBy('createdAt')
-    .then(notifications => notifications.reverse())  // Newest first
+    .then((notifications) => notifications.reverse()) // Newest first
 }
 
 export async function getAllNotifications(): Promise<InAppNotification[]> {
-  return db.notifications
-    .orderBy('createdAt')
-    .reverse()
-    .toArray()
+  return db.notifications.orderBy('createdAt').reverse().toArray()
 }
 
 export async function markNotificationAsRead(id: string): Promise<void> {
@@ -533,7 +548,7 @@ export async function snoozeNotification(id: string, until: number): Promise<voi
 
 export async function getUnreadNotificationCount(): Promise<number> {
   return db.notifications
-    .filter(n => !n.readAt && !n.dismissedAt && (!n.snoozedUntil || n.snoozedUntil < Date.now()))
+    .filter((n) => !n.readAt && !n.dismissedAt && (!n.snoozedUntil || n.snoozedUntil < Date.now()))
     .count()
 }
 
@@ -552,7 +567,7 @@ export async function addAchievement(achievement: Achievement): Promise<void> {
   const achievements = profile.achievements ?? []
 
   // Don't add duplicates
-  if (achievements.some(a => a.hours === achievement.hours)) {
+  if (achievements.some((a) => a.hours === achievement.hours)) {
     return
   }
 
@@ -568,19 +583,20 @@ export async function recordMilestoneIfNew(
 ): Promise<Achievement | null> {
   const profile = await getProfile()
   const achievements = profile.achievements ?? []
-  const achievedHours = new Set(achievements.map(a => a.hours))
+  const achievedHours = new Set(achievements.map((a) => a.hours))
 
   // Find milestones that should be achieved but aren't recorded
   for (const milestone of milestones) {
     if (totalHours >= milestone && !achievedHours.has(milestone)) {
-      const name = milestone >= 1000
-        ? `${(milestone / 1000).toFixed(milestone % 1000 === 0 ? 0 : 1)}k hours`
-        : `${milestone} hours`
+      const name =
+        milestone >= 1000
+          ? `${(milestone / 1000).toFixed(milestone % 1000 === 0 ? 0 : 1)}k hours`
+          : `${milestone} hours`
 
       const achievement: Achievement = {
         hours: milestone,
         achievedAt: Date.now(),
-        name
+        name,
       }
 
       await addAchievement(achievement)
@@ -604,7 +620,7 @@ export async function addInsight(data: {
     formattedText: data.formattedText ?? null,
     sharedPearlId: null,
     createdAt: new Date(),
-    updatedAt: null
+    updatedAt: null,
   }
   await db.insights.add(insight)
   return insight
@@ -617,7 +633,7 @@ export async function updateInsight(
 ): Promise<void> {
   await db.insights.update(id, {
     ...updates,
-    updatedAt: new Date()
+    updatedAt: new Date(),
   })
 }
 
@@ -633,7 +649,7 @@ export async function getInsights(): Promise<Insight[]> {
 // Get only insights that have content (for My Insights view)
 export async function getInsightsWithContent(): Promise<Insight[]> {
   const insights = await db.insights.orderBy('createdAt').reverse().toArray()
-  return insights.filter(i => i.rawText && i.rawText.trim().length > 0)
+  return insights.filter((i) => i.rawText && i.rawText.trim().length > 0)
 }
 
 export async function getInsightById(id: string): Promise<Insight | undefined> {
@@ -647,20 +663,20 @@ export async function deleteInsight(id: string): Promise<void> {
 export async function markInsightAsShared(insightId: string, pearlId: string): Promise<void> {
   await db.insights.update(insightId, {
     sharedPearlId: pearlId,
-    updatedAt: new Date()
+    updatedAt: new Date(),
   })
 }
 
 export async function getUnsharedInsights(): Promise<Insight[]> {
   return db.insights
-    .filter(insight => insight.sharedPearlId === null)
+    .filter((insight) => insight.sharedPearlId === null)
     .reverse()
     .sortBy('createdAt')
 }
 
 export async function getSharedInsights(): Promise<Insight[]> {
   return db.insights
-    .filter(insight => insight.sharedPearlId !== null)
+    .filter((insight) => insight.sharedPearlId !== null)
     .reverse()
     .sortBy('createdAt')
 }
@@ -670,10 +686,12 @@ export async function getInsightsBySessionId(sessionId: string): Promise<Insight
 }
 
 // Planned session helpers
-export async function addPlannedSession(data: Omit<PlannedSession, 'id' | 'createdAt'>): Promise<PlannedSession> {
+export async function addPlannedSession(
+  data: Omit<PlannedSession, 'id' | 'createdAt'>
+): Promise<PlannedSession> {
   const planned: PlannedSession = {
     ...data,
-    createdAt: Date.now()
+    createdAt: Date.now(),
   }
   const id = await db.plannedSessions.add(planned)
   return { ...planned, id }
@@ -687,18 +705,18 @@ export async function getPlannedSession(date: number): Promise<PlannedSession | 
 export async function getIncompletePlansForDate(date: number): Promise<PlannedSession[]> {
   // Get all incomplete (not yet done) plans for a specific date
   const plans = await db.plannedSessions.where('date').equals(date).toArray()
-  return plans.filter(p => !p.completed && !p.linkedSessionUuid)
+  return plans.filter((p) => !p.completed && !p.linkedSessionUuid)
 }
 
 export async function getPlannedSessionsForWeek(weekStartDate: number): Promise<PlannedSession[]> {
   const weekEndDate = weekStartDate + 7 * 24 * 60 * 60 * 1000
-  return db.plannedSessions
-    .where('date')
-    .between(weekStartDate, weekEndDate, true, false)
-    .toArray()
+  return db.plannedSessions.where('date').between(weekStartDate, weekEndDate, true, false).toArray()
 }
 
-export async function getPlannedSessionsForMonth(year: number, month: number): Promise<PlannedSession[]> {
+export async function getPlannedSessionsForMonth(
+  year: number,
+  month: number
+): Promise<PlannedSession[]> {
   const monthStart = new Date(year, month, 1)
   monthStart.setHours(0, 0, 0, 0)
   const monthEnd = new Date(year, month + 1, 1)
@@ -724,26 +742,27 @@ export async function deletePlannedSession(id: number): Promise<void> {
 function isSameDay(timestamp1: number, timestamp2: number): boolean {
   const d1 = new Date(timestamp1)
   const d2 = new Date(timestamp2)
-  return d1.getFullYear() === d2.getFullYear() &&
+  return (
+    d1.getFullYear() === d2.getFullYear() &&
     d1.getMonth() === d2.getMonth() &&
     d1.getDate() === d2.getDate()
+  )
 }
 
 // Get the next upcoming planned session (today or future, not completed)
 // Pass afterDate to skip plans on that date (useful when today already has a session)
-export async function getNextPlannedSession(afterDate?: number): Promise<PlannedSession | undefined> {
+export async function getNextPlannedSession(
+  afterDate?: number
+): Promise<PlannedSession | undefined> {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const todayTime = today.getTime()
 
   // Get all plans from today onwards
-  const plans = await db.plannedSessions
-    .where('date')
-    .aboveOrEqual(todayTime)
-    .toArray()
+  const plans = await db.plannedSessions.where('date').aboveOrEqual(todayTime).toArray()
 
   return plans
-    .filter(p => {
+    .filter((p) => {
       if (p.completed || p.linkedSessionUuid) return false
       // Defensive check: exclude plans from past days (handles edge cases)
       if (p.date < todayTime) return false
@@ -759,7 +778,10 @@ export async function getLatestInsight(): Promise<Insight | undefined> {
 }
 
 // Session-Plan Linking helpers
-export async function linkSessionToPlan(sessionUuid: string, date: number): Promise<PlannedSession | null> {
+export async function linkSessionToPlan(
+  sessionUuid: string,
+  date: number
+): Promise<PlannedSession | null> {
   // Find an unlinked plan for the given date and link it to the session
   // Use date range (same calendar day) to handle any timestamp discrepancies
   const dayStart = new Date(date)
@@ -770,13 +792,13 @@ export async function linkSessionToPlan(sessionUuid: string, date: number): Prom
   const plan = await db.plannedSessions
     .where('date')
     .between(dayStart.getTime(), dayEnd.getTime(), true, true)
-    .filter(p => !p.linkedSessionUuid)
+    .filter((p) => !p.linkedSessionUuid)
     .first()
 
   if (plan && plan.id) {
     await db.plannedSessions.update(plan.id, {
       completed: true,
-      linkedSessionUuid: sessionUuid
+      linkedSessionUuid: sessionUuid,
     })
     // Return the linked plan for caller to handle additional side effects (e.g., template completion tracking)
     return { ...plan, completed: true, linkedSessionUuid: sessionUuid }
@@ -784,7 +806,9 @@ export async function linkSessionToPlan(sessionUuid: string, date: number): Prom
   return null
 }
 
-export async function getPlannedSessionByLinkedUuid(sessionUuid: string): Promise<PlannedSession | undefined> {
+export async function getPlannedSessionByLinkedUuid(
+  sessionUuid: string
+): Promise<PlannedSession | undefined> {
   return db.plannedSessions.where('linkedSessionUuid').equals(sessionUuid).first()
 }
 
@@ -798,19 +822,19 @@ export async function getAllPlannedSessions(): Promise<PlannedSession[]> {
  */
 export async function relinkOrphanedPlans(sessions: Session[]): Promise<number> {
   const unlinkedPlans = await db.plannedSessions
-    .filter(p => !p.completed && !p.linkedSessionUuid)
+    .filter((p) => !p.completed && !p.linkedSessionUuid)
     .toArray()
 
   let linkedCount = 0
 
   for (const plan of unlinkedPlans) {
     // Find a session on the same day as this plan
-    const matchingSession = sessions.find(session => isSameDay(session.startTime, plan.date))
+    const matchingSession = sessions.find((session) => isSameDay(session.startTime, plan.date))
 
     if (matchingSession && plan.id) {
       await db.plannedSessions.update(plan.id, {
         completed: true,
-        linkedSessionUuid: matchingSession.uuid
+        linkedSessionUuid: matchingSession.uuid,
       })
       linkedCount++
     }
@@ -825,7 +849,7 @@ export async function relinkOrphanedPlans(sessions: Session[]): Promise<number> 
  */
 export async function markPlanCompleted(planId: number): Promise<void> {
   await db.plannedSessions.update(planId, {
-    completed: true
+    completed: true,
   })
 }
 
@@ -849,7 +873,7 @@ export async function startCourse(courseId: string): Promise<UserCourseProgress>
     if (existing.status === 'paused') {
       await db.courseProgress.update(existing.id, {
         status: 'active',
-        lastActivityAt: Date.now()
+        lastActivityAt: Date.now(),
       })
     }
     return existing
@@ -861,7 +885,7 @@ export async function startCourse(courseId: string): Promise<UserCourseProgress>
     sessionsCompleted: [],
     startedAt: Date.now(),
     lastActivityAt: Date.now(),
-    status: 'active'
+    status: 'active',
   }
   await db.courseProgress.add(progress)
   return progress
@@ -875,7 +899,7 @@ export async function updateCourseProgress(
   if (progress) {
     await db.courseProgress.update(progress.id, {
       ...updates,
-      lastActivityAt: Date.now()
+      lastActivityAt: Date.now(),
     })
   }
 }
@@ -886,7 +910,7 @@ export async function markCourseSessionComplete(courseId: string, position: numb
     const newCompleted = [...progress.sessionsCompleted, position].sort((a, b) => a - b)
     await db.courseProgress.update(progress.id, {
       sessionsCompleted: newCompleted,
-      lastActivityAt: Date.now()
+      lastActivityAt: Date.now(),
     })
   }
 }
@@ -907,7 +931,7 @@ export async function saveTemplate(templateId: string): Promise<SavedTemplate> {
   const saved: SavedTemplate = {
     id: crypto.randomUUID(),
     templateId,
-    savedAt: Date.now()
+    savedAt: Date.now(),
   }
   await db.savedTemplates.add(saved)
   return saved
@@ -946,7 +970,7 @@ export async function savePearlDraft(insightId: string, text: string): Promise<P
       insightId,
       text,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     }
     await db.pearlDrafts.add(draft)
     return draft
@@ -987,7 +1011,7 @@ export async function saveTemplateDraft(
       id: 'current',
       ...data,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     }
     await db.templateDrafts.add(draft)
     return draft
@@ -1013,7 +1037,7 @@ export async function getUserPreferences(): Promise<UserPreferences> {
   if (!prefs) {
     prefs = {
       id: 1,
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
     }
     await db.userPreferences.put(prefs)
   }
@@ -1033,7 +1057,7 @@ export async function getWellbeingSettings(): Promise<WellbeingSettings> {
     settings = {
       id: 1,
       checkInFrequencyDays: 14,
-      isEnabled: false
+      isEnabled: false,
     }
     await db.wellbeingSettings.put(settings)
   }
@@ -1047,22 +1071,23 @@ export async function updateWellbeingSettings(
 }
 
 // Wellbeing Dimension helpers
-export async function addWellbeingDimension(
-  data: { name: string; label: string; description?: string; isCustom: boolean }
-): Promise<WellbeingDimension> {
+export async function addWellbeingDimension(data: {
+  name: string
+  label: string
+  description?: string
+  isCustom: boolean
+}): Promise<WellbeingDimension> {
   const dimension: WellbeingDimension = {
     id: crypto.randomUUID(),
     ...data,
-    createdAt: Date.now()
+    createdAt: Date.now(),
   }
   await db.wellbeingDimensions.add(dimension)
   return dimension
 }
 
 export async function getWellbeingDimensions(): Promise<WellbeingDimension[]> {
-  return db.wellbeingDimensions
-    .filter(d => !d.archivedAt)
-    .toArray()
+  return db.wellbeingDimensions.filter((d) => !d.archivedAt).toArray()
 }
 
 export async function getAllWellbeingDimensions(): Promise<WellbeingDimension[]> {
@@ -1078,24 +1103,22 @@ export async function restoreWellbeingDimension(id: string): Promise<void> {
 }
 
 // Wellbeing Check-in helpers
-export async function addWellbeingCheckIn(
-  data: { dimensionId: string; score: number; note?: string }
-): Promise<WellbeingCheckIn> {
+export async function addWellbeingCheckIn(data: {
+  dimensionId: string
+  score: number
+  note?: string
+}): Promise<WellbeingCheckIn> {
   const checkIn: WellbeingCheckIn = {
     id: crypto.randomUUID(),
     ...data,
-    createdAt: Date.now()
+    createdAt: Date.now(),
   }
   await db.wellbeingCheckIns.add(checkIn)
   return checkIn
 }
 
 export async function getCheckInsForDimension(dimensionId: string): Promise<WellbeingCheckIn[]> {
-  return db.wellbeingCheckIns
-    .where('dimensionId')
-    .equals(dimensionId)
-    .reverse()
-    .sortBy('createdAt')
+  return db.wellbeingCheckIns.where('dimensionId').equals(dimensionId).reverse().sortBy('createdAt')
 }
 
 export async function getLatestCheckIns(): Promise<Map<string, WellbeingCheckIn>> {
@@ -1124,10 +1147,7 @@ export async function getCheckInHistory(
   dimensionId: string,
   limit?: number
 ): Promise<WellbeingCheckIn[]> {
-  let query = db.wellbeingCheckIns
-    .where('dimensionId')
-    .equals(dimensionId)
-    .reverse()
+  const query = db.wellbeingCheckIns.where('dimensionId').equals(dimensionId).reverse()
 
   const results = await query.sortBy('createdAt')
   return limit ? results.slice(0, limit) : results
@@ -1149,6 +1169,6 @@ export async function getImprovementForDimension(
   return {
     first: first.score,
     latest: latest.score,
-    percentChange: Math.round(percentChange)
+    percentChange: Math.round(percentChange),
   }
 }
