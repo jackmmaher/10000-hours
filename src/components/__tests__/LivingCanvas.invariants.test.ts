@@ -16,7 +16,7 @@ import {
   getSeasonalEffects,
   SUN_THRESHOLDS,
   type EffectIntensities,
-  type SeasonalEffects
+  type SeasonalEffects,
 } from '../../lib/livingTheme'
 
 // =============================================================================
@@ -45,7 +45,7 @@ function simulateParticleCreation(
       particles.push({
         type: 'star',
         alpha: 0.2 + Math.random() * 0.8,
-        z: Math.random()
+        z: Math.random(),
       })
     }
   }
@@ -60,13 +60,13 @@ function simulateParticleCreation(
         snow: 'snow',
         leaves: 'leaf',
         fireflies: 'firefly',
-        mist: 'mist'
+        mist: 'mist',
       }
       const countMap = {
         snow: Math.floor(200 * intensity),
         leaves: Math.floor(60 * intensity),
         fireflies: Math.floor(40 * intensity),
-        mist: Math.floor(50 * intensity)
+        mist: Math.floor(50 * intensity),
       }
       const count = countMap[particleType] || 0
       const actualType = typeMap[particleType]
@@ -74,7 +74,7 @@ function simulateParticleCreation(
         particles.push({
           type: actualType,
           alpha: 0.3 + Math.random() * 0.5,
-          z: Math.random()
+          z: Math.random(),
         })
       }
     }
@@ -86,10 +86,7 @@ function simulateParticleCreation(
 /**
  * Simulate star render alpha calculation from LivingCanvas.tsx line 452
  */
-function simulateStarRenderAlpha(
-  particle: SimulatedParticle,
-  effectsStars: number
-): number {
+function simulateStarRenderAlpha(particle: SimulatedParticle, effectsStars: number): number {
   const twinkle = 0.5 // Assume middle of twinkle cycle
   const depthAlpha = 0.3 + particle.z * 0.7
   return particle.alpha * twinkle * depthAlpha * effectsStars
@@ -111,7 +108,7 @@ describe('Invariant 1: Particles exist when effects say they should', () => {
 
     const seasonalEffects = getSeasonalEffects('winter', 'night', false)
     const particles = simulateParticleCreation(effects, seasonalEffects)
-    const stars = particles.filter(p => p.type === 'star')
+    const stars = particles.filter((p) => p.type === 'star')
 
     expect(stars.length).toBeGreaterThan(0)
   })
@@ -124,7 +121,7 @@ describe('Invariant 1: Particles exist when effects say they should', () => {
 
     const seasonalEffects = getSeasonalEffects('summer', 'daytime', false)
     const particles = simulateParticleCreation(effects, seasonalEffects)
-    const stars = particles.filter(p => p.type === 'star')
+    const stars = particles.filter((p) => p.type === 'star')
 
     expect(stars.length).toBe(0)
   })
@@ -154,7 +151,7 @@ describe('Invariant 1: Particles exist when effects say they should', () => {
     // Particles created at T1 (this is what OLD code would have)
     const seasonalEffects = getSeasonalEffects('winter', 'daytime', false)
     const oldParticles = simulateParticleCreation(daytimeEffects, seasonalEffects)
-    const oldStars = oldParticles.filter(p => p.type === 'star')
+    const oldStars = oldParticles.filter((p) => p.type === 'star')
 
     // T2: Switch to night - effects.stars becomes 1
     const manualNightTheme = calculateManualTheme('winter', 'night', false)
@@ -164,7 +161,7 @@ describe('Invariant 1: Particles exist when effects say they should', () => {
     if (oldStars.length === 0 && manualNightTheme.effects.stars > 0) {
       console.warn(
         'BUG SCENARIO (now fixed): effects.stars=%d but no star particles exist. ' +
-        'In old code, stars would not render. Now createParticles is called on effects change.',
+          'In old code, stars would not render. Now createParticles is called on effects change.',
         manualNightTheme.effects.stars
       )
     }
@@ -172,11 +169,11 @@ describe('Invariant 1: Particles exist when effects say they should', () => {
     // With fix: particles WOULD be recreated, so let's simulate that
     const nightSeasonalEffects = getSeasonalEffects('winter', 'night', false)
     const newParticles = simulateParticleCreation(manualNightTheme.effects, nightSeasonalEffects)
-    const newStars = newParticles.filter(p => p.type === 'star')
+    const newStars = newParticles.filter((p) => p.type === 'star')
 
     // After fix: stars exist and render with visible alpha
     expect(newStars.length).toBeGreaterThan(0)
-    newStars.forEach(star => {
+    newStars.forEach((star) => {
       const alpha = simulateStarRenderAlpha(star, manualNightTheme.effects.stars)
       expect(alpha).toBeGreaterThan(0.01)
     })
@@ -192,10 +189,10 @@ describe('Invariant 2: Particles render with non-zero alpha when they should be 
     const effects = calculateEffectIntensities(-10, false, 'winter', false)
     const seasonalEffects = getSeasonalEffects('winter', 'night', false)
     const particles = simulateParticleCreation(effects, seasonalEffects)
-    const stars = particles.filter(p => p.type === 'star')
+    const stars = particles.filter((p) => p.type === 'star')
 
     // All stars should have visible render alpha
-    stars.forEach(star => {
+    stars.forEach((star) => {
       const renderAlpha = simulateStarRenderAlpha(star, effects.stars)
       expect(renderAlpha).toBeGreaterThan(0.01) // Minimum visibility threshold
     })
@@ -208,7 +205,7 @@ describe('Invariant 2: Particles render with non-zero alpha when they should be 
     const nightEffects = calculateEffectIntensities(-10, false, 'winter', false)
     const seasonalEffects = getSeasonalEffects('winter', 'night', false)
     const particles = simulateParticleCreation(nightEffects, seasonalEffects)
-    const stars = particles.filter(p => p.type === 'star')
+    const stars = particles.filter((p) => p.type === 'star')
     expect(stars.length).toBeGreaterThan(0)
 
     // T2: Day - effects.stars becomes 0
@@ -217,7 +214,7 @@ describe('Invariant 2: Particles render with non-zero alpha when they should be 
 
     // Particles still exist but render with 0 alpha
     // This is CORRECT behavior (fade out) - not a bug
-    stars.forEach(star => {
+    stars.forEach((star) => {
       const renderAlpha = simulateStarRenderAlpha(star, dayEffects.stars)
       expect(renderAlpha).toBe(0)
     })
@@ -235,7 +232,7 @@ describe('Invariant 3: Correct particle types for each season', () => {
     const particles = simulateParticleCreation(theme.effects, seasonalEffects)
 
     expect(seasonalEffects.particleType).toBe('snow')
-    const snow = particles.filter(p => p.type === 'snow')
+    const snow = particles.filter((p) => p.type === 'snow')
     expect(snow.length).toBeGreaterThan(0)
   })
 
@@ -245,7 +242,7 @@ describe('Invariant 3: Correct particle types for each season', () => {
     const particles = simulateParticleCreation(theme.effects, seasonalEffects)
 
     expect(seasonalEffects.particleType).toBe('leaves')
-    const leaves = particles.filter(p => p.type === 'leaf')
+    const leaves = particles.filter((p) => p.type === 'leaf')
     expect(leaves.length).toBeGreaterThan(0)
   })
 
@@ -255,7 +252,7 @@ describe('Invariant 3: Correct particle types for each season', () => {
     const particles = simulateParticleCreation(theme.effects, seasonalEffects)
 
     expect(seasonalEffects.particleType).toBe('fireflies')
-    const fireflies = particles.filter(p => p.type === 'firefly')
+    const fireflies = particles.filter((p) => p.type === 'firefly')
     expect(fireflies.length).toBeGreaterThan(0)
   })
 
@@ -265,7 +262,7 @@ describe('Invariant 3: Correct particle types for each season', () => {
     const particles = simulateParticleCreation(theme.effects, seasonalEffects)
 
     expect(seasonalEffects.particleType).toBe('mist')
-    const mist = particles.filter(p => p.type === 'mist')
+    const mist = particles.filter((p) => p.type === 'mist')
     expect(mist.length).toBeGreaterThan(0)
   })
 })
@@ -287,10 +284,13 @@ describe('Invariant 4: Effect thresholds are consistent', () => {
     // At stars = 0.3, stars exist but aurora doesn't render
     const lowStarEffects = calculateEffectIntensities(2, false, 'winter', true) // Just below golden hour
 
-    if (lowStarEffects.stars > STAR_CREATION_THRESHOLD && lowStarEffects.stars <= AURORA_RENDER_THRESHOLD) {
+    if (
+      lowStarEffects.stars > STAR_CREATION_THRESHOLD &&
+      lowStarEffects.stars <= AURORA_RENDER_THRESHOLD
+    ) {
       // This is a potential inconsistency - stars visible but aurora not
       // May or may not be intentional, but documents the threshold gap
-      console.info(
+      console.debug(
         'THRESHOLD GAP: stars=%d creates particles but aurora threshold is %d',
         lowStarEffects.stars,
         AURORA_RENDER_THRESHOLD
@@ -313,7 +313,7 @@ describe('Invariant 4: Effect thresholds are consistent', () => {
       directionalLight: { intensity: 0, warmth: 0, angle: 0 },
       particles: 0.05, // Below threshold
       grain: 0,
-      ambientDarkness: 0
+      ambientDarkness: 0,
     }
 
     const seasonalEffects: SeasonalEffects = {
@@ -321,14 +321,14 @@ describe('Invariant 4: Effect thresholds are consistent', () => {
       particleMultiplier: 1,
       aurora: false,
       harvestMoon: false,
-      rainPossible: false
+      rainPossible: false,
     }
 
     const intensity = lowIntensityEffects.particles * seasonalEffects.particleMultiplier
     expect(intensity).toBeLessThan(PARTICLE_THRESHOLD)
 
     const particles = simulateParticleCreation(lowIntensityEffects, seasonalEffects)
-    const snow = particles.filter(p => p.type === 'snow')
+    const snow = particles.filter((p) => p.type === 'snow')
     expect(snow.length).toBe(0) // No particles created below threshold
   })
 })
@@ -343,10 +343,15 @@ describe('Invariant 5: Manual theme mode produces correct effects', () => {
     { season: 'winter' as const, time: 'daytime' as const, expectStars: false, expectSnow: true },
     { season: 'summer' as const, time: 'night' as const, expectStars: true, expectFireflies: true },
     { season: 'autumn' as const, time: 'evening' as const, expectStars: true, expectLeaves: true },
-    { season: 'neutral' as const, time: 'night' as const, expectStars: false, expectParticles: false },
+    {
+      season: 'neutral' as const,
+      time: 'night' as const,
+      expectStars: false,
+      expectParticles: false,
+    },
   ]
 
-  manualConfigs.forEach(config => {
+  manualConfigs.forEach((config) => {
     it(`${config.season} ${config.time} produces expected particles`, () => {
       const theme = calculateManualTheme(config.season, config.time, false)
       const seasonalEffects = getManualSeasonalEffects(config.season, config.time, false)
@@ -354,10 +359,10 @@ describe('Invariant 5: Manual theme mode produces correct effects', () => {
 
       if (config.expectStars) {
         expect(theme.effects.stars).toBeGreaterThan(0)
-        expect(particles.some(p => p.type === 'star')).toBe(true)
+        expect(particles.some((p) => p.type === 'star')).toBe(true)
       } else {
         expect(theme.effects.stars).toBe(0)
-        expect(particles.filter(p => p.type === 'star').length).toBe(0)
+        expect(particles.filter((p) => p.type === 'star').length).toBe(0)
       }
 
       if (config.expectSnow) {

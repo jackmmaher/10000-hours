@@ -46,7 +46,7 @@ export async function createTemplate(
     throw new Error('Supabase not configured. Please check your connection settings.')
   }
 
-  console.log('Creating template:', { title: template.title, userId })
+  console.debug('Creating template:', { title: template.title, userId })
 
   try {
     const supabasePromise = new Promise<{
@@ -87,7 +87,7 @@ export async function createTemplate(
       throw new Error('No data returned from server')
     }
 
-    console.log('Template created successfully:', data.id)
+    console.debug('Template created successfully:', data.id)
 
     // Auto-add creator's vote and save (triggers will update counts)
     // These are fire-and-forget - don't fail creation if they fail
@@ -499,7 +499,7 @@ export async function reportTemplate(
     if (reportError) {
       // Check for duplicate report
       if (reportError.code === '23505') {
-        console.log('User has already reported this template')
+        console.debug('User has already reported this template')
         return { success: true, creatorId: template?.user_id }
       }
       console.error('Create report error:', reportError)
