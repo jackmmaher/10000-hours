@@ -10,7 +10,6 @@ import { formatTimer, formatTotalHours, formatSessionAdded } from '../lib/format
 import { getNearMissInfo } from '../lib/milestones'
 import { getUserPreferences } from '../lib/db'
 import { ZenMessage } from './ZenMessage'
-import { InsightCapture } from './InsightCapture'
 
 export function Timer() {
   const {
@@ -20,16 +19,16 @@ export function Timer() {
     hasReachedEnlightenment,
     justReachedEnlightenment,
     lastSessionUuid,
+    justAchievedMilestone,
     startPreparing,
     startTimer,
     stopTimer,
     acknowledgeEnlightenment,
-    startInsightCapture,
-    skipInsightCapture
+    completeSession
   } = useSessionStore()
-  const { setView } = useNavigationStore()
+  const { setView, triggerPostSessionFlow } = useNavigationStore()
 
-  const { hideTimeDisplay, skipInsightCapture: skipInsightSetting } = useSettingsStore()
+  const { hideTimeDisplay } = useSettingsStore()
   const haptic = useTapFeedback()
   const audio = useAudioFeedback()
 
@@ -69,18 +68,30 @@ export function Timer() {
       audio.complete() // Audio chime (respects setting internally)
       stopTimer()
     }
-    // Don't handle tap during 'complete' - let it transition to capture
+    // Don't handle tap during 'complete' - let it transition to Journey
   }, [timerPhase, startPreparing, stopTimer, haptic, audio])
 
-  // After session complete, transition to insight capture (or skip if preference set)
-  // Brief delay (800ms) for user to register completion, not a forced wait
+  // After session complete, navigate to Journey tab for calm offboarding
   useEffect(() => {
-    if (timerPhase === 'complete') {
-      const handler = skipInsightSetting ? skipInsightCapture : startInsightCapture
-      const timer = setTimeout(handler, 800)
+    if (timerPhase === 'complete' && lastSessionUuid && lastSessionDuration) {
+      // Build milestone message if one was just achieved
+      let milestoneMessage: string | undefined
+      if (justAchievedMilestone) {
+        if ('type' in justAchievedMilestone) {
+          milestoneMessage = justAchievedMilestone.label
+        } else {
+          milestoneMessage = `You just reached ${justAchievedMilestone.hours} hours`
+        }
+      }
+
+      // Brief moment to register completion, then navigate
+      const timer = setTimeout(() => {
+        triggerPostSessionFlow(lastSessionUuid, lastSessionDuration, milestoneMessage)
+        completeSession()
+      }, 800)
       return () => clearTimeout(timer)
     }
-  }, [timerPhase, startInsightCapture, skipInsightCapture, skipInsightSetting])
+  }, [timerPhase, lastSessionUuid, lastSessionDuration, justAchievedMilestone, triggerPostSessionFlow, completeSession])
 
   // Swipe handlers - horizontal navigation between tabs
   const swipeHandlers = useSwipe({
@@ -377,15 +388,6 @@ export function Timer() {
       </div>
       )}
 
-      {/* Insight capture after session */}
-      {timerPhase === 'capture' && (
-        <InsightCapture
-          sessionId={lastSessionUuid || undefined}
-          sessionDuration={lastSessionDuration || undefined}
-          onComplete={skipInsightCapture}
-          onSkip={skipInsightCapture}
-        />
-      )}
     </>
   )
 }
