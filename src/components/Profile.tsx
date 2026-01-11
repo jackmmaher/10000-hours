@@ -77,7 +77,7 @@ interface ProfileProps {
 
 export function Profile({ onNavigateToSettings }: ProfileProps) {
   const { sessions } = useSessionStore()
-  const { setView, setViewWithVoiceModal } = useNavigationStore()
+  const { setView, setViewWithVoiceModal, navigateToInsightCapture } = useNavigationStore()
   const { user, isAuthenticated } = useAuthStore()
   const { voice, isLoading: voiceLoading } = useVoice()
   const haptic = useTapFeedback()
@@ -545,6 +545,9 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
       <NotificationCenter
         isOpen={showNotifications}
         onClose={() => setShowNotifications(false)}
+        onInsightReminderClick={(sessionId) => {
+          navigateToInsightCapture(sessionId)
+        }}
       />
     </div>
   )
