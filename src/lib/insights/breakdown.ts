@@ -6,6 +6,7 @@
 
 import type { Session } from '../db'
 import type { DisciplineBreakdown, WeekComparison } from './types'
+import { TREND_THRESHOLDS } from './constants'
 
 /**
  * Get discipline distribution breakdown
@@ -66,8 +67,8 @@ export function getWeekComparison(sessions: Session[]): WeekComparison {
 
   if (lastWeek.minutes > 0) {
     changePercent = Math.round(((thisWeek.minutes - lastWeek.minutes) / lastWeek.minutes) * 100)
-    if (changePercent > 10) trend = 'up'
-    else if (changePercent < -10) trend = 'down'
+    if (changePercent > TREND_THRESHOLDS.WEEKLY_CHANGE) trend = 'up'
+    else if (changePercent < -TREND_THRESHOLDS.WEEKLY_CHANGE) trend = 'down'
   } else if (thisWeek.minutes > 0) {
     trend = 'up'
     changePercent = 100

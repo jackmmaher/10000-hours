@@ -7,12 +7,13 @@
 
 import type { Session } from '../db'
 import type { PracticeShape, PatternStrength } from './types'
+import { MIN_DATA, PATTERN_THRESHOLDS, STRENGTH_LEVELS, TIME_BUCKETS } from './constants'
 
 /**
  * Analyze practice patterns across multiple dimensions
  */
 export function getPracticeShape(sessions: Session[]): PracticeShape {
-  if (sessions.length < 5) {
+  if (sessions.length < MIN_DATA.SESSIONS_FOR_PATTERNS) {
     return {
       timeOfDay: null,
       discipline: null,
@@ -39,9 +40,11 @@ function analyzeTimeOfDay(sessions: Session[]): PatternStrength | null {
 
   for (const session of sessions) {
     const hour = new Date(session.startTime).getHours()
-    if (hour >= 5 && hour < 12) buckets.morning++
-    else if (hour >= 12 && hour < 17) buckets.afternoon++
-    else if (hour >= 17 && hour < 22) buckets.evening++
+    if (hour >= TIME_BUCKETS.MORNING_START && hour < TIME_BUCKETS.AFTERNOON_START) buckets.morning++
+    else if (hour >= TIME_BUCKETS.AFTERNOON_START && hour < TIME_BUCKETS.EVENING_START)
+      buckets.afternoon++
+    else if (hour >= TIME_BUCKETS.EVENING_START && hour < TIME_BUCKETS.NIGHT_START)
+      buckets.evening++
     else buckets.night++
   }
 
@@ -51,8 +54,8 @@ function analyzeTimeOfDay(sessions: Session[]): PatternStrength | null {
   const [topTime, topCount] = sorted[0]
   const percentage = Math.round((topCount / total) * 100)
 
-  // Only show if there's a clear pattern (>40%)
-  if (percentage < 40) return null
+  // Only show if there's a clear pattern
+  if (percentage < PATTERN_THRESHOLDS.TIME_OF_DAY_PATTERN) return null
 
   const labels: Record<string, string> = {
     morning: 'Morning practitioner',
@@ -88,14 +91,14 @@ function analyzeDiscipline(sessions: Session[]): PatternStrength | null {
     }
   }
 
-  if (withDiscipline < 5) return null
+  if (withDiscipline < MIN_DATA.SESSIONS_WITH_ATTRIBUTE) return null
 
   const entries = Object.entries(counts).sort((a, b) => b[1] - a[1])
   const [topDiscipline, topCount] = entries[0]
   const percentage = Math.round((topCount / withDiscipline) * 100)
 
-  // Only show if there's focus (>30%)
-  if (percentage < 30) return null
+  // Only show if there's focus
+  if (percentage < PATTERN_THRESHOLDS.DISCIPLINE_FOCUS) return null
 
   return {
     label: `${topDiscipline}-focused`,
@@ -117,14 +120,14 @@ function analyzePose(sessions: Session[]): PatternStrength | null {
     }
   }
 
-  if (withPose < 5) return null
+  if (withPose < MIN_DATA.SESSIONS_WITH_ATTRIBUTE) return null
 
   const entries = Object.entries(counts).sort((a, b) => b[1] - a[1])
   const [topPose, topCount] = entries[0]
   const percentage = Math.round((topCount / withPose) * 100)
 
-  // Only show if there's a pattern (>40%)
-  if (percentage < 40) return null
+  // Only show if there's a pattern
+  if (percentage < PATTERN_THRESHOLDS.POSE_PATTERN) return null
 
   return {
     label: `${topPose} sitter`,
@@ -162,7 +165,7 @@ function analyzeDayOfWeek(sessions: Session[]): PatternStrength | null {
   const weekendCount = dayCounts[0] + dayCounts[6]
   const weekdayPct = Math.round((weekdayCount / total) * 100)
 
-  if (weekdayPct >= 75) {
+  if (weekdayPct >= PATTERN_THRESHOLDS.WEEKDAY_PRACTITIONER) {
     return {
       label: 'Weekday practitioner',
       value: 'weekday',
@@ -172,7 +175,7 @@ function analyzeDayOfWeek(sessions: Session[]): PatternStrength | null {
     }
   }
 
-  if (weekendCount / total >= 0.4) {
+  if (weekendCount / total >= PATTERN_THRESHOLDS.WEEKEND_WARRIOR) {
     return {
       label: 'Weekend warrior',
       value: 'weekend',
@@ -182,8 +185,8 @@ function analyzeDayOfWeek(sessions: Session[]): PatternStrength | null {
     }
   }
 
-  // Only show specific day if very dominant (>25% for single day is a lot)
-  if (percentage >= 25) {
+  // Only show specific day if very dominant
+  if (percentage >= PATTERN_THRESHOLDS.SINGLE_DAY_DOMINANT) {
     return {
       label: `${dayNames[maxDay]}s are your day`,
       value: dayNames[maxDay].toLowerCase(),
@@ -197,9 +200,9 @@ function analyzeDayOfWeek(sessions: Session[]): PatternStrength | null {
 }
 
 function percentageToStrength(percentage: number): number {
-  if (percentage >= 80) return 5
-  if (percentage >= 65) return 4
-  if (percentage >= 50) return 3
-  if (percentage >= 35) return 2
+  if (percentage >= STRENGTH_LEVELS.LEVEL_5) return 5
+  if (percentage >= STRENGTH_LEVELS.LEVEL_4) return 4
+  if (percentage >= STRENGTH_LEVELS.LEVEL_3) return 3
+  if (percentage >= STRENGTH_LEVELS.LEVEL_2) return 2
   return 1
 }

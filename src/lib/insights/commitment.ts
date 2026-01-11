@@ -6,6 +6,7 @@
 
 import type { Session, PlannedSession } from '../db'
 import type { CommitmentStats } from './types'
+import { MIN_DATA, TREND_THRESHOLDS, TIME_WINDOWS, DEFAULTS } from './constants'
 
 /**
  * Analyze planned vs actual meditation commitment
@@ -55,8 +56,8 @@ export function getCommitmentStats(
 
   // If no duration data, use session averages
   if (plansWithDuration === 0 && completedPlans.length > 0) {
-    // Estimate planned as 20min per session (reasonable default)
-    plannedMinutes = completedPlans.length * 20
+    // Estimate planned as default minutes per session
+    plannedMinutes = completedPlans.length * DEFAULTS.PLANNED_MINUTES_PER_SESSION
   }
 
   const completionRate =
@@ -66,22 +67,22 @@ export function getCommitmentStats(
     plannedMinutes > 0 ? Math.round(((actualMinutes - plannedMinutes) / plannedMinutes) * 100) : 0
 
   // Determine trend by comparing recent vs older completion rates
-  const fourWeeksAgo = now - 28 * 24 * 60 * 60 * 1000
-  const recentPlans = pastPlans.filter((p) => p.date >= fourWeeksAgo)
-  const olderPlans = pastPlans.filter((p) => p.date < fourWeeksAgo)
+  const recentCutoff = now - TIME_WINDOWS.RECENT_DAYS * 24 * 60 * 60 * 1000
+  const recentPlans = pastPlans.filter((p) => p.date >= recentCutoff)
+  const olderPlans = pastPlans.filter((p) => p.date < recentCutoff)
 
   let trend: CommitmentStats['trend'] = 'stable'
 
-  if (olderPlans.length < 4) {
+  if (olderPlans.length < MIN_DATA.PLANS_FOR_TREND) {
     trend = 'new'
-  } else if (recentPlans.length >= 4) {
+  } else if (recentPlans.length >= MIN_DATA.PLANS_FOR_TREND) {
     const recentRate =
       recentPlans.filter((p) => p.completed || p.linkedSessionUuid).length / recentPlans.length
     const olderRate =
       olderPlans.filter((p) => p.completed || p.linkedSessionUuid).length / olderPlans.length
 
-    if (recentRate > olderRate + 0.15) trend = 'improving'
-    else if (recentRate < olderRate - 0.15) trend = 'declining'
+    if (recentRate > olderRate + TREND_THRESHOLDS.COMMITMENT_CHANGE) trend = 'improving'
+    else if (recentRate < olderRate - TREND_THRESHOLDS.COMMITMENT_CHANGE) trend = 'declining'
   }
 
   return {

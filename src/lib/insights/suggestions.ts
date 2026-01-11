@@ -6,6 +6,7 @@
 
 import type { Session, PlannedSession, SavedTemplate, UserCourseProgress, Insight } from '../db'
 import type { SuggestedAction } from './types'
+import { MIN_DATA, PATTERN_THRESHOLDS, SUGGESTION_THRESHOLDS, DEFAULTS } from './constants'
 
 /**
  * Generate conditional, actionable suggestions based on practice gaps
@@ -62,14 +63,17 @@ export function getSuggestedActions(
     }
   }
 
-  if (totalWithDiscipline >= 10) {
+  if (totalWithDiscipline >= MIN_DATA.SESSIONS_FOR_DISCIPLINE_BALANCE) {
     const sorted = Object.entries(disciplineCounts).sort((a, b) => b[1] - a[1])
     if (sorted.length >= 2) {
       const [topName, topCount] = sorted[0]
       const [bottomName, bottomCount] = sorted[sorted.length - 1]
       const topPct = Math.round((topCount / totalWithDiscipline) * 100)
 
-      if (topPct > 40 && bottomCount < 5) {
+      if (
+        topPct > PATTERN_THRESHOLDS.DISCIPLINE_DOMINANT &&
+        bottomCount < PATTERN_THRESHOLDS.DISCIPLINE_UNDERREPRESENTED
+      ) {
         suggestions.push({
           id: 'discipline-imbalance',
           type: 'discipline',
@@ -84,7 +88,7 @@ export function getSuggestedActions(
   }
 
   // 4. Weak day of week
-  if (sessions.length >= 14) {
+  if (sessions.length >= MIN_DATA.SESSIONS_FOR_DAY_ANALYSIS) {
     const dayCounts = [0, 0, 0, 0, 0, 0, 0]
     const dayNames = [
       'Sundays',
@@ -111,8 +115,11 @@ export function getSuggestedActions(
       }
     }
 
-    // Only suggest if significantly below average (less than 50%)
-    if (weakestCount < avgPerDay * 0.5 && weakestCount < sessions.length * 0.1) {
+    // Only suggest if significantly below average
+    if (
+      weakestCount < avgPerDay * SUGGESTION_THRESHOLDS.WEAK_DAY_FRACTION &&
+      weakestCount < sessions.length * SUGGESTION_THRESHOLDS.WEAK_DAY_MAX_FRACTION
+    ) {
       suggestions.push({
         id: 'weak-day',
         type: 'day',
@@ -125,9 +132,12 @@ export function getSuggestedActions(
 
   // 5. Insights not shared as pearls
   const unsharedInsights = insights.filter(
-    (i) => i.rawText && i.rawText.trim().length > 20 && !i.sharedPearlId
+    (i) =>
+      i.rawText &&
+      i.rawText.trim().length > SUGGESTION_THRESHOLDS.INSIGHT_MIN_LENGTH &&
+      !i.sharedPearlId
   )
-  if (unsharedInsights.length >= 3) {
+  if (unsharedInsights.length >= SUGGESTION_THRESHOLDS.UNSHARED_INSIGHTS_MIN) {
     suggestions.push({
       id: 'unshared-insights',
       type: 'insight',
@@ -149,7 +159,7 @@ export function getSuggestedActions(
     }
   }
 
-  if (totalWithPose >= 10) {
+  if (totalWithPose >= MIN_DATA.SESSIONS_FOR_POSE_VARIETY) {
     const poses = Object.keys(poseCounts)
     if (poses.length === 1) {
       suggestions.push({
@@ -163,7 +173,10 @@ export function getSuggestedActions(
   }
 
   // Add fallback suggestions if we don't have enough
-  if (suggestions.length < 2 && sessions.length >= 3) {
+  if (
+    suggestions.length < SUGGESTION_THRESHOLDS.MIN_SUGGESTIONS &&
+    sessions.length >= SUGGESTION_THRESHOLDS.SESSIONS_FOR_FALLBACKS
+  ) {
     // Encourage exploring community content
     if (savedTemplates.length === 0) {
       suggestions.push({
@@ -178,7 +191,10 @@ export function getSuggestedActions(
     }
 
     // Encourage recording insights
-    if (insights.length < 3 && sessions.length >= 5) {
+    if (
+      insights.length < SUGGESTION_THRESHOLDS.INSIGHTS_THRESHOLD &&
+      sessions.length >= SUGGESTION_THRESHOLDS.SESSIONS_FOR_INSIGHT_SUGGESTION
+    ) {
       suggestions.push({
         id: 'record-insights',
         type: 'insight',
@@ -192,7 +208,10 @@ export function getSuggestedActions(
 
     // Celebrate consistency if they have regular practice
     const uniqueDays = new Set(sessions.map((s) => new Date(s.startTime).toDateString())).size
-    if (uniqueDays >= 5 && suggestions.length < 2) {
+    if (
+      uniqueDays >= SUGGESTION_THRESHOLDS.UNIQUE_DAYS_FOR_CONSISTENCY &&
+      suggestions.length < SUGGESTION_THRESHOLDS.MIN_SUGGESTIONS
+    ) {
       suggestions.push({
         id: 'consistency-note',
         type: 'day',
@@ -203,13 +222,14 @@ export function getSuggestedActions(
     }
   }
 
-  // Sort by priority and limit to top 4
-  return suggestions.sort((a, b) => a.priority - b.priority).slice(0, 4)
+  // Sort by priority and limit
+  return suggestions
+    .sort((a, b) => a.priority - b.priority)
+    .slice(0, SUGGESTION_THRESHOLDS.MAX_SUGGESTIONS)
 }
 
 // Helper to get course total sessions (would need course data)
-// For now, default to 5 if unknown
 function getCourseTotalSessions(_courseId: string): number {
   // TODO: Look up from course data
-  return 5
+  return DEFAULTS.COURSE_TOTAL_SESSIONS
 }

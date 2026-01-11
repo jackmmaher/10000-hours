@@ -6,12 +6,13 @@
 
 import type { Session } from '../db'
 import type { GrowthTrajectory, MonthlyAverage } from './types'
+import { MIN_DATA, TIME_WINDOWS, TREND_THRESHOLDS } from './constants'
 
 /**
  * Analyze session duration evolution over time
  */
 export function getGrowthTrajectory(sessions: Session[]): GrowthTrajectory {
-  if (sessions.length < 5) {
+  if (sessions.length < MIN_DATA.SESSIONS_FOR_PATTERNS) {
     return {
       months: [],
       trend: 'new',
@@ -62,10 +63,10 @@ export function getGrowthTrajectory(sessions: Session[]): GrowthTrajectory {
     })
   }
 
-  // Only show last 4 months max
-  const recentMonths = months.slice(-4)
+  // Only show recent months
+  const recentMonths = months.slice(-TIME_WINDOWS.MONTHS_TO_SHOW)
 
-  if (recentMonths.length < 2) {
+  if (recentMonths.length < MIN_DATA.MONTHS_FOR_GROWTH) {
     return {
       months: recentMonths,
       trend: 'new',
@@ -80,8 +81,8 @@ export function getGrowthTrajectory(sessions: Session[]): GrowthTrajectory {
   const changePercent = oldestAvg > 0 ? Math.round(((newestAvg - oldestAvg) / oldestAvg) * 100) : 0
 
   let trend: GrowthTrajectory['trend'] = 'stable'
-  if (changePercent >= 20) trend = 'deepening'
-  else if (changePercent <= -20) trend = 'shortening'
+  if (changePercent >= TREND_THRESHOLDS.GROWTH_CHANGE) trend = 'deepening'
+  else if (changePercent <= -TREND_THRESHOLDS.GROWTH_CHANGE) trend = 'shortening'
 
   return {
     months: recentMonths,

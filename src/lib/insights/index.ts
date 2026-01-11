@@ -31,3 +31,15 @@ export { getSuggestedActions } from './suggestions'
 
 // Breakdown Analysis
 export { getDisciplineBreakdown, getWeekComparison } from './breakdown'
+
+// Constants (for testing or customization)
+export {
+  MIN_DATA,
+  PATTERN_THRESHOLDS,
+  STRENGTH_LEVELS,
+  TREND_THRESHOLDS,
+  TIME_BUCKETS,
+  TIME_WINDOWS,
+  SUGGESTION_THRESHOLDS,
+  DEFAULTS,
+} from './constants'
