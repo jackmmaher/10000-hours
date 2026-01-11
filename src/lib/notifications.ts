@@ -5,6 +5,7 @@
  * - attribution: "Your meditation helped 3 people this week"
  * - milestone: "You reached 100 hours!"
  * - gentle_reminder: "Your planned session is in 30 minutes"
+ * - content_reported: "Your meditation is under review"
  *
  * Design principles (Zen philosophy):
  * - NO urgency language ("Don't miss!" forbidden)
@@ -13,7 +14,7 @@
  * - Notifications are helpers, not nags
  */
 
-export type NotificationType = 'attribution' | 'milestone' | 'gentle_reminder'
+export type NotificationType = 'attribution' | 'milestone' | 'gentle_reminder' | 'content_reported'
 
 export interface InAppNotification {
   id: string

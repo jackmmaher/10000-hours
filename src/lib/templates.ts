@@ -461,6 +461,61 @@ export async function hasUserSaved(templateId: string, userId: string): Promise<
 }
 
 /**
+ * Report a template for content issues
+ * Returns the template creator's user ID for notification purposes
+ */
+export async function reportTemplate(
+  templateId: string,
+  reporterId: string,
+  reason: string
+): Promise<{ success: boolean; creatorId?: string }> {
+  if (!isSupabaseConfigured() || !supabase) {
+    return { success: false }
+  }
+
+  try {
+    // First get the template to find the creator
+    const { data: template, error: templateError } = await supabase
+      .from('session_templates')
+      .select('user_id')
+      .eq('id', templateId)
+      .single()
+
+    if (templateError) {
+      console.error('Get template for report error:', templateError)
+      return { success: false }
+    }
+
+    // Create the report
+    const { error: reportError } = await supabase
+      .from('template_reports')
+      .insert({
+        template_id: templateId,
+        reporter_id: reporterId,
+        reason: reason
+      })
+
+    if (reportError) {
+      // Check for duplicate report
+      if (reportError.code === '23505') {
+        console.log('User has already reported this template')
+        return { success: true, creatorId: template?.user_id }
+      }
+      console.error('Create report error:', reportError)
+      return { success: false }
+    }
+
+    return {
+      success: true,
+      creatorId: template?.user_id
+    }
+  } catch (err) {
+    console.error('Report template failed:', err)
+    return { success: false }
+  }
+}
+
+/**
  * Get templates with user's vote/save status using RPC
  * More efficient than separate queries
  */

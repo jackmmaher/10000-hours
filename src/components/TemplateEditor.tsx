@@ -94,7 +94,16 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
   // Get preview gradient based on intention
   const previewGradient = INTENTION_TO_GRADIENT[intention] || INTENTIONS[0].gradient
 
-  const isValid = title.trim() && tagline.trim() && guidanceNotes.trim() && intention.trim()
+  // All fields required for high-quality UGC
+  const missingFields: string[] = []
+  if (!title.trim()) missingFields.push('Title')
+  if (!tagline.trim()) missingFields.push('Tagline')
+  if (!guidanceNotes.trim()) missingFields.push('Guidance Notes')
+  if (!intention.trim()) missingFields.push('Intention')
+  if (!environment.trim()) missingFields.push('Environment')
+  if (intentTags.length === 0) missingFields.push('Intent Tags')
+
+  const isValid = missingFields.length === 0
   const hasContent = title.trim() || tagline.trim() || guidanceNotes.trim()
 
   // Format duration for storage (e.g., "15 mins")
@@ -225,7 +234,7 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
                   : 'text-ink/30 cursor-not-allowed'
               }`}
             >
-              {isPublishing ? 'Publishing...' : 'Publish'}
+              {isPublishing ? 'Publishing...' : isValid ? 'Publish' : `${missingFields.length} fields left`}
             </button>
           </div>
         </div>
@@ -246,7 +255,9 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g., Morning Stillness"
-              className="w-full px-4 py-3 rounded-xl bg-cream-deep text-ink placeholder:text-ink/30 focus:outline-none focus:ring-2 focus:ring-moss/30"
+              className={`w-full px-4 py-3 rounded-xl bg-cream-deep text-ink placeholder:text-ink/30 focus:outline-none focus:ring-2 focus:ring-moss/30 ${
+                !title.trim() && hasContent ? 'ring-2 ring-rose-300/50' : ''
+              }`}
               maxLength={60}
             />
           </div>
@@ -259,7 +270,9 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
               value={tagline}
               onChange={(e) => setTagline(e.target.value)}
               placeholder="e.g., Begin each day with presence"
-              className="w-full px-4 py-3 rounded-xl bg-cream-deep text-ink placeholder:text-ink/30 focus:outline-none focus:ring-2 focus:ring-moss/30"
+              className={`w-full px-4 py-3 rounded-xl bg-cream-deep text-ink placeholder:text-ink/30 focus:outline-none focus:ring-2 focus:ring-moss/30 ${
+                !tagline.trim() && hasContent ? 'ring-2 ring-rose-300/50' : ''
+              }`}
               maxLength={100}
             />
           </div>
@@ -380,15 +393,17 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
             </div>
           </div>
 
-          {/* Environment (optional) */}
+          {/* Environment */}
           <div>
-            <label className="block text-xs text-ink/40 mb-2">Environment <span className="text-ink/30">(optional)</span></label>
+            <label className="block text-xs text-ink/40 mb-2">Environment *</label>
             <input
               type="text"
               value={environment}
               onChange={(e) => setEnvironment(e.target.value)}
               placeholder="e.g., Quiet space, outdoors, by water"
-              className="w-full px-4 py-3 rounded-xl bg-cream-deep text-ink placeholder:text-ink/30 focus:outline-none focus:ring-2 focus:ring-moss/30"
+              className={`w-full px-4 py-3 rounded-xl bg-cream-deep text-ink placeholder:text-ink/30 focus:outline-none focus:ring-2 focus:ring-moss/30 ${
+                !environment.trim() && hasContent ? 'ring-2 ring-rose-300/50' : ''
+              }`}
               maxLength={100}
             />
           </div>
@@ -400,7 +415,9 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
               value={guidanceNotes}
               onChange={(e) => setGuidanceNotes(e.target.value)}
               placeholder="Detailed instructions for the meditation practice..."
-              className="w-full h-32 px-4 py-3 rounded-xl bg-cream-deep text-ink placeholder:text-ink/30 focus:outline-none focus:ring-2 focus:ring-moss/30 resize-none"
+              className={`w-full h-32 px-4 py-3 rounded-xl bg-cream-deep text-ink placeholder:text-ink/30 focus:outline-none focus:ring-2 focus:ring-moss/30 resize-none ${
+                !guidanceNotes.trim() && hasContent ? 'ring-2 ring-rose-300/50' : ''
+              }`}
               maxLength={2000}
             />
             <p className="text-xs text-ink/30 mt-1 text-right">
@@ -437,10 +454,12 @@ export function TemplateEditor({ onClose, onPublished, creatorHours }: TemplateE
           {/* Intent Tags - for discoverability */}
           <div>
             <label className="block text-xs text-ink/40 mb-2">
-              What does this help with?
-              <span className="text-ink/30 ml-1">(select all that apply)</span>
+              What does this help with? *
+              <span className="text-ink/30 ml-1">(select at least one)</span>
             </label>
-            <div className="flex flex-wrap gap-2">
+            <div className={`flex flex-wrap gap-2 ${
+              intentTags.length === 0 && hasContent ? 'p-2 rounded-xl ring-2 ring-rose-300/50' : ''
+            }`}>
               {INTENT_OPTIONS.map((tag) => {
                 const isSelected = intentTags.includes(tag)
                 return (

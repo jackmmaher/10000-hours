@@ -357,9 +357,9 @@ export function Settings({ onBack }: SettingsProps) {
             className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform touch-manipulation"
           >
             <div className="text-left">
-              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Milestone reminders</p>
+              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Milestone achievements</p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                Gentle nudge when approaching milestones
+                Save milestone moments to notification history
               </p>
             </div>
             <div
