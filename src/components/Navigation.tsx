@@ -71,7 +71,7 @@ export function Navigation() {
   const haptic = useTapFeedback()
 
   // Hide during active meditation phases
-  const isTimerActive = timerPhase === 'preparing' || timerPhase === 'running' || timerPhase === 'capture' || timerPhase === 'enlightenment'
+  const isTimerActive = timerPhase === 'preparing' || timerPhase === 'running' || timerPhase === 'enlightenment'
 
   if (isTimerActive) return null
 
