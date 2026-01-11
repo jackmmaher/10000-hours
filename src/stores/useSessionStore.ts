@@ -8,7 +8,7 @@ import { InAppNotification } from '../lib/notifications'
 // Re-export AppView from navigation store for backwards compatibility during migration
 export type { AppView } from './useNavigationStore'
 
-type TimerPhase = 'idle' | 'preparing' | 'running' | 'complete' | 'capture' | 'enlightenment'
+type TimerPhase = 'idle' | 'preparing' | 'running' | 'complete' | 'enlightenment'
 
 interface SessionState {
   // Sessions
@@ -43,8 +43,8 @@ interface SessionState {
   clearLastSession: () => void
   acknowledgeEnlightenment: () => void
   clearMilestoneCelebration: () => void
-  startInsightCapture: () => void
-  skipInsightCapture: () => void
+  createInsightReminder: (sessionId: string) => Promise<void>
+  completeSession: () => void
 }
 
 export const useSessionStore = create<SessionState>((set, get) => ({
@@ -250,11 +250,23 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     set({ justAchievedMilestone: null })
   },
 
-  startInsightCapture: () => {
-    set({ timerPhase: 'capture' })
+  createInsightReminder: async (sessionId: string) => {
+    try {
+      const notification: InAppNotification = {
+        id: crypto.randomUUID(),
+        type: 'insight_reminder',
+        title: 'Capture your insight',
+        body: 'You have a moment waiting to be remembered',
+        createdAt: Date.now(),
+        metadata: { sessionId }
+      }
+      await addNotification(notification)
+    } catch (err) {
+      console.warn('Failed to create insight reminder:', err)
+    }
   },
 
-  skipInsightCapture: () => {
+  completeSession: () => {
     set({
       timerPhase: 'idle',
       lastSessionDuration: null,
