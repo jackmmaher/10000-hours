@@ -2,6 +2,24 @@ import type { Transition, Variants } from 'framer-motion'
 import { useReducedMotion } from 'framer-motion'
 
 /**
+ * Timer animation phases - the continuous timeline
+ *
+ * resting    → idle state, breathing animation active
+ * departing  → exhaling away from cumulative display
+ * arriving   → inhaling into active display, timer starts
+ * active     → timer running, counting up
+ * completing → session ending, dissolving upward
+ * resolving  → cumulative emerging, settling into rest
+ */
+export type TimerPhase =
+  | 'resting'
+  | 'departing'
+  | 'arriving'
+  | 'active'
+  | 'completing'
+  | 'resolving'
+
+/**
  * Spring physics presets for organic, meditative animations
  *
  * These replace the linear CSS transitions with physics-based motion
@@ -16,11 +34,11 @@ export const springs = {
     mass: 1,
   },
 
-  // Gentle settle - for post-transition calm
+  // Gentle settle - for post-transition calm with micro-overshoot
   settle: {
     type: 'spring' as const,
     stiffness: 200,
-    damping: 25,
+    damping: 22, // slightly underdamped for subtle overshoot
     mass: 0.8,
   },
 
@@ -28,7 +46,7 @@ export const springs = {
   quick: {
     type: 'spring' as const,
     stiffness: 400,
-    damping: 40,
+    damping: 35,
   },
 
   // Breathing - slow, meditative pulse
@@ -103,7 +121,7 @@ export const breatheVariants: Variants = {
 }
 
 /**
- * Transition state animation presets
+ * Transition state animation presets (legacy - kept for reference)
  */
 export const stateAnimations = {
   exhaling: {
@@ -131,6 +149,77 @@ export const stateAnimations = {
 }
 
 /**
+ * Stage variants for the persistent timer container
+ *
+ * The container never unmounts. These variants control its scale and position
+ * as the animation flows through phases. The crossfade between display layers
+ * is handled separately via opacity.
+ */
+export const stageVariants: Variants = {
+  resting: {
+    scale: 1,
+    y: 0,
+  },
+  departing: {
+    scale: 0.96,
+    transition: {
+      duration: 0.4,
+      ease: [0.4, 0, 0.2, 1], // ease-out
+    },
+  },
+  arriving: {
+    scale: 1,
+    transition: springs.settle,
+  },
+  active: {
+    scale: 1,
+    transition: springs.quick,
+  },
+  completing: {
+    scale: 0.92,
+    y: -12,
+    transition: {
+      duration: 0.5,
+      ease: [0.4, 0, 0.2, 1],
+    },
+  },
+  resolving: {
+    scale: 1,
+    y: 0,
+    transition: springs.settle,
+  },
+}
+
+/**
+ * Layer opacity transitions - smooth crossfade between cumulative and active
+ */
+export const layerTransition: Transition = {
+  duration: 0.4,
+  ease: [0.4, 0, 0.2, 1],
+}
+
+/**
+ * Get layer opacity values for a given phase
+ * Both layers always exist; visibility controlled by opacity
+ */
+export function getLayerOpacity(phase: TimerPhase): { cumulative: number; active: number } {
+  switch (phase) {
+    case 'resting':
+      return { cumulative: 1, active: 0 }
+    case 'departing':
+      return { cumulative: 0, active: 0 } // cumulative fading out
+    case 'arriving':
+      return { cumulative: 0, active: 1 } // active fading in
+    case 'active':
+      return { cumulative: 0, active: 1 }
+    case 'completing':
+      return { cumulative: 0, active: 0 } // active fading out
+    case 'resolving':
+      return { cumulative: 1, active: 0 } // cumulative fading in
+  }
+}
+
+/**
  * Hook for reduced-motion-aware animation configuration
  *
  * When the user prefers reduced motion, all animations become instant.
@@ -141,6 +230,15 @@ export function useMotionConfig() {
 
   if (prefersReduced) {
     // Return instant transitions for reduced motion preference
+    const instantStageVariants: Variants = {
+      resting: { scale: 1, y: 0 },
+      departing: { scale: 1, transition: { duration: 0 } },
+      arriving: { scale: 1, transition: { duration: 0 } },
+      active: { scale: 1, transition: { duration: 0 } },
+      completing: { scale: 1, y: 0, transition: { duration: 0 } },
+      resolving: { scale: 1, y: 0, transition: { duration: 0 } },
+    }
+
     return {
       springs: {
         morph: { duration: 0 },
@@ -158,6 +256,8 @@ export function useMotionConfig() {
         idle: { scale: 1 },
         breathe: { scale: 1 }, // No animation
       } as Variants,
+      stageVariants: instantStageVariants,
+      layerTransition: { duration: 0 },
       prefersReduced: true,
     }
   }
@@ -166,6 +266,8 @@ export function useMotionConfig() {
     springs,
     transitions,
     breatheVariants,
+    stageVariants,
+    layerTransition,
     prefersReduced: false,
   }
 }

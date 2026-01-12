@@ -1,34 +1,42 @@
 import { useEffect, useCallback, useState, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useNavigationStore } from '../stores/useNavigationStore'
 import { useSettingsStore } from '../stores/useSettingsStore'
-import { useTimer, useWakeLock } from '../hooks/useTimer'
+import { useTimerOrchestration } from '../hooks/useTimerOrchestration'
+import { useWakeLock } from '../hooks/useTimer'
 import { useSwipe } from '../hooks/useSwipe'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 import { useAudioFeedback } from '../hooks/useAudioFeedback'
 import { getNearMissInfo } from '../lib/milestones'
 import { getUserPreferences } from '../lib/db'
+import { stageVariants, getLayerOpacity, layerTransition } from '../lib/motion'
 import { ZenMessage } from './ZenMessage'
 import { HemingwayTime } from './HemingwayTime'
 import { InsightModal } from './InsightModal'
 import { GooeyOrb } from './GooeyOrb'
 
-type TransitionState = 'idle' | 'exhaling' | 'inhaling' | 'running' | 'merging' | 'settling'
-
+/**
+ * Timer - The Persistent Stage
+ *
+ * One container. Two layers. Continuous motion.
+ *
+ * The container never unmounts. Both display layers (cumulative and active)
+ * exist simultaneously. Visibility is controlled by opacity animation.
+ * Phase transitions flow as a choreographed timeline, not state jumps.
+ */
 export function Timer() {
   const {
-    timerPhase,
+    timerPhase: storeTimerPhase,
     totalSeconds,
     lastSessionDuration,
     justReachedEnlightenment,
     lastSessionUuid,
     justAchievedMilestone,
-    startTimer,
-    stopTimer,
     acknowledgeEnlightenment,
     completeSession,
   } = useSessionStore()
+
   const {
     setView,
     triggerPostSessionFlow,
@@ -40,19 +48,15 @@ export function Timer() {
     hideInsightCaptureModal,
     clearPostSessionState,
   } = useNavigationStore()
-  const { createInsightReminder } = useSessionStore()
 
+  const { createInsightReminder } = useSessionStore()
   const { hideTimeDisplay } = useSettingsStore()
+
   const haptic = useTapFeedback()
   const audio = useAudioFeedback()
 
-  const { elapsed, isRunning } = useTimer()
-
-  // Transition state for animation choreography
-  const [transitionState, setTransitionState] = useState<TransitionState>('idle')
-
-  // Track for merge animation
-  const [sessionJustEnded, setSessionJustEnded] = useState(false)
+  // The orchestration hook - central control for animation timeline
+  const { phase, beginSession, endSession, activeDisplaySeconds } = useTimerOrchestration()
 
   // Near-miss visibility (dopamine anticipation)
   const [nearMiss, setNearMiss] = useState<{
@@ -60,9 +64,9 @@ export function Timer() {
     nextMilestone: number
   } | null>(null)
 
-  // Load near-miss info when idle
+  // Load near-miss info when resting
   useEffect(() => {
-    if (timerPhase === 'idle') {
+    if (phase === 'resting') {
       const loadNearMiss = async () => {
         const prefs = await getUserPreferences()
         const currentHours = totalSeconds / 3600
@@ -73,41 +77,30 @@ export function Timer() {
     } else {
       setNearMiss(null)
     }
-  }, [timerPhase, totalSeconds])
+  }, [phase, totalSeconds])
 
-  // Hide time if setting is enabled
-  const shouldHideTime = hideTimeDisplay
+  // Derive running state for external systems
+  const isRunning = phase === 'active'
 
   // Keep screen awake during session
   useWakeLock(isRunning)
 
   // Handle tap on main area
   const handleTap = useCallback(() => {
-    if (timerPhase === 'idle' && transitionState === 'idle') {
-      haptic.medium() // Session start - noticeable feedback
-      setTransitionState('exhaling')
-
-      // After exhale animation, then inhale
-      setTimeout(() => {
-        setTransitionState('inhaling')
-        startTimer()
-
-        setTimeout(() => {
-          setTransitionState('running')
-        }, 400) // inhale duration
-      }, 600) // exhale duration
-    } else if (timerPhase === 'running') {
-      haptic.success() // Session complete - celebratory pattern
-      audio.complete() // Audio chime (respects setting internally)
-      setSessionJustEnded(true)
-      stopTimer()
+    if (phase === 'resting') {
+      haptic.medium()
+      beginSession()
+    } else if (phase === 'active') {
+      haptic.success()
+      audio.complete()
+      endSession()
     }
-  }, [timerPhase, transitionState, startTimer, stopTimer, haptic, audio])
+    // Ignore taps during transitions (departing, arriving, completing, resolving)
+  }, [phase, beginSession, endSession, haptic, audio])
 
   // After session complete, navigate to Journey tab for calm offboarding
   useEffect(() => {
-    if (timerPhase === 'complete' && lastSessionUuid && lastSessionDuration) {
-      // Build milestone message if one was just achieved
+    if (storeTimerPhase === 'complete' && lastSessionUuid && lastSessionDuration) {
       let milestoneMessage: string | undefined
       if (justAchievedMilestone) {
         if ('type' in justAchievedMilestone) {
@@ -117,7 +110,6 @@ export function Timer() {
         }
       }
 
-      // Brief moment to register completion, then navigate
       const timer = setTimeout(() => {
         triggerPostSessionFlow(lastSessionUuid, lastSessionDuration, milestoneMessage)
         completeSession()
@@ -125,7 +117,7 @@ export function Timer() {
       return () => clearTimeout(timer)
     }
   }, [
-    timerPhase,
+    storeTimerPhase,
     lastSessionUuid,
     lastSessionDuration,
     justAchievedMilestone,
@@ -133,29 +125,10 @@ export function Timer() {
     completeSession,
   ])
 
-  // Handle merge animation after session ends
-  // Simple: session fades out, cumulative fades in
-  useEffect(() => {
-    if (timerPhase === 'complete' && sessionJustEnded && lastSessionDuration) {
-      setTransitionState('merging')
-
-      // Session fades out, then cumulative appears
-      setTimeout(() => {
-        setTransitionState('settling')
-        setSessionJustEnded(false)
-
-        // Return to idle
-        setTimeout(() => {
-          setTransitionState('idle')
-        }, 600)
-      }, 800)
-    }
-  }, [timerPhase, sessionJustEnded, lastSessionDuration])
-
   // Swipe handlers - horizontal navigation between tabs
   const swipeHandlers = useSwipe({
     onSwipeLeft: () => {
-      if (timerPhase === 'idle') {
+      if (phase === 'resting') {
         setView('journey')
       }
     },
@@ -166,15 +139,15 @@ export function Timer() {
     acknowledgeEnlightenment()
   }, [acknowledgeEnlightenment])
 
-  // Show insight modal after merge animation settles
+  // Show insight modal after animation settles
   useEffect(() => {
-    if (transitionState === 'idle' && pendingInsightSessionId && !showInsightModal) {
+    if (phase === 'resting' && pendingInsightSessionId && !showInsightModal) {
       const timer = setTimeout(() => {
         showInsightCaptureModal()
       }, 300)
       return () => clearTimeout(timer)
     }
-  }, [transitionState, pendingInsightSessionId, showInsightModal, showInsightCaptureModal])
+  }, [phase, pendingInsightSessionId, showInsightModal, showInsightCaptureModal])
 
   // Handlers for insight modal actions
   const handleInsightComplete = useCallback(() => {
@@ -200,87 +173,132 @@ export function Timer() {
     clearPostSessionState,
   ])
 
-  // Unified display state - what to show based on transitionState
-  const currentDisplay = useMemo(() => {
-    switch (transitionState) {
-      case 'idle':
-      case 'settling':
-        return { seconds: totalSeconds, mode: 'cumulative' as const }
-      case 'exhaling':
-        return { seconds: totalSeconds, mode: 'cumulative' as const }
-      case 'inhaling':
-        return { seconds: 0, mode: 'active' as const }
-      case 'running':
-        return { seconds: elapsed, mode: 'active' as const }
-      case 'merging':
-        // Show session time briefly before transitioning
-        return { seconds: lastSessionDuration || 0, mode: 'active' as const }
-      default:
-        return { seconds: totalSeconds, mode: 'cumulative' as const }
-    }
-  }, [transitionState, totalSeconds, elapsed, lastSessionDuration])
+  // Get layer opacity based on current phase
+  const layerOpacity = useMemo(() => getLayerOpacity(phase), [phase])
+
+  // Whether to show breathing animation (only when fully at rest)
+  const showBreathing = phase === 'resting'
+
+  // Hide time mode check
+  const shouldHideTime = hideTimeDisplay
 
   return (
     <>
       {/* Enlightenment reveal */}
-      {timerPhase === 'enlightenment' && justReachedEnlightenment && (
+      {storeTimerPhase === 'enlightenment' && justReachedEnlightenment && (
         <ZenMessage isEnlightened={true} onComplete={handleEnlightenmentComplete} variant="after" />
       )}
 
       {/* Main timer screen - hidden during enlightenment reveal */}
-      {!(timerPhase === 'enlightenment' && justReachedEnlightenment) && (
+      {!(storeTimerPhase === 'enlightenment' && justReachedEnlightenment) && (
         <div
           className={`
-          flex flex-col items-center justify-center h-full px-8 pb-[10vh]
-          transition-colors duration-400 select-none
-          ${isRunning ? 'bg-cream-dark' : 'bg-cream'}
-        `}
+            flex flex-col items-center justify-center h-full px-8 pb-[10vh]
+            transition-colors duration-400 select-none
+            ${isRunning ? 'bg-cream-dark' : 'bg-cream'}
+          `}
           onClick={handleTap}
           {...swipeHandlers}
         >
-          {/* Timer display */}
-          <div className="flex flex-col items-center">
+          {/* Timer Stage - THE PERSISTENT CONTAINER */}
+          <motion.div
+            className="relative flex flex-col items-center"
+            variants={stageVariants}
+            animate={phase}
+            initial="resting"
+          >
             {shouldHideTime ? (
-              // Hide time mode - gooey orb
-              <div className="flex flex-col items-center">
-                <GooeyOrb transitionState={transitionState} />
-                {transitionState === 'idle' && timerPhase === 'idle' && (
-                  <p className="text-xs text-indigo-deep/30 mt-6 animate-fade-in">tap to begin</p>
+              // Hide time mode - GooeyOrb with phase
+              <div className="relative">
+                <GooeyOrb phase={phase} />
+                {/* Hint text for resting state */}
+                {phase === 'resting' && (
+                  <motion.p
+                    className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs text-indigo-deep/30 whitespace-nowrap"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3, duration: 0.4 }}
+                  >
+                    tap to begin
+                  </motion.p>
                 )}
               </div>
             ) : (
-              // Normal mode - unified display with simple fades
-              <AnimatePresence mode="wait">
+              // Normal mode - dual layer display
+              <div className="relative">
+                {/* Cumulative Layer - always rendered, opacity controlled */}
                 <motion.div
-                  key={`${transitionState}-${currentDisplay.mode}`}
                   className="flex flex-col items-center"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.4, ease: 'easeOut' }}
+                  animate={{ opacity: layerOpacity.cumulative }}
+                  transition={layerTransition}
+                  style={{
+                    position:
+                      layerOpacity.cumulative === 0 && layerOpacity.active === 1
+                        ? 'absolute'
+                        : 'relative',
+                    pointerEvents: layerOpacity.cumulative > 0.5 ? 'auto' : 'none',
+                  }}
                 >
                   <HemingwayTime
-                    seconds={currentDisplay.seconds}
-                    mode={currentDisplay.mode}
-                    breathing={transitionState === 'idle' && timerPhase === 'idle'}
+                    seconds={totalSeconds}
+                    mode="cumulative"
+                    breathing={showBreathing}
                     className="text-indigo-deep"
                   />
 
                   {/* Near-miss visibility - subtle anticipation trigger */}
-                  {transitionState === 'idle' && timerPhase === 'idle' && nearMiss && (
-                    <p className="text-xs text-indigo-deep/40 mt-2 animate-fade-in">
+                  {phase === 'resting' && nearMiss && (
+                    <motion.p
+                      className="text-xs text-indigo-deep/40 mt-2"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.5, duration: 0.4 }}
+                    >
                       {nearMiss.hoursRemaining < 0.1
                         ? `Almost at ${nearMiss.nextMilestone}h`
                         : `${(nearMiss.hoursRemaining * 60).toFixed(0)} min to ${nearMiss.nextMilestone}h`}
-                    </p>
+                    </motion.p>
                   )}
                 </motion.div>
-              </AnimatePresence>
+
+                {/* Active Layer - always rendered, opacity controlled */}
+                <motion.div
+                  className="flex flex-col items-center"
+                  animate={{ opacity: layerOpacity.active }}
+                  transition={layerTransition}
+                  style={{
+                    position:
+                      layerOpacity.active === 0 && layerOpacity.cumulative === 1
+                        ? 'absolute'
+                        : 'relative',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    pointerEvents: layerOpacity.active > 0.5 ? 'auto' : 'none',
+                  }}
+                >
+                  <HemingwayTime
+                    seconds={activeDisplaySeconds}
+                    mode="active"
+                    breathing={false}
+                    className="text-indigo-deep"
+                  />
+                </motion.div>
+              </div>
             )}
-          </div>
+          </motion.div>
 
           {/* Running state hint */}
-          {isRunning && <p className="absolute bottom-24 text-xs text-ink/25">tap to end</p>}
+          {isRunning && (
+            <motion.p
+              className="absolute bottom-24 text-xs text-ink/25"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.3 }}
+            >
+              tap to end
+            </motion.p>
+          )}
         </div>
       )}
 

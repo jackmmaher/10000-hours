@@ -1,5 +1,7 @@
+import { useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { springs, transitions } from '../lib/motion'
+import { springs, layerTransition } from '../lib/motion'
+import type { TimerPhase } from '../lib/motion'
 
 /**
  * GooeyOrb - Organic, liquid meditation orb
@@ -7,99 +9,79 @@ import { springs, transitions } from '../lib/motion'
  * Uses SVG gooey filter to create a bioluminescent, living organism effect.
  * Three overlapping circles merge and morph like a lava lamp.
  *
- * Follows the same transition states as HemingwayTime:
- * - idle: 4-4-4-4 box breathing (16s cycle)
- * - exhaling: scales down, fades
- * - inhaling: scales up, fades in
- * - running: active breathing, more luminous
- * - merging: rises and dissolves
- * - settling: gentle pulse
+ * Receives the same phase as HemingwayTime for identical choreography:
+ * - resting:    16s box breathing cycle, slow morphing
+ * - departing:  contracts toward center
+ * - arriving:   expands outward
+ * - active:     faster, more energetic morphing
+ * - completing: rises and disperses upward
+ * - resolving:  coalesces from above, settles
  */
 
-type TransitionState = 'idle' | 'exhaling' | 'inhaling' | 'running' | 'merging' | 'settling'
-
 interface GooeyOrbProps {
-  transitionState: TransitionState
+  phase: TimerPhase
   className?: string
 }
 
-export function GooeyOrb({ transitionState, className = '' }: GooeyOrbProps) {
-  // Animation props based on state
-  const getAnimationProps = () => {
-    switch (transitionState) {
-      case 'exhaling':
-        return {
-          initial: { scale: 1, opacity: 1 },
-          animate: { scale: 0.95, opacity: 0 },
-          transition: { duration: 0.8 },
-        }
-      case 'inhaling':
-        return {
-          initial: { scale: 0.9, opacity: 0 },
-          animate: { scale: 1, opacity: 1 },
-          transition: { duration: 0.6 },
-        }
-      case 'merging':
-        return {
-          initial: { y: 0, scale: 1, opacity: 1 },
-          animate: { y: -30, scale: 0.6, opacity: 0 },
-          transition: transitions.merge,
-        }
-      case 'settling':
-        return {
-          initial: { scale: 0.95, opacity: 0 },
-          animate: { scale: 1, opacity: 1 },
-          transition: springs.settle,
-        }
-      case 'idle':
-        return {
-          initial: { scale: 1, opacity: 1 },
-          animate: {
-            scale: [1, 1.03, 1.03, 1],
-            opacity: 1,
-          },
-          transition: {
-            duration: 16,
-            repeat: Infinity,
-            times: [0, 0.25, 0.5, 0.75],
-            ease: 'easeInOut' as const,
-          },
-        }
-      case 'running':
-      default:
-        return {
-          initial: { scale: 1, opacity: 1 },
-          animate: { scale: 1, opacity: 1 },
-          transition: springs.quick,
-        }
-    }
-  }
+export function GooeyOrb({ phase, className = '' }: GooeyOrbProps) {
+  // Map phase to visual states
+  const isActive = phase === 'active'
+  const isResting = phase === 'resting'
 
-  // Size varies by state
-  const getSize = () => {
-    switch (transitionState) {
-      case 'idle':
-      case 'exhaling':
+  // Determine orb opacity based on phase (mirrors HemingwayTime layers)
+  const orbOpacity = useMemo(() => {
+    switch (phase) {
+      case 'resting':
+      case 'resolving':
+        return 1
+      case 'departing':
+      case 'completing':
+        return 0 // fading out
+      case 'arriving':
+      case 'active':
+        return 1
+      default:
+        return 1
+    }
+  }, [phase])
+
+  // Size varies by phase
+  const { width, height, orbSize } = useMemo(() => {
+    switch (phase) {
+      case 'resting':
+      case 'departing':
+      case 'resolving':
         return { width: 140, height: 140, orbSize: 50 }
-      case 'inhaling':
-      case 'running':
+      case 'arriving':
+      case 'active':
         return { width: 200, height: 200, orbSize: 80 }
-      case 'merging':
-      case 'settling':
+      case 'completing':
         return { width: 160, height: 160, orbSize: 60 }
       default:
         return { width: 140, height: 140, orbSize: 50 }
     }
+  }, [phase])
+
+  // Animation class based on phase
+  const getBlobAnimation = (blobNum: 1 | 2 | 3) => {
+    if (isActive) {
+      return `gooeyBlob${blobNum}Active`
+    }
+    return `gooeyBlob${blobNum}Idle`
   }
 
-  const { width, height, orbSize } = getSize()
-  const isActive = transitionState === 'running'
-  const animationProps = getAnimationProps()
+  const getBlobDuration = (blobNum: 1 | 2 | 3) => {
+    if (isActive) {
+      return blobNum === 1 ? '8s' : blobNum === 2 ? '7s' : '6s'
+    }
+    return blobNum === 1 ? '12s' : blobNum === 2 ? '10s' : '14s'
+  }
 
   return (
     <motion.div
       className={`relative flex items-center justify-center ${className}`}
-      {...animationProps}
+      animate={{ opacity: orbOpacity }}
+      transition={layerTransition}
     >
       {/* SVG Filter Definition - The "Gooey" effect */}
       <svg style={{ position: 'absolute', width: 0, height: 0 }}>
@@ -124,11 +106,14 @@ export function GooeyOrb({ transitionState, className = '' }: GooeyOrbProps) {
       </svg>
 
       {/* Main orb container with gooey filter */}
-      <div
+      <motion.div
         className="relative flex items-center justify-center"
-        style={{
+        animate={{
           width: `${width}px`,
           height: `${height}px`,
+        }}
+        transition={springs.settle}
+        style={{
           filter: 'url(#gooey-filter)',
         }}
       >
@@ -140,9 +125,7 @@ export function GooeyOrb({ transitionState, className = '' }: GooeyOrbProps) {
             height: `${orbSize}px`,
             background: 'var(--orb-edge)',
             opacity: 0.8,
-            animation: isActive
-              ? 'gooeyBlob1Active 8s ease-in-out infinite'
-              : 'gooeyBlob1Idle 12s ease-in-out infinite',
+            animation: `${getBlobAnimation(1)} ${getBlobDuration(1)} ease-in-out infinite`,
           }}
         />
 
@@ -154,9 +137,7 @@ export function GooeyOrb({ transitionState, className = '' }: GooeyOrbProps) {
             height: `${orbSize * 0.85}px`,
             background: 'var(--orb-mid)',
             opacity: 0.7,
-            animation: isActive
-              ? 'gooeyBlob2Active 7s ease-in-out infinite'
-              : 'gooeyBlob2Idle 10s ease-in-out infinite',
+            animation: `${getBlobAnimation(2)} ${getBlobDuration(2)} ease-in-out infinite`,
             animationDelay: '-2s',
           }}
         />
@@ -169,9 +150,7 @@ export function GooeyOrb({ transitionState, className = '' }: GooeyOrbProps) {
             height: `${orbSize * 0.7}px`,
             background: 'var(--orb-glow)',
             opacity: 0.6,
-            animation: isActive
-              ? 'gooeyBlob3Active 6s ease-in-out infinite'
-              : 'gooeyBlob3Idle 14s ease-in-out infinite',
+            animation: `${getBlobAnimation(3)} ${getBlobDuration(3)} ease-in-out infinite`,
             animationDelay: '-4s',
           }}
         />
@@ -189,21 +168,28 @@ export function GooeyOrb({ transitionState, className = '' }: GooeyOrbProps) {
             `,
             animation: isActive
               ? 'gooeyCore 4s ease-in-out infinite'
-              : 'gooeyCoreIdle 16s ease-in-out infinite', // Matches box breathing
+              : isResting
+                ? 'gooeyCoreIdle 16s ease-in-out infinite'
+                : 'none',
           }}
         />
-      </div>
+      </motion.div>
 
       {/* Outer atmosphere glow (not affected by gooey filter) */}
-      <div
+      <motion.div
         className="absolute rounded-full pointer-events-none"
-        style={{
+        animate={{
           width: `${width * 1.2}px`,
           height: `${height * 1.2}px`,
+        }}
+        transition={springs.settle}
+        style={{
           background: `radial-gradient(circle, var(--orb-atmosphere) 0%, transparent 70%)`,
           animation: isActive
             ? 'atmosphereActive 6s ease-in-out infinite'
-            : 'atmosphereIdle 16s ease-in-out infinite', // Matches box breathing
+            : isResting
+              ? 'atmosphereIdle 16s ease-in-out infinite'
+              : 'none',
         }}
       />
     </motion.div>
