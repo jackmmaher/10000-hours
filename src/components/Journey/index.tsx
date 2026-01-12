@@ -20,7 +20,7 @@ import { useAuthStore } from '../../stores/useAuthStore'
 import { useSwipe } from '../../hooks/useSwipe'
 import { usePullToRefresh } from '../../hooks/usePullToRefresh'
 import { WeekStonesRow, getDayStatusWithPlan, ExtendedDayStatus } from '../WeekStones'
-import { JourneyNextSession } from '../JourneyNextSession'
+import { NextSessionSpotlight } from '../NextSessionSpotlight'
 import { InsightStream } from '../InsightStream'
 import { Calendar } from '../Calendar'
 import { JourneySavedContent } from '../JourneySavedContent'
@@ -89,6 +89,7 @@ export function Journey() {
   // References for scroll container and sub-tabs section
   const scrollRef = useRef<HTMLDivElement>(null)
   const subTabsRef = useRef<HTMLDivElement>(null)
+  const calendarRef = useRef<HTMLDivElement>(null)
 
   // Pull-to-refresh
   const {
@@ -167,6 +168,26 @@ export function Journey() {
     setSelectedDaySessions(daySessions)
     setPlanningDate(date)
   }
+
+  // Scroll to calendar and optionally open planning modal
+  const scrollToCalendarAndPlan = useCallback(
+    (date?: Date) => {
+      if (calendarRef.current) {
+        calendarRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+      // Small delay to let scroll complete, then open modal
+      setTimeout(() => {
+        const targetDate = date || new Date()
+        targetDate.setHours(0, 0, 0, 0)
+        const daySessions = getSessionsForDate(sessions, targetDate).sort(
+          (a, b) => b.startTime - a.startTime
+        )
+        setSelectedDaySessions(daySessions)
+        setPlanningDate(targetDate)
+      }, 300)
+    },
+    [sessions]
+  )
 
   // Load next planned session
   useEffect(() => {
@@ -264,34 +285,37 @@ export function Journey() {
       </div>
 
       <div className="px-6 py-8 max-w-lg mx-auto">
-        {/* Your Next Moment */}
-        <JourneyNextSession
+        {/* Next Session Spotlight - Hero (2/3 viewport) */}
+        <NextSessionSpotlight
           plannedSession={nextPlannedSession}
           onPlanClick={() => {
             if (nextPlannedSession) {
               const planDate = new Date(nextPlannedSession.date)
               planDate.setHours(0, 0, 0, 0)
-              setPlanningDate(planDate)
+              scrollToCalendarAndPlan(planDate)
             } else {
-              const today = new Date()
-              today.setHours(0, 0, 0, 0)
-              setPlanningDate(today)
+              scrollToCalendarAndPlan()
             }
           }}
         />
 
-        {/* Week Stones */}
-        <div className="mb-10">
-          <p className="font-serif text-sm text-ink/50 tracking-wide mb-5">Meditations this week</p>
-          <WeekStonesRow days={weekDays} onDayClick={handleDayClick} showLabels={true} size="md" />
-        </div>
-
-        {/* Calendar */}
-        <div className="mb-10">
+        {/* Calendar - Planning Hub */}
+        <div ref={calendarRef} className="mb-10">
           <Calendar
             embedded
             onDateClick={(date) => handleDayClick(0, date)}
             refreshKey={plansRefreshKey}
+          />
+        </div>
+
+        {/* Week Summary - Display Only */}
+        <div className="mb-10">
+          <p className="font-serif text-sm text-ink/50 tracking-wide mb-5">This week</p>
+          <WeekStonesRow
+            days={weekDays}
+            onDayClick={(_dayIndex, date) => scrollToCalendarAndPlan(date)}
+            showLabels={true}
+            size="md"
           />
         </div>
 
