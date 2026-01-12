@@ -212,7 +212,7 @@ export function Timer() {
       {!(timerPhase === 'enlightenment' && justReachedEnlightenment) && (
         <div
           className={`
-          flex flex-col items-center justify-center h-full px-8
+          flex flex-col items-center justify-center h-full px-8 pb-[10vh]
           transition-colors duration-400 select-none
           ${isRunning ? 'bg-cream-dark' : 'bg-cream'}
         `}
