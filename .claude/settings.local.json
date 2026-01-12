@@ -74,7 +74,26 @@
       "Bash(meditation\" element due to millisecond timestamp mismatches.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Skill(gsd:map-codebase)",
       "WebFetch(domain:codepen.io)",
-      "Bash(npm test:*)"
+      "Bash(npm test:*)",
+      "Bash(git status:*)",
+      "WebFetch(domain:uisources.com)",
+      "WebFetch(domain:www.figma.com)",
+      "WebFetch(domain:mobbin.com)",
+      "WebFetch(domain:colorswall.com)",
+      "Skill(superpowers:subagent-driven-development)",
+      "Bash(git -C \"C:\\\\Users\\\\jackm\\\\Projects\\\\10000-hours\" diff src/components/Timer.tsx)",
+      "Bash(git -C \"C:\\\\Users\\\\jackm\\\\Projects\\\\10000-hours\" log --oneline -5)",
+      "Bash(for f in \"C:\\\\Users\\\\jackm\\\\Projects\\\\10000-hours\\\\src\\\\components\"/*.tsx)",
+      "Bash(done)",
+      "Bash(npx husky init)",
+      "WebFetch(domain:suttacentral.net)",
+      "Bash(readme \")",
+      "Bash(git reset:*)",
+      "Bash(git show:*)",
+      "Skill(superpowers:test-driven-development)",
+      "Bash(grep:*)",
+      "Bash(node scripts/generate-sync-sql.js:*)",
+      "Bash(node scripts/normalize-engagement-data.js:*)"
     ]
   }
 }
