@@ -7,7 +7,7 @@ export function formatTimer(seconds: number): string {
   return [
     h.toString().padStart(2, '0'),
     m.toString().padStart(2, '0'),
-    s.toString().padStart(2, '0')
+    s.toString().padStart(2, '0'),
   ].join(':')
 }
 
@@ -74,7 +74,7 @@ export function formatFullDate(date: Date): string {
   return date.toLocaleDateString('en-US', {
     month: 'long',
     day: 'numeric',
-    year: 'numeric'
+    year: 'numeric',
   })
 }
 
@@ -83,7 +83,7 @@ export function formatTime(date: Date): string {
   return date.toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
-    hour12: true
+    hour12: true,
   })
 }
 
@@ -112,4 +112,56 @@ export function formatDaysRemaining(days: number): string {
     return `${Math.round(days)} days`
   }
   return `~${years.toFixed(1)} years`
+}
+
+// Hemingway format for cumulative display (no labels, no colons)
+// Returns hours and minutes as separate parts for flexible rendering
+export function formatHemingwayCumulative(seconds: number): {
+  hours: string | null
+  minutes: string
+} {
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+
+  if (h === 0) {
+    return { hours: null, minutes: m.toString() }
+  }
+
+  return {
+    hours: h.toString(),
+    minutes: m.toString().padStart(2, '0'),
+  }
+}
+
+// Hemingway format for active timer display (expanding stream)
+// Shows only relevant units: seconds → min:sec → hr:min:sec
+export function formatHemingwayActive(seconds: number): {
+  hours: string | null
+  minutes: string | null
+  seconds: string
+} {
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  const s = Math.floor(seconds % 60)
+
+  // Under 1 minute: just seconds (no padding)
+  if (h === 0 && m === 0) {
+    return { hours: null, minutes: null, seconds: s.toString() }
+  }
+
+  // Under 1 hour: minutes and padded seconds
+  if (h === 0) {
+    return {
+      hours: null,
+      minutes: m.toString(),
+      seconds: s.toString().padStart(2, '0'),
+    }
+  }
+
+  // 1 hour or more: hours, padded minutes, padded seconds
+  return {
+    hours: h.toString(),
+    minutes: m.toString().padStart(2, '0'),
+    seconds: s.toString().padStart(2, '0'),
+  }
 }
