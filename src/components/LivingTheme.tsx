@@ -5,7 +5,7 @@ import {
   useEffect,
   useCallback,
   useRef,
-  ReactNode
+  ReactNode,
 } from 'react'
 import { LivingCanvas } from './LivingCanvas'
 import {
@@ -21,7 +21,7 @@ import {
   SeasonalEffects,
   TimeOfDay,
   Season,
-  SeasonOption
+  SeasonOption,
 } from '../lib/livingTheme'
 import { useSettingsStore } from '../stores/useSettingsStore'
 
@@ -51,10 +51,7 @@ interface LivingThemeProps {
 
 const UPDATE_INTERVAL = 60 * 1000
 
-export function LivingTheme({
-  children,
-  breathingIntensity = 0.015
-}: LivingThemeProps) {
+export function LivingTheme({ children, breathingIntensity = 0.015 }: LivingThemeProps) {
   const { visualEffects, themeMode, manualSeason, manualTime } = useSettingsStore()
   const expressive = visualEffects === 'expressive'
   const isManualMode = themeMode === 'manual'
@@ -88,12 +85,7 @@ export function LivingTheme({
 
     let newState: LivingThemeState
     if (isManualMode) {
-      newState = calculateManualTheme(
-        manualSeason as SeasonOption,
-        manualTime,
-        expressive,
-        true
-      )
+      newState = calculateManualTheme(manualSeason as SeasonOption, manualTime, expressive, true)
     } else {
       const currentLocation = location ?? estimateLocationFromTimezone()
       newState = calculateLivingTheme(currentLocation, now, expressive, true)
@@ -125,14 +117,17 @@ export function LivingTheme({
     ? getManualSeasonalEffects(manualSeason as SeasonOption, manualTime, expressive)
     : getSeasonalEffects(themeState.season, themeState.timeOfDay, expressive)
 
+  // Hide sun and moon for neutral themes (neutral light / neutral dark)
+  const hideCelestialBodies = isManualMode && manualSeason === 'neutral'
+
   const contextValue: LivingThemeContextValue = {
     ...themeState,
     seasonalEffects,
     debug: {
       sunAltitude: themeState.sunAltitude,
       location,
-      lastUpdate
-    }
+      lastUpdate,
+    },
   }
 
   return (
@@ -175,6 +170,7 @@ export function LivingTheme({
           sunAltitude={themeState.sunAltitude}
           moonIllumination={themeState.moonIllumination}
           moonPhaseAngle={themeState.moonPhaseAngle}
+          hideCelestialBodies={hideCelestialBodies}
         />
 
         {children}
@@ -192,6 +188,7 @@ interface LivingThemeEffectsProps {
   sunAltitude: number
   moonIllumination: number
   moonPhaseAngle: number
+  hideCelestialBodies: boolean
 }
 
 function LivingThemeEffects({
@@ -202,7 +199,8 @@ function LivingThemeEffects({
   seasonalEffects,
   sunAltitude,
   moonIllumination,
-  moonPhaseAngle
+  moonPhaseAngle,
+  hideCelestialBodies,
 }: LivingThemeEffectsProps) {
   const [mounted, setMounted] = useState(false)
 
@@ -213,10 +211,7 @@ function LivingThemeEffects({
   if (!mounted) return null
 
   return (
-    <div
-      className="fixed inset-0 pointer-events-none overflow-hidden"
-      style={{ zIndex: 0 }}
-    >
+    <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
       <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
@@ -226,10 +221,7 @@ function LivingThemeEffects({
 
       <GrainOverlay intensity={effects.grain + (effects.ambientDarkness > 0.5 ? 0.02 : 0)} />
 
-      <AtmosphericGradient
-        season={season}
-        darkness={effects.ambientDarkness}
-      />
+      <AtmosphericGradient season={season} darkness={effects.ambientDarkness} />
 
       <DirectionalLight
         intensity={effects.directionalLight.intensity}
@@ -245,6 +237,7 @@ function LivingThemeEffects({
         sunAltitude={sunAltitude}
         moonIllumination={moonIllumination}
         moonPhaseAngle={moonPhaseAngle}
+        hideCelestialBodies={hideCelestialBodies}
       />
     </div>
   )
@@ -257,24 +250,18 @@ function GrainOverlay({ intensity }: { intensity: number }) {
       style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
         opacity: intensity,
-        mixBlendMode: 'overlay'
+        mixBlendMode: 'overlay',
       }}
     />
   )
 }
 
-function AtmosphericGradient({
-  season,
-  darkness
-}: {
-  season: Season
-  darkness: number
-}) {
+function AtmosphericGradient({ season, darkness }: { season: Season; darkness: number }) {
   const dayGradients: Record<Season, string> = {
     winter: `radial-gradient(ellipse 100% 60% at 50% -10%, rgba(14, 165, 233, 0.08) 0%, transparent 50%)`,
     spring: `radial-gradient(ellipse 100% 60% at 50% -10%, rgba(34, 197, 94, 0.08) 0%, transparent 50%)`,
     summer: `radial-gradient(ellipse 100% 60% at 50% -10%, rgba(234, 88, 12, 0.1) 0%, transparent 50%)`,
-    autumn: `radial-gradient(ellipse 100% 60% at 50% -10%, rgba(194, 65, 12, 0.08) 0%, transparent 50%)`
+    autumn: `radial-gradient(ellipse 100% 60% at 50% -10%, rgba(194, 65, 12, 0.08) 0%, transparent 50%)`,
   }
 
   const nightGradients: Record<Season, string> = {
@@ -285,7 +272,7 @@ function AtmosphericGradient({
     summer: `radial-gradient(ellipse 80% 50% at 50% 20%, rgba(251, 191, 36, 0.05) 0%, transparent 50%),
              linear-gradient(180deg, rgba(28, 25, 23, 0) 0%, rgba(28, 25, 23, 0.3) 100%)`,
     autumn: `radial-gradient(ellipse 80% 50% at 60% 15%, rgba(217, 119, 6, 0.06) 0%, transparent 50%),
-             linear-gradient(180deg, rgba(26, 20, 18, 0) 0%, rgba(26, 20, 18, 0.3) 100%)`
+             linear-gradient(180deg, rgba(26, 20, 18, 0) 0%, rgba(26, 20, 18, 0.3) 100%)`,
   }
 
   return (
@@ -294,27 +281,21 @@ function AtmosphericGradient({
         className="absolute inset-0 transition-opacity duration-[2000ms]"
         style={{
           background: dayGradients[season],
-          opacity: 1 - darkness
+          opacity: 1 - darkness,
         }}
       />
       <div
         className="absolute inset-0 transition-opacity duration-[2000ms]"
         style={{
           background: nightGradients[season],
-          opacity: darkness
+          opacity: darkness,
         }}
       />
     </>
   )
 }
 
-function DirectionalLight({
-  intensity,
-  warmth
-}: {
-  intensity: number
-  warmth: number
-}) {
+function DirectionalLight({ intensity, warmth }: { intensity: number; warmth: number }) {
   if (intensity < 0.05) return null
 
   const coolColor = 'rgba(255, 255, 255, 0.15)'
@@ -331,7 +312,7 @@ function DirectionalLight({
       style={{
         background: `linear-gradient(${angle}, ${color} 0%, transparent 60%)`,
         opacity: finalOpacity,
-        mixBlendMode: blendMode as React.CSSProperties['mixBlendMode']
+        mixBlendMode: blendMode as React.CSSProperties['mixBlendMode'],
       }}
     />
   )
@@ -339,7 +320,7 @@ function DirectionalLight({
 
 export function SoftLightRays({
   color = 'rgba(255, 255, 255, 0.08)',
-  fromRight = true
+  fromRight = true,
 }: {
   color?: string
   fromRight?: boolean
@@ -358,7 +339,7 @@ export function SoftLightRays({
             transform: `rotate(${fromRight ? 20 + i * 8 : -20 - i * 8}deg)`,
             top: '-20%',
             [fromRight ? 'right' : 'left']: `${10 + i * 15}%`,
-            opacity: 0.6 - i * 0.1
+            opacity: 0.6 - i * 0.1,
           }}
         />
       ))}

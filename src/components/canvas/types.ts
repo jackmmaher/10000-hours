@@ -13,6 +13,7 @@ export interface LivingCanvasProps {
   sunAltitude: number
   moonIllumination: number
   moonPhaseAngle: number
+  hideCelestialBodies?: boolean
 }
 
 export interface BaseParticle {

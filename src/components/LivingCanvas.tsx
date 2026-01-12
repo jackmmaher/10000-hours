@@ -29,6 +29,7 @@ export function LivingCanvas({
   sunAltitude,
   moonIllumination,
   moonPhaseAngle,
+  hideCelestialBodies = false,
 }: LivingCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const particlesRef = useRef<Particle[]>([])
@@ -185,21 +186,22 @@ export function LivingCanvas({
       // Clear canvas to transparent - DOM gradients render behind
       ctx.clearRect(0, 0, width, height)
 
-      // Render sun (behind particles)
-      renderSun(ctx, width, height, sunAltitude)
+      // Render sun and moon (behind particles) - hidden for neutral themes
+      if (!hideCelestialBodies) {
+        renderSun(ctx, width, height, sunAltitude)
 
-      // Render moon (behind particles, with phase)
-      if (effectsRef.current.moon > 0) {
-        renderMoon(
-          ctx,
-          width,
-          height,
-          moonIllumination,
-          moonPhaseAngle,
-          effectsRef.current.moon,
-          seasonalEffectsRef.current.harvestMoon,
-          sunAltitude
-        )
+        if (effectsRef.current.moon > 0) {
+          renderMoon(
+            ctx,
+            width,
+            height,
+            moonIllumination,
+            moonPhaseAngle,
+            effectsRef.current.moon,
+            seasonalEffectsRef.current.harvestMoon,
+            sunAltitude
+          )
+        }
       }
 
       // Sort particles by z-depth (far to near)
@@ -252,6 +254,7 @@ export function LivingCanvas({
       sunAltitude,
       moonIllumination,
       moonPhaseAngle,
+      hideCelestialBodies,
     ]
   )
 
