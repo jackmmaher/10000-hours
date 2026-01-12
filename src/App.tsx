@@ -27,13 +27,21 @@ import { Onboarding, hasSeenOnboarding, markOnboardingSeen } from './components/
 import { MilestoneCelebration } from './components/MilestoneCelebration'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { LivingTheme } from './components/LivingTheme'
+import { ZenMessage } from './components/ZenMessage'
 import { PWAInstallPrompt } from './components/PWAInstallPrompt'
 import { ToastContainer } from './components/Toast'
 import type { Session } from './lib/db'
 
 function AppContent() {
-  const { view, setView } = useNavigationStore()
-  const { isLoading, hydrate } = useSessionStore()
+  const {
+    view,
+    setView,
+    showWelcomeCutscene,
+    welcomeCutsceneShown,
+    triggerWelcomeCutscene,
+    dismissWelcomeCutscene,
+  } = useNavigationStore()
+  const { isLoading, hydrate, goalCompleted } = useSessionStore()
   const settingsStore = useSettingsStore()
   const authStore = useAuthStore()
 
@@ -63,6 +71,19 @@ function AppContent() {
     }
     init()
   }, [hydrate, settingsStore, authStore])
+
+  // Trigger welcome cutscene on first load (after hydration)
+  useEffect(() => {
+    if (!isLoading && !settingsStore.isLoading && !showOnboarding && !welcomeCutsceneShown) {
+      triggerWelcomeCutscene()
+    }
+  }, [
+    isLoading,
+    settingsStore.isLoading,
+    showOnboarding,
+    welcomeCutsceneShown,
+    triggerWelcomeCutscene,
+  ])
 
   // Voice growth notification check (singleton - only runs here)
   // This prevents race conditions from multiple useVoice instances
@@ -157,6 +178,20 @@ function AppContent() {
       <div className="h-full bg-cream flex items-center justify-center">
         <div className="w-1 h-1 bg-indigo-deep/30 rounded-full animate-pulse" />
       </div>
+    )
+  }
+
+  // Welcome cutscene - shows on every app launch
+  if (showWelcomeCutscene) {
+    return (
+      <LivingTheme breathingIntensity={0.02}>
+        <ZenMessage
+          isEnlightened={false}
+          goalCompleted={goalCompleted}
+          onComplete={dismissWelcomeCutscene}
+          variant="welcome"
+        />
+      </LivingTheme>
     )
   }
 
