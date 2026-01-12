@@ -80,14 +80,14 @@ export const useNavigationStore = create<NavigationState>((set) => ({
   setViewWithVoiceModal: () => set({ view: 'progress', openVoiceModal: true }),
   clearVoiceModalIntent: () => set({ openVoiceModal: false }),
 
-  // Called after session ends - navigate to Journey with pending insight
+  // Called after session ends - stay on timer tab with pending insight
   triggerPostSessionFlow: (sessionId, duration, milestone) =>
     set({
-      view: 'journey',
+      // Don't change view - stay on timer tab
       pendingInsightSessionId: sessionId,
       pendingInsightSessionDuration: duration,
       pendingMilestone: milestone || null,
-      showInsightModal: false, // Will be shown after delay
+      showInsightModal: false, // Will be shown after merge animation
     }),
 
   // Called after stats animation settles

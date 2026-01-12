@@ -11,6 +11,7 @@ import { getNearMissInfo } from '../lib/milestones'
 import { getUserPreferences } from '../lib/db'
 import { ZenMessage } from './ZenMessage'
 import { HemingwayTime } from './HemingwayTime'
+import { InsightModal } from './InsightModal'
 
 export function Timer() {
   const {
@@ -21,19 +22,37 @@ export function Timer() {
     justReachedEnlightenment,
     lastSessionUuid,
     justAchievedMilestone,
-    startPreparing,
     startTimer,
     stopTimer,
     acknowledgeEnlightenment,
     completeSession,
   } = useSessionStore()
-  const { setView, triggerPostSessionFlow } = useNavigationStore()
+  const {
+    setView,
+    triggerPostSessionFlow,
+    pendingInsightSessionId,
+    pendingInsightSessionDuration,
+    pendingMilestone,
+    showInsightModal,
+    showInsightCaptureModal,
+    hideInsightCaptureModal,
+    clearPostSessionState,
+  } = useNavigationStore()
+  const { createInsightReminder } = useSessionStore()
 
   const { hideTimeDisplay } = useSettingsStore()
   const haptic = useTapFeedback()
   const audio = useAudioFeedback()
 
   const { elapsed, isRunning } = useTimer()
+
+  // Transition state for animation choreography
+  const [transitionState, setTransitionState] = useState<
+    'idle' | 'exhaling' | 'inhaling' | 'running' | 'merging' | 'settling'
+  >('idle')
+
+  // Track for merge animation
+  const [sessionJustEnded, setSessionJustEnded] = useState(false)
 
   // Near-miss visibility (dopamine anticipation)
   const [nearMiss, setNearMiss] = useState<{
@@ -64,16 +83,27 @@ export function Timer() {
 
   // Handle tap on main area
   const handleTap = useCallback(() => {
-    if (timerPhase === 'idle') {
+    if (timerPhase === 'idle' && transitionState === 'idle') {
       haptic.medium() // Session start - noticeable feedback
-      startPreparing()
+      setTransitionState('exhaling')
+
+      // After exhale animation (400ms), pause (200ms), then start
+      setTimeout(() => {
+        setTransitionState('inhaling')
+        startTimer() // Skip preparing phase, start directly
+
+        setTimeout(() => {
+          setTransitionState('running')
+        }, 400) // inhale duration
+      }, 600) // exhale + pause
     } else if (timerPhase === 'running') {
       haptic.success() // Session complete - celebratory pattern
       audio.complete() // Audio chime (respects setting internally)
+      setSessionJustEnded(true)
       stopTimer()
     }
     // Don't handle tap during 'complete' - let it transition to Journey
-  }, [timerPhase, startPreparing, stopTimer, haptic, audio])
+  }, [timerPhase, transitionState, startTimer, stopTimer, haptic, audio])
 
   // After session complete, navigate to Journey tab for calm offboarding
   useEffect(() => {
@@ -104,6 +134,24 @@ export function Timer() {
     completeSession,
   ])
 
+  // Handle merge animation after session ends
+  useEffect(() => {
+    if (timerPhase === 'complete' && sessionJustEnded && lastSessionDuration) {
+      setTransitionState('merging')
+
+      // After merge animation
+      setTimeout(() => {
+        setTransitionState('settling')
+        setSessionJustEnded(false)
+
+        // After settle, return to idle
+        setTimeout(() => {
+          setTransitionState('idle')
+        }, 400)
+      }, 800)
+    }
+  }, [timerPhase, sessionJustEnded, lastSessionDuration])
+
   // Swipe handlers - horizontal navigation between tabs
   const swipeHandlers = useSwipe({
     onSwipeLeft: () => {
@@ -122,6 +170,40 @@ export function Timer() {
   const handleEnlightenmentComplete = useCallback(() => {
     acknowledgeEnlightenment()
   }, [acknowledgeEnlightenment])
+
+  // Show insight modal after merge animation settles
+  useEffect(() => {
+    if (transitionState === 'idle' && pendingInsightSessionId && !showInsightModal) {
+      const timer = setTimeout(() => {
+        showInsightCaptureModal()
+      }, 300)
+      return () => clearTimeout(timer)
+    }
+  }, [transitionState, pendingInsightSessionId, showInsightModal, showInsightCaptureModal])
+
+  // Handlers for insight modal actions
+  const handleInsightComplete = useCallback(() => {
+    hideInsightCaptureModal()
+    clearPostSessionState()
+  }, [hideInsightCaptureModal, clearPostSessionState])
+
+  const handleInsightSkip = useCallback(() => {
+    hideInsightCaptureModal()
+    clearPostSessionState()
+  }, [hideInsightCaptureModal, clearPostSessionState])
+
+  const handleInsightRemindLater = useCallback(() => {
+    if (pendingInsightSessionId) {
+      createInsightReminder(pendingInsightSessionId)
+    }
+    hideInsightCaptureModal()
+    clearPostSessionState()
+  }, [
+    pendingInsightSessionId,
+    createInsightReminder,
+    hideInsightCaptureModal,
+    clearPostSessionState,
+  ])
 
   return (
     <>
@@ -316,10 +398,22 @@ export function Timer() {
                     </div>
                   </div>
                 ) : (
-                  // Normal mode - show elapsed timer with breathing animation
-                  <HemingwayTime seconds={elapsed} mode="active" className="text-indigo-deep" />
+                  // Normal mode - show running timer with transition awareness
+                  <>
+                    {/* Inhaling: first second appearing (timer just started) */}
+                    {transitionState === 'inhaling' && (
+                      <div className="animate-timer-inhale">
+                        <HemingwayTime seconds={0} mode="active" className="text-indigo-deep" />
+                      </div>
+                    )}
+
+                    {/* Running: normal active display */}
+                    {transitionState === 'running' && (
+                      <HemingwayTime seconds={elapsed} mode="active" className="text-indigo-deep" />
+                    )}
+                  </>
                 )
-              ) : // Idle
+              ) : // Idle or transitioning
               shouldHideTime ? (
                 // Hide time mode - dormant orb waiting to be awakened
                 <div className="flex flex-col items-center">
@@ -370,21 +464,68 @@ export function Timer() {
                   <p className="text-xs text-indigo-deep/30 mt-6">tap to begin</p>
                 </div>
               ) : (
-                // Normal mode - show total or weekly hours based on tier
+                // Normal mode - handle idle and transition states (not running)
                 <div className="flex flex-col items-center">
-                  <HemingwayTime
-                    seconds={totalSeconds}
-                    mode="cumulative"
-                    breathing={true}
-                    className="text-indigo-deep"
-                  />
-                  {/* Near-miss visibility - subtle anticipation trigger */}
-                  {nearMiss && (
-                    <p className="text-xs text-indigo-deep/40 mt-2 animate-fade-in">
-                      {nearMiss.hoursRemaining < 0.1
-                        ? `Almost at ${nearMiss.nextMilestone}h`
-                        : `${(nearMiss.hoursRemaining * 60).toFixed(0)} min to ${nearMiss.nextMilestone}h`}
-                    </p>
+                  {/* Exhaling: cumulative fading out */}
+                  {transitionState === 'exhaling' && (
+                    <div className="animate-timer-exhale">
+                      <HemingwayTime
+                        seconds={totalSeconds}
+                        mode="cumulative"
+                        className="text-indigo-deep"
+                      />
+                    </div>
+                  )}
+
+                  {/* Merging: session rising, cumulative appearing */}
+                  {transitionState === 'merging' && (
+                    <div className="relative">
+                      <div className="animate-session-merge-rise absolute inset-0 flex items-center justify-center">
+                        <HemingwayTime
+                          seconds={lastSessionDuration || 0}
+                          mode="active"
+                          className="text-indigo-deep"
+                        />
+                      </div>
+                      <div className="animate-cumulative-merge-in">
+                        <HemingwayTime
+                          seconds={totalSeconds}
+                          mode="cumulative"
+                          className="text-indigo-deep"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Settling: cumulative with breath pulse */}
+                  {transitionState === 'settling' && (
+                    <div className="animate-pulse-soft">
+                      <HemingwayTime
+                        seconds={totalSeconds}
+                        mode="cumulative"
+                        className="text-indigo-deep"
+                      />
+                    </div>
+                  )}
+
+                  {/* Idle: cumulative breathing */}
+                  {transitionState === 'idle' && timerPhase === 'idle' && (
+                    <>
+                      <HemingwayTime
+                        seconds={totalSeconds}
+                        mode="cumulative"
+                        breathing={true}
+                        className="text-indigo-deep"
+                      />
+                      {/* Near-miss visibility - subtle anticipation trigger */}
+                      {nearMiss && (
+                        <p className="text-xs text-indigo-deep/40 mt-2 animate-fade-in">
+                          {nearMiss.hoursRemaining < 0.1
+                            ? `Almost at ${nearMiss.nextMilestone}h`
+                            : `${(nearMiss.hoursRemaining * 60).toFixed(0)} min to ${nearMiss.nextMilestone}h`}
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
               )}
@@ -394,6 +535,18 @@ export function Timer() {
             {isRunning && <p className="absolute bottom-24 text-xs text-ink/25">tap to end</p>}
           </div>
         )}
+
+      {/* Insight capture modal - stays on timer tab */}
+      {showInsightModal && pendingInsightSessionId && (
+        <InsightModal
+          sessionId={pendingInsightSessionId}
+          sessionDuration={pendingInsightSessionDuration}
+          milestoneMessage={pendingMilestone}
+          onComplete={handleInsightComplete}
+          onSkip={handleInsightSkip}
+          onRemindLater={handleInsightRemindLater}
+        />
+      )}
     </>
   )
 }
