@@ -11,30 +11,31 @@ import { create } from 'zustand'
 // Navigation structure: Timer | Journey | Explore | Progress | Profile
 export type AppView =
   | 'timer'
-  | 'journey'           // Personal space - plans, sessions, insights
-  | 'explore'           // Community discovery - pearls + sessions + courses
-  | 'progress'          // Milestones, stats, insight-driven history
-  | 'profile'           // User identity, preferences, wellbeing tracking
-  | 'settings'          // Sub-page: Theme, display options, legal
+  | 'journey' // Personal space - plans, sessions, insights
+  | 'explore' // Community discovery - pearls + sessions + courses
+  | 'progress' // Milestones, stats, insight-driven history
+  | 'profile' // User identity, preferences, wellbeing tracking
+  | 'settings' // Sub-page: Theme, display options, legal
   // Legacy views (still accessible via internal links)
-  | 'calendar'          // -> accessed from progress
-  | 'insights'          // -> accessed from journey
-  | 'pearls'            // -> accessed from explore
-  | 'saved-pearls'      // -> accessed from explore
+  | 'calendar' // -> accessed from progress
+  | 'insights' // -> accessed from journey
+  | 'pearls' // -> accessed from explore
+  | 'saved-pearls' // -> accessed from explore
 
 interface NavigationState {
   view: AppView
   // Intent flags - consumed by target views
   openVoiceModal: boolean
   // Post-session insight capture flow
-  pendingInsightSessionId: string | null       // Session awaiting insight capture
-  showInsightModal: boolean                     // Whether to show insight modal
-  pendingInsightSessionDuration: number | null  // Duration for body awareness prompt
-  pendingMilestone: string | null               // Milestone message to show in modal header
+  pendingInsightSessionId: string | null // Session awaiting insight capture
+  showInsightModal: boolean // Whether to show insight modal
+  pendingInsightSessionDuration: number | null // Duration for body awareness prompt
+  pendingMilestone: string | null // Milestone message to show in modal header
   // CTA navigation intents - consumed and cleared by target views
   exploreFilter: 'all' | 'pearls' | 'meditations' | null
   journeySubTab: 'sessions' | 'saved' | 'pearls' | null
   openPlanningModal: boolean
+  scrollToSubTabs: boolean
   // Actions
   setView: (view: AppView) => void
   setViewWithVoiceModal: () => void
@@ -64,60 +65,70 @@ export const useNavigationStore = create<NavigationState>((set) => ({
   exploreFilter: null,
   journeySubTab: null,
   openPlanningModal: false,
+  scrollToSubTabs: false,
 
   setView: (view) => set({ view }),
   setViewWithVoiceModal: () => set({ view: 'progress', openVoiceModal: true }),
   clearVoiceModalIntent: () => set({ openVoiceModal: false }),
 
   // Called after session ends - navigate to Journey with pending insight
-  triggerPostSessionFlow: (sessionId, duration, milestone) => set({
-    view: 'journey',
-    pendingInsightSessionId: sessionId,
-    pendingInsightSessionDuration: duration,
-    pendingMilestone: milestone || null,
-    showInsightModal: false  // Will be shown after delay
-  }),
+  triggerPostSessionFlow: (sessionId, duration, milestone) =>
+    set({
+      view: 'journey',
+      pendingInsightSessionId: sessionId,
+      pendingInsightSessionDuration: duration,
+      pendingMilestone: milestone || null,
+      showInsightModal: false, // Will be shown after delay
+    }),
 
   // Called after stats animation settles
   showInsightCaptureModal: () => set({ showInsightModal: true }),
 
   hideInsightCaptureModal: () => set({ showInsightModal: false }),
 
-  clearPostSessionState: () => set({
-    pendingInsightSessionId: null,
-    pendingInsightSessionDuration: null,
-    pendingMilestone: null,
-    showInsightModal: false
-  }),
+  clearPostSessionState: () =>
+    set({
+      pendingInsightSessionId: null,
+      pendingInsightSessionDuration: null,
+      pendingMilestone: null,
+      showInsightModal: false,
+    }),
 
   // For deep-linking from notification
-  navigateToInsightCapture: (sessionId) => set({
-    view: 'journey',
-    pendingInsightSessionId: sessionId,
-    pendingInsightSessionDuration: null,
-    pendingMilestone: null,
-    showInsightModal: true  // Show immediately for notification tap
-  }),
+  navigateToInsightCapture: (sessionId) =>
+    set({
+      view: 'journey',
+      pendingInsightSessionId: sessionId,
+      pendingInsightSessionDuration: null,
+      pendingMilestone: null,
+      showInsightModal: true, // Show immediately for notification tap
+    }),
 
   // CTA navigation actions - consumed and cleared by target views
-  navigateToExploreWithFilter: (filter) => set({
-    view: 'explore',
-    exploreFilter: filter
-  }),
+  navigateToExploreWithFilter: (filter) =>
+    set({
+      view: 'explore',
+      exploreFilter: filter,
+    }),
 
-  navigateToJourneyTab: (subTab) => set({
-    view: 'journey',
-    journeySubTab: subTab
-  }),
+  navigateToJourneyTab: (subTab) =>
+    set({
+      view: 'journey',
+      journeySubTab: subTab,
+      scrollToSubTabs: true,
+    }),
 
-  navigateToJourneyPlanning: () => set({
-    view: 'journey',
-    openPlanningModal: true
-  }),
+  navigateToJourneyPlanning: () =>
+    set({
+      view: 'journey',
+      openPlanningModal: true,
+    }),
 
-  clearNavigationIntent: () => set({
-    exploreFilter: null,
-    journeySubTab: null,
-    openPlanningModal: false
-  })
+  clearNavigationIntent: () =>
+    set({
+      exploreFilter: null,
+      journeySubTab: null,
+      openPlanningModal: false,
+      scrollToSubTabs: false,
+    }),
 }))

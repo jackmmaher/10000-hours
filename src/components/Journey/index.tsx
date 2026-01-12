@@ -59,6 +59,7 @@ export function Journey() {
     clearPostSessionState,
     journeySubTab: navSubTab,
     openPlanningModal: navOpenPlanning,
+    scrollToSubTabs: navScrollToSubTabs,
     clearNavigationIntent,
   } = useNavigationStore()
   const { user } = useAuthStore()
@@ -85,8 +86,9 @@ export function Journey() {
     setPlansRefreshKey((k) => k + 1)
   }, [])
 
-  // Reference to scroll container
+  // References for scroll container and sub-tabs section
   const scrollRef = useRef<HTMLDivElement>(null)
+  const subTabsRef = useRef<HTMLDivElement>(null)
 
   // Pull-to-refresh
   const {
@@ -189,9 +191,16 @@ export function Journey() {
   useEffect(() => {
     if (navSubTab) {
       setSubTab(navSubTab)
+      // Scroll to sub-tabs section if requested
+      if (navScrollToSubTabs && subTabsRef.current) {
+        // Small delay to ensure DOM is ready
+        setTimeout(() => {
+          subTabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }, 100)
+      }
       clearNavigationIntent()
     }
-  }, [navSubTab, clearNavigationIntent])
+  }, [navSubTab, navScrollToSubTabs, clearNavigationIntent])
 
   useEffect(() => {
     if (navOpenPlanning) {
@@ -287,7 +296,7 @@ export function Journey() {
         </div>
 
         {/* Sub-tabs */}
-        <div className="flex gap-1 mb-6 bg-cream-deep rounded-lg p-1">
+        <div ref={subTabsRef} className="flex gap-1 mb-6 bg-cream-deep rounded-lg p-1">
           <TabButton active={subTab === 'sessions'} onClick={() => setSubTab('sessions')}>
             Insights
           </TabButton>
