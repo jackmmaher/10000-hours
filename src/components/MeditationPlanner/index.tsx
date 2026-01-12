@@ -24,6 +24,7 @@ import {
 import { usePlannerState } from './usePlannerState'
 import { DayItemsCarousel } from './DayItemsCarousel'
 import { RepeatPicker } from './RepeatPicker'
+import { PearlPicker } from './PearlPicker'
 
 export type { MeditationPlannerProps } from './types'
 
@@ -32,6 +33,12 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
 
   // Source template modal state
   const [sourceTemplate, setSourceTemplate] = useState<SessionTemplate | null>(null)
+
+  // Pearl picker modal state
+  const [showPearlPicker, setShowPearlPicker] = useState(false)
+
+  // Destructure pearl state from usePlannerState
+  const { attachedPearl, handlePearlSelect } = state
 
   // Block swipe navigation when modal is open
   const handleTouchEvent = (e: React.TouchEvent) => {
@@ -313,6 +320,36 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                 />
               </div>
 
+              {/* Pearl Attachment */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-ink/70">Guidance</label>
+                {attachedPearl ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowPearlPicker(true)}
+                    className="w-full text-left p-3 rounded-xl bg-moss/10 border border-moss/30 touch-manipulation"
+                  >
+                    <p className="text-xs text-moss mb-1 flex items-center gap-1">
+                      <span>💎</span> Attached Pearl
+                    </p>
+                    {attachedPearl.text ? (
+                      <p className="text-ink leading-relaxed italic">"{attachedPearl.text}"</p>
+                    ) : (
+                      <p className="text-ink/50 italic text-sm">Pearl attached</p>
+                    )}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowPearlPicker(true)}
+                    className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-dashed border-ink/20 text-ink/50 hover:border-moss/50 hover:text-moss transition-colors touch-manipulation"
+                  >
+                    <span className="text-lg">💎</span>
+                    <span>Attach a Pearl</span>
+                  </button>
+                )}
+              </div>
+
               {/* Repeat picker for scheduling recurring sessions */}
               <RepeatPicker
                 frequency={state.repeatFrequency}
@@ -587,6 +624,38 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                   />
                 </div>
 
+                {/* Pearl Attachment - only show for plan mode, not session mode */}
+                {!state.isSessionMode && (
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-ink/70">Guidance</label>
+                    {attachedPearl ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowPearlPicker(true)}
+                        className="w-full text-left p-3 rounded-xl bg-moss/10 border border-moss/30 touch-manipulation"
+                      >
+                        <p className="text-xs text-moss mb-1 flex items-center gap-1">
+                          <span>💎</span> Attached Pearl
+                        </p>
+                        {attachedPearl.text ? (
+                          <p className="text-ink leading-relaxed italic">"{attachedPearl.text}"</p>
+                        ) : (
+                          <p className="text-ink/50 italic text-sm">Pearl attached</p>
+                        )}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setShowPearlPicker(true)}
+                        className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-dashed border-ink/20 text-ink/50 hover:border-moss/50 hover:text-moss transition-colors touch-manipulation"
+                      >
+                        <span className="text-lg">💎</span>
+                        <span>Attach a Pearl</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 {/* Repeat picker - only show for plan mode, not session mode */}
                 {!state.isSessionMode && (
                   <RepeatPicker
@@ -673,6 +742,14 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
           onAdopt={() => setSourceTemplate(null)}
         />
       )}
+
+      {/* Pearl picker modal */}
+      <PearlPicker
+        isOpen={showPearlPicker}
+        onClose={() => setShowPearlPicker(false)}
+        onSelect={handlePearlSelect}
+        selectedPearlId={attachedPearl?.id}
+      />
     </div>
   )
 }
