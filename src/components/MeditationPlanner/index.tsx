@@ -6,7 +6,7 @@
  * 2. Session mode (has sessions): For past sessions, shows read-only time/duration,
  *    allows editing metadata (pose, discipline, notes), displays insight if captured
  *
- * Supports multiple sessions per day with a session selector.
+ * Uses DayItemsCarousel to show sessions and plans as swipeable cards.
  */
 
 import { useState } from 'react'
@@ -22,6 +22,7 @@ import {
   getTemplateById,
 } from './utils'
 import { usePlannerState } from './usePlannerState'
+import { DayItemsCarousel } from './DayItemsCarousel'
 
 export type { MeditationPlannerProps } from './types'
 
@@ -58,14 +59,17 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
           <div className="flex items-start justify-between">
             <div>
               <h2 className="font-serif text-xl text-indigo-deep">
-                {state.isSessionMode ? 'Session Details' : state.planTitle || 'Plan Meditation'}
+                {state.currentItem?.type === 'session'
+                  ? 'Session Details'
+                  : state.currentItem?.type === 'plan'
+                    ? state.currentItem.plan?.title || 'Planned Session'
+                    : state.planTitle || 'Plan Meditation'}
               </h2>
-              {state.isSessionMode && (
-                <p className="text-sm text-ink-soft mt-1">{formatDateForDisplay(date)}</p>
-              )}
-              {!state.isSessionMode && state.planTitle && (
-                <p className="text-sm text-ink-soft mt-1">Guided meditation</p>
-              )}
+              <p className="text-sm text-ink-soft mt-1">
+                {state.dayItems.length > 0
+                  ? `${state.dayItems.length} item${state.dayItems.length !== 1 ? 's' : ''} · ${formatDateForDisplay(date)}`
+                  : formatDateForDisplay(date)}
+              </p>
             </div>
             <button
               onClick={onClose}
@@ -97,133 +101,45 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
               <div className="w-5 h-5 border-2 border-indigo-deep/20 border-t-indigo-deep rounded-full animate-spin" />
             </div>
           ) : (
-            <>
-              {/* Session selector - show when multiple sessions on same day */}
-              {state.isSessionMode && state.hasMultipleSessions && (
-                <div>
-                  <label className="text-xs text-ink-soft block mb-2">
-                    {sessions.length} sessions this day
-                  </label>
-                  <div className="flex gap-2 overflow-x-auto pb-1">
-                    {sessions.map((s, index) => (
-                      <button
-                        key={s.uuid}
-                        onClick={() => state.setSelectedSessionIndex(index)}
-                        className={`
-                          px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-all min-h-[44px]
-                          ${
-                            state.selectedSessionIndex === index
-                              ? 'bg-accent text-on-accent'
-                              : 'bg-elevated text-ink/60 hover:bg-deep'
-                          }
-                        `}
-                      >
-                        {formatTimeFromTimestamp(s.startTime)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Session mode: Show read-only time and duration */}
-              {state.isSessionMode && state.session && (
-                <div className="bg-moss/10 rounded-xl p-4 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-ink-soft">Time</span>
-                    <span className="text-ink font-medium">
-                      {formatTimeFromTimestamp(state.session.startTime)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-ink-soft">Duration</span>
-                    <span className="text-ink font-medium">
-                      {formatDurationMinutes(state.session.durationSeconds)}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Session mode: Show pending plans for this day */}
-              {state.isSessionMode && state.pendingPlans.length > 0 && (
-                <div className="bg-accent/10 rounded-xl p-4">
-                  <p className="text-xs text-ink-soft mb-2">Also planned for today</p>
-                  {state.pendingPlans.map((plan) => (
-                    <div key={plan.id} className="flex justify-between items-center">
-                      <span className="text-sm text-ink">
-                        {plan.title || plan.discipline || 'Meditation'}
-                      </span>
-                      <span className="text-sm text-accent font-medium">
-                        {plan.plannedTime || 'Anytime'}
-                      </span>
+            <DayItemsCarousel
+              itemCount={state.dayItems.length}
+              currentIndex={state.selectedItemIndex}
+              onIndexChange={state.setSelectedItemIndex}
+            >
+              <div className="space-y-5">
+                {/* Session content (type='session') */}
+                {state.currentItem?.type === 'session' && state.session && (
+                  <>
+                    {/* Read-only time and duration */}
+                    <div className="bg-moss/10 rounded-xl p-4 space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-ink-soft">Time</span>
+                        <span className="text-ink font-medium">
+                          {formatTimeFromTimestamp(state.session.startTime)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-ink-soft">Duration</span>
+                        <span className="text-ink font-medium">
+                          {formatDurationMinutes(state.session.durationSeconds)}
+                        </span>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                  </>
+                )}
 
-              {/* Plan mode: Show editable date picker */}
-              {!state.isSessionMode && (
-                <div className="w-full">
-                  <label className="text-xs text-ink-soft block mb-2">Date</label>
-                  <div className="relative w-full">
-                    <input
-                      type="date"
-                      value={formatDateForInput(state.selectedDate)}
-                      onChange={(e) => {
-                        const newDate = new Date(e.target.value + 'T00:00:00')
-                        state.handleDateChange(newDate)
-                      }}
-                      style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
-                      className="block w-full max-w-full box-border px-4 py-4 rounded-xl bg-elevated text-ink text-lg font-medium text-center focus:outline-none focus:ring-2 focus:ring-accent/30 appearance-none"
-                    />
-                    <svg
-                      className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink-soft pointer-events-none"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              )}
-
-              {/* Source template link */}
-              {!state.isSessionMode && state.planSourceTemplateId && (
-                <button
-                  onClick={() => {
-                    const template = getTemplateById(state.planSourceTemplateId!)
-                    if (template) setSourceTemplate(template)
-                  }}
-                  className="flex items-center gap-2 text-sm text-accent hover:text-accent-hover transition-colors"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-                    />
-                  </svg>
-                  <span>From guided meditation · View full guidance →</span>
-                </button>
-              )}
-
-              {/* Plan mode: Time and Duration inputs */}
-              {!state.isSessionMode && (
-                <>
-                  {/* Time */}
+                {/* Plan content (type='plan' or empty state) - show editable date picker */}
+                {(state.currentItem?.type === 'plan' || !state.currentItem) && (
                   <div className="w-full">
-                    <label className="text-xs text-ink-soft block mb-2">Time</label>
+                    <label className="text-xs text-ink-soft block mb-2">Date</label>
                     <div className="relative w-full">
                       <input
-                        type="time"
-                        value={state.plannedTime}
-                        onChange={(e) => state.setPlannedTime(e.target.value)}
+                        type="date"
+                        value={formatDateForInput(state.selectedDate)}
+                        onChange={(e) => {
+                          const newDate = new Date(e.target.value + 'T00:00:00')
+                          state.handleDateChange(newDate)
+                        }}
                         style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
                         className="block w-full max-w-full box-border px-4 py-4 rounded-xl bg-elevated text-ink text-lg font-medium text-center focus:outline-none focus:ring-2 focus:ring-accent/30 appearance-none"
                       />
@@ -237,201 +153,267 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={1.5}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
                       </svg>
-                      {!state.plannedTime && (
-                        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-ink-soft font-medium pointer-events-none">
-                          Tap to set time
-                        </span>
-                      )}
                     </div>
                   </div>
+                )}
 
-                  {/* Duration - Progressive disclosure */}
-                  <div>
-                    <label className="text-xs text-ink-soft block mb-2">Duration</label>
+                {/* Source template link */}
+                {!state.isSessionMode && state.planSourceTemplateId && (
+                  <button
+                    onClick={() => {
+                      const template = getTemplateById(state.planSourceTemplateId!)
+                      if (template) setSourceTemplate(template)
+                    }}
+                    className="flex items-center gap-2 text-sm text-accent hover:text-accent-hover transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                      />
+                    </svg>
+                    <span>From guided meditation · View full guidance →</span>
+                  </button>
+                )}
 
-                    {/* Tier 1: Categories */}
-                    <div className="flex gap-2">
-                      {DURATION_CATEGORIES.map((cat) => (
+                {/* Plan mode: Time and Duration inputs */}
+                {!state.isSessionMode && (
+                  <>
+                    {/* Time */}
+                    <div className="w-full">
+                      <label className="text-xs text-ink-soft block mb-2">Time</label>
+                      <div className="relative w-full">
+                        <input
+                          type="time"
+                          value={state.plannedTime}
+                          onChange={(e) => state.setPlannedTime(e.target.value)}
+                          style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
+                          className="block w-full max-w-full box-border px-4 py-4 rounded-xl bg-elevated text-ink text-lg font-medium text-center focus:outline-none focus:ring-2 focus:ring-accent/30 appearance-none"
+                        />
+                        <svg
+                          className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink-soft pointer-events-none"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        {!state.plannedTime && (
+                          <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-ink-soft font-medium pointer-events-none">
+                            Tap to set time
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Duration - Progressive disclosure */}
+                    <div>
+                      <label className="text-xs text-ink-soft block mb-2">Duration</label>
+
+                      {/* Tier 1: Categories */}
+                      <div className="flex gap-2">
+                        {DURATION_CATEGORIES.map((cat) => (
+                          <button
+                            key={cat.label}
+                            onClick={() => state.handleDurationCategoryChange(cat.label)}
+                            className={`flex-1 py-2 px-3 rounded-xl text-sm transition-colors min-h-[44px] flex flex-col items-center justify-center ${
+                              state.durationCategory === cat.label
+                                ? 'bg-accent text-on-accent'
+                                : 'bg-deep/50 text-ink-soft hover:bg-deep'
+                            }`}
+                          >
+                            <span className="font-medium">{cat.label}</span>
+                            <span className="text-xs opacity-70">{cat.range}</span>
+                          </button>
+                        ))}
                         <button
-                          key={cat.label}
-                          onClick={() => state.handleDurationCategoryChange(cat.label)}
-                          className={`flex-1 py-2 px-3 rounded-xl text-sm transition-colors min-h-[44px] flex flex-col items-center justify-center ${
-                            state.durationCategory === cat.label
+                          onClick={() => state.handleDurationCategoryChange('custom')}
+                          className={`flex-1 py-2 px-3 rounded-xl text-sm transition-colors min-h-[44px] flex items-center justify-center ${
+                            state.durationCategory === 'custom'
                               ? 'bg-accent text-on-accent'
                               : 'bg-deep/50 text-ink-soft hover:bg-deep'
                           }`}
                         >
-                          <span className="font-medium">{cat.label}</span>
-                          <span className="text-xs opacity-70">{cat.range}</span>
+                          <span className="font-medium">Custom</span>
                         </button>
-                      ))}
-                      <button
-                        onClick={() => state.handleDurationCategoryChange('custom')}
-                        className={`flex-1 py-2 px-3 rounded-xl text-sm transition-colors min-h-[44px] flex items-center justify-center ${
-                          state.durationCategory === 'custom'
-                            ? 'bg-accent text-on-accent'
-                            : 'bg-deep/50 text-ink-soft hover:bg-deep'
-                        }`}
-                      >
-                        <span className="font-medium">Custom</span>
-                      </button>
-                    </div>
-
-                    {/* Tier 2: Specific durations within category */}
-                    {state.durationCategory && state.durationCategory !== 'custom' && (
-                      <div className="flex gap-2 mt-3 animate-fade-in">
-                        {DURATION_CATEGORIES.find(
-                          (c) => c.label === state.durationCategory
-                        )?.durations.map((d) => (
-                          <button
-                            key={d}
-                            onClick={() => state.handleDurationChange(d)}
-                            className={`px-4 py-2 rounded-full text-sm min-h-[44px] transition-colors ${
-                              state.duration === d
-                                ? 'bg-accent text-on-accent'
-                                : 'bg-deep/30 text-ink-soft hover:bg-deep/50'
-                            }`}
-                          >
-                            {d} min
-                          </button>
-                        ))}
                       </div>
-                    )}
 
-                    {/* Custom duration - scrollable picker */}
-                    {state.showCustomDuration && (
-                      <div className="mt-3 animate-fade-in">
-                        <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
-                          {[
-                            1, 2, 3, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 120,
-                            150, 180,
-                          ].map((d) => (
+                      {/* Tier 2: Specific durations within category */}
+                      {state.durationCategory && state.durationCategory !== 'custom' && (
+                        <div className="flex gap-2 mt-3 animate-fade-in">
+                          {DURATION_CATEGORIES.find(
+                            (c) => c.label === state.durationCategory
+                          )?.durations.map((d) => (
                             <button
                               key={d}
                               onClick={() => state.handleDurationChange(d)}
-                              className={`px-4 py-2 rounded-full text-sm whitespace-nowrap min-h-[44px] transition-colors flex-shrink-0 ${
+                              className={`px-4 py-2 rounded-full text-sm min-h-[44px] transition-colors ${
                                 state.duration === d
                                   ? 'bg-accent text-on-accent'
                                   : 'bg-deep/30 text-ink-soft hover:bg-deep/50'
                               }`}
                             >
-                              {formatCustomDuration(d)}
+                              {d} min
                             </button>
                           ))}
                         </div>
+                      )}
+
+                      {/* Custom duration - scrollable picker */}
+                      {state.showCustomDuration && (
+                        <div className="mt-3 animate-fade-in">
+                          <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
+                            {[
+                              1, 2, 3, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 120,
+                              150, 180,
+                            ].map((d) => (
+                              <button
+                                key={d}
+                                onClick={() => state.handleDurationChange(d)}
+                                className={`px-4 py-2 rounded-full text-sm whitespace-nowrap min-h-[44px] transition-colors flex-shrink-0 ${
+                                  state.duration === d
+                                    ? 'bg-accent text-on-accent'
+                                    : 'bg-deep/30 text-ink-soft hover:bg-deep/50'
+                                }`}
+                              >
+                                {formatCustomDuration(d)}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {/* Position - horizontal scroll with groups */}
+                <div>
+                  <label className="text-xs text-ink-soft block mb-2">Position</label>
+                  <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
+                    {POSE_GROUPS.map((group, groupIndex) => (
+                      <div key={group.label} className="flex gap-2 items-center">
+                        {group.poses.map((p) => (
+                          <button
+                            key={p}
+                            onClick={() => state.setPose(state.pose === p ? '' : p)}
+                            className={`px-3 py-2 rounded-full text-sm whitespace-nowrap transition-colors min-h-[44px] ${
+                              state.pose === p
+                                ? 'bg-accent text-on-accent'
+                                : 'bg-deep/50 text-ink-soft hover:bg-deep'
+                            }`}
+                          >
+                            {p}
+                          </button>
+                        ))}
+                        {groupIndex < POSE_GROUPS.length - 1 && (
+                          <div className="w-px h-6 bg-ink/10 mx-1 flex-shrink-0" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Technique - horizontal scroll with groups */}
+                <div>
+                  <label className="text-xs text-ink-soft block mb-2">Technique</label>
+                  <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
+                    {DISCIPLINE_GROUPS.map((group, groupIndex) => (
+                      <div key={group.label} className="flex gap-2 items-center">
+                        {group.disciplines.map((d) => (
+                          <button
+                            key={d}
+                            onClick={() => state.setDiscipline(state.discipline === d ? '' : d)}
+                            className={`px-3 py-2 rounded-full text-sm whitespace-nowrap transition-colors min-h-[44px] ${
+                              state.discipline === d
+                                ? 'bg-accent text-on-accent'
+                                : 'bg-deep/50 text-ink-soft hover:bg-deep'
+                            }`}
+                          >
+                            {d}
+                          </button>
+                        ))}
+                        {groupIndex < DISCIPLINE_GROUPS.length - 1 && (
+                          <div className="w-px h-6 bg-ink/10 mx-1 flex-shrink-0" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Notes / Intention */}
+                <div>
+                  <label className="text-xs text-ink-soft block mb-2">
+                    {state.isSessionMode ? 'Intention' : 'Notes'}
+                  </label>
+                  <textarea
+                    value={state.notes}
+                    onChange={(e) => state.setNotes(e.target.value)}
+                    placeholder={
+                      state.isSessionMode
+                        ? 'What was your intention for this session?'
+                        : 'Set your intention for this session...'
+                    }
+                    className="w-full h-24 px-4 py-3 rounded-xl bg-deep/50 text-ink placeholder:text-ink/30 resize-none focus:outline-none focus:ring-2 focus:ring-accent/20"
+                  />
+                </div>
+
+                {/* Insight display - show in session mode */}
+                {state.isSessionMode && (
+                  <div>
+                    <label className="text-xs text-ink-soft block mb-2">Insight captured</label>
+                    {state.insight ? (
+                      <div className="bg-accent/5 rounded-xl p-4 border border-accent/10">
+                        <p className="text-ink text-sm whitespace-pre-wrap">
+                          {state.insight.formattedText || state.insight.rawText}
+                        </p>
+                        <p className="text-xs text-ink/40 mt-2">
+                          {new Date(state.insight.createdAt).toLocaleString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit',
+                          })}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="bg-deep/30 rounded-xl p-4">
+                        <p className="text-ink/40 text-sm italic">
+                          No insight captured for this session
+                        </p>
                       </div>
                     )}
                   </div>
-                </>
-              )}
-
-              {/* Position - horizontal scroll with groups */}
-              <div>
-                <label className="text-xs text-ink-soft block mb-2">Position</label>
-                <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
-                  {POSE_GROUPS.map((group, groupIndex) => (
-                    <div key={group.label} className="flex gap-2 items-center">
-                      {group.poses.map((p) => (
-                        <button
-                          key={p}
-                          onClick={() => state.setPose(state.pose === p ? '' : p)}
-                          className={`px-3 py-2 rounded-full text-sm whitespace-nowrap transition-colors min-h-[44px] ${
-                            state.pose === p
-                              ? 'bg-accent text-on-accent'
-                              : 'bg-deep/50 text-ink-soft hover:bg-deep'
-                          }`}
-                        >
-                          {p}
-                        </button>
-                      ))}
-                      {groupIndex < POSE_GROUPS.length - 1 && (
-                        <div className="w-px h-6 bg-ink/10 mx-1 flex-shrink-0" />
-                      )}
-                    </div>
-                  ))}
-                </div>
+                )}
               </div>
-
-              {/* Technique - horizontal scroll with groups */}
-              <div>
-                <label className="text-xs text-ink-soft block mb-2">Technique</label>
-                <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
-                  {DISCIPLINE_GROUPS.map((group, groupIndex) => (
-                    <div key={group.label} className="flex gap-2 items-center">
-                      {group.disciplines.map((d) => (
-                        <button
-                          key={d}
-                          onClick={() => state.setDiscipline(state.discipline === d ? '' : d)}
-                          className={`px-3 py-2 rounded-full text-sm whitespace-nowrap transition-colors min-h-[44px] ${
-                            state.discipline === d
-                              ? 'bg-accent text-on-accent'
-                              : 'bg-deep/50 text-ink-soft hover:bg-deep'
-                          }`}
-                        >
-                          {d}
-                        </button>
-                      ))}
-                      {groupIndex < DISCIPLINE_GROUPS.length - 1 && (
-                        <div className="w-px h-6 bg-ink/10 mx-1 flex-shrink-0" />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Notes / Intention */}
-              <div>
-                <label className="text-xs text-ink-soft block mb-2">
-                  {state.isSessionMode ? 'Intention' : 'Notes'}
-                </label>
-                <textarea
-                  value={state.notes}
-                  onChange={(e) => state.setNotes(e.target.value)}
-                  placeholder={
-                    state.isSessionMode
-                      ? 'What was your intention for this session?'
-                      : 'Set your intention for this session...'
-                  }
-                  className="w-full h-24 px-4 py-3 rounded-xl bg-deep/50 text-ink placeholder:text-ink/30 resize-none focus:outline-none focus:ring-2 focus:ring-accent/20"
-                />
-              </div>
-
-              {/* Insight display - show in session mode */}
-              {state.isSessionMode && (
-                <div>
-                  <label className="text-xs text-ink-soft block mb-2">Insight captured</label>
-                  {state.insight ? (
-                    <div className="bg-accent/5 rounded-xl p-4 border border-accent/10">
-                      <p className="text-ink text-sm whitespace-pre-wrap">
-                        {state.insight.formattedText || state.insight.rawText}
-                      </p>
-                      <p className="text-xs text-ink/40 mt-2">
-                        {new Date(state.insight.createdAt).toLocaleString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          hour: 'numeric',
-                          minute: '2-digit',
-                        })}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="bg-deep/30 rounded-xl p-4">
-                      <p className="text-ink/40 text-sm italic">
-                        No insight captured for this session
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </>
+            </DayItemsCarousel>
           )}
         </div>
 
         {/* Actions */}
         <div className="px-6 pb-8 pt-4 border-t border-ink/5 space-y-3 safe-area-bottom">
+          {/* Add another session button - only show when viewing existing items */}
+          {state.dayItems.length > 0 && (
+            <button
+              onClick={() => {
+                // Navigate to plan form for a new session
+                // This will be fully implemented in Task 4
+              }}
+              className="w-full py-3 rounded-xl text-sm font-medium border border-dashed border-ink/20 text-ink/50 hover:border-ink/40 hover:text-ink/70 transition-colors"
+            >
+              + Add Another Session
+            </button>
+          )}
+
           <button
             onClick={state.handleSave}
             disabled={state.isSaving || state.isLoading}
