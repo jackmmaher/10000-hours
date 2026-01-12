@@ -104,7 +104,8 @@ describe('useNavigationStore', () => {
       triggerPostSessionFlow('session-123', 1800) // 30 minutes
 
       const state = useNavigationStore.getState()
-      expect(state.view).toBe('journey')
+      // Note: view stays on timer - modal appears there instead of navigating away
+      expect(state.view).toBe('timer')
       expect(state.pendingInsightSessionId).toBe('session-123')
       expect(state.pendingInsightSessionDuration).toBe(1800)
       expect(state.pendingMilestone).toBeNull()
