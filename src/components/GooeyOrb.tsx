@@ -1,3 +1,6 @@
+import { motion } from 'framer-motion'
+import { springs, transitions } from '../lib/motion'
+
 /**
  * GooeyOrb - Organic, liquid meditation orb
  *
@@ -21,23 +24,54 @@ interface GooeyOrbProps {
 }
 
 export function GooeyOrb({ transitionState, className = '' }: GooeyOrbProps) {
-  // Determine animation class based on state
-  const getContainerAnimation = () => {
+  // Animation props based on state
+  const getAnimationProps = () => {
     switch (transitionState) {
       case 'exhaling':
-        return 'animate-timer-exhale'
+        return {
+          initial: { scale: 1, opacity: 1 },
+          animate: { scale: 0.95, opacity: 0 },
+          transition: { duration: 0.8 },
+        }
       case 'inhaling':
-        return 'animate-timer-inhale'
+        return {
+          initial: { scale: 0.9, opacity: 0 },
+          animate: { scale: 1, opacity: 1 },
+          transition: { duration: 0.6 },
+        }
       case 'merging':
-        return 'animate-session-merge-rise'
+        return {
+          initial: { y: 0, scale: 1, opacity: 1 },
+          animate: { y: -30, scale: 0.6, opacity: 0 },
+          transition: transitions.merge,
+        }
       case 'settling':
-        return 'animate-pulse-soft'
+        return {
+          initial: { scale: 0.95, opacity: 0 },
+          animate: { scale: 1, opacity: 1 },
+          transition: springs.settle,
+        }
       case 'idle':
-        return 'animate-box-breathe'
+        return {
+          initial: { scale: 1, opacity: 1 },
+          animate: {
+            scale: [1, 1.03, 1.03, 1],
+            opacity: 1,
+          },
+          transition: {
+            duration: 16,
+            repeat: Infinity,
+            times: [0, 0.25, 0.5, 0.75],
+            ease: 'easeInOut' as const,
+          },
+        }
       case 'running':
-        return '' // Running has its own internal animation
       default:
-        return ''
+        return {
+          initial: { scale: 1, opacity: 1 },
+          animate: { scale: 1, opacity: 1 },
+          transition: springs.quick,
+        }
     }
   }
 
@@ -60,10 +94,12 @@ export function GooeyOrb({ transitionState, className = '' }: GooeyOrbProps) {
 
   const { width, height, orbSize } = getSize()
   const isActive = transitionState === 'running'
+  const animationProps = getAnimationProps()
 
   return (
-    <div
-      className={`relative flex items-center justify-center ${getContainerAnimation()} ${className}`}
+    <motion.div
+      className={`relative flex items-center justify-center ${className}`}
+      {...animationProps}
     >
       {/* SVG Filter Definition - The "Gooey" effect */}
       <svg style={{ position: 'absolute', width: 0, height: 0 }}>
@@ -170,6 +206,6 @@ export function GooeyOrb({ transitionState, className = '' }: GooeyOrbProps) {
             : 'atmosphereIdle 16s ease-in-out infinite', // Matches box breathing
         }}
       />
-    </div>
+    </motion.div>
   )
 }

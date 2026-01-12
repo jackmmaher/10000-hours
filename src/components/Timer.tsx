@@ -1,4 +1,5 @@
-import { useEffect, useCallback, useState } from 'react'
+import { useEffect, useCallback, useState, useMemo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useNavigationStore } from '../stores/useNavigationStore'
 import { useSettingsStore } from '../stores/useSettingsStore'
@@ -9,10 +10,13 @@ import { useAudioFeedback } from '../hooks/useAudioFeedback'
 import { formatSessionAdded } from '../lib/format'
 import { getNearMissInfo } from '../lib/milestones'
 import { getUserPreferences } from '../lib/db'
+import { springs, transitions } from '../lib/motion'
 import { ZenMessage } from './ZenMessage'
 import { HemingwayTime } from './HemingwayTime'
 import { InsightModal } from './InsightModal'
 import { GooeyOrb } from './GooeyOrb'
+
+type TransitionState = 'idle' | 'exhaling' | 'inhaling' | 'running' | 'merging' | 'settling'
 
 export function Timer() {
   const {
@@ -47,9 +51,7 @@ export function Timer() {
   const { elapsed, isRunning } = useTimer()
 
   // Transition state for animation choreography
-  const [transitionState, setTransitionState] = useState<
-    'idle' | 'exhaling' | 'inhaling' | 'running' | 'merging' | 'settling'
-  >('idle')
+  const [transitionState, setTransitionState] = useState<TransitionState>('idle')
 
   // Track for merge animation
   const [sessionJustEnded, setSessionJustEnded] = useState(false)
@@ -201,6 +203,63 @@ export function Timer() {
     clearPostSessionState,
   ])
 
+  // Unified display state - what to show based on transitionState
+  const currentDisplay = useMemo(() => {
+    switch (transitionState) {
+      case 'idle':
+      case 'settling':
+        return { seconds: totalSeconds, mode: 'cumulative' as const }
+      case 'exhaling':
+        return { seconds: totalSeconds, mode: 'cumulative' as const }
+      case 'inhaling':
+        return { seconds: 0, mode: 'active' as const }
+      case 'running':
+        return { seconds: elapsed, mode: 'active' as const }
+      case 'merging':
+        // During merge, we show session time (will animate to cumulative)
+        return { seconds: lastSessionDuration || 0, mode: 'active' as const }
+      default:
+        return { seconds: totalSeconds, mode: 'cumulative' as const }
+    }
+  }, [transitionState, totalSeconds, elapsed, lastSessionDuration])
+
+  // Animation variants for different transition states
+  const getAnimationProps = (state: TransitionState) => {
+    switch (state) {
+      case 'exhaling':
+        return {
+          initial: { scale: 1, opacity: 1 },
+          animate: { scale: 0.95, opacity: 0 },
+          transition: { duration: 0.8 },
+        }
+      case 'inhaling':
+        return {
+          initial: { scale: 0.9, opacity: 0 },
+          animate: { scale: 1, opacity: 1 },
+          transition: { duration: 0.6 },
+        }
+      case 'running':
+        return {
+          initial: { scale: 1, opacity: 1 },
+          animate: { scale: 1, opacity: 1 },
+          transition: springs.quick,
+        }
+      case 'settling':
+        return {
+          initial: { scale: 0.95, opacity: 0 },
+          animate: { scale: 1, opacity: 1 },
+          transition: springs.settle,
+        }
+      case 'idle':
+      default:
+        return {
+          initial: { scale: 1, opacity: 1 },
+          animate: { scale: 1, opacity: 1 },
+          transition: springs.morph,
+        }
+    }
+  }
+
   return (
     <>
       {/* Enlightenment reveal */}
@@ -221,133 +280,115 @@ export function Timer() {
         >
           {/* Total hours display (idle/complete) or running timer */}
           <div className="flex flex-col items-center">
-            {timerPhase === 'complete' && lastSessionDuration ? (
-              // Just completed
-              <div className="animate-fade-in">
-                {shouldHideTime ? (
-                  // Hide time mode - settling gooey orb
-                  <div className="flex flex-col items-center">
-                    <GooeyOrb transitionState="settling" />
-                    <p className="font-serif text-lg text-indigo-deep/70 mt-2 animate-fade-in">
-                      Complete
-                    </p>
-                  </div>
-                ) : (
-                  // Normal mode - show added time
-                  <>
-                    <HemingwayTime
-                      seconds={totalSeconds}
-                      mode="cumulative"
-                      className="text-indigo-deep"
-                    />
-                    <p className="text-sm text-indigo-deep/50 mt-2 text-center">
-                      {formatSessionAdded(lastSessionDuration)}
-                    </p>
-                  </>
-                )}
-              </div>
-            ) : isRunning ? (
-              // Running
-              shouldHideTime ? (
-                // Hide time mode - gooey orb with transition awareness
-                <GooeyOrb
-                  transitionState={transitionState === 'inhaling' ? 'inhaling' : 'running'}
-                />
-              ) : (
-                // Normal mode - show running timer with transition awareness
-                <>
-                  {/* Inhaling: first second appearing (timer just started) */}
-                  {transitionState === 'inhaling' && (
-                    <div className="animate-timer-inhale">
-                      <HemingwayTime seconds={0} mode="active" className="text-indigo-deep" />
-                    </div>
-                  )}
-
-                  {/* Running: normal active display */}
-                  {transitionState === 'running' && (
-                    <HemingwayTime seconds={elapsed} mode="active" className="text-indigo-deep" />
-                  )}
-                </>
-              )
-            ) : // Idle or transitioning
-            shouldHideTime ? (
+            {shouldHideTime ? (
               // Hide time mode - gooey orb with transition awareness
               <div className="flex flex-col items-center">
                 <GooeyOrb transitionState={transitionState} />
-                {transitionState === 'idle' && (
-                  <p className="text-xs text-indigo-deep/30 mt-6">tap to begin</p>
+                {transitionState === 'idle' && timerPhase === 'idle' && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-xs text-indigo-deep/30 mt-6"
+                  >
+                    tap to begin
+                  </motion.p>
                 )}
+              </div>
+            ) : transitionState === 'merging' ? (
+              // Merging: special case with session rising and cumulative appearing
+              <div className="relative flex flex-col items-center">
+                {/* Session time rising and dissolving */}
+                <motion.div
+                  initial={{ y: 0, scale: 1, opacity: 1 }}
+                  animate={{ y: -30, scale: 0.6, opacity: 0 }}
+                  transition={transitions.merge}
+                  className="absolute"
+                >
+                  <HemingwayTime
+                    seconds={lastSessionDuration || 0}
+                    mode="active"
+                    className="text-indigo-deep"
+                    layoutGroup="session-merge"
+                  />
+                </motion.div>
+                {/* Cumulative total appearing */}
+                <motion.div
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={transitions.cumulativeAppear}
+                >
+                  <HemingwayTime
+                    seconds={totalSeconds}
+                    mode="cumulative"
+                    className="text-indigo-deep"
+                    layoutGroup="cumulative-merge"
+                  />
+                </motion.div>
+                {/* Session added indicator */}
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8, duration: 0.3 }}
+                  className="text-sm text-indigo-deep/50 mt-2 text-center"
+                >
+                  {formatSessionAdded(lastSessionDuration || 0)}
+                </motion.p>
               </div>
             ) : (
-              // Normal mode - handle idle and transition states (not running)
-              <div className="flex flex-col items-center">
-                {/* Exhaling: cumulative fading out */}
-                {transitionState === 'exhaling' && (
-                  <div className="animate-timer-exhale">
-                    <HemingwayTime
-                      seconds={totalSeconds}
-                      mode="cumulative"
-                      className="text-indigo-deep"
-                    />
-                  </div>
-                )}
+              // All other states: unified display with AnimatePresence
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={`${transitionState}-${currentDisplay.mode}`}
+                  className="flex flex-col items-center"
+                  {...getAnimationProps(transitionState)}
+                >
+                  <HemingwayTime
+                    seconds={currentDisplay.seconds}
+                    mode={currentDisplay.mode}
+                    breathing={transitionState === 'idle' && timerPhase === 'idle'}
+                    className="text-indigo-deep"
+                  />
 
-                {/* Merging: session rising, cumulative appearing */}
-                {transitionState === 'merging' && (
-                  <div className="relative">
-                    <div className="animate-session-merge-rise absolute inset-0 flex items-center justify-center">
-                      <HemingwayTime
-                        seconds={lastSessionDuration || 0}
-                        mode="active"
-                        className="text-indigo-deep"
-                      />
-                    </div>
-                    <div className="animate-cumulative-merge-in">
-                      <HemingwayTime
-                        seconds={totalSeconds}
-                        mode="cumulative"
-                        className="text-indigo-deep"
-                      />
-                    </div>
-                  </div>
-                )}
+                  {/* Near-miss visibility - subtle anticipation trigger */}
+                  {transitionState === 'idle' && timerPhase === 'idle' && nearMiss && (
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-xs text-indigo-deep/40 mt-2"
+                    >
+                      {nearMiss.hoursRemaining < 0.1
+                        ? `Almost at ${nearMiss.nextMilestone}h`
+                        : `${(nearMiss.hoursRemaining * 60).toFixed(0)} min to ${nearMiss.nextMilestone}h`}
+                    </motion.p>
+                  )}
 
-                {/* Settling: cumulative with breath pulse */}
-                {transitionState === 'settling' && (
-                  <div className="animate-pulse-soft">
-                    <HemingwayTime
-                      seconds={totalSeconds}
-                      mode="cumulative"
-                      className="text-indigo-deep"
-                    />
-                  </div>
-                )}
-
-                {/* Idle: cumulative breathing */}
-                {transitionState === 'idle' && timerPhase === 'idle' && (
-                  <>
-                    <HemingwayTime
-                      seconds={totalSeconds}
-                      mode="cumulative"
-                      breathing={true}
-                      className="text-indigo-deep"
-                    />
-                    {/* Near-miss visibility - subtle anticipation trigger */}
-                    {nearMiss && (
-                      <p className="text-xs text-indigo-deep/40 mt-2 animate-fade-in">
-                        {nearMiss.hoursRemaining < 0.1
-                          ? `Almost at ${nearMiss.nextMilestone}h`
-                          : `${(nearMiss.hoursRemaining * 60).toFixed(0)} min to ${nearMiss.nextMilestone}h`}
-                      </p>
-                    )}
-                  </>
-                )}
-              </div>
+                  {/* Settling indicator */}
+                  {transitionState === 'settling' && (
+                    <motion.p
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                      className="text-sm text-indigo-deep/50 mt-2 text-center"
+                    >
+                      {formatSessionAdded(lastSessionDuration || 0)}
+                    </motion.p>
+                  )}
+                </motion.div>
+              </AnimatePresence>
             )}
           </div>
 
           {/* Running state hint */}
-          {isRunning && <p className="absolute bottom-24 text-xs text-ink/25">tap to end</p>}
+          {isRunning && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.25 }}
+              className="absolute bottom-24 text-xs text-ink"
+            >
+              tap to end
+            </motion.p>
+          )}
         </div>
       )}
 

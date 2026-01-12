@@ -95,10 +95,7 @@ export default {
         'orb-breathe': 'orbBreathe 4s ease-in-out infinite',
         'orb-glow': 'orbGlow 4s ease-in-out infinite',
         'box-breathe': 'boxBreathe 16s ease-in-out infinite',
-        'timer-exhale': 'timerExhale 800ms var(--ease-organic) forwards',
-        'timer-inhale': 'timerInhale 600ms var(--ease-organic) forwards',
-        'session-merge-rise': 'sessionMergeRise 1400ms ease-out forwards',
-        'cumulative-merge-in': 'cumulativeMergeIn 1000ms ease-out forwards',
+        // Timer transitions now handled by Framer Motion
       },
       keyframes: {
         fadeIn: {
@@ -141,25 +138,7 @@ export default {
           '25%, 50%': { transform: 'scale(1.03)', opacity: '1' },
           '75%': { transform: 'scale(1)', opacity: '1' },
         },
-        // Timer transition animations
-        timerExhale: {
-          from: { transform: 'scale(1)', opacity: '1' },
-          to: { transform: 'scale(0.95)', opacity: '0' },
-        },
-        timerInhale: {
-          from: { transform: 'scale(0.9)', opacity: '0' },
-          to: { transform: 'scale(1)', opacity: '1' },
-        },
-        // Session merge - rising and dissolving
-        sessionMergeRise: {
-          from: { transform: 'translateY(0) scale(1)', opacity: '1' },
-          to: { transform: 'translateY(-30px) scale(0.6)', opacity: '0' },
-        },
-        // Cumulative merge - appearing from below
-        cumulativeMergeIn: {
-          from: { transform: 'scale(0.95)', opacity: '0' },
-          to: { transform: 'scale(1)', opacity: '1' },
-        },
+        // Timer transitions now handled by Framer Motion (see src/lib/motion.ts)
       },
       transitionDuration: {
         // Semantic durations (prefer these)
