@@ -23,3 +23,7 @@ npm-debug.log*
 
 # Cache
 .cache/
+
+# Claude Code temp files
+tmpclaude-*
+nul
