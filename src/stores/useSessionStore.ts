@@ -1,6 +1,24 @@
 import { create } from 'zustand'
-import { Session, Achievement, addSession, getAllSessions, initAppState, markEnlightenmentReached, recordMilestoneIfNew, linkSessionToPlan, getUserPreferences, getSettings, addNotification } from '../lib/db'
-import { generateMilestones, checkSessionMilestone, checkWeeklyFirst, SessionMilestone, WeeklyFirstMilestone } from '../lib/milestones'
+import {
+  Session,
+  Achievement,
+  addSession,
+  getAllSessions,
+  initAppState,
+  markEnlightenmentReached,
+  recordMilestoneIfNew,
+  linkSessionToPlan,
+  getUserPreferences,
+  getSettings,
+  addNotification,
+} from '../lib/db'
+import {
+  generateMilestones,
+  checkSessionMilestone,
+  checkWeeklyFirst,
+  SessionMilestone,
+  WeeklyFirstMilestone,
+} from '../lib/milestones'
 import { recordTemplateCompletion } from '../lib/templates'
 import { supabase } from '../lib/supabase'
 import { InAppNotification } from '../lib/notifications'
@@ -18,13 +36,14 @@ interface SessionState {
 
   // Timer state
   timerPhase: TimerPhase
-  startedAt: number | null           // performance.now() for elapsed calculation
-  sessionStartTime: number | null    // Date.now() wall-clock time for storage
+  startedAt: number | null // performance.now() for elapsed calculation
+  sessionStartTime: number | null // Date.now() wall-clock time for storage
   lastSessionDuration: number | null
 
   // Enlightenment state
   hasReachedEnlightenment: boolean
   justReachedEnlightenment: boolean
+  goalCompleted: boolean // True when user reached their goal and hasn't set a new one
 
   // Milestone celebration state
   justAchievedMilestone: Achievement | SessionMilestone | WeeklyFirstMilestone | null
@@ -45,6 +64,7 @@ interface SessionState {
   clearMilestoneCelebration: () => void
   createInsightReminder: (sessionId: string) => Promise<void>
   completeSession: () => void
+  resetGoalCompleted: () => void
 }
 
 export const useSessionStore = create<SessionState>((set, get) => ({
@@ -58,23 +78,29 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   lastSessionDuration: null,
   hasReachedEnlightenment: false,
   justReachedEnlightenment: false,
+  goalCompleted: false,
   justAchievedMilestone: null,
   lastSessionUuid: null,
   lastPlanChange: 0,
 
   hydrate: async () => {
-    const [sessions, appState] = await Promise.all([
-      getAllSessions(),
-      initAppState()
-    ])
+    const [sessions, appState] = await Promise.all([getAllSessions(), initAppState()])
 
     const totalSeconds = sessions.reduce((sum, s) => sum + s.durationSeconds, 0)
+
+    // Check if goal is completed (totalHours >= goalHours and enlightenment reached)
+    const userPrefs = await getUserPreferences()
+    const goalCompleted =
+      appState.hasReachedEnlightenment &&
+      userPrefs?.practiceGoalHours &&
+      totalSeconds / 3600 >= userPrefs.practiceGoalHours
 
     set({
       sessions,
       totalSeconds,
       hasReachedEnlightenment: appState.hasReachedEnlightenment,
-      isLoading: false
+      goalCompleted: goalCompleted || false,
+      isLoading: false,
     })
   },
 
@@ -87,7 +113,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       timerPhase: 'running',
       startedAt: performance.now(),
       sessionStartTime: Date.now(),
-      lastSessionDuration: null
+      lastSessionDuration: null,
     })
   },
 
@@ -111,7 +137,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       uuid: sessionUuid,
       startTime: sessionStartTime,
       endTime,
-      durationSeconds
+      durationSeconds,
     }
 
     await addSession(session)
@@ -129,7 +155,9 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     // Track community template completion if this session was linked to a community template
     if (linkedPlan?.sourceTemplateId && supabase) {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
         if (user) {
           await recordTemplateCompletion(linkedPlan.sourceTemplateId, user.id, sessionUuid)
         }
@@ -157,9 +185,11 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
     // Check for weekly first milestone (first morning/evening/long session this week)
     const weekStart = new Date(sessionStartTime)
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay() + (weekStart.getDay() === 0 ? -6 : 1))
+    weekStart.setDate(
+      weekStart.getDate() - weekStart.getDay() + (weekStart.getDay() === 0 ? -6 : 1)
+    )
     weekStart.setHours(0, 0, 0, 0)
-    const weekSessions = newSessions.filter(s => s.startTime >= weekStart.getTime())
+    const weekSessions = newSessions.filter((s) => s.startTime >= weekStart.getTime())
     const weeklyMilestone = checkWeeklyFirst(sessionStartTime, durationSeconds, weekSessions)
 
     // Priority: hour milestone > session count > weekly first
@@ -189,7 +219,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
             type: 'milestone',
             title,
             body,
-            createdAt: Date.now()
+            createdAt: Date.now(),
           }
           await addNotification(notification)
         }
@@ -201,9 +231,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     // Check if we just crossed the enlightenment threshold
     // Only trigger enlightenment if user has explicit goal AND reached it
     const userGoalSeconds = userGoalHours ? userGoalHours * 3600 : null
-    const crossedThreshold = userGoalSeconds
-      && !hasReachedEnlightenment
-      && newTotalSeconds >= userGoalSeconds
+    const crossedThreshold =
+      userGoalSeconds && !hasReachedEnlightenment && newTotalSeconds >= userGoalSeconds
 
     if (crossedThreshold) {
       await markEnlightenmentReached()
@@ -217,7 +246,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         totalSeconds: newTotalSeconds,
         hasReachedEnlightenment: true,
         justReachedEnlightenment: true,
-        justAchievedMilestone: achievedMilestone
+        justAchievedMilestone: achievedMilestone,
       })
     } else {
       set({
@@ -228,7 +257,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         lastSessionUuid: sessionUuid,
         sessions: newSessions,
         totalSeconds: newTotalSeconds,
-        justAchievedMilestone: achievedMilestone
+        justAchievedMilestone: achievedMilestone,
       })
     }
   },
@@ -242,7 +271,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       timerPhase: 'idle',
       justReachedEnlightenment: false,
       lastSessionDuration: null,
-      justAchievedMilestone: null
+      justAchievedMilestone: null,
     })
   },
 
@@ -258,7 +287,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         title: 'Capture your insight',
         body: 'You have a moment waiting to be remembered',
         createdAt: Date.now(),
-        metadata: { sessionId }
+        metadata: { sessionId },
       }
       await addNotification(notification)
     } catch (err) {
@@ -271,7 +300,11 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       timerPhase: 'idle',
       lastSessionDuration: null,
       lastSessionUuid: null,
-      justAchievedMilestone: null
+      justAchievedMilestone: null,
     })
-  }
+  },
+
+  resetGoalCompleted: () => {
+    set({ goalCompleted: false })
+  },
 }))
