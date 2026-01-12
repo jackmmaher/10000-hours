@@ -270,6 +270,13 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
       } else {
         // Handle recurring sessions with repeat frequency
         if (repeatFrequency) {
+          // Validate custom days selection
+          if (repeatFrequency === 'custom' && repeatCustomDays.length === 0) {
+            // Don't save - user needs to select at least one day
+            // Just return without error - the UI should show they need to select days
+            return
+          }
+
           await createRepeatRuleWithSessions({
             frequency: repeatFrequency,
             customDays: repeatFrequency === 'custom' ? repeatCustomDays : undefined,
