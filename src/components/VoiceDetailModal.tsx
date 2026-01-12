@@ -7,8 +7,8 @@
  * Uses living theme colors with opacity variations for visual harmony.
  */
 
-import { VoiceScore, getVoiceVisual, VoiceLevel, getVoiceTier, getNextTier, VoiceTier } from '../lib/voice'
-import { FEATURE_UNLOCKS, getUnlockedFeatures, getTierDisplayName } from '../lib/featureUnlocks'
+import { VoiceScore, getVoiceVisual, VoiceLevel, getVoiceTier, getNextTier } from '../lib/voice'
+import { PRACTICE_PROGRESSIONS } from '../lib/featureUnlocks'
 
 interface VoiceDetailModalProps {
   voice: VoiceScore
@@ -39,9 +39,12 @@ export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
   const nextTier = getNextTier(tier.tier)
 
   // Glow for high scores
-  const scoreGlow = visual.glow !== 'none'
-    ? { textShadow: `0 0 ${visual.glow === 'strong' ? '8px' : '4px'} var(--accent-glow, rgba(0,0,0,0.1))` }
-    : {}
+  const scoreGlow =
+    visual.glow !== 'none'
+      ? {
+          textShadow: `0 0 ${visual.glow === 'strong' ? '8px' : '4px'} var(--accent-glow, rgba(0,0,0,0.1))`,
+        }
+      : {}
 
   return (
     <div
@@ -75,9 +78,10 @@ export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
                       key={dot}
                       className="w-2 h-2 rounded-full transition-colors"
                       style={{
-                        backgroundColor: dot <= visual.dots
-                          ? getVoiceDotStyle(visual.level)
-                          : 'var(--border-subtle, rgba(0,0,0,0.1))'
+                        backgroundColor:
+                          dot <= visual.dots
+                            ? getVoiceDotStyle(visual.level)
+                            : 'var(--border-subtle, rgba(0,0,0,0.1))',
                       }}
                     />
                   ))}
@@ -91,9 +95,7 @@ export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
                 >
                   {tier.label}
                 </span>
-                <span className="text-xs text-ink/40 ml-2">
-                  {tier.description}
-                </span>
+                <span className="text-xs text-ink/40 ml-2">{tier.description}</span>
               </div>
               {/* Progress to next tier */}
               {nextTier && (
@@ -108,7 +110,12 @@ export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
               aria-label="Close modal"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -233,15 +240,15 @@ export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
             </FactorSection>
           </div>
 
-          {/* Feature Unlocks */}
-          <FeatureUnlocksSection currentTier={tier.tier} />
+          {/* Practice Progressions */}
+          <PracticeProgressionsSection />
 
           {/* Explanation */}
           <div className="mt-6 p-4 bg-cream-deep rounded-xl">
             <p className="text-xs text-ink/50 leading-relaxed">
-              Voice measures meditation credibility across practice depth, contribution, and
-              two-way validation. It rewards both sharing wisdom AND engaging with others' content.
-              High scores require giving to the community as much as receiving recognition.
+              Voice measures meditation credibility across practice depth, contribution, and two-way
+              validation. It rewards both sharing wisdom AND engaging with others' content. High
+              scores require giving to the community as much as receiving recognition.
             </p>
           </div>
         </div>
@@ -265,7 +272,7 @@ function ComponentBar({
   score,
   max,
   opacity,
-  description
+  description,
 }: {
   label: string
   score: number
@@ -288,7 +295,7 @@ function ComponentBar({
           className="h-full rounded-full transition-all duration-500"
           style={{
             width: `${percent}%`,
-            backgroundColor: `color-mix(in srgb, var(--accent) ${opacity * 100}%, transparent)`
+            backgroundColor: `color-mix(in srgb, var(--accent) ${opacity * 100}%, transparent)`,
           }}
         />
       </div>
@@ -300,7 +307,7 @@ function ComponentBar({
 function FactorSection({
   title,
   subtitle,
-  children
+  children,
 }: {
   title: string
   subtitle: string
@@ -321,7 +328,7 @@ function Factor({
   label,
   value,
   score,
-  max
+  max,
 }: {
   label: string
   value: string
@@ -342,82 +349,36 @@ function Factor({
             className="h-full rounded-full transition-all duration-500"
             style={{
               width: `${percent}%`,
-              backgroundColor: 'color-mix(in srgb, var(--accent) 40%, transparent)'
+              backgroundColor: 'color-mix(in srgb, var(--accent) 40%, transparent)',
             }}
           />
         </div>
       </div>
-      <span className="text-xs text-ink/30 tabular-nums w-10 text-right">
-        {score.toFixed(1)}
-      </span>
+      <span className="text-xs text-ink/30 tabular-nums w-10 text-right">{score.toFixed(1)}</span>
     </div>
   )
 }
 
 /**
- * Feature Unlocks Section
- * Shows features unlocked at current tier and what's coming
+ * Practice Progressions Section
+ * Quiet statement of what naturally emerges with sustained practice.
+ * No locks, no tiers, no gamification — just honest truths.
  */
-function FeatureUnlocksSection({ currentTier }: { currentTier: VoiceTier }) {
-  const unlockedFeatures = getUnlockedFeatures(currentTier)
-  const lockedFeatures = FEATURE_UNLOCKS.filter(f => !unlockedFeatures.some(u => u.id === f.id))
-
-  // Don't show if no features to display
-  if (FEATURE_UNLOCKS.length === 0) return null
+function PracticeProgressionsSection() {
+  if (PRACTICE_PROGRESSIONS.length === 0) return null
 
   return (
     <div className="mt-6">
-      <p className="text-sm font-medium text-ink mb-3">Feature Unlocks</p>
+      <p className="text-sm font-medium text-ink mb-3">With sustained practice</p>
 
-      {/* Unlocked features */}
-      {unlockedFeatures.length > 0 && (
-        <div className="space-y-2 mb-4">
-          {unlockedFeatures.map(feature => (
-            <div
-              key={feature.id}
-              className="flex items-start gap-3 p-3 bg-moss/10 rounded-xl"
-            >
-              <div
-                className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                style={{ backgroundColor: 'var(--accent)' }}
-              >
-                <svg className="w-3 h-3 text-cream" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm text-ink font-medium">{feature.name}</p>
-                <p className="text-xs text-ink/50">{feature.description}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Locked features (coming soon) */}
-      {lockedFeatures.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-xs text-ink/40 mb-2">Unlocks with higher Voice</p>
-          {lockedFeatures.map(feature => (
-            <div
-              key={feature.id}
-              className="flex items-start gap-3 p-3 bg-cream-deep rounded-xl opacity-70"
-            >
-              <div className="w-5 h-5 rounded-full bg-ink/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg className="w-3 h-3 text-ink/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm text-ink/60">{feature.name}</p>
-                <p className="text-xs text-ink/40">
-                  {feature.description} • Requires {getTierDisplayName(feature.requiredTier)}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="space-y-3">
+        {PRACTICE_PROGRESSIONS.map((progression) => (
+          <div key={progression.id} className="p-3 bg-cream-deep rounded-xl">
+            <p className="text-sm text-ink/70">{progression.title}</p>
+            <p className="text-xs text-ink/40 mt-0.5">{progression.description}</p>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

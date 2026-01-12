@@ -1,86 +1,40 @@
 /**
- * Feature Unlocks
+ * Practice Progressions
  *
- * Some features are unlocked by Voice tier as earned privileges.
- * This rewards sustained engagement without paywall mechanics.
+ * Natural enhancements that emerge with sustained practice.
+ * Not rewards or unlocks — honest descriptions of what continued
+ * practice and engagement brings.
  *
  * Design philosophy:
- * - Features are rewards for sustained practice, not artificial gatekeeping
- * - High-tier users get recognition, not advantages
- * - Language is positive ("you've earned access") not negative ("you can't access")
+ * - These aren't gated features — they're truths about practice
+ * - No gamification: users shouldn't feel "locked out" or grinding toward a reward
+ * - Universal appeal: meaningful to both beginners and experienced practitioners
  */
 
-import { VoiceTier } from './voice'
-
-export interface FeatureUnlock {
+export interface PracticeProgression {
   id: string
-  name: string
+  title: string
   description: string
-  requiredTier: VoiceTier
 }
 
-// Order of tiers for comparison
-const TIER_ORDER: VoiceTier[] = ['newcomer', 'practitioner', 'established', 'respected', 'mentor']
-
-export const FEATURE_UNLOCKS: FeatureUnlock[] = [
+/**
+ * What naturally emerges with sustained practice.
+ * These are displayed without tier requirements or lock states.
+ */
+export const PRACTICE_PROGRESSIONS: PracticeProgression[] = [
   {
-    id: 'extended_sessions',
-    name: 'Extended Sessions',
-    description: 'Sessions longer than 60 minutes',
-    requiredTier: 'established'
+    id: 'deeper_insights',
+    title: 'Richer insights emerge from deeper data',
+    description: 'The more you practice, the clearer your patterns become',
   },
   {
-    id: 'course_creation',
-    name: 'Course Creation',
-    description: 'Create multi-session meditation courses',
-    requiredTier: 'mentor'
+    id: 'voice_carries',
+    title: 'Your voice carries further in community',
+    description: 'Sustained contribution naturally reaches more people',
   },
   {
-    id: 'advanced_insights',
-    name: 'Advanced Insights',
-    description: 'Deeper practice pattern analysis',
-    requiredTier: 'respected'
-  }
+    id: 'guide_others',
+    title: 'Your experience becomes a guide for others',
+    description: 'Depth of practice makes what you share meaningful',
+  },
 ]
-
-/**
- * Get all features unlocked at or below a given tier
- */
-export function getUnlockedFeatures(tier: VoiceTier): FeatureUnlock[] {
-  const tierIndex = TIER_ORDER.indexOf(tier)
-
-  return FEATURE_UNLOCKS.filter(feature => {
-    const requiredIndex = TIER_ORDER.indexOf(feature.requiredTier)
-    return tierIndex >= requiredIndex
-  })
-}
-
-/**
- * Check if a specific feature is unlocked for a given tier
- */
-export function isFeatureUnlocked(featureId: string, tier: VoiceTier): boolean {
-  const unlocked = getUnlockedFeatures(tier)
-  return unlocked.some(f => f.id === featureId)
-}
-
-/**
- * Get the required tier for a feature
- */
-export function getRequiredTier(featureId: string): VoiceTier | null {
-  const feature = FEATURE_UNLOCKS.find(f => f.id === featureId)
-  return feature?.requiredTier || null
-}
-
-/**
- * Get tier display name for unlock messages
- */
-export function getTierDisplayName(tier: VoiceTier): string {
-  const names: Record<VoiceTier, string> = {
-    newcomer: 'Newcomer',
-    practitioner: 'Practitioner',
-    established: 'Established',
-    respected: 'Respected',
-    mentor: 'Mentor'
-  }
-  return names[tier]
-}
