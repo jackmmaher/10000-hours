@@ -10,6 +10,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 import { Card, CardBody, PearlOrb } from './Card'
+import { PlanSelector } from './PlanSelector'
+import { updatePlannedSession, PlannedSession } from '../lib/db'
 import type { Pearl } from '../lib/pearls'
 
 export function JourneyMyPearls() {
@@ -23,6 +25,8 @@ export function JourneyMyPearls() {
   const [isSavingEdit, setIsSavingEdit] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Pearl | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [attachTarget, setAttachTarget] = useState<Pearl | null>(null)
+  const [showPlanSelector, setShowPlanSelector] = useState(false)
 
   const loadPearls = useCallback(async () => {
     if (!user) {
@@ -32,10 +36,7 @@ export function JourneyMyPearls() {
     setIsLoading(true)
     try {
       const { getMyPearls, getSavedPearls } = await import('../lib/pearls')
-      const [created, saved] = await Promise.all([
-        getMyPearls(user.id),
-        getSavedPearls(user.id)
-      ])
+      const [created, saved] = await Promise.all([getMyPearls(user.id), getSavedPearls(user.id)])
       setCreatedPearls(created)
       setSavedPearls(saved)
     } catch (err) {
@@ -54,7 +55,7 @@ export function JourneyMyPearls() {
     try {
       const { unsavePearl } = await import('../lib/pearls')
       await unsavePearl(pearlId, user.id)
-      setSavedPearls(prev => prev.filter(p => p.id !== pearlId))
+      setSavedPearls((prev) => prev.filter((p) => p.id !== pearlId))
     } catch (err) {
       console.error('Failed to unsave pearl:', err)
     }
@@ -79,10 +80,11 @@ export function JourneyMyPearls() {
       const { updatePearl } = await import('../lib/pearls')
       const success = await updatePearl(editingPearlId, editText, user.id)
       if (success) {
-        setCreatedPearls(prev =>
-          prev.map(p => p.id === editingPearlId
-            ? { ...p, text: editText, editedAt: new Date().toISOString() }
-            : p
+        setCreatedPearls((prev) =>
+          prev.map((p) =>
+            p.id === editingPearlId
+              ? { ...p, text: editText, editedAt: new Date().toISOString() }
+              : p
           )
         )
         setEditingPearlId(null)
@@ -107,7 +109,7 @@ export function JourneyMyPearls() {
 
       if (success) {
         haptic.success()
-        setCreatedPearls(prev => prev.filter(p => p.id !== deleteTarget.id))
+        setCreatedPearls((prev) => prev.filter((p) => p.id !== deleteTarget.id))
         setDeleteTarget(null)
       } else {
         console.error('Failed to delete pearl')
@@ -116,6 +118,17 @@ export function JourneyMyPearls() {
       console.error('Error deleting pearl:', err)
     } finally {
       setIsDeleting(false)
+    }
+  }
+
+  const handleAttachToPlan = async (plan: PlannedSession) => {
+    if (!attachTarget || !plan.id) return
+    try {
+      await updatePlannedSession(plan.id, { attachedPearlId: attachTarget.id })
+      haptic.success()
+      setAttachTarget(null)
+    } catch (err) {
+      console.error('Failed to attach pearl:', err)
     }
   }
 
@@ -133,9 +146,7 @@ export function JourneyMyPearls() {
         <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-gradient-to-br from-cream-deep to-cream flex items-center justify-center shadow-inner">
           <div className="w-6 h-6 rounded-full bg-cream-deep" />
         </div>
-        <p className="text-ink/50 text-sm">
-          Sign in to see your pearls
-        </p>
+        <p className="text-ink/50 text-sm">Sign in to see your pearls</p>
       </div>
     )
   }
@@ -148,9 +159,7 @@ export function JourneyMyPearls() {
         <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-gradient-to-br from-cream-deep to-cream flex items-center justify-center shadow-inner">
           <div className="w-6 h-6 rounded-full bg-cream-deep" />
         </div>
-        <p className="text-ink/50 text-sm mb-1">
-          No pearls yet
-        </p>
+        <p className="text-ink/50 text-sm mb-1">No pearls yet</p>
         <p className="text-ink/30 text-xs">
           Distill insights into wisdom, or save pearls from Explore
         </p>
@@ -163,9 +172,7 @@ export function JourneyMyPearls() {
       {/* Created by me section */}
       {createdPearls.length > 0 && (
         <div>
-          <p className="text-xs text-ink-soft font-medium tracking-wide mb-4">
-            My Wisdom
-          </p>
+          <p className="text-xs text-ink-soft font-medium tracking-wide mb-4">My Wisdom</p>
           <div className="space-y-4">
             {createdPearls.map((pearl) => (
               <Card key={pearl.id} variant="default">
@@ -176,7 +183,7 @@ export function JourneyMyPearls() {
                     <span className="text-xs text-ink-soft">
                       {new Date(pearl.createdAt).toLocaleDateString('en-US', {
                         month: 'short',
-                        day: 'numeric'
+                        day: 'numeric',
                       })}
                       {pearl.editedAt && <span className="italic text-ink/40 ml-1">· edited</span>}
                     </span>
@@ -214,7 +221,9 @@ export function JourneyMyPearls() {
                         autoFocus
                       />
                       <div className="flex items-center justify-between">
-                        <span className={`text-xs ${editText.length > 280 ? 'text-rose-500' : 'text-ink/40'}`}>
+                        <span
+                          className={`text-xs ${editText.length > 280 ? 'text-rose-500' : 'text-ink/40'}`}
+                        >
                           {editText.length}/280
                         </span>
                         <div className="flex gap-2">
@@ -226,7 +235,9 @@ export function JourneyMyPearls() {
                           </button>
                           <button
                             onClick={handleSaveEdit}
-                            disabled={isSavingEdit || editText.length === 0 || editText.length > 280}
+                            disabled={
+                              isSavingEdit || editText.length === 0 || editText.length > 280
+                            }
                             className="text-xs bg-accent text-on-accent font-medium hover:opacity-90 transition-opacity px-3 py-1.5 rounded-lg disabled:opacity-50"
                           >
                             {isSavingEdit ? 'Saving...' : 'Save'}
@@ -241,13 +252,35 @@ export function JourneyMyPearls() {
                   )}
                 </CardBody>
 
-                {/* Footer - Upvotes */}
+                {/* Footer - Upvotes and Attach */}
                 {editingPearlId !== pearl.id && (
-                  <div className="flex items-center gap-1.5 px-5 pt-2 pb-4 text-ink-soft">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                    </svg>
-                    <span className="text-sm tabular-nums">{pearl.upvotes}</span>
+                  <div className="flex items-center justify-between px-5 pt-2 pb-4">
+                    <div className="flex items-center gap-1.5 text-ink-soft">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 15l7-7 7 7"
+                        />
+                      </svg>
+                      <span className="text-sm tabular-nums">{pearl.upvotes}</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        haptic.light()
+                        setAttachTarget(pearl)
+                        setShowPlanSelector(true)
+                      }}
+                      className="text-xs text-moss hover:text-moss/80 transition-colors px-2 py-1 touch-manipulation"
+                    >
+                      Attach to Plan
+                    </button>
                   </div>
                 )}
               </Card>
@@ -259,9 +292,7 @@ export function JourneyMyPearls() {
       {/* Saved from community section */}
       {savedPearls.length > 0 && (
         <div>
-          <p className="text-xs text-ink-soft font-medium tracking-wide mb-4">
-            Collected Wisdom
-          </p>
+          <p className="text-xs text-ink-soft font-medium tracking-wide mb-4">Collected Wisdom</p>
           <div className="space-y-4">
             {savedPearls.map((pearl) => (
               <Card key={pearl.id} variant="subtle">
@@ -283,17 +314,32 @@ export function JourneyMyPearls() {
 
                 {/* Body */}
                 <CardBody>
-                  <p className="font-serif text-ink leading-relaxed text-[15px]">
-                    "{pearl.text}"
-                  </p>
+                  <p className="font-serif text-ink leading-relaxed text-[15px]">"{pearl.text}"</p>
                 </CardBody>
 
-                {/* Footer - Upvotes (read-only) */}
-                <div className="flex items-center gap-1.5 px-5 pt-2 pb-4 text-ink/40">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                  </svg>
-                  <span className="text-sm tabular-nums">{pearl.upvotes}</span>
+                {/* Footer - Upvotes and Attach */}
+                <div className="flex items-center justify-between px-5 pt-2 pb-4">
+                  <div className="flex items-center gap-1.5 text-ink/40">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 15l7-7 7 7"
+                      />
+                    </svg>
+                    <span className="text-sm tabular-nums">{pearl.upvotes}</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      haptic.light()
+                      setAttachTarget(pearl)
+                      setShowPlanSelector(true)
+                    }}
+                    className="text-xs text-moss hover:text-moss/80 transition-colors px-2 py-1 touch-manipulation"
+                  >
+                    Attach to Plan
+                  </button>
                 </div>
               </Card>
             ))}
@@ -315,15 +361,12 @@ export function JourneyMyPearls() {
             className="relative bg-card rounded-2xl p-6 max-w-sm w-full shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="font-serif text-lg text-ink mb-2">
-              Delete pearl?
-            </h3>
+            <h3 className="font-serif text-lg text-ink mb-2">Delete pearl?</h3>
             <p className="text-sm text-ink/60 mb-2">
-              "{deleteTarget.text.slice(0, 60)}{deleteTarget.text.length > 60 ? '...' : ''}"
+              "{deleteTarget.text.slice(0, 60)}
+              {deleteTarget.text.length > 60 ? '...' : ''}"
             </p>
-            <p className="text-xs text-ink/40 mb-6">
-              Anyone who saved it will keep their copy.
-            </p>
+            <p className="text-xs text-ink/40 mb-6">Anyone who saved it will keep their copy.</p>
 
             <div className="flex gap-3">
               <button
@@ -346,6 +389,21 @@ export function JourneyMyPearls() {
           </div>
         </div>
       )}
+
+      <PlanSelector
+        isOpen={showPlanSelector}
+        onClose={() => {
+          setShowPlanSelector(false)
+          setAttachTarget(null)
+        }}
+        onSelectPlan={handleAttachToPlan}
+        onCreateNew={() => {
+          // For now, just close - we'll wire up the full flow in Task 4
+          setShowPlanSelector(false)
+          setAttachTarget(null)
+        }}
+        title="Attach Pearl to Plan"
+      />
     </div>
   )
 }
