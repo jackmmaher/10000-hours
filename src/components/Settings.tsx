@@ -21,7 +21,7 @@ import { useAudioFeedback } from '../hooks/useAudioFeedback'
 import { trackHideTimeToggle } from '../lib/analytics'
 import { SeasonOverride, TimeOverride } from '../lib/db'
 import { getThemeName } from '../lib/themeEngine'
-import { downloadJSON, downloadCSV } from '../lib/export'
+import { exportData } from '../lib/export'
 import { AuthModal } from './AuthModal'
 
 interface SettingsProps {
@@ -33,14 +33,14 @@ const SEASON_OPTIONS: { value: SeasonOverride; label: string; icon: string }[] =
   { value: 'summer', label: 'Summer', icon: '☀️' },
   { value: 'autumn', label: 'Autumn', icon: '🍂' },
   { value: 'winter', label: 'Winter', icon: '❄️' },
-  { value: 'neutral', label: 'Neutral', icon: '○' }
+  { value: 'neutral', label: 'Neutral', icon: '○' },
 ]
 
 const TIME_OPTIONS: { value: TimeOverride; label: string }[] = [
   { value: 'morning', label: 'Morning' },
   { value: 'daytime', label: 'Daytime' },
   { value: 'evening', label: 'Evening' },
-  { value: 'night', label: 'Night' }
+  { value: 'night', label: 'Night' },
 ]
 
 const QUICK_PRESETS: { label: string; season: SeasonOverride; time: TimeOverride }[] = [
@@ -49,17 +49,24 @@ const QUICK_PRESETS: { label: string; season: SeasonOverride; time: TimeOverride
   { label: 'Spring Dawn', season: 'spring', time: 'morning' },
   { label: 'Summer Day', season: 'summer', time: 'daytime' },
   { label: 'Autumn Evening', season: 'autumn', time: 'evening' },
-  { label: 'Winter Night', season: 'winter', time: 'night' }
+  { label: 'Winter Night', season: 'winter', time: 'night' },
 ]
 
 export function Settings({ onBack }: SettingsProps) {
   const {
-    hideTimeDisplay, setHideTimeDisplay,
-    themeMode, setThemeMode,
-    visualEffects, setVisualEffects,
-    audioFeedbackEnabled, setAudioFeedbackEnabled,
-    notificationPreferences, setNotificationPreferences,
-    manualSeason, manualTime, setManualTheme
+    hideTimeDisplay,
+    setHideTimeDisplay,
+    themeMode,
+    setThemeMode,
+    visualEffects,
+    setVisualEffects,
+    audioFeedbackEnabled,
+    setAudioFeedbackEnabled,
+    notificationPreferences,
+    setNotificationPreferences,
+    manualSeason,
+    manualTime,
+    setManualTheme,
   } = useSettingsStore()
   const { user, isAuthenticated, signOut, isLoading: authLoading, refreshProfile } = useAuthStore()
   const { timeOfDay, season } = useThemeInfo()
@@ -73,9 +80,9 @@ export function Settings({ onBack }: SettingsProps) {
     isPulling,
     isRefreshing,
     pullDistance,
-    handlers: pullHandlers
+    handlers: pullHandlers,
   } = usePullToRefresh({
-    onRefresh: refreshProfile
+    onRefresh: refreshProfile,
   })
 
   // Get current auto theme description
@@ -99,7 +106,7 @@ export function Settings({ onBack }: SettingsProps) {
         className="flex justify-center overflow-hidden transition-all duration-200"
         style={{
           height: isPulling || isRefreshing ? Math.min(pullDistance, 80) : 0,
-          opacity: isPulling || isRefreshing ? 1 : 0
+          opacity: isPulling || isRefreshing ? 1 : 0,
         }}
       >
         <div className="flex items-center gap-2 py-2">
@@ -113,11 +120,20 @@ export function Settings({ onBack }: SettingsProps) {
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 14l-7 7m0 0l-7-7m7 7V3"
+              />
             </svg>
           )}
           <span className="text-sm text-moss">
-            {isRefreshing ? 'Refreshing...' : pullDistance >= 80 ? 'Release to refresh' : 'Pull to refresh'}
+            {isRefreshing
+              ? 'Refreshing...'
+              : pullDistance >= 80
+                ? 'Release to refresh'
+                : 'Pull to refresh'}
           </span>
         </div>
       </div>
@@ -133,7 +149,12 @@ export function Settings({ onBack }: SettingsProps) {
           aria-label="Go back to profile"
         >
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
           Profile
         </button>
@@ -147,9 +168,7 @@ export function Settings({ onBack }: SettingsProps) {
           {isAuthenticated && user ? (
             <div className="p-5 bg-card/90 backdrop-blur-md border border-ink/5 shadow-sm rounded-xl">
               <p className="text-sm text-ink/60 mb-2">{user.email}</p>
-              <p className="text-xs text-ink/40 mb-4">
-                You can create and share pearls
-              </p>
+              <p className="text-xs text-ink/40 mb-4">You can create and share pearls</p>
               <button
                 onClick={() => {
                   haptic.light()
@@ -195,7 +214,9 @@ export function Settings({ onBack }: SettingsProps) {
             className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform touch-manipulation"
           >
             <div className="text-left">
-              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Hide time display</p>
+              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                Hide time display
+              </p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                 Meditate without watching numbers (orb mode)
               </p>
@@ -225,7 +246,9 @@ export function Settings({ onBack }: SettingsProps) {
             className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform touch-manipulation"
           >
             <div className="text-left">
-              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Visual effects</p>
+              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                Visual effects
+              </p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                 {visualEffects === 'calm'
                   ? 'Calm — subtle, minimal atmosphere'
@@ -235,7 +258,10 @@ export function Settings({ onBack }: SettingsProps) {
             {/* Custom organic toggle - theme aware */}
             <div
               className="relative w-12 h-7 rounded-full transition-colors duration-300"
-              style={{ background: visualEffects === 'expressive' ? 'var(--toggle-on)' : 'var(--toggle-off)' }}
+              style={{
+                background:
+                  visualEffects === 'expressive' ? 'var(--toggle-on)' : 'var(--toggle-off)',
+              }}
             >
               <div
                 className={`
@@ -262,7 +288,9 @@ export function Settings({ onBack }: SettingsProps) {
             className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform touch-manipulation"
           >
             <div className="text-left">
-              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Audio feedback</p>
+              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                Audio feedback
+              </p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                 Subtle sounds on session complete and milestones
               </p>
@@ -270,7 +298,9 @@ export function Settings({ onBack }: SettingsProps) {
             {/* Custom organic toggle - theme aware */}
             <div
               className="relative w-12 h-7 rounded-full transition-colors duration-300"
-              style={{ background: audioFeedbackEnabled ? 'var(--toggle-on)' : 'var(--toggle-off)' }}
+              style={{
+                background: audioFeedbackEnabled ? 'var(--toggle-on)' : 'var(--toggle-off)',
+              }}
             >
               <div
                 className={`
@@ -292,19 +322,27 @@ export function Settings({ onBack }: SettingsProps) {
           <button
             onClick={() => {
               haptic.light()
-              setNotificationPreferences({ attributionEnabled: !notificationPreferences.attributionEnabled })
+              setNotificationPreferences({
+                attributionEnabled: !notificationPreferences.attributionEnabled,
+              })
             }}
             className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform touch-manipulation"
           >
             <div className="text-left">
-              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Impact updates</p>
+              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                Impact updates
+              </p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                 When your shared content helps others
               </p>
             </div>
             <div
               className="relative w-12 h-7 rounded-full transition-colors duration-300"
-              style={{ background: notificationPreferences.attributionEnabled ? 'var(--toggle-on)' : 'var(--toggle-off)' }}
+              style={{
+                background: notificationPreferences.attributionEnabled
+                  ? 'var(--toggle-on)'
+                  : 'var(--toggle-off)',
+              }}
             >
               <div
                 className={`
@@ -321,19 +359,27 @@ export function Settings({ onBack }: SettingsProps) {
           <button
             onClick={() => {
               haptic.light()
-              setNotificationPreferences({ milestoneEnabled: !notificationPreferences.milestoneEnabled })
+              setNotificationPreferences({
+                milestoneEnabled: !notificationPreferences.milestoneEnabled,
+              })
             }}
             className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform touch-manipulation"
           >
             <div className="text-left">
-              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Milestone achievements</p>
+              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                Milestone achievements
+              </p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                 Save milestone moments to notification history
               </p>
             </div>
             <div
               className="relative w-12 h-7 rounded-full transition-colors duration-300"
-              style={{ background: notificationPreferences.milestoneEnabled ? 'var(--toggle-on)' : 'var(--toggle-off)' }}
+              style={{
+                background: notificationPreferences.milestoneEnabled
+                  ? 'var(--toggle-on)'
+                  : 'var(--toggle-off)',
+              }}
             >
               <div
                 className={`
@@ -350,19 +396,27 @@ export function Settings({ onBack }: SettingsProps) {
           <button
             onClick={() => {
               haptic.light()
-              setNotificationPreferences({ gentleRemindersEnabled: !notificationPreferences.gentleRemindersEnabled })
+              setNotificationPreferences({
+                gentleRemindersEnabled: !notificationPreferences.gentleRemindersEnabled,
+              })
             }}
             className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform touch-manipulation"
           >
             <div className="text-left">
-              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Session reminders</p>
+              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                Session reminders
+              </p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                 Reminder before planned sessions
               </p>
             </div>
             <div
               className="relative w-12 h-7 rounded-full transition-colors duration-300"
-              style={{ background: notificationPreferences.gentleRemindersEnabled ? 'var(--toggle-on)' : 'var(--toggle-off)' }}
+              style={{
+                background: notificationPreferences.gentleRemindersEnabled
+                  ? 'var(--toggle-on)'
+                  : 'var(--toggle-off)',
+              }}
             >
               <div
                 className={`
@@ -378,7 +432,9 @@ export function Settings({ onBack }: SettingsProps) {
           {/* Reminder timing - only show when gentle reminders enabled */}
           {notificationPreferences.gentleRemindersEnabled && (
             <div className="py-4">
-              <p className="text-sm mb-3" style={{ color: 'var(--text-primary)' }}>Remind me</p>
+              <p className="text-sm mb-3" style={{ color: 'var(--text-primary)' }}>
+                Remind me
+              </p>
               <div className="flex gap-2">
                 {[15, 30, 60].map((minutes) => {
                   const isActive = notificationPreferences.reminderMinutesBefore === minutes
@@ -391,9 +447,10 @@ export function Settings({ onBack }: SettingsProps) {
                       }}
                       className={`
                         flex-1 py-2.5 rounded-xl text-center transition-all duration-200 touch-manipulation active:scale-[0.97]
-                        ${isActive
-                          ? 'bg-moss text-cream'
-                          : 'bg-cream-warm text-ink hover:bg-cream-deep'
+                        ${
+                          isActive
+                            ? 'bg-moss text-cream'
+                            : 'bg-cream-warm text-ink hover:bg-cream-deep'
                         }
                       `}
                     >
@@ -421,7 +478,9 @@ export function Settings({ onBack }: SettingsProps) {
             className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform touch-manipulation"
           >
             <div className="text-left">
-              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Living theme</p>
+              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                Living theme
+              </p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                 {themeMode === 'auto'
                   ? `Adapts to time & season — ${currentThemeName}`
@@ -431,7 +490,9 @@ export function Settings({ onBack }: SettingsProps) {
             {/* Custom organic toggle - theme aware */}
             <div
               className="relative w-12 h-7 rounded-full transition-colors duration-300"
-              style={{ background: themeMode === 'auto' ? 'var(--toggle-on)' : 'var(--toggle-off)' }}
+              style={{
+                background: themeMode === 'auto' ? 'var(--toggle-on)' : 'var(--toggle-off)',
+              }}
             >
               <div
                 className={`
@@ -453,7 +514,9 @@ export function Settings({ onBack }: SettingsProps) {
             className="w-full flex items-center justify-between py-4 touch-manipulation"
           >
             <div className="text-left">
-              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Personalize</p>
+              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                Personalize
+              </p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                 {themeMode === 'manual'
                   ? `${manualSeason.charAt(0).toUpperCase() + manualSeason.slice(1)} ${manualTime}`
@@ -467,7 +530,12 @@ export function Settings({ onBack }: SettingsProps) {
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </button>
 
@@ -475,10 +543,15 @@ export function Settings({ onBack }: SettingsProps) {
             <div className="mt-2 space-y-4">
               {/* Quick Presets */}
               <div>
-                <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>Quick presets</p>
+                <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
+                  Quick presets
+                </p>
                 <div className="grid grid-cols-2 gap-2">
                   {QUICK_PRESETS.map((preset) => {
-                    const isActive = themeMode === 'manual' && manualSeason === preset.season && manualTime === preset.time
+                    const isActive =
+                      themeMode === 'manual' &&
+                      manualSeason === preset.season &&
+                      manualTime === preset.time
                     return (
                       <button
                         key={preset.label}
@@ -488,9 +561,10 @@ export function Settings({ onBack }: SettingsProps) {
                         }}
                         className={`
                           p-3 rounded-xl text-left transition-all duration-200 touch-manipulation active:scale-[0.97]
-                          ${isActive
-                            ? 'bg-moss text-cream'
-                            : 'bg-cream-warm text-ink hover:bg-cream-deep'
+                          ${
+                            isActive
+                              ? 'bg-moss text-cream'
+                              : 'bg-cream-warm text-ink hover:bg-cream-deep'
                           }
                         `}
                       >
@@ -505,7 +579,9 @@ export function Settings({ onBack }: SettingsProps) {
 
               {/* Season Picker */}
               <div>
-                <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>Season</p>
+                <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
+                  Season
+                </p>
                 <div className="flex gap-2">
                   {SEASON_OPTIONS.map((option) => {
                     const isActive = themeMode === 'manual' && manualSeason === option.value
@@ -518,9 +594,10 @@ export function Settings({ onBack }: SettingsProps) {
                         }}
                         className={`
                           flex-1 py-2.5 px-1 rounded-xl text-center transition-all duration-200 touch-manipulation active:scale-[0.97]
-                          ${isActive
-                            ? 'bg-moss text-cream'
-                            : 'bg-cream-warm text-ink hover:bg-cream-deep'
+                          ${
+                            isActive
+                              ? 'bg-moss text-cream'
+                              : 'bg-cream-warm text-ink hover:bg-cream-deep'
                           }
                         `}
                       >
@@ -536,7 +613,9 @@ export function Settings({ onBack }: SettingsProps) {
 
               {/* Time of Day Picker */}
               <div>
-                <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>Time of day</p>
+                <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
+                  Time of day
+                </p>
                 <div className="flex gap-2">
                   {TIME_OPTIONS.map((option) => {
                     const isActive = themeMode === 'manual' && manualTime === option.value
@@ -549,9 +628,10 @@ export function Settings({ onBack }: SettingsProps) {
                         }}
                         className={`
                           flex-1 py-2.5 rounded-xl text-center transition-all duration-200 touch-manipulation active:scale-[0.97]
-                          ${isActive
-                            ? 'bg-moss text-cream'
-                            : 'bg-cream-warm text-ink hover:bg-cream-deep'
+                          ${
+                            isActive
+                              ? 'bg-moss text-cream'
+                              : 'bg-cream-warm text-ink hover:bg-cream-deep'
                           }
                         `}
                       >
@@ -570,32 +650,18 @@ export function Settings({ onBack }: SettingsProps) {
         {/* Data */}
         <div className="mb-8">
           <p className="font-serif text-sm text-ink/50 tracking-wide mb-4">Your Data</p>
-          <div className="space-y-2">
-            <button
-              onClick={() => {
-                haptic.light()
-                downloadJSON()
-              }}
-              className="w-full p-4 bg-cream-warm rounded-xl text-left hover:bg-cream-deep transition-colors active:scale-[0.99] touch-manipulation"
-            >
-              <p className="text-sm text-ink font-medium">Export as JSON</p>
-              <p className="text-xs text-ink/40 mt-1">
-                Full data backup including insights
-              </p>
-            </button>
-            <button
-              onClick={() => {
-                haptic.light()
-                downloadCSV()
-              }}
-              className="w-full p-4 bg-cream-warm rounded-xl text-left hover:bg-cream-deep transition-colors active:scale-[0.99] touch-manipulation"
-            >
-              <p className="text-sm text-ink font-medium">Export sessions as CSV</p>
-              <p className="text-xs text-ink/40 mt-1">
-                Spreadsheet-compatible format
-              </p>
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              haptic.light()
+              exportData()
+            }}
+            className="w-full p-4 bg-cream-warm rounded-xl text-left hover:bg-cream-deep transition-colors active:scale-[0.99] touch-manipulation"
+          >
+            <p className="text-sm text-ink font-medium">Export Your Data</p>
+            <p className="text-xs text-ink/40 mt-1">
+              Download your meditation journal and wellbeing tracking
+            </p>
+          </button>
         </div>
 
         {/* Links */}
@@ -617,9 +683,7 @@ export function Settings({ onBack }: SettingsProps) {
 
       {/* Version */}
       <footer className="pb-20 text-center">
-        <p className="font-serif text-xs text-ink/25 italic">
-          Still Hours · v3.0.0
-        </p>
+        <p className="font-serif text-xs text-ink/25 italic">Still Hours · v3.0.0</p>
       </footer>
 
       {/* Auth modal */}
