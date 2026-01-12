@@ -70,6 +70,9 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
   const [planTitle, setPlanTitle] = useState('')
   const [planSourceTemplateId, setPlanSourceTemplateId] = useState<string | undefined>(undefined)
 
+  // State for tracking if we're adding a new plan (not editing existing)
+  const [isAddingNewPlan, setIsAddingNewPlan] = useState(false)
+
   // Build unified dayItems array combining sessions and pending plans
   const dayItems: DayItem[] = useMemo(() => {
     const dateStart = getStartOfDay(date)
@@ -379,6 +382,25 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
     [duration]
   )
 
+  const handleAddNewPlan = useCallback(() => {
+    // Clear form fields for new plan
+    setPlannedTime('')
+    setDuration(null)
+    setDurationCategory(null)
+    setShowCustomDuration(false)
+    setPlanPose('')
+    setPlanDiscipline('')
+    setPlanNotes('')
+    setPlanTitle('')
+    setPlanSourceTemplateId(undefined)
+    setExistingPlan(null)
+    setIsAddingNewPlan(true)
+
+    // Navigate past all existing items (conceptually to a "new" slot)
+    // We'll show the planning form in this state
+    setSelectedItemIndex(dayItems.length) // Point past the array
+  }, [dayItems.length])
+
   return {
     // Unified day items (sessions + plans combined)
     dayItems,
@@ -426,5 +448,9 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
     handleDateChange,
     handleDurationCategoryChange,
     handleDurationChange,
+
+    // New plan creation
+    isAddingNewPlan,
+    handleAddNewPlan,
   }
 }
