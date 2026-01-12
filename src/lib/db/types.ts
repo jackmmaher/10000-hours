@@ -92,6 +92,7 @@ export interface PlannedSession {
   courseId?: string // If part of a course
   coursePosition?: number // Position in course (1 of 5)
   repeatRuleId?: number // Link to repeat rule that generated this session
+  attachedPearlId?: string // Supabase pearl ID attached as intention/guidance
 }
 
 export interface UserCourseProgress {
