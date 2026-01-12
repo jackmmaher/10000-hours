@@ -36,6 +36,8 @@ export type {
   WellbeingDimension,
   WellbeingCheckIn,
   WellbeingSettings,
+  RepeatRule,
+  RepeatFrequency,
 } from './db/index'
 
 // Schema and db instance
@@ -156,4 +158,16 @@ export {
   getAllCheckIns,
   getCheckInHistory,
   getImprovementForDimension,
+} from './db/index'
+
+// Repeat Rules
+export {
+  addRepeatRule,
+  getRepeatRule,
+  updateRepeatRule,
+  deleteRepeatRule,
+  getAllRepeatRules,
+  generateSessionsFromRule,
+  saveGeneratedSessions,
+  createRepeatRuleWithSessions,
 } from './db/index'

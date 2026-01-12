@@ -21,6 +21,7 @@ import {
   getInsightsBySessionId,
   updateSession,
   getSessionByUuid,
+  createRepeatRuleWithSessions,
 } from '../../lib/db'
 import { DURATION_CATEGORIES } from '../../lib/meditation-options'
 import { createScheduledReminder, cancelScheduledReminder } from '../../lib/reminders'
@@ -267,6 +268,28 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
         })
         await Promise.all(savePromises)
       } else {
+        // Handle recurring sessions with repeat frequency
+        if (repeatFrequency) {
+          await createRepeatRuleWithSessions({
+            frequency: repeatFrequency,
+            customDays: repeatFrequency === 'custom' ? repeatCustomDays : undefined,
+            plannedTime: plannedTime || undefined,
+            duration: duration || undefined,
+            title: planTitle || undefined,
+            pose: planPose || undefined,
+            discipline: planDiscipline || undefined,
+            notes: planNotes || undefined,
+            sourceTemplateId: planSourceTemplateId,
+          })
+          // Reset repeat state after saving
+          setRepeatFrequency(null)
+          setRepeatCustomDays([])
+          onSave()
+          onClose()
+          return
+        }
+
+        // Single session save (existing logic)
         if (existingPlan?.id) {
           // Cancel existing reminder before updating (time may have changed)
           await cancelScheduledReminder(existingPlan.id)
@@ -335,6 +358,8 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
     onClose,
     isSessionMode,
     sessionEdits,
+    repeatFrequency,
+    repeatCustomDays,
   ])
 
   const handleDelete = useCallback(async () => {
