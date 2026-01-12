@@ -169,3 +169,19 @@ export async function markPlanCompleted(planId: number): Promise<void> {
     completed: true,
   })
 }
+
+/**
+ * Get upcoming incomplete planned sessions
+ */
+export async function getUpcomingPlans(daysAhead: number = 14): Promise<PlannedSession[]> {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const endDate = new Date(today)
+  endDate.setDate(endDate.getDate() + daysAhead)
+
+  return db.plannedSessions
+    .where('date')
+    .between(today.getTime(), endDate.getTime())
+    .filter((p) => !p.completed)
+    .sortBy('date')
+}

@@ -100,6 +100,7 @@ export {
   getAllPlannedSessions,
   relinkOrphanedPlans,
   markPlanCompleted,
+  getUpcomingPlans,
 } from './plans'
 
 // Courses

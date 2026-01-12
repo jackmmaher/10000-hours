@@ -110,6 +110,7 @@ export {
   getAllPlannedSessions,
   relinkOrphanedPlans,
   markPlanCompleted,
+  getUpcomingPlans,
 } from './db/index'
 
 // Courses
