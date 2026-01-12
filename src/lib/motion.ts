@@ -163,13 +163,16 @@ export const stageVariants: Variants = {
   departing: {
     scale: 0.96,
     transition: {
-      duration: 0.4,
+      duration: 0.8, // Matches TIMING.depart
       ease: [0.4, 0, 0.2, 1], // ease-out
     },
   },
   arriving: {
     scale: 1,
-    transition: springs.settle,
+    transition: {
+      ...springs.settle,
+      duration: 0.7, // Matches TIMING.arrive
+    },
   },
   active: {
     scale: 1,
@@ -177,22 +180,45 @@ export const stageVariants: Variants = {
   },
   completing: {
     scale: 0.92,
-    y: -12,
+    y: -16, // Slightly more lift for ceremonial feel
     transition: {
-      duration: 0.5,
+      duration: 1.5, // Matches TIMING.complete - ceremonial exhale
       ease: [0.4, 0, 0.2, 1],
     },
   },
   resolving: {
     scale: 1,
     y: 0,
-    transition: springs.settle,
+    transition: {
+      type: 'spring',
+      stiffness: 120, // Slower, more meditative settle
+      damping: 18,
+      mass: 1.2,
+      duration: 2.5, // Matches TIMING.resolve - ceremonial inhale
+    },
   },
 }
 
 /**
- * Layer opacity transitions - smooth crossfade between cumulative and active
+ * Get layer opacity transition for a given phase
+ * Ceremonial phases (completing/resolving) use longer durations
  */
+export function getLayerTransition(phase: TimerPhase): Transition {
+  switch (phase) {
+    case 'completing':
+      return { duration: 1.2, ease: [0.4, 0, 0.2, 1] } // Ceremonial fade out
+    case 'resolving':
+      return { duration: 2.0, ease: [0.2, 0, 0.4, 1] } // Slow, meditative fade in
+    case 'departing':
+      return { duration: 0.6, ease: [0.4, 0, 0.2, 1] }
+    case 'arriving':
+      return { duration: 0.5, ease: [0.2, 0, 0.4, 1] }
+    default:
+      return { duration: 0.4, ease: [0.4, 0, 0.2, 1] }
+  }
+}
+
+// Legacy constant for backward compatibility
 export const layerTransition: Transition = {
   duration: 0.4,
   ease: [0.4, 0, 0.2, 1],

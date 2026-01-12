@@ -7,11 +7,14 @@
  * - Lower frequencies (calming, not alerting)
  * - Soft presence (felt more than heard)
  *
- * The completion chime is carefully timed:
- * - Begins softly during "completing" phase (0-500ms)
- * - Crescendos during "resolving" phase (500-1100ms)
- * - Peaks as animation settles (~1100ms)
- * - Natural decay over 4 seconds
+ * The completion chime follows a breath-aligned 4-second ceremony:
+ * - Begins softly during "completing" phase (0-1500ms exhale)
+ * - Crescendos during "resolving" phase (1500-4000ms inhale)
+ * - Peaks as animation settles (~4000ms)
+ * - Natural decay over 4 seconds after peak
+ *
+ * Like the Disney castle intro or Pixar lamp - the transition itself
+ * is part of the experience, not just a bridge between states.
  *
  * All sounds are synthesized (no external audio files needed).
  * Respects user preference (default: disabled).
@@ -23,9 +26,10 @@ import { useSettingsStore } from '../stores/useSettingsStore'
 type AudioCue = 'complete' | 'milestone' | 'tick'
 
 // Animation timing constants (must match useTimerOrchestration.ts)
-const COMPLETING_DURATION = 0.5 // 500ms
-const RESOLVING_DURATION = 0.6 // 600ms
-const CRESCENDO_DURATION = COMPLETING_DURATION + RESOLVING_DURATION // ~1.1s
+// Breath-aligned ceremony: 4 second total transition
+const COMPLETING_DURATION = 1.5 // 1500ms - ceremonial exhale
+const RESOLVING_DURATION = 2.5 // 2500ms - ceremonial inhale
+const CRESCENDO_DURATION = COMPLETING_DURATION + RESOLVING_DURATION // 4s breath cycle
 
 export function useAudioFeedback() {
   const audioFeedbackEnabled = useSettingsStore((s) => s.audioFeedbackEnabled)

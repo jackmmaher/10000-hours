@@ -25,11 +25,15 @@ interface TimerOrchestration {
 }
 
 // Timeline durations (in ms)
+// Breath-aligned ceremony: END transition ~4s, START quicker (~1.5s)
 const TIMING = {
-  depart: 400, // exhale duration
-  arrive: 350, // inhale duration (spring settles ~300ms after)
-  complete: 500, // merge/dissolve duration
-  resolve: 600, // settle duration
+  // START sequence - eager energy, quicker
+  depart: 800, // exhale duration (releasing cumulative)
+  arrive: 700, // inhale duration (receiving active timer)
+
+  // END sequence - ceremonial, breath-aligned
+  complete: 1500, // exhale/dissolve (releasing the session)
+  resolve: 2500, // inhale/settle (receiving new cumulative)
 } as const
 
 export function useTimerOrchestration(): TimerOrchestration {
@@ -42,11 +46,12 @@ export function useTimerOrchestration(): TimerOrchestration {
 
   /**
    * Begin a session - orchestrated START sequence
+   * Quicker pace (~1.5s) - eager energy to begin
    *
    * Timeline:
    * t=0ms    departing - cumulative exhales out
-   * t=400ms  arriving  - active inhales in, timer starts
-   * t=750ms  active    - fully running
+   * t=800ms  arriving  - active inhales in, timer starts
+   * t=1500ms active    - fully running
    */
   const beginSession = useCallback(() => {
     if (transitioningRef.current || phase !== 'resting') return
@@ -70,11 +75,12 @@ export function useTimerOrchestration(): TimerOrchestration {
 
   /**
    * End a session - orchestrated STOP sequence
+   * Breath-aligned ceremony (~4s) - meditative settle
    *
    * Timeline:
-   * t=0ms    completing - session dissolves upward
-   * t=500ms  resolving  - cumulative settles in
-   * t=1100ms resting    - fully at rest
+   * t=0ms     completing - session exhales/dissolves upward
+   * t=1500ms  resolving  - cumulative inhales/settles in
+   * t=4000ms  resting    - fully at rest
    */
   const endSession = useCallback(() => {
     if (transitioningRef.current || phase !== 'active') return

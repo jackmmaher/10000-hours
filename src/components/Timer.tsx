@@ -10,7 +10,7 @@ import { useTapFeedback } from '../hooks/useTapFeedback'
 import { useAudioFeedback } from '../hooks/useAudioFeedback'
 import { getNearMissInfo } from '../lib/milestones'
 import { getUserPreferences } from '../lib/db'
-import { stageVariants, getLayerOpacity, layerTransition } from '../lib/motion'
+import { stageVariants, getLayerOpacity, getLayerTransition } from '../lib/motion'
 import { ZenMessage } from './ZenMessage'
 import { HemingwayTime } from './HemingwayTime'
 import { GooeyOrb } from './GooeyOrb'
@@ -126,8 +126,9 @@ export function Timer() {
     acknowledgeEnlightenment()
   }, [acknowledgeEnlightenment])
 
-  // Get layer opacity based on current phase
+  // Get layer opacity and transition based on current phase
   const layerOpacity = useMemo(() => getLayerOpacity(phase), [phase])
+  const layerTransition = useMemo(() => getLayerTransition(phase), [phase])
 
   // Whether to show breathing animation (only when fully at rest)
   const showBreathing = phase === 'resting'
@@ -182,6 +183,7 @@ export function Timer() {
                 {/* Cumulative Layer - always rendered, opacity controlled */}
                 <motion.div
                   className="flex flex-col items-center"
+                  initial={{ opacity: 1 }}
                   animate={{ opacity: layerOpacity.cumulative }}
                   transition={layerTransition}
                   style={{
@@ -217,6 +219,7 @@ export function Timer() {
                 {/* Active Layer - always rendered, opacity controlled */}
                 <motion.div
                   className="flex flex-col items-center"
+                  initial={{ opacity: 0 }}
                   animate={{ opacity: layerOpacity.active }}
                   transition={layerTransition}
                   style={{
