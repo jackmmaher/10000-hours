@@ -95,10 +95,10 @@ export default {
         'orb-breathe': 'orbBreathe 4s ease-in-out infinite',
         'orb-glow': 'orbGlow 4s ease-in-out infinite',
         'box-breathe': 'boxBreathe 16s ease-in-out infinite',
-        'timer-exhale': 'timerExhale 400ms var(--ease-organic) forwards',
-        'timer-inhale': 'timerInhale 400ms var(--ease-organic) forwards',
-        'session-merge-rise': 'sessionMergeRise 800ms ease-out forwards',
-        'cumulative-merge-in': 'cumulativeMergeIn 600ms ease-out forwards',
+        'timer-exhale': 'timerExhale 800ms var(--ease-organic) forwards',
+        'timer-inhale': 'timerInhale 600ms var(--ease-organic) forwards',
+        'session-merge-rise': 'sessionMergeRise 1400ms ease-out forwards',
+        'cumulative-merge-in': 'cumulativeMergeIn 1000ms ease-out forwards',
       },
       keyframes: {
         fadeIn: {

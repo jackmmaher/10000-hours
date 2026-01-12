@@ -28,8 +28,14 @@ import { PearlPicker } from './PearlPicker'
 
 export type { MeditationPlannerProps } from './types'
 
-export function MeditationPlanner({ date, sessions, onClose, onSave }: MeditationPlannerProps) {
-  const state = usePlannerState({ date, sessions, onSave, onClose })
+export function MeditationPlanner({
+  date,
+  sessions,
+  onClose,
+  onSave,
+  prefillTemplate,
+}: MeditationPlannerProps) {
+  const state = usePlannerState({ date, sessions, onSave, onClose, prefillTemplate })
 
   // Source template modal state
   const [sourceTemplate, setSourceTemplate] = useState<SessionTemplate | null>(null)

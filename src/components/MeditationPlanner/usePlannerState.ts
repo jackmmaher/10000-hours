@@ -42,9 +42,16 @@ interface UsePlannerStateProps {
   sessions: Session[]
   onSave: () => void
   onClose: () => void
+  prefillTemplate?: { title?: string; duration?: number; discipline?: string; id?: string } | null
 }
 
-export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerStateProps) {
+export function usePlannerState({
+  date,
+  sessions,
+  onSave,
+  onClose,
+  prefillTemplate,
+}: UsePlannerStateProps) {
   // Item selection state (unified for sessions and plans)
   const [selectedItemIndex, setSelectedItemIndex] = useState(0)
 
@@ -255,6 +262,29 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
     }
     loadPendingPlans()
   }, [date])
+
+  // Apply prefill template data when provided
+  useEffect(() => {
+    if (prefillTemplate) {
+      if (prefillTemplate.title) setPlanTitle(prefillTemplate.title)
+      if (prefillTemplate.duration) {
+        setDuration(prefillTemplate.duration)
+        // Find matching category or use custom
+        const category = DURATION_CATEGORIES.find((c) =>
+          c.durations.includes(prefillTemplate.duration!)
+        )
+        if (category) {
+          setDurationCategory(category.label)
+          setShowCustomDuration(false)
+        } else {
+          setDurationCategory('custom')
+          setShowCustomDuration(true)
+        }
+      }
+      if (prefillTemplate.discipline) setPlanDiscipline(prefillTemplate.discipline)
+      if (prefillTemplate.id) setPlanSourceTemplateId(prefillTemplate.id)
+    }
+  }, [prefillTemplate])
 
   const handleSave = useCallback(async () => {
     setIsSaving(true)

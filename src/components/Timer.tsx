@@ -86,15 +86,15 @@ export function Timer() {
       haptic.medium() // Session start - noticeable feedback
       setTransitionState('exhaling')
 
-      // After exhale animation (400ms), pause (200ms), then start
+      // After exhale animation (800ms) + pause (200ms), then inhale
       setTimeout(() => {
         setTransitionState('inhaling')
         startTimer() // Skip preparing phase, start directly
 
         setTimeout(() => {
           setTransitionState('running')
-        }, 400) // inhale duration
-      }, 600) // exhale + pause
+        }, 600) // inhale duration - slower, more deliberate
+      }, 1000) // exhale (800ms) + pause (200ms)
     } else if (timerPhase === 'running') {
       haptic.success() // Session complete - celebratory pattern
       audio.complete() // Audio chime (respects setting internally)
@@ -134,20 +134,21 @@ export function Timer() {
   ])
 
   // Handle merge animation after session ends
+  // Total ~2.2 seconds to sync with chime and feel contemplative
   useEffect(() => {
     if (timerPhase === 'complete' && sessionJustEnded && lastSessionDuration) {
       setTransitionState('merging')
 
-      // After merge animation
+      // After merge animation (session rises and dissolves)
       setTimeout(() => {
         setTransitionState('settling')
         setSessionJustEnded(false)
 
-        // After settle, return to idle
+        // After settle (cumulative breathes once), return to idle
         setTimeout(() => {
           setTransitionState('idle')
-        }, 400)
-      }, 800)
+        }, 800) // settle duration - slow, restful
+      }, 1400) // merge duration - unhurried ascent
     }
   }, [timerPhase, sessionJustEnded, lastSessionDuration])
 

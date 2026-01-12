@@ -15,11 +15,20 @@ export interface DayItem {
   timestamp: number // For sorting: session.startTime or plan date + plannedTime
 }
 
+// Template prefill data for planning from saved meditations
+export interface PrefillTemplate {
+  title?: string
+  duration?: number
+  discipline?: string
+  id?: string
+}
+
 export interface MeditationPlannerProps {
   date: Date
   sessions: Session[] // All sessions for this date (may be empty for future dates)
   onClose: () => void
   onSave: () => void
+  prefillTemplate?: PrefillTemplate | null
 }
 
 // Track edits for each session independently

@@ -139,8 +139,10 @@
   /* === TYPOGRAPHY SCALE === */
   /* Exactly 5 semantic text styles per Human-Crafted Design */
 
-  /* Display - Hero text, total hours (72px / 1.0 / -0.02em) */
-  --text-display-size: 4.5rem;
+  /* Display - Hero text, total hours (fluid responsive)
+     Scales proportionally: 80px min → 22vw fluid → 128px max
+     iPhone SE (375px): ~82px | iPhone 13 (390px): ~86px | Pro Max (430px): ~95px */
+  --text-display-size: clamp(5rem, 22vw, 8rem);
   --text-display-line: 1;
   --text-display-tracking: -0.02em;
 

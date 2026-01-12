@@ -16,23 +16,34 @@ function LoadingOverlay() {
   )
 }
 
+// Template prefill type for planning from saved meditations
+interface PrefillTemplate {
+  title?: string
+  duration?: number
+  discipline?: string
+  id?: string
+}
+
 // Wrapper for lazy loading MeditationPlanner
 export function MeditationPlannerWrapper({
   date,
   sessions,
   onClose,
   onSave,
+  prefillTemplate,
 }: {
   date: Date
   sessions: Session[]
   onClose: () => void
   onSave: () => void
+  prefillTemplate?: PrefillTemplate | null
 }) {
   const [MeditationPlanner, setMeditationPlanner] = useState<React.ComponentType<{
     date: Date
     sessions: Session[]
     onClose: () => void
     onSave: () => void
+    prefillTemplate?: PrefillTemplate | null
   }> | null>(null)
 
   useEffect(() => {
@@ -45,7 +56,15 @@ export function MeditationPlannerWrapper({
     return <LoadingOverlay />
   }
 
-  return <MeditationPlanner date={date} sessions={sessions} onClose={onClose} onSave={onSave} />
+  return (
+    <MeditationPlanner
+      date={date}
+      sessions={sessions}
+      onClose={onClose}
+      onSave={onSave}
+      prefillTemplate={prefillTemplate}
+    />
+  )
 }
 
 // Wrapper for lazy loading InsightCapture

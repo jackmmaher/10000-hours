@@ -42,6 +42,7 @@ import {
   SharePearlWrapper,
   TemplateEditorWrapper,
 } from './wrappers'
+import type { SessionTemplate } from '../../lib/types'
 
 type JourneySubTab = 'sessions' | 'saved' | 'pearls'
 
@@ -66,6 +67,7 @@ export function Journey() {
   const [insightStreamKey, setInsightStreamKey] = useState(0)
   const [showTemplateEditor, setShowTemplateEditor] = useState(false)
   const [nextPlannedSession, setNextPlannedSession] = useState<PlannedSession | null>(null)
+  const [templateToPlan, setTemplateToPlan] = useState<SessionTemplate | null>(null)
 
   // Calculate total hours for creator badge
   const totalHours = useMemo(() => {
@@ -324,7 +326,16 @@ export function Journey() {
         )}
         {subTab === 'pearls' && <JourneyMyPearls />}
         {subTab === 'saved' && (
-          <JourneySavedContent onCreateNew={user ? () => setShowTemplateEditor(true) : undefined} />
+          <JourneySavedContent
+            onCreateNew={user ? () => setShowTemplateEditor(true) : undefined}
+            onPlanTemplate={(template) => {
+              setTemplateToPlan(template)
+              const today = new Date()
+              today.setHours(0, 0, 0, 0)
+              setPlanningDate(today)
+              setSelectedDaySessions(getSessionsForDate(sessions, today))
+            }}
+          />
         )}
       </div>
 
@@ -336,8 +347,13 @@ export function Journey() {
           onClose={() => {
             setPlanningDate(null)
             setSelectedDaySessions([])
+            setTemplateToPlan(null)
           }}
-          onSave={refreshAllPlanData}
+          onSave={() => {
+            refreshAllPlanData()
+            setTemplateToPlan(null)
+          }}
+          prefillTemplate={templateToPlan}
         />
       )}
 
