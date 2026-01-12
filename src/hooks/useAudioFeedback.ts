@@ -1,16 +1,17 @@
 /**
- * useAudioFeedback - Optional audio cues for key moments
- *
- * Provides subtle, meditative audio feedback using Web Audio API:
- * - complete: Singing bowl tone for session completion
- * - milestone: Deeper, richer bowl for milestones
- * - tick: Very subtle soft click
+ * useAudioFeedback - Meditative audio synchronized with visual transitions
  *
  * Sound design philosophy:
  * - Organic, not electronic (multiple harmonics like real bells)
- * - Slow decay (singing bowls ring for seconds, not milliseconds)
+ * - Synchronized with animation (crescendo matches visual settling)
  * - Lower frequencies (calming, not alerting)
- * - No arpeggios or melodies (single mindful moment)
+ * - Soft presence (felt more than heard)
+ *
+ * The completion chime is carefully timed:
+ * - Begins softly during "completing" phase (0-500ms)
+ * - Crescendos during "resolving" phase (500-1100ms)
+ * - Peaks as animation settles (~1100ms)
+ * - Natural decay over 4 seconds
  *
  * All sounds are synthesized (no external audio files needed).
  * Respects user preference (default: disabled).
@@ -20,6 +21,11 @@ import { useCallback, useRef } from 'react'
 import { useSettingsStore } from '../stores/useSettingsStore'
 
 type AudioCue = 'complete' | 'milestone' | 'tick'
+
+// Animation timing constants (must match useTimerOrchestration.ts)
+const COMPLETING_DURATION = 0.5 // 500ms
+const RESOLVING_DURATION = 0.6 // 600ms
+const CRESCENDO_DURATION = COMPLETING_DURATION + RESOLVING_DURATION // ~1.1s
 
 export function useAudioFeedback() {
   const audioFeedbackEnabled = useSettingsStore((s) => s.audioFeedbackEnabled)
@@ -42,27 +48,36 @@ export function useAudioFeedback() {
   }, [])
 
   /**
-   * Create a singing bowl / bell tone
-   * Multiple detuned oscillators create organic warmth
+   * Create a synchronized singing bowl tone
+   *
+   * The envelope is designed to match the visual animation:
+   * - Soft emergence during visual dissolve
+   * - Peak presence as new cumulative settles
+   * - Gentle decay as stillness takes hold
    */
-  const playSingingBowl = useCallback(
-    (ctx: AudioContext, baseFreq: number, duration: number, volume: number) => {
+  const playSynchronizedBowl = useCallback(
+    (
+      ctx: AudioContext,
+      baseFreq: number,
+      crescendoDuration: number,
+      decayDuration: number,
+      peakVolume: number
+    ) => {
       const now = ctx.currentTime
 
-      // Harmonics ratios for bell-like tone (fundamental + overtones)
+      // Harmonics for warm, bell-like tone
       const harmonics = [
         { ratio: 1, gain: 1 }, // Fundamental
-        { ratio: 2.0, gain: 0.4 }, // Octave
-        { ratio: 3.0, gain: 0.2 }, // Fifth above octave
-        { ratio: 4.2, gain: 0.15 }, // Slightly sharp double octave (bell character)
-        { ratio: 5.4, gain: 0.1 }, // Higher partial
+        { ratio: 2.0, gain: 0.35 }, // Octave (slightly reduced)
+        { ratio: 3.0, gain: 0.15 }, // Fifth above octave
+        { ratio: 4.2, gain: 0.1 }, // Bell character
+        { ratio: 5.4, gain: 0.05 }, // Shimmer (very subtle)
       ]
 
-      // Slight detune for warmth (like real bowls have imperfections)
-      const detuneAmount = 3 // cents
+      // Slight detune for organic warmth
+      const detuneAmount = 2 // cents (reduced for cleaner tone)
 
       harmonics.forEach(({ ratio, gain: harmonicGain }) => {
-        // Create two slightly detuned oscillators per harmonic for richness
         for (let detune = -detuneAmount; detune <= detuneAmount; detune += detuneAmount * 2) {
           const osc = ctx.createOscillator()
           const gainNode = ctx.createGain()
@@ -74,10 +89,72 @@ export function useAudioFeedback() {
           osc.frequency.value = baseFreq * ratio
           osc.detune.value = detune
 
-          // Soft attack, long natural decay
+          const peak = peakVolume * harmonicGain * 0.4
+
+          // Synchronized envelope:
+          // 1. Start barely audible
+          // 2. Slow crescendo matching visual transition (~1.1s)
+          // 3. Brief hold at peak
+          // 4. Long, peaceful decay
+          gainNode.gain.setValueAtTime(0.001, now)
+
+          // Crescendo: exponential rise feels more natural than linear
+          // Start very soft, build gradually
+          gainNode.gain.exponentialRampToValueAtTime(peak * 0.15, now + crescendoDuration * 0.4)
+          gainNode.gain.exponentialRampToValueAtTime(peak * 0.6, now + crescendoDuration * 0.8)
+          gainNode.gain.linearRampToValueAtTime(peak, now + crescendoDuration)
+
+          // Brief sustain at peak (the "arrival" moment)
+          gainNode.gain.setValueAtTime(peak, now + crescendoDuration + 0.1)
+
+          // Gentle decay - exponential for natural bell-like fade
+          gainNode.gain.exponentialRampToValueAtTime(
+            peak * 0.4,
+            now + crescendoDuration + decayDuration * 0.3
+          )
+          gainNode.gain.exponentialRampToValueAtTime(
+            peak * 0.1,
+            now + crescendoDuration + decayDuration * 0.6
+          )
+          gainNode.gain.exponentialRampToValueAtTime(0.001, now + crescendoDuration + decayDuration)
+
+          osc.start(now)
+          osc.stop(now + crescendoDuration + decayDuration + 0.1)
+        }
+      })
+    },
+    []
+  )
+
+  /**
+   * Legacy instant bowl for milestone (more celebratory, immediate presence)
+   */
+  const playInstantBowl = useCallback(
+    (ctx: AudioContext, baseFreq: number, duration: number, volume: number) => {
+      const now = ctx.currentTime
+
+      const harmonics = [
+        { ratio: 1, gain: 1 },
+        { ratio: 2.0, gain: 0.4 },
+        { ratio: 3.0, gain: 0.2 },
+        { ratio: 4.2, gain: 0.12 },
+      ]
+
+      harmonics.forEach(({ ratio, gain: harmonicGain }) => {
+        for (let detune = -3; detune <= 3; detune += 6) {
+          const osc = ctx.createOscillator()
+          const gainNode = ctx.createGain()
+
+          osc.connect(gainNode)
+          gainNode.connect(ctx.destination)
+
+          osc.type = 'sine'
+          osc.frequency.value = baseFreq * ratio
+          osc.detune.value = detune
+
           const peakGain = volume * harmonicGain * 0.5
           gainNode.gain.setValueAtTime(0, now)
-          gainNode.gain.linearRampToValueAtTime(peakGain, now + 0.02) // Soft 20ms attack
+          gainNode.gain.linearRampToValueAtTime(peakGain, now + 0.08) // Soft 80ms attack
           gainNode.gain.exponentialRampToValueAtTime(peakGain * 0.3, now + duration * 0.3)
           gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration)
 
@@ -103,21 +180,21 @@ export function useAudioFeedback() {
 
       switch (cue) {
         case 'complete': {
-          // Gentle singing bowl - F3 (174Hz) - warm, grounding
-          // 5s duration allows natural exponential decay without abrupt cutoff
-          playSingingBowl(ctx, 174.61, 5.0, 0.15)
+          // Synchronized singing bowl - G3 (196Hz) - warm, centered
+          // Crescendo matches animation (~1.1s), then 4s decay
+          playSynchronizedBowl(ctx, 196.0, CRESCENDO_DURATION, 4.0, 0.12)
           break
         }
 
         case 'milestone': {
-          // Richer, slightly higher bowl - A3 (220Hz) - more presence
-          // 6s duration for fuller, more celebratory resonance
-          playSingingBowl(ctx, 220.0, 6.0, 0.18)
+          // Richer bowl with quicker presence - A3 (220Hz)
+          // Still soft attack but more immediate than complete
+          playInstantBowl(ctx, 220.0, 5.0, 0.14)
           break
         }
 
         case 'tick': {
-          // Very subtle soft thud (for potential future use)
+          // Very subtle soft presence (for potential future use)
           const now = ctx.currentTime
           const osc = ctx.createOscillator()
           const gainNode = ctx.createGain()
@@ -127,16 +204,16 @@ export function useAudioFeedback() {
           osc.type = 'sine'
           osc.frequency.value = 150
 
-          gainNode.gain.setValueAtTime(0.02, now)
-          gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1)
+          gainNode.gain.setValueAtTime(0.015, now)
+          gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.15)
 
           osc.start(now)
-          osc.stop(now + 0.1)
+          osc.stop(now + 0.15)
           break
         }
       }
     },
-    [audioFeedbackEnabled, getAudioContext, playSingingBowl]
+    [audioFeedbackEnabled, getAudioContext, playSynchronizedBowl, playInstantBowl]
   )
 
   return {

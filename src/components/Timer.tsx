@@ -13,7 +13,6 @@ import { getUserPreferences } from '../lib/db'
 import { stageVariants, getLayerOpacity, layerTransition } from '../lib/motion'
 import { ZenMessage } from './ZenMessage'
 import { HemingwayTime } from './HemingwayTime'
-import { InsightModal } from './InsightModal'
 import { GooeyOrb } from './GooeyOrb'
 
 /**
@@ -37,19 +36,7 @@ export function Timer() {
     completeSession,
   } = useSessionStore()
 
-  const {
-    setView,
-    triggerPostSessionFlow,
-    pendingInsightSessionId,
-    pendingInsightSessionDuration,
-    pendingMilestone,
-    showInsightModal,
-    showInsightCaptureModal,
-    hideInsightCaptureModal,
-    clearPostSessionState,
-  } = useNavigationStore()
-
-  const { createInsightReminder } = useSessionStore()
+  const { setView, triggerPostSessionFlow } = useNavigationStore()
   const { hideTimeDisplay } = useSettingsStore()
 
   const haptic = useTapFeedback()
@@ -138,40 +125,6 @@ export function Timer() {
   const handleEnlightenmentComplete = useCallback(() => {
     acknowledgeEnlightenment()
   }, [acknowledgeEnlightenment])
-
-  // Show insight modal after animation settles
-  useEffect(() => {
-    if (phase === 'resting' && pendingInsightSessionId && !showInsightModal) {
-      const timer = setTimeout(() => {
-        showInsightCaptureModal()
-      }, 300)
-      return () => clearTimeout(timer)
-    }
-  }, [phase, pendingInsightSessionId, showInsightModal, showInsightCaptureModal])
-
-  // Handlers for insight modal actions
-  const handleInsightComplete = useCallback(() => {
-    hideInsightCaptureModal()
-    clearPostSessionState()
-  }, [hideInsightCaptureModal, clearPostSessionState])
-
-  const handleInsightSkip = useCallback(() => {
-    hideInsightCaptureModal()
-    clearPostSessionState()
-  }, [hideInsightCaptureModal, clearPostSessionState])
-
-  const handleInsightRemindLater = useCallback(() => {
-    if (pendingInsightSessionId) {
-      createInsightReminder(pendingInsightSessionId)
-    }
-    hideInsightCaptureModal()
-    clearPostSessionState()
-  }, [
-    pendingInsightSessionId,
-    createInsightReminder,
-    hideInsightCaptureModal,
-    clearPostSessionState,
-  ])
 
   // Get layer opacity based on current phase
   const layerOpacity = useMemo(() => getLayerOpacity(phase), [phase])
@@ -300,18 +253,6 @@ export function Timer() {
             </motion.p>
           )}
         </div>
-      )}
-
-      {/* Insight capture modal - stays on timer tab */}
-      {showInsightModal && pendingInsightSessionId && (
-        <InsightModal
-          sessionId={pendingInsightSessionId}
-          sessionDuration={pendingInsightSessionDuration}
-          milestoneMessage={pendingMilestone}
-          onComplete={handleInsightComplete}
-          onSkip={handleInsightSkip}
-          onRemindLater={handleInsightRemindLater}
-        />
       )}
     </>
   )

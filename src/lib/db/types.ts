@@ -22,6 +22,9 @@ export interface AppState {
   id: string
   hasReachedEnlightenment: boolean // True once 10,000 hours reached
   enlightenmentReachedAt?: number // Timestamp when crossed threshold
+  // Session-in-progress recovery (survives app kill/crash)
+  sessionInProgress?: boolean
+  sessionStartTime?: number // Date.now() wall-clock when session started
 }
 
 export type TierType = 'free' | 'premium'

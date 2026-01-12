@@ -34,7 +34,13 @@ export type {
 export { MeditationDB, db } from './schema'
 
 // App State
-export { initAppState, markEnlightenmentReached } from './appState'
+export {
+  initAppState,
+  markEnlightenmentReached,
+  saveSessionInProgress,
+  clearSessionInProgress,
+  getSessionInProgress,
+} from './appState'
 
 // Sessions
 export {

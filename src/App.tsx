@@ -22,6 +22,7 @@ import { Journey } from './components/Journey'
 import { Explore } from './components/Explore'
 import { Progress } from './components/Progress'
 import { SessionEditModal } from './components/SessionEditModal'
+import { InsightModal } from './components/InsightModal'
 import { useAuthStore } from './stores/useAuthStore'
 import { Onboarding, hasSeenOnboarding, markOnboardingSeen } from './components/Onboarding'
 import { MilestoneCelebration } from './components/MilestoneCelebration'
@@ -40,8 +41,14 @@ function AppContent() {
     welcomeCutsceneShown,
     triggerWelcomeCutscene,
     dismissWelcomeCutscene,
+    pendingInsightSessionId,
+    pendingInsightSessionDuration,
+    pendingMilestone,
+    showInsightModal,
+    hideInsightCaptureModal,
+    clearPostSessionState,
   } = useNavigationStore()
-  const { isLoading, hydrate, goalCompleted } = useSessionStore()
+  const { isLoading, hydrate, goalCompleted, createInsightReminder } = useSessionStore()
   const settingsStore = useSettingsStore()
   const authStore = useAuthStore()
 
@@ -172,6 +179,30 @@ function AppContent() {
     setCalendarRefreshKey((k) => k + 1)
   }, [hydrate])
 
+  // Insight modal handlers (global - modal appears on any tab after leaving timer)
+  const handleInsightComplete = useCallback(() => {
+    hideInsightCaptureModal()
+    clearPostSessionState()
+  }, [hideInsightCaptureModal, clearPostSessionState])
+
+  const handleInsightSkip = useCallback(() => {
+    hideInsightCaptureModal()
+    clearPostSessionState()
+  }, [hideInsightCaptureModal, clearPostSessionState])
+
+  const handleInsightRemindLater = useCallback(() => {
+    if (pendingInsightSessionId) {
+      createInsightReminder(pendingInsightSessionId)
+    }
+    hideInsightCaptureModal()
+    clearPostSessionState()
+  }, [
+    pendingInsightSessionId,
+    createInsightReminder,
+    hideInsightCaptureModal,
+    clearPostSessionState,
+  ])
+
   // Loading state
   if (isLoading || settingsStore.isLoading) {
     return (
@@ -231,6 +262,18 @@ function AppContent() {
 
         {/* Toast notifications */}
         <ToastContainer />
+
+        {/* Global insight capture modal - appears on any tab after leaving timer */}
+        {showInsightModal && pendingInsightSessionId && (
+          <InsightModal
+            sessionId={pendingInsightSessionId}
+            sessionDuration={pendingInsightSessionDuration}
+            milestoneMessage={pendingMilestone}
+            onComplete={handleInsightComplete}
+            onSkip={handleInsightSkip}
+            onRemindLater={handleInsightRemindLater}
+          />
+        )}
 
         {/* Bottom navigation */}
         <Navigation />

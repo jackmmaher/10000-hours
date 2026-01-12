@@ -11,6 +11,9 @@ import {
   getUserPreferences,
   getSettings,
   addNotification,
+  saveSessionInProgress,
+  clearSessionInProgress,
+  getSessionInProgress,
 } from '../lib/db'
 import {
   generateMilestones,
@@ -84,7 +87,11 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   lastPlanChange: 0,
 
   hydrate: async () => {
-    const [sessions, appState] = await Promise.all([getAllSessions(), initAppState()])
+    const [sessions, appState, sessionInProgressTime] = await Promise.all([
+      getAllSessions(),
+      initAppState(),
+      getSessionInProgress(),
+    ])
 
     const totalSeconds = sessions.reduce((sum, s) => sum + s.durationSeconds, 0)
 
@@ -94,6 +101,31 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       appState.hasReachedEnlightenment &&
       userPrefs?.practiceGoalHours &&
       totalSeconds / 3600 >= userPrefs.practiceGoalHours
+
+    // Check for session recovery (app was killed while timer was running)
+    if (sessionInProgressTime) {
+      const elapsedMs = Date.now() - sessionInProgressTime
+      // Only recover if the session is less than 24 hours old (sanity check)
+      if (elapsedMs > 0 && elapsedMs < 24 * 60 * 60 * 1000) {
+        // Recover the session by setting startedAt to maintain correct elapsed calculation
+        // startedAt = performance.now() - elapsedMs
+        // This ensures (performance.now() - startedAt) / 1000 = correct elapsed seconds
+        set({
+          sessions,
+          totalSeconds,
+          hasReachedEnlightenment: appState.hasReachedEnlightenment,
+          goalCompleted: goalCompleted || false,
+          isLoading: false,
+          timerPhase: 'running',
+          startedAt: performance.now() - elapsedMs,
+          sessionStartTime: sessionInProgressTime,
+        })
+        return
+      } else {
+        // Session too old, clear it
+        await clearSessionInProgress()
+      }
+    }
 
     set({
       sessions,
@@ -109,10 +141,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   },
 
   startTimer: () => {
+    const sessionStartTime = Date.now()
+    // Persist to IndexedDB for crash recovery
+    saveSessionInProgress(sessionStartTime)
     set({
       timerPhase: 'running',
       startedAt: performance.now(),
-      sessionStartTime: Date.now(),
+      sessionStartTime,
       lastSessionDuration: null,
     })
   },
@@ -121,6 +156,9 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     const { startedAt, sessionStartTime, totalSeconds, sessions, hasReachedEnlightenment } = get()
 
     if (!startedAt || !sessionStartTime) return
+
+    // Clear session-in-progress from IndexedDB (no longer needed for recovery)
+    await clearSessionInProgress()
 
     const elapsed = performance.now() - startedAt
     const durationSeconds = Math.floor(elapsed / 1000)

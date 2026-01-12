@@ -76,7 +76,18 @@ export const useNavigationStore = create<NavigationState>((set) => ({
   showWelcomeCutscene: false,
   welcomeCutsceneShown: false,
 
-  setView: (view) => set({ view }),
+  setView: (view) =>
+    set((state) => {
+      // Trigger insight modal when navigating AWAY from timer with pending insight
+      // This keeps the timer experience sacred - modal appears on the destination tab
+      const leavingTimer = state.view === 'timer' && view !== 'timer'
+      const hasPendingInsight = state.pendingInsightSessionId && !state.showInsightModal
+
+      return {
+        view,
+        showInsightModal: leavingTimer && hasPendingInsight ? true : state.showInsightModal,
+      }
+    }),
   setViewWithVoiceModal: () => set({ view: 'progress', openVoiceModal: true }),
   clearVoiceModalIntent: () => set({ openVoiceModal: false }),
 
