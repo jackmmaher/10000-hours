@@ -12,6 +12,7 @@ import {
   PlannedSession,
   Session,
   Insight,
+  RepeatFrequency,
   addPlannedSession,
   getPlannedSession,
   getIncompletePlansForDate,
@@ -72,6 +73,10 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
 
   // State for tracking if we're adding a new plan (not editing existing)
   const [isAddingNewPlan, setIsAddingNewPlan] = useState(false)
+
+  // Repeat scheduling state
+  const [repeatFrequency, setRepeatFrequency] = useState<RepeatFrequency | null>(null)
+  const [repeatCustomDays, setRepeatCustomDays] = useState<number[]>([])
 
   // Build unified dayItems array combining sessions and pending plans
   const dayItems: DayItem[] = useMemo(() => {
@@ -355,6 +360,8 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
     setPlanPose('')
     setPlanDiscipline('')
     setPlanNotes('')
+    setRepeatFrequency(null)
+    setRepeatCustomDays([])
   }, [])
 
   const handleDurationCategoryChange = useCallback(
@@ -382,6 +389,16 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
     [duration]
   )
 
+  const handleRepeatChange = useCallback(
+    (frequency: RepeatFrequency | null, customDays?: number[]) => {
+      setRepeatFrequency(frequency)
+      if (customDays !== undefined) {
+        setRepeatCustomDays(customDays)
+      }
+    },
+    []
+  )
+
   const handleAddNewPlan = useCallback(() => {
     // Clear form fields for new plan
     setPlannedTime('')
@@ -395,6 +412,8 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
     setPlanSourceTemplateId(undefined)
     setExistingPlan(null)
     setIsAddingNewPlan(true)
+    setRepeatFrequency(null)
+    setRepeatCustomDays([])
 
     // Navigate past all existing items (conceptually to a "new" slot)
     // We'll show the planning form in this state
@@ -452,5 +471,10 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
     // New plan creation
     isAddingNewPlan,
     handleAddNewPlan,
+
+    // Repeat scheduling
+    repeatFrequency,
+    repeatCustomDays,
+    handleRepeatChange,
   }
 }

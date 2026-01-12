@@ -23,6 +23,7 @@ import {
 } from './utils'
 import { usePlannerState } from './usePlannerState'
 import { DayItemsCarousel } from './DayItemsCarousel'
+import { RepeatPicker } from './RepeatPicker'
 
 export type { MeditationPlannerProps } from './types'
 
@@ -311,6 +312,13 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                   className="w-full h-24 px-4 py-3 rounded-xl bg-deep/50 text-ink placeholder:text-ink/30 resize-none focus:outline-none focus:ring-2 focus:ring-accent/20"
                 />
               </div>
+
+              {/* Repeat picker for scheduling recurring sessions */}
+              <RepeatPicker
+                frequency={state.repeatFrequency}
+                customDays={state.repeatCustomDays}
+                onChange={state.handleRepeatChange}
+              />
             </div>
           ) : (
             <DayItemsCarousel
@@ -578,6 +586,15 @@ export function MeditationPlanner({ date, sessions, onClose, onSave }: Meditatio
                     className="w-full h-24 px-4 py-3 rounded-xl bg-deep/50 text-ink placeholder:text-ink/30 resize-none focus:outline-none focus:ring-2 focus:ring-accent/20"
                   />
                 </div>
+
+                {/* Repeat picker - only show for plan mode, not session mode */}
+                {!state.isSessionMode && (
+                  <RepeatPicker
+                    frequency={state.repeatFrequency}
+                    customDays={state.repeatCustomDays}
+                    onChange={state.handleRepeatChange}
+                  />
+                )}
 
                 {/* Insight display - show in session mode */}
                 {state.isSessionMode && (
