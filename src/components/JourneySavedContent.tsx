@@ -49,9 +49,10 @@ function SessionDetailModalWrapper({
 
 interface SavedContentProps {
   onCreateNew?: () => void
+  onPlanTemplate?: (template: SessionTemplate) => void
 }
 
-export function JourneySavedContent({ onCreateNew }: SavedContentProps) {
+export function JourneySavedContent({ onCreateNew, onPlanTemplate }: SavedContentProps) {
   const { user } = useAuthStore()
   const haptic = useTapFeedback()
   const [createdMeditations, setCreatedMeditations] = useState<SessionTemplate[]>([])
@@ -283,6 +284,29 @@ export function JourneySavedContent({ onCreateNew }: SavedContentProps) {
         <CardBody compact>
           <CardTitle>{session.title}</CardTitle>
           <CardDescription>"{session.tagline}"</CardDescription>
+          {/* Plan This action */}
+          {onPlanTemplate && (
+            <div className="mt-3 pt-3 border-t border-ink/5">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation() // Don't open detail modal
+                  haptic.light()
+                  onPlanTemplate(session)
+                }}
+                className="flex items-center gap-1.5 text-xs text-moss hover:text-moss/80 transition-colors px-3 py-1.5 rounded-lg bg-moss/10 touch-manipulation"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                Plan This
+              </button>
+            </div>
+          )}
         </CardBody>
       </Card>
     )
