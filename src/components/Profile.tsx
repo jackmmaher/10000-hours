@@ -28,7 +28,7 @@ import {
   UserPreferences,
   WellbeingDimension,
   WellbeingCheckIn,
-  WellbeingSettings
+  WellbeingSettings,
 } from '../lib/db'
 import { GOAL_PRESETS } from '../lib/milestones'
 import { VoiceBadge } from './VoiceBadge'
@@ -44,7 +44,7 @@ const POSTURE_OPTIONS = [
   { value: 'seated-chair', label: 'Chair' },
   { value: 'lying', label: 'Lying' },
   { value: 'walking', label: 'Walking' },
-  { value: 'varies', label: 'Varies' }
+  { value: 'varies', label: 'Varies' },
 ]
 
 const DISCIPLINE_OPTIONS = [
@@ -54,21 +54,21 @@ const DISCIPLINE_OPTIONS = [
   { value: 'zen', label: 'Zen' },
   { value: 'loving-kindness', label: 'Loving Kindness' },
   { value: 'body-scan', label: 'Body Scan' },
-  { value: 'varies', label: 'Varies' }
+  { value: 'varies', label: 'Varies' },
 ]
 
 const DURATION_OPTIONS = [
   { value: '5-10', label: '5-10 min' },
   { value: '15-20', label: '15-20 min' },
   { value: '30+', label: '30+ min' },
-  { value: 'varies', label: 'Varies' }
+  { value: 'varies', label: 'Varies' },
 ]
 
 const TIME_OPTIONS = [
   { value: 'morning', label: 'Morning' },
   { value: 'afternoon', label: 'Afternoon' },
   { value: 'evening', label: 'Evening' },
-  { value: 'varies', label: 'Varies' }
+  { value: 'varies', label: 'Varies' },
 ]
 
 interface ProfileProps {
@@ -93,6 +93,7 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
   const [showPreferences, setShowPreferences] = useState(false)
   const [showGoalSettings, setShowGoalSettings] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
+  const [notificationRefreshKey, setNotificationRefreshKey] = useState(0)
 
   // Calculate current hours for goal setting UI
   const currentHours = sessions.reduce((sum, s) => sum + s.durationSeconds, 0) / 3600
@@ -105,7 +106,7 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
         getUserPreferences(),
         getWellbeingDimensions(),
         getWellbeingSettings(),
-        getProfile()
+        getProfile(),
       ])
       setPreferences(prefs)
       setDimensions(dims)
@@ -114,7 +115,7 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
       if (profile.firstSessionDate) {
         setPracticingSince(new Date(profile.firstSessionDate))
       } else if (sessions.length > 0) {
-        const firstSession = Math.min(...sessions.map(s => s.startTime))
+        const firstSession = Math.min(...sessions.map((s) => s.startTime))
         setPracticingSince(new Date(firstSession))
       }
 
@@ -146,9 +147,9 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
     isPulling,
     isRefreshing,
     pullDistance,
-    handlers: pullHandlers
+    handlers: pullHandlers,
   } = usePullToRefresh({
-    onRefresh: loadData
+    onRefresh: loadData,
   })
 
   // Swipe navigation
@@ -158,36 +159,46 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
         setView('timer')
       }
     },
-    onSwipeRight: () => setView('progress')
+    onSwipeRight: () => setView('progress'),
   })
 
   // Update preference
-  const handlePreferenceChange = async (
-    key: keyof UserPreferences,
-    value: string
-  ) => {
+  const handlePreferenceChange = async (key: keyof UserPreferences, value: string) => {
     if (!preferences) return
     haptic.light()
     await updateUserPreferences({ [key]: value })
-    setPreferences(prev => prev ? { ...prev, [key]: value } : null)
+    setPreferences((prev) => (prev ? { ...prev, [key]: value } : null))
   }
 
   // Update practice goal
   const handleGoalChange = async (goal: number | undefined) => {
     haptic.light()
     await updateUserPreferences({ practiceGoalHours: goal })
-    setPreferences(prev => prev ? { ...prev, practiceGoalHours: goal } : null)
+    setPreferences((prev) => (prev ? { ...prev, practiceGoalHours: goal } : null))
   }
 
   // Format practicing since date
   const formatPracticingSince = (date: Date): string => {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ]
     return `${months[date.getMonth()]} ${date.getFullYear()}`
   }
 
   // Get display name
-  const displayName = preferences?.displayName ||
-    (user?.email ? user.email.split('@')[0] : 'Practitioner')
+  const displayName =
+    preferences?.displayName || (user?.email ? user.email.split('@')[0] : 'Practitioner')
 
   // Get initials for avatar
   const getInitials = (name: string): string => {
@@ -226,7 +237,7 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
         className="flex justify-center overflow-hidden transition-all duration-200"
         style={{
           height: isPulling || isRefreshing ? Math.min(pullDistance, 80) : 0,
-          opacity: isPulling || isRefreshing ? 1 : 0
+          opacity: isPulling || isRefreshing ? 1 : 0,
         }}
       >
         <div className="flex items-center gap-2 py-2">
@@ -240,11 +251,20 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 14l-7 7m0 0l-7-7m7 7V3"
+              />
             </svg>
           )}
           <span className="text-sm text-moss">
-            {isRefreshing ? 'Refreshing...' : pullDistance >= 80 ? 'Release to refresh' : 'Pull to refresh'}
+            {isRefreshing
+              ? 'Refreshing...'
+              : pullDistance >= 80
+                ? 'Release to refresh'
+                : 'Pull to refresh'}
           </span>
         </div>
       </div>
@@ -252,7 +272,10 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
       <div className="px-6 py-8 max-w-lg mx-auto">
         {/* Header actions: Notifications + Settings */}
         <div className="flex items-center justify-end gap-1 mb-8">
-          <NotificationBell onPress={() => setShowNotifications(true)} />
+          <NotificationBell
+            onPress={() => setShowNotifications(true)}
+            refreshKey={notificationRefreshKey}
+          />
           <button
             onClick={() => {
               haptic.light()
@@ -262,8 +285,18 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
             aria-label="Settings"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
             </svg>
           </button>
         </div>
@@ -279,9 +312,7 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
                 className="w-full h-full rounded-full object-cover"
               />
             ) : (
-              <span className="text-xl font-serif text-ink/60">
-                {getInitials(displayName)}
-              </span>
+              <span className="text-xl font-serif text-ink/60">{getInitials(displayName)}</span>
             )}
           </div>
 
@@ -331,7 +362,8 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
               <p className="text-sm text-ink font-medium">Meditation Preferences</p>
               <p className="text-xs text-ink/40 mt-0.5">
                 {preferences?.preferredDiscipline && preferences.preferredDiscipline !== 'varies'
-                  ? DISCIPLINE_OPTIONS.find(d => d.value === preferences.preferredDiscipline)?.label
+                  ? DISCIPLINE_OPTIONS.find((d) => d.value === preferences.preferredDiscipline)
+                      ?.label
                   : 'Set your defaults'}
               </p>
             </div>
@@ -341,7 +373,12 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </button>
 
@@ -352,7 +389,7 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
               <div>
                 <p className="text-xs text-ink/50 mb-2">Preferred posture</p>
                 <div className="flex flex-wrap gap-2">
-                  {POSTURE_OPTIONS.map(opt => (
+                  {POSTURE_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
                       onClick={() => handlePreferenceChange('preferredPosture', opt.value)}
@@ -372,7 +409,7 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
               <div>
                 <p className="text-xs text-ink/50 mb-2">Preferred discipline</p>
                 <div className="flex flex-wrap gap-2">
-                  {DISCIPLINE_OPTIONS.map(opt => (
+                  {DISCIPLINE_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
                       onClick={() => handlePreferenceChange('preferredDiscipline', opt.value)}
@@ -392,7 +429,7 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
               <div>
                 <p className="text-xs text-ink/50 mb-2">Typical duration</p>
                 <div className="flex flex-wrap gap-2">
-                  {DURATION_OPTIONS.map(opt => (
+                  {DURATION_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
                       onClick={() => handlePreferenceChange('preferredDuration', opt.value)}
@@ -412,7 +449,7 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
               <div>
                 <p className="text-xs text-ink/50 mb-2">Best time</p>
                 <div className="flex flex-wrap gap-2">
-                  {TIME_OPTIONS.map(opt => (
+                  {TIME_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
                       onClick={() => handlePreferenceChange('preferredTime', opt.value)}
@@ -442,9 +479,7 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
               rounded-xl hover:bg-card/95 hover:shadow-md transition-all touch-manipulation cursor-pointer"
           >
             <div className="text-left">
-              <p className="text-sm font-medium text-ink">
-                Practice Goal
-              </p>
+              <p className="text-sm font-medium text-ink">Practice Goal</p>
               <p className="text-xs text-ink/40 mt-0.5">
                 {preferences?.practiceGoalHours
                   ? `${preferences.practiceGoalHours} hours`
@@ -457,7 +492,12 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </button>
 
@@ -485,11 +525,9 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
 
               {/* Goal presets */}
               <div>
-                <p className="text-xs text-ink/40 mb-2">
-                  Set a destination
-                </p>
+                <p className="text-xs text-ink/40 mb-2">Set a destination</p>
                 <div className="flex flex-wrap gap-2">
-                  {GOAL_PRESETS.map(goal => {
+                  {GOAL_PRESETS.map((goal) => {
                     const isSelected = preferences?.practiceGoalHours === goal
                     const isAchieved = goal <= currentHours
                     const isDisabled = isAchieved && !isSelected
@@ -509,7 +547,7 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
                         }`}
                         style={{ opacity: isDisabled ? 0.5 : 1 }}
                       >
-                        {goal >= 1000 ? `${goal/1000}k` : goal}h
+                        {goal >= 1000 ? `${goal / 1000}k` : goal}h
                         {isAchieved && !isSelected && ' ✓'}
                       </button>
                     )
@@ -519,7 +557,8 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
 
               {/* Explainer text */}
               <p className="text-xs text-center text-ink/40">
-                Setting a destination helps celebrate your progress. When you arrive, you can extend further.
+                Setting a destination helps celebrate your progress. When you arrive, you can extend
+                further.
               </p>
             </div>
           )}
@@ -544,7 +583,10 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
       {/* Notification Center Modal */}
       <NotificationCenter
         isOpen={showNotifications}
-        onClose={() => setShowNotifications(false)}
+        onClose={() => {
+          setShowNotifications(false)
+          setNotificationRefreshKey((k) => k + 1)
+        }}
         onInsightReminderClick={(sessionId) => {
           navigateToInsightCapture(sessionId)
         }}

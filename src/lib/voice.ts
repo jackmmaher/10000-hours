@@ -58,31 +58,31 @@ export interface VoiceInputs {
   totalHours: number
   totalSessions: number
   avgSessionMinutes: number
-  sessionsPerWeekAvg: number  // Rolling 4-week average
+  sessionsPerWeekAvg: number // Rolling 4-week average
 
   // Contribution signals
   pearlsShared: number
   meditationsCreated: number
 
   // Validation RECEIVED (others vouch for you)
-  karmaReceived: number       // Total upvotes on your content
+  karmaReceived: number // Total upvotes on your content
   contentSavedByOthers: number // Your pearls + meditations saved
   meditationCompletions: number // Times others completed your meditations
 
   // Validation GIVEN (you vouch for others - reciprocity)
-  karmaGiven: number          // Upvotes you've given to others
-  savesMade: number           // Content you've bookmarked
+  karmaGiven: number // Upvotes you've given to others
+  savesMade: number // Content you've bookmarked
   completionsPerformed: number // Meditations you've practiced
 }
 
 export interface VoiceScore {
-  total: number              // 0-100 composite score
+  total: number // 0-100 composite score
 
   // Component scores (for breakdown display)
-  practice: number           // 0-30
-  contribution: number       // 0-20
+  practice: number // 0-30
+  contribution: number // 0-20
   validationReceived: number // 0-25
-  validationGiven: number    // 0-25
+  validationGiven: number // 0-25
 
   // Individual factors (for detailed breakdown)
   factors: {
@@ -224,62 +224,62 @@ export function calculateVoice(inputs: VoiceInputs): VoiceScore {
       hours: {
         value: inputs.totalHours,
         score: Math.round(hoursScore * 10) / 10,
-        max: hoursMax
+        max: hoursMax,
       },
       depth: {
         value: inputs.avgSessionMinutes,
         score: Math.round(depthScore * 10) / 10,
-        max: depthMax
+        max: depthMax,
       },
       consistency: {
         value: inputs.sessionsPerWeekAvg,
         score: Math.round(consistencyScore * 10) / 10,
-        max: consistencyMax
+        max: consistencyMax,
       },
       // Contribution
       pearlsShared: {
         value: inputs.pearlsShared,
         score: Math.round(pearlsScore * 10) / 10,
-        max: pearlsMax
+        max: pearlsMax,
       },
       meditationsCreated: {
         value: inputs.meditationsCreated,
         score: Math.round(meditationsScore * 10) / 10,
-        max: meditationsMax
+        max: meditationsMax,
       },
       // Validation Received
       karmaReceived: {
         value: inputs.karmaReceived,
         score: Math.round(karmaReceivedScore * 10) / 10,
-        max: karmaReceivedMax
+        max: karmaReceivedMax,
       },
       contentSaved: {
         value: inputs.contentSavedByOthers,
         score: Math.round(contentSavedScore * 10) / 10,
-        max: contentSavedMax
+        max: contentSavedMax,
       },
       completionsReceived: {
         value: inputs.meditationCompletions,
         score: Math.round(completionsReceivedScore * 10) / 10,
-        max: completionsReceivedMax
+        max: completionsReceivedMax,
       },
       // Validation Given
       karmaGiven: {
         value: inputs.karmaGiven,
         score: Math.round(karmaGivenScore * 10) / 10,
-        max: karmaGivenMax
+        max: karmaGivenMax,
       },
       savesMade: {
         value: inputs.savesMade,
         score: Math.round(savesMadeScore * 10) / 10,
-        max: savesMadeMax
+        max: savesMadeMax,
       },
       completionsPerformed: {
         value: inputs.completionsPerformed,
         score: Math.round(completionsPerformedScore * 10) / 10,
-        max: completionsPerformedMax
-      }
-    }
+        max: completionsPerformedMax,
+      },
+    },
   }
 }
 
@@ -310,50 +310,50 @@ const VOICE_TIERS: VoiceTierInfo[] = [
     label: 'Newcomer',
     description: 'Beginning the path',
     minScore: 0,
-    maxScore: 19
+    maxScore: 19,
   },
   {
     tier: 'practitioner',
     label: 'Practitioner',
     description: 'Developing a practice',
     minScore: 20,
-    maxScore: 44
+    maxScore: 44,
   },
   {
     tier: 'established',
     label: 'Established',
     description: 'A steady presence',
     minScore: 45,
-    maxScore: 69
+    maxScore: 69,
   },
   {
     tier: 'respected',
     label: 'Respected',
     description: 'Wisdom recognized',
     minScore: 70,
-    maxScore: 84
+    maxScore: 84,
   },
   {
     tier: 'mentor',
     label: 'Mentor',
     description: 'Guiding others on the path',
     minScore: 85,
-    maxScore: 100
-  }
+    maxScore: 100,
+  },
 ]
 
 /**
  * Get the Voice tier info for a given score
  */
 export function getVoiceTier(score: number): VoiceTierInfo {
-  return VOICE_TIERS.find(t => score >= t.minScore && score <= t.maxScore) || VOICE_TIERS[0]
+  return VOICE_TIERS.find((t) => score >= t.minScore && score <= t.maxScore) || VOICE_TIERS[0]
 }
 
 /**
  * Get the next tier (for showing progress toward upgrade)
  */
 export function getNextTier(currentTier: VoiceTier): VoiceTierInfo | null {
-  const currentIndex = VOICE_TIERS.findIndex(t => t.tier === currentTier)
+  const currentIndex = VOICE_TIERS.findIndex((t) => t.tier === currentTier)
   return currentIndex < VOICE_TIERS.length - 1 ? VOICE_TIERS[currentIndex + 1] : null
 }
 
@@ -460,3 +460,73 @@ export function getVoiceVisual(score: number): {
  * and community validation, max score would be ~30.
  * The algorithm rewards the full picture, not just sitting.
  */
+
+// ============================================
+// VOICE GROWTH NOTIFICATIONS
+// ============================================
+// Centralized notification logic - called ONCE from App.tsx
+// to prevent race conditions from multiple useVoice instances.
+
+import { getSettings, addNotification, hasNotificationWithTitle } from './db'
+import type { InAppNotification } from './notifications'
+
+// Voice thresholds and their quiet recognition messages
+// Written as a teacher might observe, not celebrate
+const VOICE_THRESHOLDS = [
+  { score: 20, message: 'Your voice carries further now.' },
+  { score: 45, message: 'A steady presence. Your practice speaks.' },
+  { score: 70, message: 'Wisdom recognized. Continue.' },
+  { score: 85, message: 'Your path guides others now.' },
+] as const
+
+interface CheckVoiceGrowthParams {
+  previousScore: number
+  currentScore: number
+}
+
+/**
+ * Check for voice growth and create notifications if thresholds crossed.
+ *
+ * This function should be called ONCE when voice score changes, not from
+ * every useVoice instance. This prevents the race condition where multiple
+ * hook instances all try to create the same notification.
+ *
+ * @returns Array of thresholds that triggered notifications
+ */
+export async function checkVoiceGrowthNotification({
+  previousScore,
+  currentScore,
+}: CheckVoiceGrowthParams): Promise<number[]> {
+  // Check settings - respect milestoneEnabled preference
+  const settings = await getSettings()
+  if (!settings.notificationPreferences?.milestoneEnabled) {
+    return []
+  }
+
+  const notifiedThresholds: number[] = []
+
+  // Check each threshold
+  for (const threshold of VOICE_THRESHOLDS) {
+    // Only notify if we crossed this threshold (previous < threshold <= current)
+    if (previousScore < threshold.score && currentScore >= threshold.score) {
+      // Check if notification already exists in DB
+      const notificationTitle = `Voice: ${threshold.score}`
+      const exists = await hasNotificationWithTitle(notificationTitle)
+
+      if (!exists) {
+        // Create notification with distinct voice_growth type
+        const notification: InAppNotification = {
+          id: crypto.randomUUID(),
+          type: 'voice_growth',
+          title: notificationTitle,
+          body: threshold.message,
+          createdAt: Date.now(),
+        }
+        await addNotification(notification)
+        notifiedThresholds.push(threshold.score)
+      }
+    }
+  }
+
+  return notifiedThresholds
+}

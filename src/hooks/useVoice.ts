@@ -8,8 +8,9 @@
  *
  * Two-way validation: rewards both giving AND receiving community engagement
  *
- * Voice growth is recognized quietly via notifications, not celebrations.
- * The way a teacher might leave a note - acknowledgment without fanfare.
+ * NOTE: Voice growth notifications are handled centrally in App.tsx via
+ * checkVoiceGrowthNotification() to prevent race conditions from multiple
+ * useVoice instances. This hook only calculates the score.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
@@ -18,17 +19,6 @@ import { useAuthStore } from '../stores/useAuthStore'
 import { getMyTemplates } from '../lib/templates'
 import { calculateVoice, VoiceScore, VoiceInputs } from '../lib/voice'
 import { updateVoiceScore } from '../lib/supabase'
-import { addNotification, hasNotificationWithTitle } from '../lib/db'
-import { InAppNotification } from '../lib/notifications'
-
-// Voice thresholds and their quiet recognition messages
-// Written as a teacher might observe, not celebrate
-const VOICE_THRESHOLDS = [
-  { score: 20, message: 'Your voice carries further now.' },
-  { score: 45, message: 'A steady presence. Your practice speaks.' },
-  { score: 70, message: 'Wisdom recognized. Continue.' },
-  { score: 85, message: 'Your path guides others now.' },
-] as const
 
 export interface UseVoiceResult {
   voice: VoiceScore | null
@@ -47,12 +37,6 @@ export function useVoice(): UseVoiceResult {
 
   // Track last synced score to avoid unnecessary updates
   const lastSyncedScore = useRef<number | null>(null)
-  // Track previous score for threshold crossing detection
-  const previousScore = useRef<number | null>(null)
-  // Track if initial hydration is complete (prevents false notifications on app load)
-  const hasHydrated = useRef(false)
-  // Track which thresholds have been notified (persisted in ref to avoid duplicates in session)
-  const notifiedThresholds = useRef<Set<number>>(new Set())
 
   const calculateVoiceData = useCallback(async () => {
     setIsLoading(true)
@@ -136,55 +120,6 @@ export function useVoice(): UseVoiceResult {
 
       setInputs(voiceInputs)
       setVoice(voiceScore)
-
-      // Check for voice growth - but only AFTER initial hydration is complete
-      // This prevents false notifications when app loads and score jumps from 0 to actual
-      if (!sessionsLoading) {
-        if (!hasHydrated.current) {
-          // First calculation after sessions have loaded - record baseline, mark existing thresholds as notified
-          hasHydrated.current = true
-          previousScore.current = voiceScore.total
-          // Don't notify for thresholds already passed
-          VOICE_THRESHOLDS.forEach((t) => {
-            if (voiceScore.total >= t.score) {
-              notifiedThresholds.current.add(t.score)
-            }
-          })
-        } else if (previousScore.current !== null) {
-          // Subsequent calculations - check for threshold crossings
-          for (const threshold of VOICE_THRESHOLDS) {
-            // Crossed this threshold AND haven't notified yet
-            if (
-              previousScore.current < threshold.score &&
-              voiceScore.total >= threshold.score &&
-              !notifiedThresholds.current.has(threshold.score)
-            ) {
-              notifiedThresholds.current.add(threshold.score)
-              // Create quiet notification - no fanfare, just acknowledgment
-              // Check DB to prevent duplicates across app sessions
-              const notificationTitle = `Voice: ${threshold.score}`
-              hasNotificationWithTitle(notificationTitle)
-                .then((exists) => {
-                  if (exists) return // Already notified in a previous session
-                  const notification: InAppNotification = {
-                    id: crypto.randomUUID(),
-                    type: 'milestone', // Reuse milestone type for voice growth
-                    title: notificationTitle,
-                    body: threshold.message,
-                    createdAt: Date.now(),
-                  }
-                  addNotification(notification).catch((err) => {
-                    console.warn('Failed to create voice growth notification:', err)
-                  })
-                })
-                .catch((err) => {
-                  console.warn('Failed to check for existing notification:', err)
-                })
-            }
-          }
-          previousScore.current = voiceScore.total
-        }
-      }
 
       // Sync to Supabase if authenticated and score changed
       if (isAuthenticated && user && voiceScore.total !== lastSyncedScore.current) {

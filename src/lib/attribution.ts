@@ -11,7 +11,7 @@
  */
 
 import { supabase, isSupabaseConfigured } from './supabase'
-import { addNotification } from './db'
+import { addNotification, getSettings } from './db'
 
 export interface AttributionStats {
   templateCompletions: number // How many completed your meditations
@@ -136,6 +136,12 @@ export async function getAttributionStats(
  * Language is warm and personal - "You helped someone", not "3 users engaged"
  */
 export async function generateAttributionNotification(userId: string): Promise<boolean> {
+  // Check settings - respect attributionEnabled preference
+  const settings = await getSettings()
+  if (!settings.notificationPreferences?.attributionEnabled) {
+    return false
+  }
+
   const stats = await getAttributionStats(userId, 'week')
 
   // Only generate if there's positive impact

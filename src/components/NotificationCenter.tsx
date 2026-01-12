@@ -22,22 +22,28 @@ interface NotificationCenterProps {
 }
 
 const NOTIFICATION_ICONS: Record<NotificationType, string> = {
-  attribution: '\u{1F49D}',      // Heart with ribbon for "your content helped"
-  milestone: '\u{2728}',         // Sparkles for achievement
-  gentle_reminder: '\u{1F9D8}',  // Person meditating for reminder
+  attribution: '\u{1F49D}', // Heart with ribbon for "your content helped"
+  milestone: '\u{2728}', // Sparkles for achievement
+  voice_growth: '\u{1F331}', // Seedling for voice growth - organic, growing
+  gentle_reminder: '\u{1F9D8}', // Person meditating for reminder
   content_reported: '\u{1F4CB}', // Clipboard for content review
-  insight_reminder: '\u{1F4AD}'  // Thought balloon for insight
+  insight_reminder: '\u{1F4AD}', // Thought balloon for insight
 }
 
 const NOTIFICATION_COLORS: Record<NotificationType, string> = {
   attribution: 'bg-pink-500/10',
   milestone: 'bg-amber-500/10',
+  voice_growth: 'bg-emerald-500/10', // Green for growth
   gentle_reminder: 'bg-blue-500/10',
   content_reported: 'bg-orange-500/10',
-  insight_reminder: 'bg-indigo-500/10'
+  insight_reminder: 'bg-indigo-500/10',
 }
 
-export function NotificationCenter({ isOpen, onClose, onInsightReminderClick }: NotificationCenterProps) {
+export function NotificationCenter({
+  isOpen,
+  onClose,
+  onInsightReminderClick,
+}: NotificationCenterProps) {
   const [notifications, setNotifications] = useState<InAppNotification[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const haptic = useTapFeedback()
@@ -52,25 +58,25 @@ export function NotificationCenter({ isOpen, onClose, onInsightReminderClick }: 
     }
   }, [isOpen])
 
-  const handleDismiss = useCallback(async (id: string) => {
-    haptic.light()
-    await dismissNotification(id)
-    setNotifications(prev => prev.filter(n => n.id !== id))
-  }, [haptic])
+  const handleDismiss = useCallback(
+    async (id: string) => {
+      haptic.light()
+      await dismissNotification(id)
+      setNotifications((prev) => prev.filter((n) => n.id !== id))
+    },
+    [haptic]
+  )
 
   const handleMarkAllRead = useCallback(async () => {
     haptic.light()
-    await Promise.all(notifications.map(n => markNotificationAsRead(n.id)))
+    await Promise.all(notifications.map((n) => markNotificationAsRead(n.id)))
     setNotifications([])
   }, [notifications, haptic])
 
   if (!isOpen) return null
 
   return (
-    <div
-      className="fixed inset-0 z-50"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50" onClick={onClose}>
       {/* Backdrop */}
       <div className="absolute inset-0 bg-ink/30 backdrop-blur-sm" />
 
@@ -97,7 +103,12 @@ export function NotificationCenter({ isOpen, onClose, onInsightReminderClick }: 
               aria-label="Close notifications"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -112,7 +123,9 @@ export function NotificationCenter({ isOpen, onClose, onInsightReminderClick }: 
           ) : notifications.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-ink/40 text-sm mb-2">No new notifications</p>
-              <p className="text-ink/30 text-xs italic">When you have updates, they'll appear here</p>
+              <p className="text-ink/30 text-xs italic">
+                When you have updates, they'll appear here
+              </p>
             </div>
           ) : (
             notifications.map((notification) => (
@@ -193,7 +206,12 @@ function NotificationItem({ notification, onDismiss, onClick }: NotificationItem
         aria-label="Dismiss notification"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
         </svg>
       </button>
     </Wrapper>

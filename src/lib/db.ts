@@ -71,6 +71,7 @@ export {
   snoozeNotification,
   getUnreadNotificationCount,
   deleteNotification,
+  hasNotificationWithTitle,
 } from './db/index'
 
 // Achievements

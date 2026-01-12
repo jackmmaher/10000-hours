@@ -13,14 +13,15 @@ import { useTapFeedback } from '../hooks/useTapFeedback'
 
 interface NotificationBellProps {
   onPress: () => void
+  refreshKey?: number // Increment to trigger refresh
 }
 
-export function NotificationBell({ onPress }: NotificationBellProps) {
+export function NotificationBell({ onPress, refreshKey }: NotificationBellProps) {
   const [unreadCount, setUnreadCount] = useState(0)
   const tapFeedback = useTapFeedback()
 
   useEffect(() => {
-    // Load count on mount
+    // Load count on mount and when refreshKey changes
     getUnreadNotificationCount().then(setUnreadCount)
 
     // Poll every 30s for new notifications
@@ -29,7 +30,7 @@ export function NotificationBell({ onPress }: NotificationBellProps) {
     }, 30000)
 
     return () => clearInterval(interval)
-  }, [])
+  }, [refreshKey])
 
   return (
     <button
