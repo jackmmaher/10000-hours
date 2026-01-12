@@ -36,6 +36,9 @@ interface NavigationState {
   journeySubTab: 'sessions' | 'saved' | 'pearls' | null
   openPlanningModal: boolean
   scrollToSubTabs: boolean
+  // Welcome cutscene state
+  showWelcomeCutscene: boolean
+  welcomeCutsceneShown: boolean // Tracks if shown this session (in-memory only)
   // Actions
   setView: (view: AppView) => void
   setViewWithVoiceModal: () => void
@@ -52,6 +55,9 @@ interface NavigationState {
   navigateToJourneyTab: (subTab: 'sessions' | 'saved' | 'pearls') => void
   navigateToJourneyPlanning: () => void
   clearNavigationIntent: () => void
+  // Welcome cutscene actions
+  triggerWelcomeCutscene: () => void
+  dismissWelcomeCutscene: () => void
 }
 
 export const useNavigationStore = create<NavigationState>((set) => ({
@@ -66,6 +72,9 @@ export const useNavigationStore = create<NavigationState>((set) => ({
   journeySubTab: null,
   openPlanningModal: false,
   scrollToSubTabs: false,
+  // Welcome cutscene state
+  showWelcomeCutscene: false,
+  welcomeCutsceneShown: false,
 
   setView: (view) => set({ view }),
   setViewWithVoiceModal: () => set({ view: 'progress', openVoiceModal: true }),
@@ -130,5 +139,13 @@ export const useNavigationStore = create<NavigationState>((set) => ({
       journeySubTab: null,
       openPlanningModal: false,
       scrollToSubTabs: false,
+    }),
+
+  // Welcome cutscene actions
+  triggerWelcomeCutscene: () => set({ showWelcomeCutscene: true }),
+  dismissWelcomeCutscene: () =>
+    set({
+      showWelcomeCutscene: false,
+      welcomeCutsceneShown: true,
     }),
 }))
