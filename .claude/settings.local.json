@@ -100,7 +100,8 @@
       "Bash(Get-ChildItem -Path . -Recurse -Filter \"*tmpclaude*\")",
       "Bash(Select-Object FullName, Length, LastWriteTime)",
       "Bash(Format-Table -AutoSize)",
-      "Bash(tasklist:*)"
+      "Bash(tasklist:*)",
+      "Bash(npm ls:*)"
     ]
   }
 }
