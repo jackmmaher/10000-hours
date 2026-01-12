@@ -12,6 +12,9 @@
  * - today: Current day without plan (cream orb, same as future)
  * - next: Tomorrow - breathing animation to encourage planning ahead
  * - future: No plan yet
+ *
+ * Journey tab usage: Display-only, clicks scroll to Calendar
+ * Progress tab usage: Display-only streak visualization
  */
 
 import { useMemo } from 'react'
@@ -34,14 +37,14 @@ export function WeekStone({ status, onClick, size = 'sm' }: WeekStoneProps) {
   const sizeClasses = {
     sm: 'w-3 h-3',
     md: 'w-4 h-4',
-    lg: 'w-5 h-5'
+    lg: 'w-5 h-5',
   }
 
   // Animated sizes must be slightly larger than base for breathing effect
   const animatedSizeClasses = {
     sm: 'w-3.5 h-3.5',
     md: 'w-[1.125rem] h-[1.125rem]',
-    lg: 'w-[1.375rem] h-[1.375rem]'
+    lg: 'w-[1.375rem] h-[1.375rem]',
   }
 
   const baseSize = sizeClasses[size]
@@ -54,7 +57,7 @@ export function WeekStone({ status, onClick, size = 'sm' }: WeekStoneProps) {
         className={`${baseSize} rounded-full cursor-default`}
         style={{
           background: `radial-gradient(circle at 30% 30%, var(--stone-completed-inner), var(--stone-completed))`,
-          boxShadow: 'var(--shadow-elevation-1)'
+          boxShadow: 'var(--shadow-elevation-1)',
         }}
         onClick={onClick}
       />
@@ -68,7 +71,7 @@ export function WeekStone({ status, onClick, size = 'sm' }: WeekStoneProps) {
         className={`${baseSize} rounded-full cursor-pointer relative`}
         style={{
           background: `radial-gradient(circle at 30% 30%, var(--accent), var(--stone-completed))`,
-          boxShadow: 'var(--shadow-elevation-1)'
+          boxShadow: 'var(--shadow-elevation-1)',
         }}
         onClick={onClick}
       >
@@ -77,8 +80,17 @@ export function WeekStone({ status, onClick, size = 'sm' }: WeekStoneProps) {
           className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full flex items-center justify-center"
           style={{ background: 'var(--accent)' }}
         >
-          <svg className="w-1.5 h-1.5" style={{ color: 'var(--text-on-accent)' }} fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+          <svg
+            className="w-1.5 h-1.5"
+            style={{ color: 'var(--text-on-accent)' }}
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fillRule="evenodd"
+              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+              clipRule="evenodd"
+            />
           </svg>
         </div>
       </div>
@@ -93,7 +105,7 @@ export function WeekStone({ status, onClick, size = 'sm' }: WeekStoneProps) {
         style={{
           background: `radial-gradient(circle at 30% 30%, var(--accent), var(--stone-completed))`,
           boxShadow: `0 0 0 2px var(--bg-base), 0 0 0 4px var(--border)`,
-          animationDuration: '3000ms'
+          animationDuration: '3000ms',
         }}
         onClick={onClick}
       />
@@ -118,7 +130,7 @@ export function WeekStone({ status, onClick, size = 'sm' }: WeekStoneProps) {
         className={`${baseSize} rounded-full cursor-pointer`}
         style={{
           background: 'var(--stone-planned)',
-          border: '2px solid var(--stone-planned-border)'
+          border: '2px solid var(--stone-planned-border)',
         }}
         onClick={onClick}
       />
@@ -147,7 +159,7 @@ export function WeekStonesRow({
   days,
   onDayClick,
   showLabels = true,
-  size = 'sm'
+  size = 'sm',
 }: WeekStonesRowProps) {
   const haptic = useTapFeedback()
 
@@ -182,15 +194,9 @@ export function WeekStonesRow({
           onClick={() => handleDayClick(i)}
           className="flex flex-col items-center gap-2 cursor-pointer active:scale-90 transition-transform touch-manipulation"
         >
-          <WeekStone
-            status={status}
-            size={size}
-          />
+          <WeekStone status={status} size={size} />
           {showLabels && (
-            <span
-              className="text-[10px]"
-              style={{ color: 'var(--text-muted)' }}
-            >
+            <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
               {DAY_LABELS[i]}
             </span>
           )}
