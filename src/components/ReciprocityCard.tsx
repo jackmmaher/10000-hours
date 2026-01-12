@@ -28,7 +28,7 @@ export function ReciprocityCard({ data }: Props) {
   const balanceMessages = {
     generous: 'You give more than you receive',
     balanced: 'Beautiful balance of give and take',
-    receiver: 'The community is supporting you'
+    receiver: 'The community is supporting you',
   }
 
   // Don't show if no community interaction at all
@@ -37,20 +37,20 @@ export function ReciprocityCard({ data }: Props) {
   }
 
   return (
-    <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-4 border border-indigo-deep/5">
+    <div className="bg-card/90 backdrop-blur-md rounded-2xl p-4 border border-ink/5 shadow-sm">
       {/* Header */}
       <div className="text-center mb-4">
-        <h3 className="font-serif text-lg text-indigo-deep">Community Flow</h3>
-        <p className="text-xs text-indigo-deep/50 mt-1">Your give and receive</p>
+        <h3 className="font-serif text-lg text-ink">Community Flow</h3>
+        <p className="text-xs text-ink-soft mt-1">Your give and receive</p>
       </div>
 
       {/* Give/Receive Grid */}
       <div className="grid grid-cols-2 gap-4">
         {/* Given */}
         <div className="text-center">
-          <p className="text-2xl font-medium text-indigo-deep">{givenTotal}</p>
-          <p className="text-xs text-indigo-deep/60">Given</p>
-          <div className="text-xs text-indigo-deep/40 mt-1 space-y-0.5">
+          <p className="text-2xl font-medium text-ink">{givenTotal}</p>
+          <p className="text-xs text-ink-soft">Given</p>
+          <div className="text-xs text-ink/40 mt-1 space-y-0.5">
             {data.given.karma > 0 && <p>{data.given.karma} votes</p>}
             {data.given.saves > 0 && <p>{data.given.saves} saves</p>}
             {data.given.completions > 0 && <p>{data.given.completions} completions</p>}
@@ -59,9 +59,9 @@ export function ReciprocityCard({ data }: Props) {
 
         {/* Received */}
         <div className="text-center">
-          <p className="text-2xl font-medium text-indigo-deep">{receivedTotal}</p>
-          <p className="text-xs text-indigo-deep/60">Received</p>
-          <div className="text-xs text-indigo-deep/40 mt-1 space-y-0.5">
+          <p className="text-2xl font-medium text-ink">{receivedTotal}</p>
+          <p className="text-xs text-ink-soft">Received</p>
+          <div className="text-xs text-ink/40 mt-1 space-y-0.5">
             {data.received.karma > 0 && <p>{data.received.karma} votes</p>}
             {data.received.saves > 0 && <p>{data.received.saves} saves</p>}
             {data.received.completions > 0 && <p>{data.received.completions} completions</p>}
@@ -70,9 +70,7 @@ export function ReciprocityCard({ data }: Props) {
       </div>
 
       {/* Balance message */}
-      <p className="text-center text-sm text-indigo-deep/50 mt-4 italic">
-        {balanceMessages[balance]}
-      </p>
+      <p className="text-center text-sm text-ink/50 mt-4 italic">{balanceMessages[balance]}</p>
     </div>
   )
 }
