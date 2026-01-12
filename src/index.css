@@ -335,6 +335,85 @@ body {
   }
 }
 
+/* ========================================
+ * BOX BREATHING ANIMATION (4-4-4-4)
+ * Timer idle state - numbers as meditation object
+ * ======================================== */
+
+@keyframes boxBreathe {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  25% {
+    /* Inhale complete - expanded */
+    transform: scale(1.03);
+    opacity: 1;
+  }
+  50% {
+    /* Hold at expanded */
+    transform: scale(1.03);
+    opacity: 1;
+  }
+  75% {
+    /* Exhale complete - return to neutral */
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    /* Hold at neutral */
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Transition animations for timer states */
+@keyframes timerExhale {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+}
+
+@keyframes timerInhale {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Session merge - rising and dissolving */
+@keyframes sessionMergeRise {
+  from {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-30px) scale(0.6);
+    opacity: 0;
+  }
+}
+
+/* Cumulative merge - appearing from below */
+@keyframes cumulativeMergeIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 /* Fade out animation */
 @keyframes fadeOut {
   0% {
