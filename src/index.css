@@ -430,6 +430,174 @@ body {
   animation: fadeOut 3s ease-out forwards;
 }
 
+/* === GOOEY ORB ANIMATIONS === */
+/* Blob movements create liquid/lava lamp effect when combined with SVG gooey filter */
+
+/* Idle state - slow, meditative movements synced to 16s box breathing */
+@keyframes gooeyBlob1Idle {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(15px, -10px) scale(1.05);
+  }
+  50% {
+    transform: translate(-10px, 15px) scale(1);
+  }
+  75% {
+    transform: translate(-15px, -5px) scale(0.95);
+  }
+}
+
+@keyframes gooeyBlob2Idle {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(-12px, 12px) scale(0.95);
+  }
+  50% {
+    transform: translate(10px, -8px) scale(1.05);
+  }
+  75% {
+    transform: translate(8px, 10px) scale(1);
+  }
+}
+
+@keyframes gooeyBlob3Idle {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(8px, 8px) scale(1.1);
+  }
+  50% {
+    transform: translate(-15px, -12px) scale(0.9);
+  }
+  75% {
+    transform: translate(12px, -10px) scale(1);
+  }
+}
+
+/* Core breathing synced to 16s box breathing (4-4-4-4) */
+@keyframes gooeyCoreIdle {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  25% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  75% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+}
+
+/* Atmosphere breathing synced to 16s box breathing */
+@keyframes atmosphereIdle {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  25% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+  75% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+}
+
+/* Active state - more energetic, faster movements */
+@keyframes gooeyBlob1Active {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  20% {
+    transform: translate(20px, -15px) scale(1.1);
+  }
+  40% {
+    transform: translate(-15px, 20px) scale(0.95);
+  }
+  60% {
+    transform: translate(-20px, -10px) scale(1.05);
+  }
+  80% {
+    transform: translate(15px, 15px) scale(1);
+  }
+}
+
+@keyframes gooeyBlob2Active {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  20% {
+    transform: translate(-18px, 18px) scale(0.9);
+  }
+  40% {
+    transform: translate(15px, -12px) scale(1.1);
+  }
+  60% {
+    transform: translate(12px, 15px) scale(1);
+  }
+  80% {
+    transform: translate(-15px, -18px) scale(1.05);
+  }
+}
+
+@keyframes gooeyBlob3Active {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  20% {
+    transform: translate(12px, 12px) scale(1.15);
+  }
+  40% {
+    transform: translate(-20px, -15px) scale(0.85);
+  }
+  60% {
+    transform: translate(18px, -12px) scale(1.1);
+  }
+  80% {
+    transform: translate(-10px, 18px) scale(0.95);
+  }
+}
+
+/* Core pulse during active meditation */
+@keyframes gooeyCore {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+/* Atmosphere during active meditation */
+@keyframes atmosphereActive {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.9;
+  }
+}
+
 /* Progress River shimmer - gentle flow of light */
 @keyframes riverShimmer {
   0%, 100% {
