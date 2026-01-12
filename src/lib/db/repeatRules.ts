@@ -75,6 +75,7 @@ export function generateSessionsFromRule(
       discipline: rule.discipline,
       notes: rule.notes,
       sourceTemplateId: rule.sourceTemplateId,
+      attachedPearlId: rule.attachedPearlId,
       repeatRuleId: rule.id,
       createdAt: Date.now(),
     })

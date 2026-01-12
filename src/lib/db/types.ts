@@ -205,4 +205,5 @@ export interface RepeatRule {
   discipline?: string
   notes?: string
   sourceTemplateId?: string
+  attachedPearlId?: string // Supabase pearl ID attached as intention/guidance
 }

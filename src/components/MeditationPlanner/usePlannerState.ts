@@ -79,6 +79,9 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
   const [repeatFrequency, setRepeatFrequency] = useState<RepeatFrequency | null>(null)
   const [repeatCustomDays, setRepeatCustomDays] = useState<number[]>([])
 
+  // Attached pearl state
+  const [attachedPearl, setAttachedPearl] = useState<{ id: string; text: string } | null>(null)
+
   // Build unified dayItems array combining sessions and pending plans
   const dayItems: DayItem[] = useMemo(() => {
     const dateStart = getStartOfDay(date)
@@ -232,6 +235,9 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
         if (!planSourceTemplateId && existing.sourceTemplateId) {
           setPlanSourceTemplateId(existing.sourceTemplateId)
         }
+        if (existing.attachedPearlId) {
+          setAttachedPearl({ id: existing.attachedPearlId, text: '' }) // Text will be loaded separately
+        }
       }
 
       setIsLoading(false)
@@ -287,6 +293,7 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
             discipline: planDiscipline || undefined,
             notes: planNotes || undefined,
             sourceTemplateId: planSourceTemplateId,
+            attachedPearlId: attachedPearl?.id,
           })
           // Reset repeat state after saving
           setRepeatFrequency(null)
@@ -310,6 +317,7 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
             discipline: planDiscipline || undefined,
             notes: planNotes || undefined,
             sourceTemplateId: planSourceTemplateId,
+            attachedPearlId: attachedPearl?.id,
           })
 
           // Create new scheduled reminder if time is set
@@ -331,6 +339,7 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
             discipline: planDiscipline || undefined,
             notes: planNotes || undefined,
             sourceTemplateId: planSourceTemplateId,
+            attachedPearlId: attachedPearl?.id,
           })
 
           // Create scheduled reminder if time is set
@@ -367,6 +376,7 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
     sessionEdits,
     repeatFrequency,
     repeatCustomDays,
+    attachedPearl,
   ])
 
   const handleDelete = useCallback(async () => {
@@ -394,6 +404,7 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
     setPlanNotes('')
     setRepeatFrequency(null)
     setRepeatCustomDays([])
+    setAttachedPearl(null)
   }, [])
 
   const handleDurationCategoryChange = useCallback(
@@ -431,6 +442,15 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
     []
   )
 
+  // Handle pearl attachment
+  const handlePearlSelect = useCallback((pearl: { id: string; text: string }) => {
+    if (pearl.id) {
+      setAttachedPearl({ id: pearl.id, text: pearl.text })
+    } else {
+      setAttachedPearl(null)
+    }
+  }, [])
+
   const handleAddNewPlan = useCallback(() => {
     // Clear form fields for new plan
     setPlannedTime('')
@@ -446,6 +466,7 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
     setIsAddingNewPlan(true)
     setRepeatFrequency(null)
     setRepeatCustomDays([])
+    setAttachedPearl(null)
 
     // Navigate past all existing items (conceptually to a "new" slot)
     // We'll show the planning form in this state
@@ -508,5 +529,9 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
     repeatFrequency,
     repeatCustomDays,
     handleRepeatChange,
+
+    // Attached pearl
+    attachedPearl,
+    handlePearlSelect,
   }
 }
