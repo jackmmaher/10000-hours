@@ -9,6 +9,7 @@ import {
   markAttributionChecked,
 } from './lib/attribution'
 import { checkAndCreateReminders } from './lib/reminders'
+import { checkVoiceGrowthNotification } from './lib/voice'
 import { Timer } from './components/Timer'
 import { Calendar } from './components/Calendar'
 import { Settings } from './components/Settings'
@@ -36,8 +37,9 @@ function AppContent() {
   const settingsStore = useSettingsStore()
   const authStore = useAuthStore()
 
-  // Initialize voice tracking (handles quiet growth notifications internally)
-  useVoice()
+  // Initialize voice tracking - notifications handled centrally below
+  const { voice } = useVoice()
+  const previousVoiceScore = useRef<number | null>(null)
 
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [editingSession, setEditingSession] = useState<Session | null>(null)
@@ -62,10 +64,38 @@ function AppContent() {
     init()
   }, [hydrate, settingsStore, authStore])
 
+  // Voice growth notification check (singleton - only runs here)
+  // This prevents race conditions from multiple useVoice instances
+  useEffect(() => {
+    if (voice === null) return
+
+    const currentScore = voice.total
+
+    // Skip on first load - just record baseline
+    if (previousVoiceScore.current === null) {
+      previousVoiceScore.current = currentScore
+      return
+    }
+
+    // Check for threshold crossings if score changed
+    if (previousVoiceScore.current !== currentScore) {
+      checkVoiceGrowthNotification({
+        previousScore: previousVoiceScore.current,
+        currentScore,
+      }).catch((err) => {
+        console.warn('Failed to check voice growth notification:', err)
+      })
+      previousVoiceScore.current = currentScore
+    }
+  }, [voice])
+
   // Weekly attribution check (delayed to not block initial load)
   useEffect(() => {
     const user = authStore.user
     if (!user) return
+
+    // Respect user's notification preferences
+    if (!settingsStore.notificationPreferences.attributionEnabled) return
 
     // Check attribution weekly (oxytocin trigger)
     if (shouldCheckAttribution()) {
@@ -76,7 +106,7 @@ function AppContent() {
 
       return () => clearTimeout(timeout)
     }
-  }, [authStore.user])
+  }, [authStore.user, settingsStore.notificationPreferences.attributionEnabled])
 
   // Gentle reminder check (runs on load and every 5 minutes)
   useEffect(() => {

@@ -22,6 +22,7 @@ import {
   getSessionByUuid,
 } from '../../lib/db'
 import { DURATION_CATEGORIES } from '../../lib/meditation-options'
+import { createScheduledReminder, cancelScheduledReminder } from '../../lib/reminders'
 import type { SessionEdits } from './types'
 import { getStartOfDay } from './utils'
 
@@ -216,6 +217,9 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
         await Promise.all(savePromises)
       } else {
         if (existingPlan?.id) {
+          // Cancel existing reminder before updating (time may have changed)
+          await cancelScheduledReminder(existingPlan.id)
+
           await updatePlannedSession(existingPlan.id, {
             date: dateStart,
             plannedTime: plannedTime || undefined,
@@ -226,8 +230,18 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
             notes: planNotes || undefined,
             sourceTemplateId: planSourceTemplateId,
           })
+
+          // Create new scheduled reminder if time is set
+          if (plannedTime) {
+            await createScheduledReminder(
+              existingPlan.id,
+              dateStart,
+              plannedTime,
+              planTitle || 'Meditation'
+            )
+          }
         } else {
-          await addPlannedSession({
+          const newPlan = await addPlannedSession({
             date: dateStart,
             plannedTime: plannedTime || undefined,
             duration: duration || undefined,
@@ -237,6 +251,16 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
             notes: planNotes || undefined,
             sourceTemplateId: planSourceTemplateId,
           })
+
+          // Create scheduled reminder if time is set
+          if (plannedTime && newPlan.id) {
+            await createScheduledReminder(
+              newPlan.id,
+              dateStart,
+              plannedTime,
+              planTitle || 'Meditation'
+            )
+          }
         }
       }
       onSave()
@@ -265,6 +289,8 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
   const handleDelete = useCallback(async () => {
     if (!existingPlan?.id) return
     try {
+      // Cancel any scheduled reminder for this plan
+      await cancelScheduledReminder(existingPlan.id)
       await deletePlannedSession(existingPlan.id)
       onSave()
       onClose()

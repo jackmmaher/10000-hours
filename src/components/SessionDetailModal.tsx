@@ -6,8 +6,20 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { getIntentionGradient } from '../lib/animations'
-import { saveTemplate as saveTemplateLocal, unsaveTemplate as unsaveTemplateLocal, isTemplateSaved, addPlannedSession, addNotification } from '../lib/db'
-import { getTemplateStats, saveTemplate as saveTemplateRemote, unsaveTemplate as unsaveTemplateRemote, reportTemplate } from '../lib/templates'
+import {
+  saveTemplate as saveTemplateLocal,
+  unsaveTemplate as unsaveTemplateLocal,
+  isTemplateSaved,
+  addPlannedSession,
+  addNotification,
+} from '../lib/db'
+import {
+  getTemplateStats,
+  saveTemplate as saveTemplateRemote,
+  unsaveTemplate as unsaveTemplateRemote,
+  reportTemplate,
+} from '../lib/templates'
+import { createScheduledReminder } from '../lib/reminders'
 import { SessionTemplate } from '../lib/types'
 import { ReportModal } from './ReportModal'
 import { InAppNotification } from '../lib/notifications'
@@ -24,7 +36,7 @@ interface SessionDetailModalProps {
   onSaveChange?: (sessionId: string, shouldSave: boolean) => void
   isAuthenticated?: boolean
   onRequireAuth?: () => void
-  currentUserId?: string  // For detecting own content
+  currentUserId?: string // For detecting own content
 }
 
 // Parse duration from string like "5-10 mins" → 10 (take max)
@@ -69,7 +81,7 @@ export function SessionDetailModal({
   onSaveChange,
   isAuthenticated = true,
   onRequireAuth,
-  currentUserId
+  currentUserId,
 }: SessionDetailModalProps) {
   // Check if this is the user's own content (can't vote/save own content)
   const isOwnContent = !!(currentUserId && session.userId === currentUserId)
@@ -90,7 +102,11 @@ export function SessionDetailModal({
   const [isAdopting, setIsAdopting] = useState(false)
 
   // Live stats (fetched from Supabase)
-  const [liveStats, setLiveStats] = useState<{ karma: number; saves: number; completions: number } | null>(null)
+  const [liveStats, setLiveStats] = useState<{
+    karma: number
+    saves: number
+    completions: number
+  } | null>(null)
 
   // Report modal state
   const [showReportModal, setShowReportModal] = useState(false)
@@ -111,7 +127,7 @@ export function SessionDetailModal({
     }
 
     // Fetch live stats from Supabase
-    getTemplateStats(session.id).then(stats => {
+    getTemplateStats(session.id).then((stats) => {
       if (stats) setLiveStats(stats)
     })
   }, [session.id, session.hasSaved, session.hasVoted])
@@ -120,7 +136,7 @@ export function SessionDetailModal({
   const displayStats = liveStats ?? {
     karma: session.karma,
     saves: session.saves,
-    completions: session.completions
+    completions: session.completions,
   }
 
   // Handle vote with optimistic update
@@ -136,10 +152,14 @@ export function SessionDetailModal({
     const newVoted = !hasVoted
     // Optimistic update
     setHasVoted(newVoted)
-    setLiveStats(prev => prev ? {
-      ...prev,
-      karma: prev.karma + (newVoted ? 1 : -1)
-    } : null)
+    setLiveStats((prev) =>
+      prev
+        ? {
+            ...prev,
+            karma: prev.karma + (newVoted ? 1 : -1),
+          }
+        : null
+    )
 
     try {
       if (onVote) {
@@ -148,10 +168,14 @@ export function SessionDetailModal({
     } catch (err) {
       // Rollback on error
       setHasVoted(!newVoted)
-      setLiveStats(prev => prev ? {
-        ...prev,
-        karma: prev.karma + (newVoted ? -1 : 1)
-      } : null)
+      setLiveStats((prev) =>
+        prev
+          ? {
+              ...prev,
+              karma: prev.karma + (newVoted ? -1 : 1),
+            }
+          : null
+      )
       console.error('Failed to vote:', err)
     } finally {
       setIsVoting(false)
@@ -167,10 +191,14 @@ export function SessionDetailModal({
 
     // Optimistic update for saves count
     setIsSaved(newSaved)
-    setLiveStats(prev => prev ? {
-      ...prev,
-      saves: prev.saves + (newSaved ? 1 : -1)
-    } : null)
+    setLiveStats((prev) =>
+      prev
+        ? {
+            ...prev,
+            saves: prev.saves + (newSaved ? 1 : -1),
+          }
+        : null
+    )
 
     try {
       if (newSaved) {
@@ -193,10 +221,14 @@ export function SessionDetailModal({
     } catch (err) {
       // Rollback on error
       setIsSaved(!newSaved)
-      setLiveStats(prev => prev ? {
-        ...prev,
-        saves: prev.saves + (newSaved ? -1 : 1)
-      } : null)
+      setLiveStats((prev) =>
+        prev
+          ? {
+              ...prev,
+              saves: prev.saves + (newSaved ? -1 : 1),
+            }
+          : null
+      )
       console.error('Failed to save template:', err)
     } finally {
       setIsSaving(false)
@@ -212,16 +244,22 @@ export function SessionDetailModal({
 
     setIsAdopting(true)
     try {
-      await addPlannedSession({
-        date: getStartOfDay(selectedDate),
+      const dateStart = getStartOfDay(selectedDate)
+      const newPlan = await addPlannedSession({
+        date: dateStart,
         plannedTime: plannedTime || undefined,
         duration: parseDuration(session.durationGuidance),
         title: session.title,
         pose: session.posture,
         discipline: session.discipline,
         notes: session.intention,
-        sourceTemplateId: session.id
+        sourceTemplateId: session.id,
       })
+
+      // Create scheduled reminder if time is set
+      if (plannedTime && newPlan.id) {
+        await createScheduledReminder(newPlan.id, dateStart, plannedTime, session.title)
+      }
 
       onAdopt()
     } catch (err) {
@@ -232,30 +270,33 @@ export function SessionDetailModal({
   }
 
   // Handle report submission
-  const handleReport = useCallback(async (reason: string) => {
-    if (!currentUserId) return
+  const handleReport = useCallback(
+    async (reason: string) => {
+      if (!currentUserId) return
 
-    const result = await reportTemplate(session.id, currentUserId, reason)
+      const result = await reportTemplate(session.id, currentUserId, reason)
 
-    if (result.success && result.creatorId) {
-      // Create notification for the content creator
-      const notification: InAppNotification = {
-        id: `report-${session.id}-${Date.now()}`,
-        type: 'content_reported',
-        title: 'Content Under Review',
-        body: `Your meditation "${session.title}" has been flagged for review. You'll receive an email once the review is complete.`,
-        createdAt: Date.now(),
-        metadata: {
-          contentId: session.id
+      if (result.success && result.creatorId) {
+        // Create notification for the content creator
+        const notification: InAppNotification = {
+          id: `report-${session.id}-${Date.now()}`,
+          type: 'content_reported',
+          title: 'Content Under Review',
+          body: `Your meditation "${session.title}" has been flagged for review. You'll receive an email once the review is complete.`,
+          createdAt: Date.now(),
+          metadata: {
+            contentId: session.id,
+          },
         }
+        await addNotification(notification)
       }
-      await addNotification(notification)
-    }
 
-    if (!result.success) {
-      throw new Error('Failed to submit report')
-    }
-  }, [currentUserId, session.id, session.title])
+      if (!result.success) {
+        throw new Error('Failed to submit report')
+      }
+    },
+    [currentUserId, session.id, session.title]
+  )
 
   // Block swipe navigation when modal is open
   const handleTouchEvent = (e: React.TouchEvent) => {
@@ -282,7 +323,12 @@ export function SessionDetailModal({
                 aria-label="Report issue"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
+                  />
                 </svg>
               </button>
             )}
@@ -293,18 +339,19 @@ export function SessionDetailModal({
               aria-label="Close modal"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
 
           {/* Title and tagline */}
-          <p className="font-serif text-2xl text-white drop-shadow-sm">
-            {session.title}
-          </p>
-          <p className="text-white/80 text-sm mt-2 italic">
-            "{session.tagline}"
-          </p>
+          <p className="font-serif text-2xl text-white drop-shadow-sm">{session.title}</p>
+          <p className="text-white/80 text-sm mt-2 italic">"{session.tagline}"</p>
         </div>
 
         {/* Content */}
@@ -328,17 +375,13 @@ export function SessionDetailModal({
           {/* Guidance notes */}
           <div className="mb-8">
             <p className="font-serif text-sm text-ink/50 mb-3">Guidance</p>
-            <p className="text-ink leading-relaxed whitespace-pre-line">
-              {session.guidanceNotes}
-            </p>
+            <p className="text-ink leading-relaxed whitespace-pre-line">{session.guidanceNotes}</p>
           </div>
 
           {/* Intention */}
           <div className="mb-8">
             <p className="font-serif text-sm text-ink/50 mb-2">Intention</p>
-            <p className="text-ink">
-              {session.intention}
-            </p>
+            <p className="text-ink">{session.intention}</p>
           </div>
 
           {/* Recommended experience level */}
@@ -354,8 +397,11 @@ export function SessionDetailModal({
           {session.intentTags && session.intentTags.length > 0 && (
             <div className="mb-8">
               <div className="flex flex-wrap gap-2">
-                {session.intentTags.map(tag => (
-                  <span key={tag} className="text-xs px-2 py-1 rounded-full bg-cream-deep text-ink/50">
+                {session.intentTags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="text-xs px-2 py-1 rounded-full bg-cream-deep text-ink/50"
+                  >
                     {tag}
                   </span>
                 ))}
@@ -371,16 +417,27 @@ export function SessionDetailModal({
               disabled={isOwnContent || isVoting}
               className={`
                 flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all
-                ${(isOwnContent || hasVoted)
-                  ? 'bg-indigo-deep text-cream'
-                  : 'bg-cream-deep text-ink/50 hover:text-ink/70 hover:bg-cream-deep/80'
+                ${
+                  isOwnContent || hasVoted
+                    ? 'bg-indigo-deep text-cream'
+                    : 'bg-cream-deep text-ink/50 hover:text-ink/70 hover:bg-cream-deep/80'
                 }
                 ${isVoting ? 'opacity-50' : ''}
                 ${isOwnContent ? 'cursor-default' : ''}
               `}
             >
-              <svg className="w-4 h-4" fill={(isOwnContent || hasVoted) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 15l7-7 7 7" />
+              <svg
+                className="w-4 h-4"
+                fill={isOwnContent || hasVoted ? 'currentColor' : 'none'}
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M5 15l7-7 7 7"
+                />
               </svg>
               <span className="tabular-nums">{displayStats.karma}</span>
             </button>
@@ -391,16 +448,27 @@ export function SessionDetailModal({
               disabled={isOwnContent || isSaving}
               className={`
                 flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all
-                ${(isOwnContent || isSaved)
-                  ? 'bg-indigo-deep text-cream'
-                  : 'bg-cream-deep text-ink/50 hover:text-ink/70 hover:bg-cream-deep/80'
+                ${
+                  isOwnContent || isSaved
+                    ? 'bg-indigo-deep text-cream'
+                    : 'bg-cream-deep text-ink/50 hover:text-ink/70 hover:bg-cream-deep/80'
                 }
                 ${isSaving ? 'opacity-50' : ''}
                 ${isOwnContent ? 'cursor-default' : ''}
               `}
             >
-              <svg className="w-4 h-4" fill={(isOwnContent || isSaved) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              <svg
+                className="w-4 h-4"
+                fill={isOwnContent || isSaved ? 'currentColor' : 'none'}
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                />
               </svg>
               <span className="tabular-nums">{displayStats.saves}</span>
             </button>
@@ -408,7 +476,12 @@ export function SessionDetailModal({
             {/* Completions (read-only) */}
             <span className="flex items-center gap-1.5 px-3 py-1.5 text-ink/40">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               <span className="tabular-nums">{displayStats.completions.toLocaleString()}</span>
             </span>
@@ -423,21 +496,33 @@ export function SessionDetailModal({
                   disabled={isOwnContent}
                   className={`
                     flex-none w-12 h-12 rounded-xl flex items-center justify-center transition-colors
-                    ${(isOwnContent || isSaved)
-                      ? 'bg-indigo-deep text-cream'
-                      : 'bg-cream-deep text-ink/50 hover:text-ink/70'
+                    ${
+                      isOwnContent || isSaved
+                        ? 'bg-indigo-deep text-cream'
+                        : 'bg-cream-deep text-ink/50 hover:text-ink/70'
                     }
                     ${isOwnContent ? 'cursor-default' : ''}
                   `}
-                  aria-label={isOwnContent ? 'Your meditation' : (isSaved ? 'Unsave meditation' : 'Save meditation')}
+                  aria-label={
+                    isOwnContent
+                      ? 'Your meditation'
+                      : isSaved
+                        ? 'Unsave meditation'
+                        : 'Save meditation'
+                  }
                 >
                   <svg
                     className="w-5 h-5"
-                    fill={(isOwnContent || isSaved) ? 'currentColor' : 'none'}
+                    fill={isOwnContent || isSaved ? 'currentColor' : 'none'}
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                    />
                   </svg>
                 </button>
                 <button
@@ -471,7 +556,9 @@ export function SessionDetailModal({
                   <label className="text-xs text-ink/50 block mb-2">
                     Time
                     {session.bestTime && (
-                      <span className="text-ink/30 ml-1">(suggested: {session.bestTime.toLowerCase()})</span>
+                      <span className="text-ink/30 ml-1">
+                        (suggested: {session.bestTime.toLowerCase()})
+                      </span>
                     )}
                   </label>
                   <input
@@ -501,7 +588,8 @@ export function SessionDetailModal({
                       setSelectedDate(tomorrow)
                     }}
                     className={`flex-1 py-2 rounded-lg text-xs transition-colors ${
-                      formatDateForInput(selectedDate) === formatDateForInput(new Date(Date.now() + 86400000))
+                      formatDateForInput(selectedDate) ===
+                      formatDateForInput(new Date(Date.now() + 86400000))
                         ? 'bg-moss/20 text-moss font-medium'
                         : 'bg-cream-deep text-ink/50 hover:bg-cream-deep/80'
                     }`}
@@ -515,7 +603,8 @@ export function SessionDetailModal({
                       setSelectedDate(nextWeek)
                     }}
                     className={`flex-1 py-2 rounded-lg text-xs transition-colors ${
-                      formatDateForInput(selectedDate) === formatDateForInput(new Date(Date.now() + 7 * 86400000))
+                      formatDateForInput(selectedDate) ===
+                      formatDateForInput(new Date(Date.now() + 7 * 86400000))
                         ? 'bg-moss/20 text-moss font-medium'
                         : 'bg-cream-deep text-ink/50 hover:bg-cream-deep/80'
                     }`}
