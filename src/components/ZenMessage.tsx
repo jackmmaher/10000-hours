@@ -3,17 +3,29 @@ import { ZEN_MESSAGE_BEFORE, ZEN_MESSAGE_AFTER } from '../lib/constants'
 
 interface ZenMessageProps {
   isEnlightened: boolean
+  goalCompleted?: boolean // New: true when goal achieved and no new goal set
   onComplete: () => void
-  variant: 'before' | 'after'
+  variant: 'before' | 'after' | 'welcome' // Add 'welcome' variant
 }
 
-export function ZenMessage({ isEnlightened, onComplete, variant }: ZenMessageProps) {
+export function ZenMessage({
+  isEnlightened,
+  goalCompleted = false,
+  onComplete,
+  variant,
+}: ZenMessageProps) {
   const [visibleWords, setVisibleWords] = useState(0)
   const [fading, setFading] = useState(false)
 
-  const message = variant === 'after' || isEnlightened
-    ? ZEN_MESSAGE_AFTER
-    : ZEN_MESSAGE_BEFORE
+  // Welcome variant: show 'after' only if goal completed, otherwise 'before'
+  const message =
+    variant === 'welcome'
+      ? goalCompleted
+        ? ZEN_MESSAGE_AFTER
+        : ZEN_MESSAGE_BEFORE
+      : variant === 'after' || isEnlightened
+        ? ZEN_MESSAGE_AFTER
+        : ZEN_MESSAGE_BEFORE
 
   const words = message.split(' ')
 
@@ -28,21 +40,30 @@ export function ZenMessage({ isEnlightened, onComplete, variant }: ZenMessagePro
     const wordTimers: ReturnType<typeof setTimeout>[] = []
 
     words.forEach((_, index) => {
-      const timer = setTimeout(() => {
-        setVisibleWords(index + 1)
-      }, (index + 1) * wordDelay)
+      const timer = setTimeout(
+        () => {
+          setVisibleWords(index + 1)
+        },
+        (index + 1) * wordDelay
+      )
       wordTimers.push(timer)
     })
 
     // Hold, then fade out
-    const holdTimer = setTimeout(() => {
-      setFading(true)
-    }, words.length * wordDelay + holdDuration)
+    const holdTimer = setTimeout(
+      () => {
+        setFading(true)
+      },
+      words.length * wordDelay + holdDuration
+    )
 
     // Complete after fade
-    const completeTimer = setTimeout(() => {
-      onComplete()
-    }, words.length * wordDelay + holdDuration + fadeOutDuration)
+    const completeTimer = setTimeout(
+      () => {
+        onComplete()
+      },
+      words.length * wordDelay + holdDuration + fadeOutDuration
+    )
 
     return () => {
       wordTimers.forEach(clearTimeout)
