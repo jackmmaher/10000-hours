@@ -3,8 +3,8 @@
  *
  * Gathers inputs from:
  * - Local IndexedDB: sessions (practice data)
- * - Supabase profile: karma/saves received, karma/saves given, pearls created
- * - Supabase templates: meditations created, completions received
+ * - Supabase profile: all validation metrics (karma, saves, completions - both given and received)
+ * - Supabase templates: meditations created count
  *
  * Two-way validation: rewards both giving AND receiving community engagement
  *
@@ -64,19 +64,16 @@ export function useVoice(): UseVoiceResult {
       // CONTRIBUTION SIGNALS (from Supabase)
       // ============================================
 
-      // Pearls shared - now from Supabase profile (accurate, not stale local data)
+      // Pearls shared - from Supabase profile
       const pearlsShared = profile?.pearlsCreated || 0
 
-      // Meditations created (from Supabase if authenticated)
+      // Meditations created (count only - from Supabase if authenticated)
       let meditationsCreated = 0
-      let meditationCompletions = 0
 
       if (isAuthenticated && user) {
         try {
           const myTemplates = await getMyTemplates(user.id)
           meditationsCreated = myTemplates.length
-          // Sum completions from all user's templates
-          meditationCompletions = myTemplates.reduce((sum, t) => sum + (t.completions || 0), 0)
         } catch (err) {
           console.warn('Failed to fetch user templates:', err)
         }
@@ -88,6 +85,8 @@ export function useVoice(): UseVoiceResult {
 
       const karmaReceived = profile?.totalKarma || 0
       const contentSavedByOthers = profile?.totalSaves || 0
+      // Completions of your meditations by others - now denormalized on profile
+      const meditationCompletions = profile?.totalCompletionsReceived || 0
 
       // ============================================
       // VALIDATION GIVEN (from Supabase profile - two-way)

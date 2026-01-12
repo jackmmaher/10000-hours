@@ -15,6 +15,7 @@ export interface UserProfile {
   // Validation received
   totalKarma: number
   totalSaves: number
+  totalCompletionsReceived: number // Others completing your meditations
   // Validation given (two-way)
   karmaGiven: number
   savesMade: number
@@ -59,7 +60,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     try {
       // Get current session
-      const { data: { session }, error } = await supabase.auth.getSession()
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession()
 
       if (error) {
         console.error('Auth init error:', error)
@@ -78,19 +82,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({
           user: session.user,
           session,
-          profile: profile ? {
-            id: profile.id,
-            tier: profile.tier,
-            totalKarma: profile.total_karma || 0,
-            totalSaves: profile.total_saves || 0,
-            karmaGiven: profile.karma_given || 0,
-            savesMade: profile.saves_made || 0,
-            completionsPerformed: profile.completions_performed || 0,
-            pearlsCreated: profile.pearls_created || 0,
-            createdAt: profile.created_at
-          } : null,
+          profile: profile
+            ? {
+                id: profile.id,
+                tier: profile.tier,
+                totalKarma: profile.total_karma || 0,
+                totalSaves: profile.total_saves || 0,
+                totalCompletionsReceived: profile.total_completions_received || 0,
+                karmaGiven: profile.karma_given || 0,
+                savesMade: profile.saves_made || 0,
+                completionsPerformed: profile.completions_performed || 0,
+                pearlsCreated: profile.pearls_created || 0,
+                createdAt: profile.created_at,
+              }
+            : null,
           isAuthenticated: true,
-          isLoading: false
+          isLoading: false,
         })
       } else {
         set({ isLoading: false })
@@ -108,25 +115,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           set({
             user: session.user,
             session,
-            profile: profile ? {
-              id: profile.id,
-              tier: profile.tier,
-              totalKarma: profile.total_karma || 0,
-              totalSaves: profile.total_saves || 0,
-              karmaGiven: profile.karma_given || 0,
-              savesMade: profile.saves_made || 0,
-              completionsPerformed: profile.completions_performed || 0,
-              pearlsCreated: profile.pearls_created || 0,
-              createdAt: profile.created_at
-            } : null,
-            isAuthenticated: true
+            profile: profile
+              ? {
+                  id: profile.id,
+                  tier: profile.tier,
+                  totalKarma: profile.total_karma || 0,
+                  totalSaves: profile.total_saves || 0,
+                  totalCompletionsReceived: profile.total_completions_received || 0,
+                  karmaGiven: profile.karma_given || 0,
+                  savesMade: profile.saves_made || 0,
+                  completionsPerformed: profile.completions_performed || 0,
+                  pearlsCreated: profile.pearls_created || 0,
+                  createdAt: profile.created_at,
+                }
+              : null,
+            isAuthenticated: true,
           })
         } else if (event === 'SIGNED_OUT') {
           set({
             user: null,
             session: null,
             profile: null,
-            isAuthenticated: false
+            isAuthenticated: false,
           })
         }
       })
@@ -148,8 +158,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin
-        }
+          redirectTo: window.location.origin,
+        },
       })
 
       if (error) throw error
@@ -157,7 +167,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       console.error('Google sign-in error:', err)
       set({
         isLoading: false,
-        error: err instanceof Error ? err.message : 'Sign-in failed'
+        error: err instanceof Error ? err.message : 'Sign-in failed',
       })
     }
   },
@@ -174,8 +184,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
         options: {
-          redirectTo: window.location.origin
-        }
+          redirectTo: window.location.origin,
+        },
       })
 
       if (error) throw error
@@ -183,7 +193,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       console.error('Apple sign-in error:', err)
       set({
         isLoading: false,
-        error: err instanceof Error ? err.message : 'Sign-in failed'
+        error: err instanceof Error ? err.message : 'Sign-in failed',
       })
     }
   },
@@ -202,13 +212,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         session: null,
         profile: null,
         isAuthenticated: false,
-        isLoading: false
+        isLoading: false,
       })
     } catch (err) {
       console.error('Sign-out error:', err)
       set({
         isLoading: false,
-        error: err instanceof Error ? err.message : 'Sign-out failed'
+        error: err instanceof Error ? err.message : 'Sign-out failed',
       })
     }
   },
@@ -231,12 +241,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             tier: profile.tier,
             totalKarma: profile.total_karma || 0,
             totalSaves: profile.total_saves || 0,
+            totalCompletionsReceived: profile.total_completions_received || 0,
             karmaGiven: profile.karma_given || 0,
             savesMade: profile.saves_made || 0,
             completionsPerformed: profile.completions_performed || 0,
             pearlsCreated: profile.pearls_created || 0,
-            createdAt: profile.created_at
-          }
+            createdAt: profile.created_at,
+          },
         })
       }
     } catch (err) {
@@ -244,5 +255,5 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  clearError: () => set({ error: null })
+  clearError: () => set({ error: null }),
 }))
