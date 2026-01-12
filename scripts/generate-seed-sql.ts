@@ -48,7 +48,7 @@ function normalizeBestTime(bestTime: string): string {
 // Format array for PostgreSQL
 function formatArray(arr: string[]): string {
   if (!arr || arr.length === 0) return "'{}'"
-  const escaped = arr.map(s => `"${escapeSQL(s)}"`).join(',')
+  const escaped = arr.map((s) => `"${escapeSQL(s)}"`).join(',')
   return `'{${escaped}}'`
 }
 
@@ -70,13 +70,15 @@ console.log('')
 
 for (const session of sessionsData) {
   const uuid = sessionIdMap.get(session.id)!
-  const courseUuid = session.course_id ? courseIdMap.get(session.course_id) : null
+  const _courseUuid = session.course_id ? courseIdMap.get(session.course_id) : null
 
   console.log(`INSERT INTO public.session_templates (`)
   console.log(`  id, user_id, title, tagline, hero_gradient, duration_guidance,`)
   console.log(`  discipline, posture, best_time, environment, guidance_notes,`)
   console.log(`  intention, recommended_after_hours, tags, intent_tags,`)
-  console.log(`  karma, saves, completions, creator_hours, course_id, course_position`)
+  console.log(
+    `  karma, saves, completions, creator_hours, creator_voice_score, course_id, course_position`
+  )
   console.log(`) VALUES (`)
   console.log(`  '${uuid}',`)
   console.log(`  NULL,`)
@@ -93,18 +95,23 @@ for (const session of sessionsData) {
   console.log(`  ${session.recommended_after_hours},`)
   console.log(`  ${formatArray(session.tags || [])},`)
   console.log(`  ${formatArray(session.intent_tags || [])},`)
-  console.log(`  ${session.seed_karma},`)
-  console.log(`  ${session.seed_saves},`)
-  console.log(`  ${session.seed_completions},`)
+  console.log(`  ${session.karma ?? 0},`)
+  console.log(`  ${session.saves ?? 0},`)
+  console.log(`  ${session.completions ?? 0},`)
   console.log(`  ${session.creator_hours},`)
-  console.log(`  NULL,`)  // course_id - courses not enabled yet
-  console.log(`  NULL`)   // course_position - courses not enabled yet
+  console.log(`  ${session.creatorVoiceScore ?? 0},`)
+  console.log(`  NULL,`) // course_id - courses not enabled yet
+  console.log(`  NULL`) // course_position - courses not enabled yet
   console.log(`)`)
   console.log(`ON CONFLICT (id) DO UPDATE SET`)
   console.log(`  title = EXCLUDED.title,`)
   console.log(`  tagline = EXCLUDED.tagline,`)
   console.log(`  guidance_notes = EXCLUDED.guidance_notes,`)
-  console.log(`  intent_tags = EXCLUDED.intent_tags;`)
+  console.log(`  intent_tags = EXCLUDED.intent_tags,`)
+  console.log(`  karma = EXCLUDED.karma,`)
+  console.log(`  saves = EXCLUDED.saves,`)
+  console.log(`  completions = EXCLUDED.completions,`)
+  console.log(`  creator_voice_score = EXCLUDED.creator_voice_score;`)
   console.log('')
 }
 

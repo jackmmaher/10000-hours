@@ -27,7 +27,8 @@
     ],
     "karma": 39,
     "saves": 75,
-    "completions": 159
+    "completions": 159,
+    "creatorVoiceScore": 8
   },
   {
     "id": "6f3836dd-7fb6-5fe4-81cb-92cf6942650f",
@@ -48,7 +49,8 @@
     "intent_tags": ["focus", "racing-mind", "body-awareness", "emotions", "letting-go"],
     "karma": 18,
     "saves": 14,
-    "completions": 57
+    "completions": 57,
+    "creatorVoiceScore": 62
   },
   {
     "id": "5daf3801-206f-5b47-8323-728e7f22c6d4",
@@ -79,7 +81,8 @@
     ],
     "karma": 39,
     "saves": 89,
-    "completions": 112
+    "completions": 112,
+    "creatorVoiceScore": 21
   },
   {
     "id": "86273986-4db7-5e9d-8a32-235b6bb9051b",
@@ -100,7 +103,8 @@
     "intent_tags": ["anger", "pain", "self-compassion", "emotions", "letting-go", "beginners"],
     "karma": 1,
     "saves": 1,
-    "completions": 10
+    "completions": 10,
+    "creatorVoiceScore": 43
   },
   {
     "id": "d289969c-c889-5a3f-b001-4ca35ea11364",
@@ -129,7 +133,8 @@
     ],
     "karma": 130,
     "saves": 148,
-    "completions": 303
+    "completions": 303,
+    "creatorVoiceScore": 53
   },
   {
     "id": "fbeeac9a-dae8-5d95-98d6-5c98205b7798",
@@ -157,7 +162,8 @@
     ],
     "karma": 3,
     "saves": 0,
-    "completions": 5
+    "completions": 5,
+    "creatorVoiceScore": 38
   },
   {
     "id": "25961543-231d-5d56-99bd-2e44f0209895",
@@ -178,7 +184,8 @@
     "intent_tags": ["anger", "focus", "sleep", "self-compassion", "morning", "beginners"],
     "karma": 161,
     "saves": 160,
-    "completions": 815
+    "completions": 815,
+    "creatorVoiceScore": 25
   },
   {
     "id": "2cd4aa9c-31fc-50c3-b165-f1f39622db66",
@@ -199,7 +206,8 @@
     "intent_tags": ["anxiety", "focus", "sleep", "body-awareness", "beginners"],
     "karma": 5,
     "saves": 6,
-    "completions": 42
+    "completions": 42,
+    "creatorVoiceScore": 19
   },
   {
     "id": "b73d6c0b-e6bb-51d1-99b9-ae637e6e6788",
@@ -229,7 +237,8 @@
     ],
     "karma": 66,
     "saves": 33,
-    "completions": 114
+    "completions": 114,
+    "creatorVoiceScore": 41
   },
   {
     "id": "da132f0b-315a-5a9a-84e2-c564badf3129",
@@ -259,7 +268,8 @@
     ],
     "karma": 94,
     "saves": 45,
-    "completions": 316
+    "completions": 316,
+    "creatorVoiceScore": 26
   },
   {
     "id": "69aa045b-ced8-55de-b651-45b0bb027eff",
@@ -292,7 +302,8 @@
     ],
     "karma": 141,
     "saves": 187,
-    "completions": 524
+    "completions": 524,
+    "creatorVoiceScore": 55
   },
   {
     "id": "37d7e48f-02db-5f4f-b451-56496f1f8b99",
@@ -323,7 +334,8 @@
     ],
     "karma": 48,
     "saves": 45,
-    "completions": 153
+    "completions": 153,
+    "creatorVoiceScore": 50
   },
   {
     "id": "dab9c033-87d9-59da-ab83-7f6755f0584e",
@@ -344,7 +356,8 @@
     "intent_tags": ["anger", "focus", "clarity", "pain", "self-compassion", "emotions"],
     "karma": 77,
     "saves": 91,
-    "completions": 308
+    "completions": 308,
+    "creatorVoiceScore": 80
   },
   {
     "id": "9cc6f490-69a7-58d7-91d6-e4b8dd5635a4",
@@ -375,7 +388,8 @@
     ],
     "karma": 111,
     "saves": 74,
-    "completions": 205
+    "completions": 205,
+    "creatorVoiceScore": 25
   },
   {
     "id": "195ed675-c8a9-508b-90f9-be171a456057",
@@ -409,7 +423,8 @@
     ],
     "karma": 86,
     "saves": 196,
-    "completions": 210
+    "completions": 210,
+    "creatorVoiceScore": 42
   },
   {
     "id": "9a7b11e2-e638-577f-a6f2-f38c55d9bc64",
@@ -430,7 +445,8 @@
     "intent_tags": ["anger", "focus", "racing-mind", "clarity", "sleep"],
     "karma": 58,
     "saves": 106,
-    "completions": 311
+    "completions": 311,
+    "creatorVoiceScore": 21
   },
   {
     "id": "ed02cf3d-7920-5adc-97f6-9c0752ff84bf",
@@ -459,7 +475,8 @@
     ],
     "karma": 67,
     "saves": 61,
-    "completions": 289
+    "completions": 289,
+    "creatorVoiceScore": 50
   },
   {
     "id": "0708b6e0-2a2a-5224-83a3-f5e6f27826c2",
@@ -490,7 +507,8 @@
     ],
     "karma": 69,
     "saves": 124,
-    "completions": 335
+    "completions": 335,
+    "creatorVoiceScore": 41
   },
   {
     "id": "9ad841f3-2b4e-5d7b-ad46-7c85b3b348fe",
@@ -520,7 +538,8 @@
     ],
     "karma": 43,
     "saves": 59,
-    "completions": 110
+    "completions": 110,
+    "creatorVoiceScore": 58
   },
   {
     "id": "d8f32e38-cf88-59e4-b651-1779f51daa64",
@@ -549,7 +568,8 @@
     ],
     "karma": 70,
     "saves": 22,
-    "completions": 271
+    "completions": 271,
+    "creatorVoiceScore": 13
   },
   {
     "id": "75d932c0-905b-516c-88bd-d0d33474fb80",
@@ -578,7 +598,8 @@
     ],
     "karma": 120,
     "saves": 81,
-    "completions": 602
+    "completions": 602,
+    "creatorVoiceScore": 16
   },
   {
     "id": "1d2392e2-5557-5316-9c51-acae7dd1893c",
@@ -608,7 +629,8 @@
     ],
     "karma": 4,
     "saves": 5,
-    "completions": 68
+    "completions": 68,
+    "creatorVoiceScore": 8
   },
   {
     "id": "a26374bf-0cde-50ca-b7d7-6c2e9c1b8809",
@@ -637,7 +659,8 @@
     ],
     "karma": 5,
     "saves": 5,
-    "completions": 6
+    "completions": 6,
+    "creatorVoiceScore": 57
   },
   {
     "id": "6fef5dee-f672-5157-b60d-55482f8a75ef",
@@ -669,7 +692,8 @@
     ],
     "karma": 27,
     "saves": 28,
-    "completions": 98
+    "completions": 98,
+    "creatorVoiceScore": 41
   },
   {
     "id": "5522a7d5-f759-55a1-821f-16f51474a0dd",
@@ -690,7 +714,8 @@
     "intent_tags": ["stress", "focus", "body-awareness", "emotions", "letting-go", "beginners"],
     "karma": 0,
     "saves": 0,
-    "completions": 46
+    "completions": 46,
+    "creatorVoiceScore": 51
   },
   {
     "id": "1e8003dc-66cb-5652-b1e6-262336d7af42",
@@ -721,7 +746,8 @@
     ],
     "karma": 87,
     "saves": 104,
-    "completions": 366
+    "completions": 366,
+    "creatorVoiceScore": 66
   },
   {
     "id": "42d27598-5174-5032-96af-fa584ed40c42",
@@ -742,7 +768,8 @@
     "intent_tags": ["low-mood", "clarity", "body-awareness", "emotions"],
     "karma": 0,
     "saves": 0,
-    "completions": 2
+    "completions": 2,
+    "creatorVoiceScore": 38
   },
   {
     "id": "d735de8a-647b-5938-86e4-2d7ee0f3fa36",
@@ -774,7 +801,8 @@
     ],
     "karma": 11,
     "saves": 13,
-    "completions": 37
+    "completions": 37,
+    "creatorVoiceScore": 62
   },
   {
     "id": "a8e8648d-71cd-5feb-a142-40ce95611ba9",
@@ -795,7 +823,8 @@
     "intent_tags": ["anxiety", "anger", "focus", "sleep", "pain", "self-compassion", "letting-go"],
     "karma": 135,
     "saves": 55,
-    "completions": 578
+    "completions": 578,
+    "creatorVoiceScore": 33
   },
   {
     "id": "9ce4c9e5-0fc0-5a88-a038-7f93e68e1f66",
@@ -816,7 +845,8 @@
     "intent_tags": ["focus", "body-awareness", "emotions", "letting-go", "beginners"],
     "karma": 303,
     "saves": 616,
-    "completions": 643
+    "completions": 643,
+    "creatorVoiceScore": 29
   },
   {
     "id": "cfe26161-4fe0-5112-aac3-2732cf8e0ee4",
@@ -837,7 +867,8 @@
     "intent_tags": ["focus", "clarity", "sleep", "body-awareness", "letting-go", "beginners"],
     "karma": 241,
     "saves": 509,
-    "completions": 700
+    "completions": 700,
+    "creatorVoiceScore": 39
   },
   {
     "id": "10da8843-28b7-5329-b76f-1263c79ac9e7",
@@ -865,7 +896,8 @@
     ],
     "karma": 138,
     "saves": 118,
-    "completions": 443
+    "completions": 443,
+    "creatorVoiceScore": 78
   },
   {
     "id": "17bc4ba9-61c4-5618-97f6-f69c4b04227f",
@@ -895,7 +927,8 @@
     ],
     "karma": 121,
     "saves": 97,
-    "completions": 1075
+    "completions": 1075,
+    "creatorVoiceScore": 17
   },
   {
     "id": "c342e109-39b7-59b7-b4f2-f650053b69a5",
@@ -915,7 +948,8 @@
     "intent_tags": ["emotions", "beginners"],
     "karma": 25,
     "saves": 33,
-    "completions": 157
+    "completions": 157,
+    "creatorVoiceScore": 6
   },
   {
     "id": "6ea3eb81-e260-573b-a656-4d4b600e85b9",
@@ -944,7 +978,8 @@
     ],
     "karma": 7,
     "saves": 17,
-    "completions": 39
+    "completions": 39,
+    "creatorVoiceScore": 54
   },
   {
     "id": "bd30de70-562d-5b66-ada4-b59d620f8b27",
@@ -972,7 +1007,8 @@
     ],
     "karma": 36,
     "saves": 35,
-    "completions": 157
+    "completions": 157,
+    "creatorVoiceScore": 19
   },
   {
     "id": "bbf74063-e06a-556c-99a9-0defa40c2b28",
@@ -992,7 +1028,8 @@
     "intent_tags": ["focus", "body-awareness", "self-compassion"],
     "karma": 0,
     "saves": 6,
-    "completions": 20
+    "completions": 20,
+    "creatorVoiceScore": 32
   },
   {
     "id": "e3f2f11f-5eed-50c0-b722-80e868e19e41",
@@ -1022,7 +1059,8 @@
     ],
     "karma": 40,
     "saves": 11,
-    "completions": 308
+    "completions": 308,
+    "creatorVoiceScore": 15
   },
   {
     "id": "c01ce1ed-9e86-57e0-9066-636eccdc62aa",
@@ -1043,7 +1081,8 @@
     "intent_tags": ["low-mood", "focus", "body-awareness", "emotions", "letting-go"],
     "karma": 22,
     "saves": 16,
-    "completions": 154
+    "completions": 154,
+    "creatorVoiceScore": 48
   },
   {
     "id": "875efa95-fe25-5782-aa16-b68eca2e1a6d",
@@ -1075,7 +1114,8 @@
     ],
     "karma": 0,
     "saves": 2,
-    "completions": 7
+    "completions": 7,
+    "creatorVoiceScore": 58
   },
   {
     "id": "8b36d726-1ca7-5dca-bb61-7838add544a6",
@@ -1105,7 +1145,8 @@
     ],
     "karma": 155,
     "saves": 81,
-    "completions": 1371
+    "completions": 1371,
+    "creatorVoiceScore": 20
   },
   {
     "id": "9d343cd0-e6e0-5d13-83a2-ef523548d463",
@@ -1137,7 +1178,8 @@
     ],
     "karma": 7,
     "saves": 6,
-    "completions": 9
+    "completions": 9,
+    "creatorVoiceScore": 16
   },
   {
     "id": "85afc224-db1c-505a-911f-af9b62169667",
@@ -1157,7 +1199,8 @@
     "intent_tags": ["stress", "anger", "focus", "body-awareness", "pain", "emotions", "letting-go"],
     "karma": 168,
     "saves": 214,
-    "completions": 679
+    "completions": 679,
+    "creatorVoiceScore": 18
   },
   {
     "id": "212ad590-b473-5b37-90f5-68c904d68bb3",
@@ -1188,7 +1231,8 @@
     ],
     "karma": 167,
     "saves": 236,
-    "completions": 585
+    "completions": 585,
+    "creatorVoiceScore": 38
   },
   {
     "id": "b83c63c7-a4aa-5354-8906-5b6005727698",
@@ -1218,7 +1262,8 @@
     ],
     "karma": 256,
     "saves": 234,
-    "completions": 1797
+    "completions": 1797,
+    "creatorVoiceScore": 38
   },
   {
     "id": "a059bd1c-33a8-5b48-a6e5-94a9bb4897fa",
@@ -1247,7 +1292,8 @@
     ],
     "karma": 26,
     "saves": 26,
-    "completions": 193
+    "completions": 193,
+    "creatorVoiceScore": 77
   },
   {
     "id": "91bb6ed1-c148-590e-9a8f-fa7927726011",
@@ -1278,7 +1324,8 @@
     ],
     "karma": 68,
     "saves": 72,
-    "completions": 352
+    "completions": 352,
+    "creatorVoiceScore": 18
   },
   {
     "id": "e8be87d2-7028-5dfd-a05f-08cf47d453cb",
@@ -1307,7 +1354,8 @@
     ],
     "karma": 0,
     "saves": 0,
-    "completions": 3
+    "completions": 3,
+    "creatorVoiceScore": 8
   },
   {
     "id": "23c18c32-2e19-577e-8dc9-6fd45f2c2251",
@@ -1337,7 +1385,8 @@
     ],
     "karma": 251,
     "saves": 432,
-    "completions": 1030
+    "completions": 1030,
+    "creatorVoiceScore": 64
   },
   {
     "id": "6b9a3b54-328c-5ee4-9e71-71dd3c576c14",
@@ -1358,7 +1407,8 @@
     "intent_tags": ["anger", "focus", "body-awareness", "self-compassion", "emotions", "beginners"],
     "karma": 65,
     "saves": 25,
-    "completions": 356
+    "completions": 356,
+    "creatorVoiceScore": 11
   },
   {
     "id": "82f1ea07-9cd0-50d6-ba6e-105ea5758a1a",
@@ -1378,7 +1428,8 @@
     "intent_tags": ["low-mood", "grief", "sleep", "body-awareness", "self-compassion", "emotions"],
     "karma": 21,
     "saves": 13,
-    "completions": 26
+    "completions": 26,
+    "creatorVoiceScore": 41
   },
   {
     "id": "42b70326-f9bb-59fc-b8e3-450260732e6b",
@@ -1398,7 +1449,8 @@
     "intent_tags": ["clarity", "sleep", "self-compassion", "emotions"],
     "karma": 84,
     "saves": 66,
-    "completions": 521
+    "completions": 521,
+    "creatorVoiceScore": 79
   },
   {
     "id": "af7fc0b7-5479-5524-9aa2-fff738871bc1",
@@ -1418,7 +1470,8 @@
     "intent_tags": ["low-mood", "body-awareness", "pain", "emotions", "beginners"],
     "karma": 42,
     "saves": 61,
-    "completions": 158
+    "completions": 158,
+    "creatorVoiceScore": 34
   },
   {
     "id": "ad57fdfb-7072-5396-ba3f-665573d8f1ab",
@@ -1438,7 +1491,8 @@
     "intent_tags": ["sleep", "body-awareness", "emotions", "letting-go", "evening"],
     "karma": 74,
     "saves": 61,
-    "completions": 269
+    "completions": 269,
+    "creatorVoiceScore": 50
   },
   {
     "id": "58a356a6-56c4-5b32-af3e-02df17881ec5",
@@ -1458,7 +1512,8 @@
     "intent_tags": ["focus", "racing-mind", "sleep", "body-awareness", "emotions", "beginners"],
     "karma": 100,
     "saves": 87,
-    "completions": 321
+    "completions": 321,
+    "creatorVoiceScore": 19
   },
   {
     "id": "b678a9f9-148e-507a-b5da-8702c70b30d0",
@@ -1478,7 +1533,8 @@
     "intent_tags": ["focus", "beginners"],
     "karma": 3,
     "saves": 3,
-    "completions": 3
+    "completions": 3,
+    "creatorVoiceScore": 19
   },
   {
     "id": "e9555894-c141-5004-b154-20e0d95a68f7",
@@ -1506,7 +1562,8 @@
     ],
     "karma": 57,
     "saves": 91,
-    "completions": 375
+    "completions": 375,
+    "creatorVoiceScore": 58
   },
   {
     "id": "3d384978-8d7d-5a9a-b6fc-aae76b91c989",
@@ -1526,7 +1583,8 @@
     "intent_tags": ["sleep", "body-awareness", "emotions", "letting-go", "morning"],
     "karma": 153,
     "saves": 158,
-    "completions": 922
+    "completions": 922,
+    "creatorVoiceScore": 39
   },
   {
     "id": "3ce00183-fe57-5936-b160-6ebd015af449",
@@ -1546,7 +1604,8 @@
     "intent_tags": ["low-mood", "racing-mind", "sleep", "body-awareness", "emotions", "beginners"],
     "karma": 72,
     "saves": 109,
-    "completions": 457
+    "completions": 457,
+    "creatorVoiceScore": 15
   },
   {
     "id": "2ac8d941-c2c8-5e6b-8c06-ea5e4335e61c",
@@ -1566,7 +1625,8 @@
     "intent_tags": ["body-awareness", "beginners"],
     "karma": 5,
     "saves": 4,
-    "completions": 49
+    "completions": 49,
+    "creatorVoiceScore": 23
   },
   {
     "id": "25db1dac-e22f-5cad-b0e3-b2b0dec420b7",
@@ -1586,7 +1646,8 @@
     "intent_tags": ["low-mood", "focus", "sleep", "self-compassion", "morning", "beginners"],
     "karma": 5,
     "saves": 2,
-    "completions": 5
+    "completions": 5,
+    "creatorVoiceScore": 53
   },
   {
     "id": "7c507cf5-6977-5ad4-beab-561f9a604974",
@@ -1606,7 +1667,8 @@
     "intent_tags": ["racing-mind", "self-compassion"],
     "karma": 56,
     "saves": 19,
-    "completions": 173
+    "completions": 173,
+    "creatorVoiceScore": 10
   },
   {
     "id": "a200ba1d-aa98-5f50-9625-e49067243bf0",
@@ -1626,7 +1688,8 @@
     "intent_tags": ["low-mood", "focus", "body-awareness"],
     "karma": 50,
     "saves": 35,
-    "completions": 134
+    "completions": 134,
+    "creatorVoiceScore": 58
   },
   {
     "id": "a8786cfa-cc91-5546-997d-35c3cacf20c3",
@@ -1646,7 +1709,8 @@
     "intent_tags": ["low-mood", "focus", "emotions", "letting-go", "beginners"],
     "karma": 13,
     "saves": 6,
-    "completions": 75
+    "completions": 75,
+    "creatorVoiceScore": 65
   },
   {
     "id": "7a1bd2c8-f1ec-5a8d-ad94-66b6576cff93",
@@ -1666,7 +1730,8 @@
     "intent_tags": ["focus", "racing-mind", "sleep", "self-compassion"],
     "karma": 4,
     "saves": 13,
-    "completions": 68
+    "completions": 68,
+    "creatorVoiceScore": 10
   },
   {
     "id": "d76e0942-6721-5584-9de4-5bd13c5e8eb4",
@@ -1686,7 +1751,8 @@
     "intent_tags": ["anxiety", "stress", "focus", "sleep", "body-awareness", "emotions"],
     "karma": 0,
     "saves": 1,
-    "completions": 15
+    "completions": 15,
+    "creatorVoiceScore": 19
   },
   {
     "id": "103c4784-1c16-593f-bbb7-0583918ccd71",
@@ -1706,7 +1772,8 @@
     "intent_tags": ["racing-mind", "sleep", "body-awareness", "emotions"],
     "karma": 134,
     "saves": 130,
-    "completions": 765
+    "completions": 765,
+    "creatorVoiceScore": 8
   },
   {
     "id": "6d0b0ac0-ad69-570b-a4ba-858826adfa41",
@@ -1726,7 +1793,8 @@
     "intent_tags": ["anxiety", "focus", "clarity", "self-compassion"],
     "karma": 66,
     "saves": 75,
-    "completions": 621
+    "completions": 621,
+    "creatorVoiceScore": 69
   },
   {
     "id": "52a3fad2-52b2-53c5-878e-e7d427a9c2a5",
@@ -1746,7 +1814,8 @@
     "intent_tags": ["anger", "focus", "sleep", "body-awareness", "pain", "beginners"],
     "karma": 86,
     "saves": 72,
-    "completions": 431
+    "completions": 431,
+    "creatorVoiceScore": 14
   },
   {
     "id": "d28e54e4-293e-55ba-a7f7-bae9d13896f9",
@@ -1766,7 +1835,8 @@
     "intent_tags": ["pain", "self-compassion", "emotions", "beginners"],
     "karma": 51,
     "saves": 20,
-    "completions": 172
+    "completions": 172,
+    "creatorVoiceScore": 27
   },
   {
     "id": "66852697-fefe-5390-9670-4833c41b8eea",
@@ -1786,7 +1856,8 @@
     "intent_tags": ["racing-mind", "sleep", "self-compassion"],
     "karma": 74,
     "saves": 24,
-    "completions": 81
+    "completions": 81,
+    "creatorVoiceScore": 39
   },
   {
     "id": "9149185e-39d5-55fe-bcad-e76d1839402c",
@@ -1806,7 +1877,8 @@
     "intent_tags": ["stress", "low-mood", "focus", "sleep", "body-awareness", "pain", "emotions"],
     "karma": 133,
     "saves": 70,
-    "completions": 279
+    "completions": 279,
+    "creatorVoiceScore": 20
   },
   {
     "id": "71f3bafd-2f7d-5255-8c63-39739c01b8a8",
@@ -1826,7 +1898,8 @@
     "intent_tags": ["anxiety", "sleep", "self-compassion", "emotions", "morning"],
     "karma": 37,
     "saves": 20,
-    "completions": 160
+    "completions": 160,
+    "creatorVoiceScore": 20
   },
   {
     "id": "420b6c46-39e9-5812-8682-dfdd2eb60356",
@@ -1846,7 +1919,8 @@
     "intent_tags": ["focus", "body-awareness", "emotions"],
     "karma": 1,
     "saves": 2,
-    "completions": 5
+    "completions": 5,
+    "creatorVoiceScore": 43
   },
   {
     "id": "e39648a3-4c98-5747-9dc0-46d519b03dbc",
@@ -1874,7 +1948,8 @@
     ],
     "karma": 8,
     "saves": 19,
-    "completions": 14
+    "completions": 14,
+    "creatorVoiceScore": 21
   },
   {
     "id": "4dd7b7b7-d6ee-5e2f-8357-b5e11a9a6cad",
@@ -1894,7 +1969,8 @@
     "intent_tags": ["anxiety", "stress", "body-awareness", "emotions", "letting-go"],
     "karma": 3,
     "saves": 2,
-    "completions": 22
+    "completions": 22,
+    "creatorVoiceScore": 50
   },
   {
     "id": "22c96d0d-a561-5d30-b5c1-2013524d2693",
@@ -1923,7 +1999,8 @@
     ],
     "karma": 83,
     "saves": 83,
-    "completions": 597
+    "completions": 597,
+    "creatorVoiceScore": 22
   },
   {
     "id": "a741b174-1bab-507f-8f32-041dfbb5c995",
@@ -1952,7 +2029,8 @@
     ],
     "karma": 82,
     "saves": 84,
-    "completions": 694
+    "completions": 694,
+    "creatorVoiceScore": 38
   },
   {
     "id": "5c6666fd-987c-5dd1-ba78-920e6d62e70d",
@@ -1981,7 +2059,8 @@
     ],
     "karma": 120,
     "saves": 106,
-    "completions": 796
+    "completions": 796,
+    "creatorVoiceScore": 59
   },
   {
     "id": "efd79817-49ce-58a5-8867-348a85f2b482",
@@ -2011,7 +2090,8 @@
     ],
     "karma": 40,
     "saves": 22,
-    "completions": 120
+    "completions": 120,
+    "creatorVoiceScore": 23
   },
   {
     "id": "f3c32b77-4fa5-5897-b4e0-b3e21c4831a5",
@@ -2031,7 +2111,8 @@
     "intent_tags": ["anger", "focus", "pain", "self-compassion", "emotions", "beginners"],
     "karma": 18,
     "saves": 23,
-    "completions": 213
+    "completions": 213,
+    "creatorVoiceScore": 77
   },
   {
     "id": "f81cffe1-7656-57b7-9d15-f104c767effb",
@@ -2051,7 +2132,8 @@
     "intent_tags": ["grief", "anger", "pain", "self-compassion", "emotions"],
     "karma": 54,
     "saves": 34,
-    "completions": 159
+    "completions": 159,
+    "creatorVoiceScore": 47
   },
   {
     "id": "206242ad-04f3-54f1-818c-b37f9919dc4b",
@@ -2071,7 +2153,8 @@
     "intent_tags": ["stress", "pain", "self-compassion", "emotions"],
     "karma": 274,
     "saves": 331,
-    "completions": 1411
+    "completions": 1411,
+    "creatorVoiceScore": 12
   },
   {
     "id": "7281b00b-3fb8-52d1-b2ba-96d44323ff43",
@@ -2091,7 +2174,8 @@
     "intent_tags": ["anger", "focus", "pain", "self-compassion", "emotions"],
     "karma": 90,
     "saves": 72,
-    "completions": 427
+    "completions": 427,
+    "creatorVoiceScore": 61
   },
   {
     "id": "0d76f0f2-e84d-5b42-a87b-4f5a85314229",
@@ -2111,7 +2195,8 @@
     "intent_tags": ["anger", "focus", "sleep", "body-awareness", "self-compassion", "emotions"],
     "karma": 44,
     "saves": 36,
-    "completions": 233
+    "completions": 233,
+    "creatorVoiceScore": 63
   },
   {
     "id": "27e32ce9-bca2-51cb-8f46-d82fe94b3977",
@@ -2131,7 +2216,8 @@
     "intent_tags": ["low-mood", "sleep", "pain", "self-compassion", "emotions"],
     "karma": 287,
     "saves": 197,
-    "completions": 1405
+    "completions": 1405,
+    "creatorVoiceScore": 38
   },
   {
     "id": "8e52d4a7-0ebf-5b29-b14f-5ecc0e4344b5",
@@ -2151,7 +2237,8 @@
     "intent_tags": ["anxiety", "stress", "low-mood", "sleep", "pain", "emotions", "beginners"],
     "karma": 35,
     "saves": 24,
-    "completions": 185
+    "completions": 185,
+    "creatorVoiceScore": 12
   },
   {
     "id": "e97c686c-0795-5c12-8520-0ce2a35cee1f",
@@ -2171,7 +2258,8 @@
     "intent_tags": ["anxiety", "focus", "emotions", "beginners"],
     "karma": 4,
     "saves": 5,
-    "completions": 42
+    "completions": 42,
+    "creatorVoiceScore": 5
   },
   {
     "id": "b0c12d46-67b7-5f7b-9c49-e5e793c1609f",
@@ -2199,7 +2287,8 @@
     ],
     "karma": 1,
     "saves": 0,
-    "completions": 4
+    "completions": 4,
+    "creatorVoiceScore": 15
   },
   {
     "id": "5629f03e-ade6-5be5-a039-58eeed17ee00",
@@ -2219,7 +2308,8 @@
     "intent_tags": ["grief", "anger", "focus", "racing-mind", "body-awareness"],
     "karma": 0,
     "saves": 1,
-    "completions": 2
+    "completions": 2,
+    "creatorVoiceScore": 8
   },
   {
     "id": "cadd3af1-196d-5881-be1a-7277ce17caed",
@@ -2239,7 +2329,8 @@
     "intent_tags": ["stress", "low-mood", "body-awareness", "emotions", "letting-go"],
     "karma": 1,
     "saves": 0,
-    "completions": 10
+    "completions": 10,
+    "creatorVoiceScore": 19
   },
   {
     "id": "708980d4-ec43-58cd-aa7f-88a05bcecd8b",
@@ -2269,7 +2360,8 @@
     ],
     "karma": 103,
     "saves": 148,
-    "completions": 530
+    "completions": 530,
+    "creatorVoiceScore": 80
   },
   {
     "id": "92f1ae01-4842-52cb-8025-380797a73ddf",
@@ -2299,7 +2391,8 @@
     ],
     "karma": 54,
     "saves": 86,
-    "completions": 523
+    "completions": 523,
+    "creatorVoiceScore": 51
   },
   {
     "id": "84e397ff-5b5e-5550-a4d3-08060ec5b41a",
@@ -2326,7 +2419,8 @@
     ],
     "karma": 4,
     "saves": 2,
-    "completions": 11
+    "completions": 11,
+    "creatorVoiceScore": 8
   },
   {
     "id": "3d3b18a0-f380-5a89-9d72-1dcd67837651",
@@ -2356,7 +2450,8 @@
     ],
     "karma": 68,
     "saves": 99,
-    "completions": 418
+    "completions": 418,
+    "creatorVoiceScore": 46
   },
   {
     "id": "71ea58c1-997f-5587-ab14-9bc0fe239c0c",
@@ -2384,7 +2479,8 @@
     ],
     "karma": 14,
     "saves": 15,
-    "completions": 40
+    "completions": 40,
+    "creatorVoiceScore": 36
   },
   {
     "id": "401d079c-6fd2-57f1-9205-4beb4d672857",
@@ -2404,7 +2500,8 @@
     "intent_tags": ["low-mood", "racing-mind", "clarity", "sleep", "self-compassion", "letting-go"],
     "karma": 3,
     "saves": 5,
-    "completions": 0
+    "completions": 0,
+    "creatorVoiceScore": 14
   },
   {
     "id": "8bb53d57-b78e-5d73-b51a-38459ffd126d",
@@ -2424,7 +2521,8 @@
     "intent_tags": ["anger", "focus", "pain", "emotions"],
     "karma": 11,
     "saves": 9,
-    "completions": 57
+    "completions": 57,
+    "creatorVoiceScore": 26
   },
   {
     "id": "07a4e22f-513b-5d4c-b6d1-dfc32e122cef",
@@ -2452,7 +2550,8 @@
     ],
     "karma": 45,
     "saves": 31,
-    "completions": 108
+    "completions": 108,
+    "creatorVoiceScore": 34
   },
   {
     "id": "178bf97b-80bd-5b82-82b9-4b5d08c508e0",
@@ -2480,7 +2579,8 @@
     ],
     "karma": 6,
     "saves": 0,
-    "completions": 10
+    "completions": 10,
+    "creatorVoiceScore": 20
   },
   {
     "id": "7621675a-820a-5776-a413-ad8c1dcbf518",
@@ -2510,7 +2610,8 @@
     ],
     "karma": 220,
     "saves": 307,
-    "completions": 1254
+    "completions": 1254,
+    "creatorVoiceScore": 6
   },
   {
     "id": "3c201219-572c-55d4-b28d-cba8184344f1",
@@ -2538,7 +2639,8 @@
     ],
     "karma": 6,
     "saves": 1,
-    "completions": 31
+    "completions": 31,
+    "creatorVoiceScore": 32
   },
   {
     "id": "7ecba322-0673-57ec-bbcd-b305e2427c0a",
@@ -2558,7 +2660,8 @@
     "intent_tags": ["sleep", "pain", "emotions"],
     "karma": 28,
     "saves": 20,
-    "completions": 97
+    "completions": 97,
+    "creatorVoiceScore": 11
   },
   {
     "id": "7b157897-55e9-5a1d-a1a4-7adcc4a7b1bc",
@@ -2589,7 +2692,8 @@
     ],
     "karma": 131,
     "saves": 255,
-    "completions": 844
+    "completions": 844,
+    "creatorVoiceScore": 55
   },
   {
     "id": "3684bf02-798c-51d8-b40b-c9ffad9527ed",
@@ -2616,7 +2720,8 @@
     ],
     "karma": 22,
     "saves": 31,
-    "completions": 245
+    "completions": 245,
+    "creatorVoiceScore": 22
   },
   {
     "id": "e78ce4f7-f256-5f8c-82aa-e1ca37c5bd45",
@@ -2645,7 +2750,8 @@
     ],
     "karma": 4,
     "saves": 0,
-    "completions": 15
+    "completions": 15,
+    "creatorVoiceScore": 24
   },
   {
     "id": "8bbd3a72-bfab-5c80-bfde-929e7d5aa8fb",
@@ -2665,7 +2771,8 @@
     "intent_tags": ["anxiety", "focus", "sleep", "emotions", "letting-go", "beginners"],
     "karma": 72,
     "saves": 127,
-    "completions": 300
+    "completions": 300,
+    "creatorVoiceScore": 42
   },
   {
     "id": "adf878d9-814a-5588-aa8e-c930e8df786e",
@@ -2685,7 +2792,8 @@
     "intent_tags": ["anxiety", "stress", "low-mood", "anger", "sleep", "emotions", "evening"],
     "karma": 0,
     "saves": 3,
-    "completions": 20
+    "completions": 20,
+    "creatorVoiceScore": 15
   },
   {
     "id": "84976f67-20ae-5594-98e7-b1cfde246493",
@@ -2705,7 +2813,8 @@
     "intent_tags": ["anxiety", "stress", "racing-mind", "emotions", "beginners"],
     "karma": 85,
     "saves": 79,
-    "completions": 335
+    "completions": 335,
+    "creatorVoiceScore": 51
   },
   {
     "id": "6c2763c5-e7f0-56a5-8a5e-a4e67610d600",
@@ -2735,7 +2844,8 @@
     ],
     "karma": 170,
     "saves": 193,
-    "completions": 382
+    "completions": 382,
+    "creatorVoiceScore": 25
   },
   {
     "id": "894cacc0-2b2b-479a-a56e-1f060eb77d5f",
@@ -2756,7 +2866,8 @@
     "karma": 39,
     "saves": 21,
     "completions": 227,
-    "creator_hours": 28
+    "creator_hours": 28,
+    "creatorVoiceScore": 7
   },
   {
     "id": "b4f9b6a2-0728-4dfb-b64a-699d313090d3",
@@ -2777,7 +2888,8 @@
     "karma": 46,
     "saves": 23,
     "completions": 229,
-    "creator_hours": 96
+    "creator_hours": 96,
+    "creatorVoiceScore": 24
   },
   {
     "id": "bd4db33a-cada-423d-88d1-42b35a1e8680",
@@ -2798,7 +2910,8 @@
     "karma": 8,
     "saves": 15,
     "completions": 35,
-    "creator_hours": 117
+    "creator_hours": 117,
+    "creatorVoiceScore": 31
   },
   {
     "id": "8e62e5d9-a6a7-43d1-9389-57d1689bdb89",
@@ -2819,7 +2932,8 @@
     "karma": 104,
     "saves": 141,
     "completions": 450,
-    "creator_hours": 635
+    "creator_hours": 635,
+    "creatorVoiceScore": 59
   },
   {
     "id": "1554eb64-81a0-4f0a-b697-5feb97edd461",
@@ -2840,7 +2954,8 @@
     "karma": 4,
     "saves": 2,
     "completions": 55,
-    "creator_hours": 21
+    "creator_hours": 21,
+    "creatorVoiceScore": 12
   },
   {
     "id": "d3523dac-9234-4f40-a9b3-e6e1469b2417",
@@ -2861,7 +2976,8 @@
     "karma": 5,
     "saves": 11,
     "completions": 62,
-    "creator_hours": 96
+    "creator_hours": 96,
+    "creatorVoiceScore": 25
   },
   {
     "id": "82306811-38ed-48e7-ac9c-5dac04e82199",
@@ -2882,7 +2998,8 @@
     "karma": 199,
     "saves": 155,
     "completions": 587,
-    "creator_hours": 654
+    "creator_hours": 654,
+    "creatorVoiceScore": 59
   },
   {
     "id": "11903496-046f-46be-813c-eb95b4b2a2e6",
@@ -2903,7 +3020,8 @@
     "karma": 0,
     "saves": 2,
     "completions": 28,
-    "creator_hours": 4109
+    "creator_hours": 4109,
+    "creatorVoiceScore": 79
   },
   {
     "id": "043805c6-eb47-40f8-ac20-822272ce7b4a",
@@ -2924,7 +3042,8 @@
     "karma": 113,
     "saves": 310,
     "completions": 581,
-    "creator_hours": 15
+    "creator_hours": 15,
+    "creatorVoiceScore": 14
   },
   {
     "id": "c06533bb-00f8-4ac9-92b1-21cbe9e27c47",
@@ -2945,7 +3064,8 @@
     "karma": 30,
     "saves": 45,
     "completions": 121,
-    "creator_hours": 291
+    "creator_hours": 291,
+    "creatorVoiceScore": 42
   },
   {
     "id": "ee75236f-649b-49f4-b7c6-0101cf393318",
@@ -2966,7 +3086,8 @@
     "karma": 104,
     "saves": 115,
     "completions": 777,
-    "creator_hours": 39
+    "creator_hours": 39,
+    "creatorVoiceScore": 11
   },
   {
     "id": "6fe54d01-4014-439f-9ddc-96a85a0596b7",
@@ -2987,7 +3108,8 @@
     "karma": 9,
     "saves": 28,
     "completions": 63,
-    "creator_hours": 137
+    "creator_hours": 137,
+    "creatorVoiceScore": 35
   },
   {
     "id": "8f13a170-29ca-4912-ad87-dc88baa584ce",
@@ -3008,7 +3130,8 @@
     "karma": 96,
     "saves": 58,
     "completions": 389,
-    "creator_hours": 29
+    "creator_hours": 29,
+    "creatorVoiceScore": 14
   },
   {
     "id": "d0da3c75-445c-452d-b18d-b7feb16c59e0",
@@ -3029,7 +3152,8 @@
     "karma": 5,
     "saves": 3,
     "completions": 44,
-    "creator_hours": 718
+    "creator_hours": 718,
+    "creatorVoiceScore": 66
   },
   {
     "id": "e75a8a9b-8167-4afd-bd7d-a12b94b07eea",
@@ -3050,7 +3174,8 @@
     "karma": 70,
     "saves": 67,
     "completions": 490,
-    "creator_hours": 60
+    "creator_hours": 60,
+    "creatorVoiceScore": 21
   },
   {
     "id": "df5836ef-d43f-4728-9d14-91976c4e419d",
@@ -3071,7 +3196,8 @@
     "karma": 2,
     "saves": 0,
     "completions": 39,
-    "creator_hours": 721
+    "creator_hours": 721,
+    "creatorVoiceScore": 61
   },
   {
     "id": "e2c97726-299a-4464-b00f-767e72f03eaf",
@@ -3092,7 +3218,8 @@
     "karma": 63,
     "saves": 56,
     "completions": 491,
-    "creator_hours": 558
+    "creator_hours": 558,
+    "creatorVoiceScore": 51
   },
   {
     "id": "d779da8d-bab4-4477-9f74-85c7177599b9",
@@ -3113,7 +3240,8 @@
     "karma": 123,
     "saves": 80,
     "completions": 221,
-    "creator_hours": 10
+    "creator_hours": 10,
+    "creatorVoiceScore": 5
   },
   {
     "id": "6f6599d4-f105-4657-8d91-7295b798418b",
@@ -3134,7 +3262,8 @@
     "karma": 167,
     "saves": 70,
     "completions": 847,
-    "creator_hours": 154
+    "creator_hours": 154,
+    "creatorVoiceScore": 35
   },
   {
     "id": "086b2d5d-e459-4ec0-ba28-79d82ba48614",
@@ -3155,7 +3284,8 @@
     "karma": 60,
     "saves": 54,
     "completions": 108,
-    "creator_hours": 52
+    "creator_hours": 52,
+    "creatorVoiceScore": 17
   },
   {
     "id": "13f3327d-8597-4b12-b216-72fa6f743a57",
@@ -3176,7 +3306,8 @@
     "karma": 56,
     "saves": 48,
     "completions": 414,
-    "creator_hours": 85
+    "creator_hours": 85,
+    "creatorVoiceScore": 24
   },
   {
     "id": "562615e4-882a-44b8-8215-716039379d81",
@@ -3197,7 +3328,8 @@
     "karma": 168,
     "saves": 161,
     "completions": 563,
-    "creator_hours": 53
+    "creator_hours": 53,
+    "creatorVoiceScore": 14
   },
   {
     "id": "381c5550-28c9-4ca7-97c2-066618fc4324",
@@ -3218,7 +3350,8 @@
     "karma": 71,
     "saves": 106,
     "completions": 237,
-    "creator_hours": 52
+    "creator_hours": 52,
+    "creatorVoiceScore": 19
   },
   {
     "id": "abb1bdbf-a010-4d76-b8b4-0949579d189a",
@@ -3239,7 +3372,8 @@
     "karma": 346,
     "saves": 280,
     "completions": 1337,
-    "creator_hours": 262
+    "creator_hours": 262,
+    "creatorVoiceScore": 39
   },
   {
     "id": "8677ed85-d81b-42ff-94e4-47e6584903a6",
@@ -3260,7 +3394,8 @@
     "karma": 187,
     "saves": 309,
     "completions": 539,
-    "creator_hours": 3001
+    "creator_hours": 3001,
+    "creatorVoiceScore": 79
   },
   {
     "id": "deead261-4d65-4686-bcf0-c9b237ac58f7",
@@ -3281,7 +3416,8 @@
     "karma": 55,
     "saves": 11,
     "completions": 104,
-    "creator_hours": 51
+    "creator_hours": 51,
+    "creatorVoiceScore": 18
   },
   {
     "id": "6a99d585-5b41-465e-93ca-57d6ccc2f7bc",
@@ -3302,7 +3438,8 @@
     "karma": 2,
     "saves": 6,
     "completions": 20,
-    "creator_hours": 64
+    "creator_hours": 64,
+    "creatorVoiceScore": 23
   },
   {
     "id": "4e500d0e-7c5d-449f-a244-0805b58f2666",
@@ -3323,7 +3460,8 @@
     "karma": 27,
     "saves": 31,
     "completions": 100,
-    "creator_hours": 318
+    "creator_hours": 318,
+    "creatorVoiceScore": 39
   },
   {
     "id": "5e28a076-efed-4ef4-95d2-0371c00d5067",
@@ -3344,7 +3482,8 @@
     "karma": 47,
     "saves": 25,
     "completions": 204,
-    "creator_hours": 64
+    "creator_hours": 64,
+    "creatorVoiceScore": 20
   },
   {
     "id": "3b166906-85c0-4bac-b9da-80da405975e1",
@@ -3365,7 +3504,8 @@
     "karma": 98,
     "saves": 65,
     "completions": 572,
-    "creator_hours": 69
+    "creator_hours": 69,
+    "creatorVoiceScore": 20
   },
   {
     "id": "d1753962-35a1-4250-90dc-7410d9671131",
@@ -3386,7 +3526,8 @@
     "karma": 51,
     "saves": 206,
     "completions": 294,
-    "creator_hours": 245
+    "creator_hours": 245,
+    "creatorVoiceScore": 39
   },
   {
     "id": "fbf08369-1038-4871-9eae-7ceff4e27ccc",
@@ -3407,7 +3548,8 @@
     "karma": 102,
     "saves": 323,
     "completions": 403,
-    "creator_hours": 31
+    "creator_hours": 31,
+    "creatorVoiceScore": 11
   },
   {
     "id": "eed417ab-0080-4db5-a824-f2143dbc68fc",
@@ -3428,7 +3570,8 @@
     "karma": 134,
     "saves": 101,
     "completions": 352,
-    "creator_hours": 294
+    "creator_hours": 294,
+    "creatorVoiceScore": 40
   },
   {
     "id": "8965fad0-7558-40b3-8614-3c6e4016a898",
@@ -3449,7 +3592,8 @@
     "karma": 12,
     "saves": 7,
     "completions": 61,
-    "creator_hours": 58
+    "creator_hours": 58,
+    "creatorVoiceScore": 20
   },
   {
     "id": "f9d95a79-040d-422b-ad8a-ff78a79e2a8b",
@@ -3470,7 +3614,8 @@
     "karma": 54,
     "saves": 37,
     "completions": 164,
-    "creator_hours": 476
+    "creator_hours": 476,
+    "creatorVoiceScore": 57
   },
   {
     "id": "679669cb-391b-4b15-9783-e15cc03610fe",
@@ -3491,7 +3636,8 @@
     "karma": 41,
     "saves": 55,
     "completions": 162,
-    "creator_hours": 88
+    "creator_hours": 88,
+    "creatorVoiceScore": 19
   },
   {
     "id": "4cdbc3b8-098f-4fb8-9665-b7aca3c045d8",
@@ -3512,7 +3658,8 @@
     "karma": 62,
     "saves": 99,
     "completions": 354,
-    "creator_hours": 37
+    "creator_hours": 37,
+    "creatorVoiceScore": 17
   },
   {
     "id": "b9f3ef6e-9108-4535-a70a-b7742af86d49",
@@ -3533,7 +3680,8 @@
     "karma": 37,
     "saves": 14,
     "completions": 348,
-    "creator_hours": 20
+    "creator_hours": 20,
+    "creatorVoiceScore": 11
   },
   {
     "id": "177a5b67-8e7d-4198-8004-300d4a9130fb",
@@ -3554,7 +3702,8 @@
     "karma": 22,
     "saves": 8,
     "completions": 26,
-    "creator_hours": 3721
+    "creator_hours": 3721,
+    "creatorVoiceScore": 77
   },
   {
     "id": "b240aa81-e2c8-47a7-8a59-14fbb0f236b4",
@@ -3575,7 +3724,8 @@
     "karma": 1,
     "saves": 2,
     "completions": 34,
-    "creator_hours": 419
+    "creator_hours": 419,
+    "creatorVoiceScore": 54
   },
   {
     "id": "8f713a16-5cea-4a92-83a8-afd88292599a",
@@ -3596,7 +3746,8 @@
     "karma": 7,
     "saves": 0,
     "completions": 0,
-    "creator_hours": 68
+    "creator_hours": 68,
+    "creatorVoiceScore": 20
   },
   {
     "id": "ee83185d-6e04-4209-80f0-2bc90dfe4c32",
@@ -3617,7 +3768,8 @@
     "karma": 10,
     "saves": 15,
     "completions": 53,
-    "creator_hours": 179
+    "creator_hours": 179,
+    "creatorVoiceScore": 32
   },
   {
     "id": "db8f3bc2-f7ec-43d5-add1-86d97758e760",
@@ -3638,7 +3790,8 @@
     "karma": 97,
     "saves": 65,
     "completions": 665,
-    "creator_hours": 42
+    "creator_hours": 42,
+    "creatorVoiceScore": 20
   },
   {
     "id": "3c986d1e-e3b3-4bb1-9932-613528967507",
@@ -3659,7 +3812,8 @@
     "karma": 23,
     "saves": 2,
     "completions": 67,
-    "creator_hours": 60
+    "creator_hours": 60,
+    "creatorVoiceScore": 19
   },
   {
     "id": "3bedfc25-67af-44bc-beae-532ac9141243",
@@ -3680,7 +3834,8 @@
     "karma": 171,
     "saves": 141,
     "completions": 812,
-    "creator_hours": 468
+    "creator_hours": 468,
+    "creatorVoiceScore": 56
   },
   {
     "id": "994cdffb-6482-4bbf-9fed-4181a48bbc8f",
@@ -3701,7 +3856,8 @@
     "karma": 164,
     "saves": 97,
     "completions": 826,
-    "creator_hours": 19
+    "creator_hours": 19,
+    "creatorVoiceScore": 10
   },
   {
     "id": "ec604c19-4c31-4fb9-8571-0f6d373fc4b1",
@@ -3722,7 +3878,8 @@
     "karma": 26,
     "saves": 16,
     "completions": 29,
-    "creator_hours": 235
+    "creator_hours": 235,
+    "creatorVoiceScore": 35
   },
   {
     "id": "904e0079-d4a6-4800-94e9-5a4b9725bff8",
@@ -3743,7 +3900,8 @@
     "karma": 1,
     "saves": 0,
     "completions": 14,
-    "creator_hours": 37
+    "creator_hours": 37,
+    "creatorVoiceScore": 17
   },
   {
     "id": "34e4d988-d69d-4349-bebe-b1f2a2f5d7bd",
@@ -3764,7 +3922,8 @@
     "karma": 28,
     "saves": 22,
     "completions": 257,
-    "creator_hours": 326
+    "creator_hours": 326,
+    "creatorVoiceScore": 47
   },
   {
     "id": "25a87790-3cea-408e-9b57-35d6d3e10c72",
@@ -3785,7 +3944,8 @@
     "karma": 59,
     "saves": 63,
     "completions": 510,
-    "creator_hours": 26
+    "creator_hours": 26,
+    "creatorVoiceScore": 13
   },
   {
     "id": "0559d262-9ab2-4947-982e-3f369a321c2c",
@@ -3806,6 +3966,7 @@
     "karma": 14,
     "saves": 11,
     "completions": 53,
-    "creator_hours": 50
+    "creator_hours": 50,
+    "creatorVoiceScore": 17
   }
 ]
