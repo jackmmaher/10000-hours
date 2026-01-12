@@ -2,7 +2,18 @@
  * MeditationPlanner Types
  */
 
-import type { Session } from '../../lib/db'
+import type { Session, PlannedSession } from '../../lib/db'
+
+// Types for unified session/plan handling in the carousel view
+export type DayItemType = 'session' | 'plan'
+
+export interface DayItem {
+  type: DayItemType
+  id: string // session.uuid or `plan-${plan.id}`
+  session?: Session
+  plan?: PlannedSession
+  timestamp: number // For sorting: session.startTime or plan date + plannedTime
+}
 
 export interface MeditationPlannerProps {
   date: Date

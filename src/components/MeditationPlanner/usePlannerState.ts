@@ -7,7 +7,7 @@
  * - Duration category management
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   PlannedSession,
   Session,
@@ -23,8 +23,17 @@ import {
 } from '../../lib/db'
 import { DURATION_CATEGORIES } from '../../lib/meditation-options'
 import { createScheduledReminder, cancelScheduledReminder } from '../../lib/reminders'
-import type { SessionEdits } from './types'
+import type { SessionEdits, DayItem } from './types'
 import { getStartOfDay } from './utils'
+
+/**
+ * Convert time string "HH:MM" to minutes from midnight for sorting
+ */
+function timeToMinutes(time: string | undefined): number {
+  if (!time) return 0
+  const [hours, minutes] = time.split(':').map(Number)
+  return hours * 60 + minutes
+}
 
 interface UsePlannerStateProps {
   date: Date
@@ -34,13 +43,10 @@ interface UsePlannerStateProps {
 }
 
 export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerStateProps) {
-  // Multiple sessions support
-  const [selectedSessionIndex, setSelectedSessionIndex] = useState(0)
-  const session = sessions.length > 0 ? sessions[selectedSessionIndex] : null
-  const hasMultipleSessions = sessions.length > 1
+  // Item selection state (unified for sessions and plans)
+  const [selectedItemIndex, setSelectedItemIndex] = useState(0)
 
-  // Determine if we're viewing a completed session vs planning
-  const isSessionMode = !!session
+  // Loading states
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [existingPlan, setExistingPlan] = useState<PlannedSession | null>(null)
@@ -63,6 +69,43 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
   const [planNotes, setPlanNotes] = useState('')
   const [planTitle, setPlanTitle] = useState('')
   const [planSourceTemplateId, setPlanSourceTemplateId] = useState<string | undefined>(undefined)
+
+  // Build unified dayItems array combining sessions and pending plans
+  const dayItems: DayItem[] = useMemo(() => {
+    const dateStart = getStartOfDay(date)
+
+    // Convert sessions to DayItems
+    const sessionItems: DayItem[] = sessions.map((s) => ({
+      type: 'session' as const,
+      id: s.uuid,
+      session: s,
+      timestamp: s.startTime,
+    }))
+
+    // Convert pending plans to DayItems
+    const planItems: DayItem[] = pendingPlans.map((p) => ({
+      type: 'plan' as const,
+      id: `plan-${p.id}`,
+      plan: p,
+      // Use plan date + planned time (converted to ms) for sorting
+      // Plans without time sort to start of day
+      timestamp: dateStart + timeToMinutes(p.plannedTime) * 60 * 1000,
+    }))
+
+    // Combine and sort chronologically
+    return [...sessionItems, ...planItems].sort((a, b) => a.timestamp - b.timestamp)
+  }, [sessions, pendingPlans, date])
+
+  // Current item from dayItems array
+  const currentItem = dayItems.length > 0 ? dayItems[selectedItemIndex] : null
+
+  // Backward compatibility: derive session from currentItem
+  const session = currentItem?.type === 'session' ? (currentItem.session ?? null) : null
+  const hasMultipleSessions = sessions.length > 1
+
+  // Determine if we're viewing a completed session vs planning
+  // Uses currentItem.type for unified handling
+  const isSessionMode = currentItem?.type === 'session'
 
   // Get current session's edits (from map or defaults)
   const currentEdits = session ? sessionEdits.get(session.uuid) : null
@@ -337,9 +380,15 @@ export function usePlannerState({ date, sessions, onSave, onClose }: UsePlannerS
   )
 
   return {
-    // Session selection
-    selectedSessionIndex,
-    setSelectedSessionIndex,
+    // Unified day items (sessions + plans combined)
+    dayItems,
+    selectedItemIndex,
+    setSelectedItemIndex,
+    currentItem,
+
+    // Legacy session selection (backward compatibility)
+    selectedSessionIndex: selectedItemIndex, // Alias for backward compatibility
+    setSelectedSessionIndex: setSelectedItemIndex, // Alias for backward compatibility
     session,
     hasMultipleSessions,
     isSessionMode,
