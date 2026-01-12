@@ -91,6 +91,7 @@ export interface PlannedSession {
   sourceTemplateId?: string // If adopted from community template
   courseId?: string // If part of a course
   coursePosition?: number // Position in course (1 of 5)
+  repeatRuleId?: number // Link to repeat rule that generated this session
 }
 
 export interface UserCourseProgress {
@@ -180,4 +181,27 @@ export interface WellbeingSettings {
   lastCheckInPrompt?: number // Timestamp of last prompt
   nextCheckInDue?: number // When next check-in is due
   isEnabled: boolean // Master toggle for wellbeing tracking
+}
+
+// Repeat rule frequency options
+export type RepeatFrequency = 'daily' | 'weekly' | 'weekdays' | 'custom'
+
+// Repeat rule for recurring planned sessions
+export interface RepeatRule {
+  id?: number
+  createdAt: number
+
+  // Schedule
+  frequency: RepeatFrequency
+  customDays?: number[] // 0-6 for Sun-Sat if frequency is 'custom'
+  endDate?: number // Optional end date timestamp
+
+  // Session template - copied to each generated PlannedSession
+  plannedTime?: string // "HH:MM"
+  duration?: number
+  title?: string
+  pose?: string
+  discipline?: string
+  notes?: string
+  sourceTemplateId?: string
 }
