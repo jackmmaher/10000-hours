@@ -25,7 +25,6 @@ import { InsightStream } from '../InsightStream'
 import { Calendar } from '../Calendar'
 import { JourneySavedContent } from '../JourneySavedContent'
 import { JourneyMyPearls } from '../JourneyMyPearls'
-import { InsightModal } from '../InsightModal'
 import {
   getPlannedSessionsForWeek,
   getNextPlannedSession,
@@ -47,16 +46,9 @@ import {
 type JourneySubTab = 'sessions' | 'saved' | 'pearls'
 
 export function Journey() {
-  const { sessions, lastPlanChange, createInsightReminder } = useSessionStore()
+  const { sessions, lastPlanChange } = useSessionStore()
   const {
     setView,
-    pendingInsightSessionId,
-    pendingInsightSessionDuration,
-    pendingMilestone,
-    showInsightModal,
-    showInsightCaptureModal,
-    hideInsightCaptureModal,
-    clearPostSessionState,
     journeySubTab: navSubTab,
     openPlanningModal: navOpenPlanning,
     scrollToSubTabs: navScrollToSubTabs,
@@ -197,16 +189,6 @@ export function Journey() {
     }
     loadNextPlan()
   }, [sessions, plansRefreshKey, lastPlanChange])
-
-  // Show insight modal after stats animation
-  useEffect(() => {
-    if (pendingInsightSessionId && !showInsightModal) {
-      const timer = setTimeout(() => {
-        showInsightCaptureModal()
-      }, 1500)
-      return () => clearTimeout(timer)
-    }
-  }, [pendingInsightSessionId, showInsightModal, showInsightCaptureModal])
 
   // Consume navigation intents
   useEffect(() => {
@@ -387,28 +369,6 @@ export function Journey() {
           onClose={() => setShowTemplateEditor(false)}
           onPublished={() => setShowTemplateEditor(false)}
           creatorHours={totalHours}
-        />
-      )}
-
-      {showInsightModal && pendingInsightSessionId && (
-        <InsightModal
-          sessionId={pendingInsightSessionId}
-          sessionDuration={pendingInsightSessionDuration}
-          milestoneMessage={pendingMilestone}
-          onComplete={() => {
-            hideInsightCaptureModal()
-            clearPostSessionState()
-            setInsightStreamKey((k) => k + 1)
-          }}
-          onSkip={() => {
-            hideInsightCaptureModal()
-            clearPostSessionState()
-          }}
-          onRemindLater={async () => {
-            await createInsightReminder(pendingInsightSessionId)
-            hideInsightCaptureModal()
-            clearPostSessionState()
-          }}
         />
       )}
     </div>

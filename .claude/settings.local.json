@@ -93,7 +93,14 @@
       "Skill(superpowers:test-driven-development)",
       "Bash(grep:*)",
       "Bash(node scripts/generate-sync-sql.js:*)",
-      "Bash(node scripts/normalize-engagement-data.js:*)"
+      "Bash(node scripts/normalize-engagement-data.js:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(npx vite build --mode development)",
+      "Bash(timeout 15 npm run dev)",
+      "Bash(Get-ChildItem -Path . -Recurse -Filter \"*tmpclaude*\")",
+      "Bash(Select-Object FullName, Length, LastWriteTime)",
+      "Bash(Format-Table -AutoSize)",
+      "Bash(tasklist:*)"
     ]
   }
 }
