@@ -7,6 +7,7 @@
 **Overall:** React SPA with PWA Capabilities + Supabase Backend
 
 **Key Characteristics:**
+
 - Single-page React application with tab-based navigation
 - Offline-first with IndexedDB local storage
 - Supabase for authentication and cloud sync
@@ -19,10 +20,12 @@
 **Purpose:** Community discovery feed for meditation templates and wisdom pearls
 
 **Content Types:**
+
 - **SessionCards** - Guided meditation templates (from `src/data/sessions.json` or Supabase)
 - **PearlCards** - Wisdom snippets from community members
 
 **Feed Algorithm:**
+
 - Mixed organic randomization: 3-5 pearls → 1-2 sessions → 2-3 pearls → 1 course
 - Intent-based filtering: anxiety, stress, sleep, focus, beginners, body-awareness, self-compassion, letting-go
 - Sorting: rising, new, top
@@ -30,17 +33,19 @@
 ### Meditation Card System
 
 **Card Components:**
+
 - `src/components/SessionCard.tsx` - Renders meditation template
 - `src/components/Card.tsx` - Base card with glassmorphism styling
 - `src/components/SessionDetailModal.tsx` - Full details + adopt flow
 
 **Card Data (`src/data/sessions.json`):**
+
 ```json
 {
   "id": "uuid",
   "title": "First Breath Awakening",
   "discipline": "Breath Awareness",
-  "recommended_after_hours": 0,  // Experience prerequisite
+  "recommended_after_hours": 0, // Experience prerequisite
   "intent_tags": ["focus", "beginners"],
   "karma": 156,
   "saves": 234,
@@ -53,6 +58,7 @@
 **The `recommendedAfterHours` System:**
 
 Distribution in seed data:
+
 - **0 hours (42 sessions)** - Beginner-friendly, no prerequisite
 - **10+ hours (29 sessions)** - Some foundation needed
 - **50+ hours (25 sessions)** - Intermediate practices
@@ -60,6 +66,7 @@ Distribution in seed data:
 - **500+ hours (1 session)** - Master-level
 
 **Filtering Logic (`src/lib/recommendations.ts`):**
+
 ```typescript
 // Hard filter - users can't see sessions above their experience level
 if (session.recommendedAfterHours > inputs.totalHours) {
@@ -68,6 +75,7 @@ if (session.recommendedAfterHours > inputs.totalHours) {
 ```
 
 **Display Logic (`src/components/SessionDetailModal.tsx`):**
+
 ```typescript
 // Only shows badge if prerequisite > 0
 {session.recommendedAfterHours > 0 && (
@@ -78,18 +86,21 @@ if (session.recommendedAfterHours > inputs.totalHours) {
 ## Layers
 
 **UI Layer:**
+
 - Purpose: React components with tab-based navigation
 - Contains: Tab components (Home, Explore, Journey, Timer, Me)
 - Location: `src/components/*.tsx`
 - Depends on: State hooks, service layer
 
 **Service Layer:**
+
 - Purpose: Business logic and data operations
 - Contains: Database operations, recommendations, voice scoring
 - Location: `src/lib/*.ts`
 - Depends on: IndexedDB, Supabase client
 
 **Data Layer:**
+
 - Purpose: Persistent storage
 - Contains: IndexedDB schemas, Supabase tables, JSON seeds
 - Location: `src/lib/db.ts`, `src/data/*.json`
@@ -109,10 +120,12 @@ if (session.recommendedAfterHours > inputs.totalHours) {
 ### State Management
 
 **Local Storage (IndexedDB via `src/lib/db.ts`):**
+
 - Sessions, SessionInsights, PlannedSessions
 - SavedPearls, SavedTemplates, TemplateDrafts
 
 **Remote Storage (Supabase):**
+
 - session_templates, session_template_votes
 - pearls, pearl_votes
 - User profiles
@@ -120,15 +133,18 @@ if (session.recommendedAfterHours > inputs.totalHours) {
 ## Key Abstractions
 
 **SessionTemplate:**
+
 - Purpose: Community meditation blueprint
 - Examples: "First Breath Awakening", "Loving-Kindness for Self"
 - Contains: guidance, duration, discipline, recommendedAfterHours
 
 **Pearl:**
+
 - Purpose: Wisdom nugget shared by practitioners
 - Contains: text, upvotes, saves, intentTags, creatorVoiceScore
 
 **Voice Score (`src/lib/voice.ts`):**
+
 - Purpose: Credibility metric for content creators
 - Formula: Weighs hours, karma, saves, completions
 - Used on: Card badges to show creator credibility
@@ -136,11 +152,13 @@ if (session.recommendedAfterHours > inputs.totalHours) {
 ## Entry Points
 
 **App Entry:**
+
 - Location: `src/App.tsx`
 - Triggers: User loads app
 - Responsibilities: Auth check, route to tabs, PWA setup
 
 **Tab Navigation:**
+
 - Location: `src/components/TabBar.tsx`
 - Tabs: Home, Explore, Journey, Timer, Me
 
@@ -149,6 +167,7 @@ if (session.recommendedAfterHours > inputs.totalHours) {
 **Purpose:** Dynamic visual atmosphere that changes with time of day, season, and weather
 
 **Core Files:**
+
 - `src/components/LivingTheme.tsx` - React context provider + DOM effects renderer
 - `src/lib/livingTheme.ts` - Theme state calculations
 - `src/lib/themeEngine.ts` - Core theme calculations (90k+ lines of logic)
@@ -156,6 +175,7 @@ if (session.recommendedAfterHours > inputs.totalHours) {
 - `src/components/AmbientAtmosphere.tsx` - Gen 2 particle system
 
 **Architecture:**
+
 ```
 LivingTheme.tsx (brain)
     ├─→ Calculates sun altitude via solarPosition.ts
@@ -169,29 +189,116 @@ LivingTheme.tsx (brain)
 ```
 
 **Effect Levels:**
+
 - **Level 1 (Current)**: DOM-based CSS animations (~25 particles)
 - **Level 2 (Planned)**: Canvas-based physics engine (~150 particles)
 
 **Standalone Testing:**
+
 - `theme-comparison.html` - Side-by-side Level 1 vs Level 2 comparison
+
+## Journey Tab Architecture
+
+**Purpose:** Personal meditation space for planning, tracking, and reflecting on practice
+
+### Component Hierarchy
+
+```
+Journey/index.tsx (main container)
+├── NextSessionSpotlight.tsx (hero CTA - 60vh)
+│   └── Receives `plannedSession` prop from parent
+├── Calendar.tsx (embedded month view)
+│   └── Receives `refreshKey` prop for re-renders
+├── WeekStones.tsx (week summary row)
+│   └── Receives computed `weekDays` statuses
+├── Sub-tabs (sessions | pearls | saved)
+│   ├── InsightStream.tsx (sessions tab)
+│   ├── JourneyMyPearls.tsx (pearls tab)
+│   └── JourneySavedContent.tsx (saved tab)
+└── Modals:
+    ├── MeditationPlanner/ (planning modal)
+    │   ├── index.tsx (main modal)
+    │   ├── usePlannerState.ts (state hook)
+    │   ├── DayItemsCarousel.tsx (swipeable cards)
+    │   ├── PearlPicker.tsx (attach pearl modal)
+    │   └── RepeatPicker.tsx (recurring sessions)
+    ├── InsightCaptureWrapper
+    ├── SharePearlWrapper
+    └── TemplateEditorWrapper
+```
+
+### Data Flow
+
+**Plan Creation Flow:**
+
+```
+1. User clicks day in Calendar/WeekStones
+   └── Journey calls `scrollToCalendarAndPlan(date)`
+2. MeditationPlanner modal opens with date
+   └── usePlannerState loads:
+       - Existing plans via `getPlannedSession()`
+       - Pending plans via `getIncompletePlansForDate()`
+       - Sessions via props from parent
+3. User fills form → handleSave()
+   └── addPlannedSession() writes to IndexedDB
+4. Modal closes → refreshAllPlanData() callback
+   └── Journey re-fetches weekPlans, nextPlannedSession
+5. NextSessionSpotlight re-renders with new data
+```
+
+**State Ownership:**
+
+| State                | Owner             | Consumers                      |
+| -------------------- | ----------------- | ------------------------------ |
+| `nextPlannedSession` | Journey/index.tsx | NextSessionSpotlight           |
+| `weekPlans`          | Journey/index.tsx | WeekStonesRow (via `weekDays`) |
+| `plansRefreshKey`    | Journey/index.tsx | Calendar, child refreshes      |
+| `dayItems`           | usePlannerState   | DayItemsCarousel               |
+| `attachedPearl`      | usePlannerState   | PearlPicker, form display      |
+
+### DayItems Carousel Architecture
+
+**Purpose:** Unified handling of past sessions and future plans for a given date
+
+**Types (`MeditationPlanner/types.ts`):**
+
+```typescript
+type DayItem = {
+  type: 'session' | 'plan'
+  id: string
+  session?: Session // Present when type='session'
+  plan?: PlannedSession // Present when type='plan'
+  timestamp: number // For chronological sorting
+}
+```
+
+**State Management (`usePlannerState.ts`):**
+
+- Combines `sessions` (props) + `pendingPlans` (fetched) into `dayItems`
+- Sorted by timestamp
+- Single `selectedItemIndex` controls carousel position
+- `isSessionMode` derived from `currentItem?.type === 'session'`
 
 ## Cross-Cutting Concerns
 
 **Offline Support:**
+
 - IndexedDB for local storage
 - Fallback JSON when Supabase unavailable
 - Sync on reconnect
 
 **Recommendations:**
+
 - `src/lib/recommendations.ts` - Personalized suggestions
 - Based on: discipline, intent, time of day, experience level
 
 **Theming:**
+
 - LivingTheme context provides colors/effects globally
 - CSS variables for dynamic theming
 - Tailwind for component styling
 
 ---
 
-*Architecture analysis: 2026-01-10*
-*Includes: Explore tab, meditation cards, Living Theme atmosphere*
+_Architecture analysis: 2026-01-10 (updated 2026-01-13)_
+_Includes: Explore tab, meditation cards, Living Theme atmosphere, Journey tab_
