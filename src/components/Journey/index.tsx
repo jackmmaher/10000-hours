@@ -184,13 +184,14 @@ export function Journey() {
   )
 
   // Load next planned session
+  const loadNextPlan = useCallback(async () => {
+    const nextPlan = await getNextPlannedSession()
+    setNextPlannedSession(nextPlan || null)
+  }, [])
+
   useEffect(() => {
-    const loadNextPlan = async () => {
-      const nextPlan = await getNextPlannedSession()
-      setNextPlannedSession(nextPlan || null)
-    }
     loadNextPlan()
-  }, [sessions, plansRefreshKey, lastPlanChange])
+  }, [sessions, plansRefreshKey, lastPlanChange, loadNextPlan])
 
   // Consume navigation intents
   useEffect(() => {
@@ -357,10 +358,12 @@ export function Journey() {
             setSelectedDaySessions([])
             setTemplateToPlan(null)
           }}
-          onSave={() => {
+          onSave={async () => {
             refreshAllPlanData()
             triggerPlanChange()
             setTemplateToPlan(null)
+            // Explicitly reload next planned session after save
+            await loadNextPlan()
           }}
           prefillTemplate={templateToPlan}
         />

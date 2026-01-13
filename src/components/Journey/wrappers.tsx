@@ -35,14 +35,14 @@ export function MeditationPlannerWrapper({
   date: Date
   sessions: Session[]
   onClose: () => void
-  onSave: () => void
+  onSave: () => Promise<void> | void
   prefillTemplate?: PrefillTemplate | null
 }) {
   const [MeditationPlanner, setMeditationPlanner] = useState<React.ComponentType<{
     date: Date
     sessions: Session[]
     onClose: () => void
-    onSave: () => void
+    onSave: () => Promise<void> | void
     prefillTemplate?: PrefillTemplate | null
   }> | null>(null)
 

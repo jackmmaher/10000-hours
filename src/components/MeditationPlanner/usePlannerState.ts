@@ -40,7 +40,7 @@ function timeToMinutes(time: string | undefined): number {
 interface UsePlannerStateProps {
   date: Date
   sessions: Session[]
-  onSave: () => void
+  onSave: () => Promise<void> | void
   onClose: () => void
   prefillTemplate?: { title?: string; duration?: number; discipline?: string; id?: string } | null
 }
@@ -89,6 +89,9 @@ export function usePlannerState({
 
   // Attached pearl state
   const [attachedPearl, setAttachedPearl] = useState<{ id: string; text: string } | null>(null)
+
+  // Local refresh key for pendingPlans (incremented after saving a new plan)
+  const [plansLocalRefreshKey, setPlansLocalRefreshKey] = useState(0)
 
   // Build unified dayItems array combining sessions and pending plans
   const dayItems: DayItem[] = useMemo(() => {
@@ -264,7 +267,7 @@ export function usePlannerState({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate, isSessionMode])
 
-  // Load pending plans for this date
+  // Load pending plans for this date (refresh when plansLocalRefreshKey changes)
   useEffect(() => {
     async function loadPendingPlans() {
       setIsLoadingPlans(true)
@@ -274,7 +277,7 @@ export function usePlannerState({
       setIsLoadingPlans(false)
     }
     loadPendingPlans()
-  }, [date])
+  }, [date, plansLocalRefreshKey])
 
   // Handle item transitions - reset/load state when switching between items in carousel
   useEffect(() => {
@@ -395,8 +398,12 @@ export function usePlannerState({
           // Reset repeat state after saving
           setRepeatFrequency(null)
           setRepeatCustomDays([])
-          onSave()
-          onClose()
+          // Refresh local plans list
+          setPlansLocalRefreshKey((k) => k + 1)
+          // Allow state updates to propagate before closing
+          await onSave()
+          // Small delay to ensure React processes state updates before unmount
+          setTimeout(() => onClose(), 50)
           return
         }
 
@@ -448,10 +455,14 @@ export function usePlannerState({
               planTitle || 'Meditation'
             )
           }
+          // Refresh local plans list after adding new plan
+          setPlansLocalRefreshKey((k) => k + 1)
         }
       }
-      onSave()
-      onClose()
+      // Allow state updates to propagate before closing
+      await onSave()
+      // Small delay to ensure React processes state updates before unmount
+      setTimeout(() => onClose(), 50)
     } catch (err) {
       console.error('Failed to save:', err)
     } finally {

@@ -27,7 +27,7 @@ export interface MeditationPlannerProps {
   date: Date
   sessions: Session[] // All sessions for this date (may be empty for future dates)
   onClose: () => void
-  onSave: () => void
+  onSave: () => Promise<void> | void // Can be async to allow awaiting refresh
   prefillTemplate?: PrefillTemplate | null
 }
 
