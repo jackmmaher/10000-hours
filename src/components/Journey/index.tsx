@@ -294,7 +294,15 @@ export function Journey() {
 
         {/* Week Summary - Display Only */}
         <div className="mb-10">
-          <p className="font-serif text-sm text-ink/50 tracking-wide mb-5">This week</p>
+          <div className="flex items-baseline justify-between mb-5">
+            <p className="font-serif text-sm text-ink/50 tracking-wide">This week</p>
+            <p className="text-xs text-ink/40">
+              Today:{' '}
+              <span className="text-accent font-medium">
+                {new Date().toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' })}
+              </span>
+            </p>
+          </div>
           <WeekStonesRow
             days={weekDays}
             onDayClick={(_dayIndex, date) => scrollToCalendarAndPlan(date)}

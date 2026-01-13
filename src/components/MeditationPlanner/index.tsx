@@ -373,7 +373,7 @@ export function MeditationPlanner({
             </div>
           ) : (
             <DayItemsCarousel
-              itemCount={state.dayItems.length}
+              items={state.dayItems}
               currentIndex={state.selectedItemIndex}
               onIndexChange={state.setSelectedItemIndex}
             >

@@ -13,14 +13,14 @@ import {
   getMonthlyData,
   getSessionDatesForMonth,
   getSessionsForDate,
-  getTotalForDate
+  getTotalForDate,
 } from '../lib/calculations'
 import {
   formatMonthYear,
   formatFullDate,
   formatDuration,
   formatTime,
-  formatTotalHours
+  formatTotalHours,
 } from '../lib/format'
 import { getPlannedSessionsForMonth, PlannedSession } from '../lib/db'
 
@@ -36,7 +36,12 @@ interface CalendarProps {
   onEditSession?: (session: ReturnType<typeof getSessionsForDate>[number]) => void
 }
 
-export function Calendar({ embedded = false, onDateClick, refreshKey, onEditSession }: CalendarProps) {
+export function Calendar({
+  embedded = false,
+  onDateClick,
+  refreshKey,
+  onEditSession,
+}: CalendarProps) {
   const { sessions } = useSessionStore()
   const { setView } = useNavigationStore()
   const haptic = useTapFeedback()
@@ -61,7 +66,7 @@ export function Calendar({ embedded = false, onDateClick, refreshKey, onEditSess
   // Get planned dates for current month (only incomplete plans)
   const plannedDates = useMemo(() => {
     const dates = new Set<number>()
-    plannedSessions.forEach(p => {
+    plannedSessions.forEach((p) => {
       // Only include incomplete plans (not already done)
       if (p.completed) return
       const planDate = new Date(p.date)
@@ -78,7 +83,7 @@ export function Calendar({ embedded = false, onDateClick, refreshKey, onEditSess
   // Get years with data for year view
   const yearsWithData = useMemo(() => {
     const years = new Set<number>()
-    sessions.forEach(s => years.add(new Date(s.startTime).getFullYear()))
+    sessions.forEach((s) => years.add(new Date(s.startTime).getFullYear()))
     if (years.size === 0) years.add(today.getFullYear())
     return Array.from(years).sort()
   }, [sessions])
@@ -165,17 +170,17 @@ export function Calendar({ embedded = false, onDateClick, refreshKey, onEditSess
   // Swipe handlers
   const monthSwipeHandlers = useSwipe({
     onSwipeLeft: goToNextMonth,
-    onSwipeRight: goToPrevMonth
+    onSwipeRight: goToPrevMonth,
   })
 
   const navSwipeHandlers = useSwipe({
     onSwipeRight: () => setView('progress'),
-    onSwipeDown: () => setView('timer')
+    onSwipeDown: () => setView('timer'),
   })
 
   // Get intensity for year view - uses theme-aware intensity colors
   const getMonthIntensity = (year: number, month: number): number => {
-    const data = monthlyData.find(m => m.year === year && m.month === month)
+    const data = monthlyData.find((m) => m.year === year && m.month === month)
     return data?.intensity ?? 0
   }
 
@@ -212,7 +217,12 @@ export function Calendar({ embedded = false, onDateClick, refreshKey, onEditSess
               style={{ color: 'var(--text-muted)' }}
             >
               <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
               Progress
             </button>
@@ -230,7 +240,10 @@ export function Calendar({ embedded = false, onDateClick, refreshKey, onEditSess
         {/* View type toggle for embedded mode */}
         {embedded && (
           <div className="flex items-center justify-between mb-4">
-            <p className="font-serif text-sm tracking-wide" style={{ color: 'var(--text-secondary)' }}>
+            <p
+              className="font-serif text-sm tracking-wide"
+              style={{ color: 'var(--text-secondary)' }}
+            >
               Calendar
             </p>
             <button
@@ -246,9 +259,11 @@ export function Calendar({ embedded = false, onDateClick, refreshKey, onEditSess
         {viewType === 'year' ? (
           // Year heat map view
           <div className="space-y-8">
-            {yearsWithData.map(year => (
+            {yearsWithData.map((year) => (
               <div key={year}>
-                <p className="font-serif text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>{year}</p>
+                <p className="font-serif text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
+                  {year}
+                </p>
                 <div className="grid grid-cols-12 gap-1.5">
                   {MONTHS_SHORT.map((monthLabel, monthIndex) => {
                     const intensity = getMonthIntensity(year, monthIndex)
@@ -274,20 +289,18 @@ export function Calendar({ embedded = false, onDateClick, refreshKey, onEditSess
 
             {/* Legend */}
             <div className="flex items-center justify-center gap-3 pt-4">
-              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Less</span>
+              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                Less
+              </span>
               <div className="flex gap-1">
                 {[0, 0.15, 0.35, 0.6, 0.85].map((intensity, i) => {
                   const style = getIntensityStyle(intensity)
-                  return (
-                    <div
-                      key={i}
-                      className="w-3 h-3 rounded-sm"
-                      style={style}
-                    />
-                  )
+                  return <div key={i} className="w-3 h-3 rounded-sm" style={style} />
                 })}
               </div>
-              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>More</span>
+              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                More
+              </span>
             </div>
           </div>
         ) : (
@@ -302,7 +315,12 @@ export function Calendar({ embedded = false, onDateClick, refreshKey, onEditSess
                 aria-label="Previous month"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M15 19l-7-7 7-7"
+                  />
                 </svg>
               </button>
 
@@ -321,14 +339,37 @@ export function Calendar({ embedded = false, onDateClick, refreshKey, onEditSess
                 aria-label="Next month"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </button>
             </div>
 
+            {/* Today indicator - always visible */}
+            <div className="text-center mb-4">
+              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                Today is{' '}
+                <button
+                  onClick={goToToday}
+                  className="font-medium underline underline-offset-2"
+                  style={{ color: 'var(--accent)' }}
+                >
+                  {today.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </button>
+              </span>
+            </div>
+
             {/* Day labels */}
             <div className="grid grid-cols-7 gap-1.5 mb-3">
-              {DAYS.map(day => (
+              {DAYS.map((day) => (
                 <div
                   key={day}
                   className="text-center text-xs py-1"
@@ -349,8 +390,10 @@ export function Calendar({ embedded = false, onDateClick, refreshKey, onEditSess
                 const hasSession = sessionDates.has(day)
                 const hasPlan = plannedDates.has(day)
                 const dayDate = new Date(currentYear, currentMonth, day)
-                const isPast = dayDate < new Date(today.getFullYear(), today.getMonth(), today.getDate())
-                const isFuture = dayDate > new Date(today.getFullYear(), today.getMonth(), today.getDate())
+                const isPast =
+                  dayDate < new Date(today.getFullYear(), today.getMonth(), today.getDate())
+                const isFuture =
+                  dayDate > new Date(today.getFullYear(), today.getMonth(), today.getDate())
                 const isTodayDate = isToday(day)
                 const isSelectedDate = isSelected(day)
 
@@ -391,8 +434,9 @@ export function Calendar({ embedded = false, onDateClick, refreshKey, onEditSess
                         onClick={handleDayClick}
                         className="w-full h-full flex items-center justify-center rounded-lg transition-all active:scale-[0.95]"
                         style={{
-                          background: hasSession || hasPlan ? 'var(--accent-muted)' : 'var(--bg-elevated)',
-                          color: 'var(--text-primary)'
+                          background:
+                            hasSession || hasPlan ? 'var(--accent-muted)' : 'var(--bg-elevated)',
+                          color: 'var(--text-primary)',
                         }}
                       >
                         <span className="text-sm font-medium">{day}</span>
@@ -408,7 +452,10 @@ export function Calendar({ embedded = false, onDateClick, refreshKey, onEditSess
                       <button
                         onClick={handleDayClick}
                         className="w-full h-full flex items-center justify-center rounded-lg transition-all active:scale-[0.95]"
-                        style={{ background: 'var(--calendar-intensity-1)', color: 'var(--text-primary)' }}
+                        style={{
+                          background: 'var(--calendar-intensity-1)',
+                          color: 'var(--text-primary)',
+                        }}
                       >
                         <span className="text-sm font-medium">{day}</span>
                       </button>
@@ -485,7 +532,12 @@ export function Calendar({ embedded = false, onDateClick, refreshKey, onEditSess
                           stroke="currentColor"
                           viewBox="0 0 24 24"
                         >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M19 9l-7 7-7-7"
+                          />
                         </svg>
                       </span>
                     </button>
@@ -500,7 +552,9 @@ export function Calendar({ embedded = false, onDateClick, refreshKey, onEditSess
                           >
                             <span>{formatTime(new Date(session.startTime))}</span>
                             <div className="flex items-center gap-3">
-                              <span className="tabular-nums">{formatDuration(session.durationSeconds)}</span>
+                              <span className="tabular-nums">
+                                {formatDuration(session.durationSeconds)}
+                              </span>
                               {onEditSession && (
                                 <button
                                   onClick={() => onEditSession(session)}
@@ -518,16 +572,19 @@ export function Calendar({ embedded = false, onDateClick, refreshKey, onEditSess
 
                     <div className="mt-5">
                       <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        Since this date: {formatTotalHours(
+                        Since this date:{' '}
+                        {formatTotalHours(
                           sessions
-                            .filter(s => s.startTime >= selectedDate.getTime())
+                            .filter((s) => s.startTime >= selectedDate.getTime())
                             .reduce((sum, s) => sum + s.durationSeconds, 0)
                         )}
                       </p>
                     </div>
                   </>
                 ) : (
-                  <p className="text-sm italic" style={{ color: 'var(--text-muted)' }}>No sessions</p>
+                  <p className="text-sm italic" style={{ color: 'var(--text-muted)' }}>
+                    No sessions
+                  </p>
                 )}
               </div>
             )}

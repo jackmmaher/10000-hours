@@ -1,81 +1,110 @@
 /**
- * DayItemsCarousel - Swipeable carousel for day items
+ * DayItemsCarousel - Tab-based navigation for multiple sessions/plans on same day
  *
- * A simple horizontal swipe component that:
- * - Shows dot indicators at top showing total items and current position
- * - Supports touch swipe gestures (swipe left = next, swipe right = previous)
- * - Renders children inside a swipeable container
- * - Calls onIndexChange when user swipes to a different item
+ * Shows labeled tabs at top indicating what each item is:
+ * - Past sessions: "6:34 AM" (time they occurred)
+ * - Future plans: "11:20 AM" with plan indicator
+ *
+ * Navigation is TAB-ONLY (no swipe) to avoid conflicts with
+ * horizontally scrollable content inside (position/technique selectors).
  */
 
-import { useState } from 'react'
+import type { DayItem } from './types'
 
 interface DayItemsCarouselProps {
-  itemCount: number
+  items: DayItem[]
   currentIndex: number
   onIndexChange: (index: number) => void
   children: React.ReactNode
 }
 
+/**
+ * Format a timestamp or time string for display
+ */
+function formatItemLabel(item: DayItem): string {
+  if (item.type === 'session' && item.session) {
+    // Past session - show the time it started
+    const date = new Date(item.session.startTime)
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    })
+  }
+
+  if (item.type === 'plan' && item.plan) {
+    // Future plan - show planned time or "Planned"
+    if (item.plan.plannedTime) {
+      // Convert "HH:MM" to readable time
+      const [hours, minutes] = item.plan.plannedTime.split(':').map(Number)
+      const date = new Date()
+      date.setHours(hours, minutes)
+      return date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      })
+    }
+    return 'Planned'
+  }
+
+  return `Item ${item.id}`
+}
+
+/**
+ * Get a short type indicator
+ */
+function getTypeIndicator(item: DayItem): string | null {
+  if (item.type === 'plan') {
+    return 'plan'
+  }
+  return null // Sessions don't need an indicator, they're the default
+}
+
 export function DayItemsCarousel({
-  itemCount,
+  items,
   currentIndex,
   onIndexChange,
   children,
 }: DayItemsCarouselProps) {
-  const [touchStart, setTouchStart] = useState<number | null>(null)
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.touches[0].clientX)
-  }
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStart === null) return
-    const touchEnd = e.changedTouches[0].clientX
-    const delta = touchStart - touchEnd
-
-    if (Math.abs(delta) > 50) {
-      if (delta > 0 && currentIndex < itemCount - 1) {
-        // Swiped left - go to next item
-        onIndexChange(currentIndex + 1)
-      } else if (delta < 0 && currentIndex > 0) {
-        // Swiped right - go to previous item
-        onIndexChange(currentIndex - 1)
-      }
-    }
-    setTouchStart(null)
-  }
-
   // Don't render carousel UI if only one item
-  if (itemCount <= 1) {
+  if (items.length <= 1) {
     return <>{children}</>
   }
 
   return (
     <div className="w-full">
-      {/* Dot indicators */}
-      <div className="flex justify-center gap-2 mb-4">
-        {Array.from({ length: itemCount }).map((_, i) => (
-          <button
-            key={i}
-            onClick={() => onIndexChange(i)}
-            aria-label={`Go to item ${i + 1}`}
-            aria-current={i === currentIndex ? 'true' : undefined}
-            className={`w-2.5 h-2.5 rounded-full transition-colors ${
-              i === currentIndex ? 'bg-accent' : 'bg-ink/40'
-            }`}
-          />
-        ))}
+      {/* Tab navigation - shows what each item is */}
+      <div className="flex justify-center gap-1 mb-4">
+        {items.map((item, i) => {
+          const label = formatItemLabel(item)
+          const typeIndicator = getTypeIndicator(item)
+          const isActive = i === currentIndex
+
+          return (
+            <button
+              key={item.id}
+              onClick={() => onIndexChange(i)}
+              aria-label={`View ${item.type === 'plan' ? 'planned session' : 'session'} at ${label}`}
+              aria-current={isActive ? 'true' : undefined}
+              className={`
+                px-3 py-1.5 rounded-full text-xs font-medium transition-all
+                ${isActive ? 'bg-accent text-on-accent' : 'bg-ink/10 text-ink/60 hover:bg-ink/20'}
+              `}
+            >
+              {label}
+              {typeIndicator && (
+                <span className={`ml-1 ${isActive ? 'text-on-accent/70' : 'text-ink/40'}`}>
+                  ({typeIndicator})
+                </span>
+              )}
+            </button>
+          )
+        })}
       </div>
 
-      {/* Swipeable container */}
-      <div
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        className="w-full touch-pan-y"
-      >
-        {children}
-      </div>
+      {/* Content - NO swipe handlers, just renders children */}
+      <div className="w-full">{children}</div>
     </div>
   )
 }
