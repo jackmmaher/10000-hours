@@ -14,12 +14,12 @@ export interface Pearl {
   upvotes: number
   saves: number
   createdAt: string
-  editedAt?: string | null  // When the pearl was last edited
-  intentTags?: string[]  // Intent-based tags for filtering (anxiety, stress, focus, etc.)
+  editedAt?: string | null // When the pearl was last edited
+  intentTags?: string[] // Intent-based tags for filtering (anxiety, stress, focus, etc.)
   hasVoted?: boolean
   hasSaved?: boolean
-  isPreserved?: boolean  // True if original pearl was deleted, this is a saved copy
-  creatorVoiceScore?: number  // Creator's global Voice score from Supabase
+  isPreserved?: boolean // True if original pearl was deleted, this is a saved copy
+  creatorVoiceScore?: number // Creator's global Voice score from Supabase
 }
 
 export type PearlFilter = 'new' | 'rising' | 'top'
@@ -42,7 +42,7 @@ export async function createPearl(text: string, userId: string): Promise<Pearl> 
     .from('pearls')
     .insert({
       user_id: userId,
-      text: text.trim()
+      text: text.trim(),
     })
     .select()
     .single()
@@ -55,19 +55,25 @@ export async function createPearl(text: string, userId: string): Promise<Pearl> 
   // Auto-add creator's vote and save (triggers will update counts)
   // These are fire-and-forget - don't fail creation if they fail
   await Promise.all([
-    supabase.from('pearl_votes').insert({ pearl_id: data.id, user_id: userId }).then(() => {}),
-    supabase.from('pearl_saves').insert({ pearl_id: data.id, user_id: userId, text: data.text }).then(() => {})
-  ]).catch(err => console.warn('Auto-vote/save failed (non-critical):', err))
+    supabase
+      .from('pearl_votes')
+      .insert({ pearl_id: data.id, user_id: userId })
+      .then(() => {}),
+    supabase
+      .from('pearl_saves')
+      .insert({ pearl_id: data.id, user_id: userId, text: data.text })
+      .then(() => {}),
+  ]).catch((err) => console.warn('Auto-vote/save failed (non-critical):', err))
 
   return {
     id: data.id,
     userId: data.user_id,
     text: data.text,
     upvotes: 1, // Creator's vote
-    saves: 1,   // Creator's save
+    saves: 1, // Creator's save
     createdAt: data.created_at,
-    hasVoted: true,  // Creator has voted
-    hasSaved: true   // Creator has saved
+    hasVoted: true, // Creator has voted
+    hasSaved: true, // Creator has saved
   }
 }
 
@@ -87,48 +93,47 @@ export async function getPearls(
 
   // Use the helper function if user is authenticated
   if (userId) {
-    const { data, error } = await supabase
-      .rpc('get_pearls_for_user', {
-        p_user_id: userId,
-        p_filter: filter,
-        p_limit: limit,
-        p_offset: offset
-      })
+    const { data, error } = await supabase.rpc('get_pearls_for_user', {
+      p_user_id: userId,
+      p_filter: filter,
+      p_limit: limit,
+      p_offset: offset,
+    })
 
     if (error) {
       console.error('Get pearls error:', error)
       return []
     }
 
-    return (data || []).map((p: {
-      id: string
-      user_id: string
-      text: string
-      upvotes: number
-      saves: number
-      created_at: string
-      intent_tags: string[] | null
-      has_voted: boolean
-      has_saved: boolean
-      creator_voice_score: number
-    }) => ({
-      id: p.id,
-      userId: p.user_id,
-      text: p.text,
-      upvotes: p.upvotes,
-      saves: p.saves,
-      createdAt: p.created_at,
-      intentTags: p.intent_tags || [],
-      hasVoted: p.has_voted,
-      hasSaved: p.has_saved,
-      creatorVoiceScore: p.creator_voice_score || 0
-    }))
+    return (data || []).map(
+      (p: {
+        id: string
+        user_id: string
+        text: string
+        upvotes: number
+        saves: number
+        created_at: string
+        intent_tags: string[] | null
+        has_voted: boolean
+        has_saved: boolean
+        creator_voice_score: number
+      }) => ({
+        id: p.id,
+        userId: p.user_id,
+        text: p.text,
+        upvotes: p.upvotes,
+        saves: p.saves,
+        createdAt: p.created_at,
+        intentTags: p.intent_tags || [],
+        hasVoted: p.has_voted,
+        hasSaved: p.has_saved,
+        creatorVoiceScore: p.creator_voice_score || 0,
+      })
+    )
   }
 
   // Anonymous user - just get pearls without vote/save status
-  let query = supabase
-    .from('pearls')
-    .select('*')
+  let query = supabase.from('pearls').select('*')
 
   // Apply ordering based on filter
   if (filter === 'top') {
@@ -140,15 +145,14 @@ export async function getPearls(
     query = query.order('created_at', { ascending: false })
   }
 
-  const { data, error } = await query
-    .range(offset, offset + limit - 1)
+  const { data, error } = await query.range(offset, offset + limit - 1)
 
   if (error) {
     console.error('Get pearls error:', error)
     return []
   }
 
-  return (data || []).map(p => ({
+  return (data || []).map((p) => ({
     id: p.id,
     userId: p.user_id,
     text: p.text,
@@ -157,7 +161,7 @@ export async function getPearls(
     createdAt: p.created_at,
     intentTags: p.intent_tags || [],
     hasVoted: false,
-    hasSaved: false
+    hasSaved: false,
   }))
 }
 
@@ -169,12 +173,10 @@ export async function votePearl(pearlId: string, userId: string): Promise<boolea
     return false
   }
 
-  const { error } = await supabase
-    .from('pearl_votes')
-    .insert({
-      pearl_id: pearlId,
-      user_id: userId
-    })
+  const { error } = await supabase.from('pearl_votes').insert({
+    pearl_id: pearlId,
+    user_id: userId,
+  })
 
   if (error) {
     // Might already be voted
@@ -231,13 +233,11 @@ export async function savePearl(pearlId: string, userId: string): Promise<boolea
     return false
   }
 
-  const { error } = await supabase
-    .from('pearl_saves')
-    .insert({
-      pearl_id: pearlId,
-      user_id: userId,
-      text: pearl.text  // Preserve copy of the text
-    })
+  const { error } = await supabase.from('pearl_saves').insert({
+    pearl_id: pearlId,
+    user_id: userId,
+    text: pearl.text, // Preserve copy of the text
+  })
 
   if (error) {
     if (error.code === '23505') {
@@ -283,7 +283,8 @@ export async function getSavedPearls(userId: string): Promise<Pearl[]> {
 
   const { data, error } = await supabase
     .from('pearl_saves')
-    .select(`
+    .select(
+      `
       pearl_id,
       text,
       saved_at,
@@ -296,7 +297,8 @@ export async function getSavedPearls(userId: string): Promise<Pearl[]> {
         created_at,
         edited_at
       )
-    `)
+    `
+    )
     .eq('user_id', userId)
     .order('saved_at', { ascending: false })
 
@@ -305,50 +307,52 @@ export async function getSavedPearls(userId: string): Promise<Pearl[]> {
     return []
   }
 
-  return (data || [])
-    .filter(d => d.pearls || d.text) // Keep if original exists OR we have saved text
-    .map(d => {
-      const p = d.pearls as unknown as {
-        id: string
-        user_id: string
-        text: string
-        upvotes: number
-        saves: number
-        created_at: string
-        edited_at: string | null
-      } | null
+  return (
+    (data || [])
+      .filter((d) => d.pearls || d.text) // Keep if original exists OR we have saved text
+      .map((d) => {
+        const p = d.pearls as unknown as {
+          id: string
+          user_id: string
+          text: string
+          upvotes: number
+          saves: number
+          created_at: string
+          edited_at: string | null
+        } | null
 
-      // Use original pearl data if available, otherwise use preserved copy
-      if (p) {
-        return {
-          id: p.id,
-          userId: p.user_id,
-          text: p.text,
-          upvotes: p.upvotes,
-          saves: p.saves,
-          createdAt: p.created_at,
-          editedAt: p.edited_at,
-          hasVoted: false,
-          hasSaved: true
+        // Use original pearl data if available, otherwise use preserved copy
+        if (p) {
+          return {
+            id: p.id,
+            userId: p.user_id,
+            text: p.text,
+            upvotes: p.upvotes,
+            saves: p.saves,
+            createdAt: p.created_at,
+            editedAt: p.edited_at,
+            hasVoted: false,
+            hasSaved: true,
+          }
+        } else {
+          // Original deleted - use preserved copy
+          return {
+            id: d.pearl_id,
+            userId: '', // Original author unknown
+            text: d.text || '[Pearl no longer available]',
+            upvotes: 0,
+            saves: 0,
+            createdAt: d.saved_at || new Date().toISOString(),
+            editedAt: null,
+            hasVoted: false,
+            hasSaved: true,
+            isPreserved: true, // Flag to indicate this is a preserved copy
+          }
         }
-      } else {
-        // Original deleted - use preserved copy
-        return {
-          id: d.pearl_id,
-          userId: '', // Original author unknown
-          text: d.text || '[Pearl no longer available]',
-          upvotes: 0,
-          saves: 0,
-          createdAt: d.saved_at || new Date().toISOString(),
-          editedAt: null,
-          hasVoted: false,
-          hasSaved: true,
-          isPreserved: true // Flag to indicate this is a preserved copy
-        }
-      }
-    })
-    // Filter out user's own created pearls to prevent duplicates with "My Pearls"
-    .filter(pearl => pearl.userId !== userId)
+      })
+      // Filter out user's own created pearls to prevent duplicates with "My Pearls"
+      .filter((pearl) => pearl.userId !== userId)
+  )
 }
 
 /**
@@ -371,7 +375,7 @@ export async function getMyPearls(userId: string): Promise<Pearl[]> {
     return []
   }
 
-  return (data || []).map(p => ({
+  return (data || []).map((p) => ({
     id: p.id,
     userId: p.user_id,
     text: p.text,
@@ -379,8 +383,8 @@ export async function getMyPearls(userId: string): Promise<Pearl[]> {
     saves: p.saves,
     createdAt: p.created_at,
     editedAt: p.edited_at || null,
-    hasVoted: true,  // Creator has auto-voted their own pearl
-    hasSaved: true   // Creator has auto-saved their own pearl
+    hasVoted: true, // Creator has auto-voted their own pearl
+    hasSaved: true, // Creator has auto-saved their own pearl
   }))
 }
 
@@ -392,11 +396,7 @@ export async function deletePearl(pearlId: string, userId: string): Promise<bool
     return false
   }
 
-  const { error } = await supabase
-    .from('pearls')
-    .delete()
-    .eq('id', pearlId)
-    .eq('user_id', userId)
+  const { error } = await supabase.from('pearls').delete().eq('id', pearlId).eq('user_id', userId)
 
   if (error) {
     console.error('Delete pearl error:', error)
@@ -410,7 +410,11 @@ export async function deletePearl(pearlId: string, userId: string): Promise<bool
  * Update a pearl's text (user can only edit their own)
  * Sets edited_at timestamp for tracking edits
  */
-export async function updatePearl(pearlId: string, newText: string, userId: string): Promise<boolean> {
+export async function updatePearl(
+  pearlId: string,
+  newText: string,
+  userId: string
+): Promise<boolean> {
   if (!isSupabaseConfigured() || !supabase) {
     return false
   }
@@ -424,7 +428,7 @@ export async function updatePearl(pearlId: string, newText: string, userId: stri
     .from('pearls')
     .update({
       text: newText,
-      edited_at: new Date().toISOString()
+      edited_at: new Date().toISOString(),
     })
     .eq('id', pearlId)
     .eq('user_id', userId) // RLS ensures user can only update own pearls
@@ -438,9 +442,40 @@ export async function updatePearl(pearlId: string, newText: string, userId: stri
 }
 
 /**
+ * Get a single pearl by ID
+ */
+export async function getPearlById(pearlId: string): Promise<Pearl | null> {
+  if (!isSupabaseConfigured() || !supabase) {
+    return null
+  }
+
+  const { data, error } = await supabase.from('pearls').select('*').eq('id', pearlId).single()
+
+  if (error) {
+    console.error('Get pearl by ID error:', error)
+    return null
+  }
+
+  return {
+    id: data.id,
+    userId: data.user_id,
+    text: data.text,
+    upvotes: data.upvotes,
+    saves: data.saves,
+    createdAt: data.created_at,
+    editedAt: data.edited_at || null,
+    intentTags: data.intent_tags || [],
+    hasVoted: false,
+    hasSaved: false,
+  }
+}
+
+/**
  * Get user's community stats
  */
-export async function getUserStats(userId: string): Promise<{ karma: number; saves: number } | null> {
+export async function getUserStats(
+  userId: string
+): Promise<{ karma: number; saves: number } | null> {
   if (!isSupabaseConfigured() || !supabase) {
     return null
   }
@@ -458,6 +493,6 @@ export async function getUserStats(userId: string): Promise<{ karma: number; sav
 
   return {
     karma: data.total_karma,
-    saves: data.total_saves
+    saves: data.total_saves,
   }
 }

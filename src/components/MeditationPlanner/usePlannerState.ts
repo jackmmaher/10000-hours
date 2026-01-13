@@ -243,7 +243,17 @@ export function usePlannerState({
           setPlanSourceTemplateId(existing.sourceTemplateId)
         }
         if (existing.attachedPearlId) {
-          setAttachedPearl({ id: existing.attachedPearlId, text: '' }) // Text will be loaded separately
+          // Load pearl text from Supabase
+          import('../../lib/pearls').then(({ getPearlById }) => {
+            getPearlById(existing.attachedPearlId!).then((pearl) => {
+              if (pearl) {
+                setAttachedPearl({ id: pearl.id, text: pearl.text })
+              } else {
+                // Pearl may have been deleted, show placeholder
+                setAttachedPearl({ id: existing.attachedPearlId!, text: '' })
+              }
+            })
+          })
         }
       }
 
@@ -262,6 +272,60 @@ export function usePlannerState({
     }
     loadPendingPlans()
   }, [date])
+
+  // Handle item transitions - reset/load state when switching between items in carousel
+  useEffect(() => {
+    if (!currentItem) return
+
+    // If we're viewing a plan item from the carousel, load its data
+    if (currentItem.type === 'plan' && currentItem.plan) {
+      const plan = currentItem.plan
+      setExistingPlan(plan)
+      setPlannedTime(plan.plannedTime || '')
+      setDuration(plan.duration || null)
+      if (plan.duration) {
+        const cat = DURATION_CATEGORIES.find((c) => c.durations.includes(plan.duration!))
+        if (cat) {
+          setDurationCategory(cat.label)
+          setShowCustomDuration(false)
+        } else {
+          setDurationCategory('custom')
+          setShowCustomDuration(true)
+        }
+      } else {
+        setDurationCategory(null)
+        setShowCustomDuration(false)
+      }
+      setPlanPose(plan.pose || '')
+      setPlanDiscipline(plan.discipline || '')
+      setPlanNotes(plan.notes || '')
+      setPlanTitle(plan.title || '')
+      setPlanSourceTemplateId(plan.sourceTemplateId)
+      if (plan.attachedPearlId) {
+        // Load pearl text from Supabase
+        import('../../lib/pearls').then(({ getPearlById }) => {
+          getPearlById(plan.attachedPearlId!).then((pearl) => {
+            if (pearl) {
+              setAttachedPearl({ id: pearl.id, text: pearl.text })
+            } else {
+              setAttachedPearl({ id: plan.attachedPearlId!, text: '' })
+            }
+          })
+        })
+      } else {
+        setAttachedPearl(null)
+      }
+      // Exit "adding new plan" mode when viewing an existing plan
+      setIsAddingNewPlan(false)
+    }
+
+    // If switching to session mode, clear plan state (don't leak plan data to sessions)
+    if (currentItem.type === 'session') {
+      // Plan state stays separate via isSessionMode routing, no action needed
+      // But ensure we exit "adding new plan" mode
+      setIsAddingNewPlan(false)
+    }
+  }, [currentItem?.id, currentItem?.type])
 
   // Apply prefill template data when provided
   useEffect(() => {

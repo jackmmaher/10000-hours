@@ -59,6 +59,7 @@ interface SessionState {
 
   // Actions
   hydrate: () => Promise<void>
+  triggerPlanChange: () => void
   startPreparing: () => void
   startTimer: () => void
   stopTimer: () => Promise<void>
@@ -85,6 +86,10 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   justAchievedMilestone: null,
   lastSessionUuid: null,
   lastPlanChange: 0,
+
+  triggerPlanChange: () => {
+    set({ lastPlanChange: Date.now() })
+  },
 
   hydrate: async () => {
     const [sessions, appState, sessionInProgressTime] = await Promise.all([

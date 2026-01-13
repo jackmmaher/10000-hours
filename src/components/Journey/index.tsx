@@ -47,7 +47,7 @@ import type { SessionTemplate } from '../../lib/types'
 type JourneySubTab = 'sessions' | 'saved' | 'pearls'
 
 export function Journey() {
-  const { sessions, lastPlanChange } = useSessionStore()
+  const { sessions, lastPlanChange, triggerPlanChange } = useSessionStore()
   const {
     setView,
     journeySubTab: navSubTab,
@@ -351,6 +351,7 @@ export function Journey() {
           }}
           onSave={() => {
             refreshAllPlanData()
+            triggerPlanChange()
             setTemplateToPlan(null)
           }}
           prefillTemplate={templateToPlan}
