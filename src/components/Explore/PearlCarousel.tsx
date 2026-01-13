@@ -50,6 +50,10 @@ export function PearlCarousel({
           scrollSnapType: 'x mandatory',
           WebkitOverflowScrolling: 'touch',
         }}
+        // Stop propagation to prevent horizontal scroll from triggering tab swipe
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
       >
         {pearls.map((pearl) => (
           <CompactPearlCard

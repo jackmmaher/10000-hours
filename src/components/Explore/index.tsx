@@ -419,8 +419,8 @@ export function Explore() {
       {/* Content Sections */}
       {!isLoading && hasContent && (
         <>
-          {/* Hero Card - Featured content */}
-          {featured && (
+          {/* Hero Card - Featured content (only in 'all' mode) */}
+          {filterType === 'all' && featured && (
             <section className="px-6 mb-12 max-w-lg mx-auto">
               <HeroCard
                 item={featured}
@@ -438,8 +438,8 @@ export function Explore() {
             </section>
           )}
 
-          {/* Pearl Carousel - Horizontal scroll */}
-          {carouselPearls.length > 0 && (
+          {/* Pearl Carousel - Horizontal scroll (only in 'all' mode) */}
+          {filterType === 'all' && carouselPearls.length > 0 && (
             <PearlCarousel
               pearls={carouselPearls}
               title="Rising Pearls"
@@ -452,61 +452,55 @@ export function Explore() {
             />
           )}
 
-          {/* Sessions Section - Vertical feed */}
+          {/* Sessions Section */}
           {feedSessions.length > 0 && (
             <section className="px-6 mb-12 max-w-lg mx-auto">
-              <SectionHeader
-                title="Guided Sessions"
-                onSeeAll={() => setFilterType('meditations')}
-              />
+              {filterType === 'all' && (
+                <SectionHeader
+                  title="Guided Sessions"
+                  onSeeAll={() => setFilterType('meditations')}
+                />
+              )}
+              {filterType === 'meditations' && <SectionHeader title="All Meditations" />}
               <div className="space-y-4">
-                {feedSessions.slice(0, 4).map((session) => (
-                  <SessionCard
-                    key={session.id}
-                    session={session}
-                    gradient={getIntentionGradient(session.intention)}
-                    onClick={() => setSelectedSession(session)}
-                    onVote={handleSessionVote}
-                    onRequireAuth={() => setShowAuthModal(true)}
-                    isAuthenticated={isAuthenticated}
-                    currentUserId={user?.id}
-                  />
-                ))}
+                {/* Show all when filtered, limited when 'all' */}
+                {(filterType === 'meditations' ? feedSessions : feedSessions.slice(0, 4)).map(
+                  (session) => (
+                    <SessionCard
+                      key={session.id}
+                      session={session}
+                      gradient={getIntentionGradient(session.intention)}
+                      onClick={() => setSelectedSession(session)}
+                      onVote={handleSessionVote}
+                      onRequireAuth={() => setShowAuthModal(true)}
+                      isAuthenticated={isAuthenticated}
+                      currentUserId={user?.id}
+                    />
+                  )
+                )}
               </div>
             </section>
           )}
 
-          {/* More Pearls Section - Vertical feed */}
-          {feedPearls.length > 0 && (
+          {/* Pearls Section */}
+          {(filterType === 'pearls' ? [...carouselPearls, ...feedPearls] : feedPearls).length >
+            0 && (
             <section className="px-6 mb-12 max-w-lg mx-auto">
-              <SectionHeader title="More Wisdom" onSeeAll={() => setFilterType('pearls')} />
+              {filterType === 'all' && (
+                <SectionHeader title="More Wisdom" onSeeAll={() => setFilterType('pearls')} />
+              )}
+              {filterType === 'pearls' && <SectionHeader title="All Pearls" />}
               <div className="space-y-4">
-                {feedPearls.slice(0, 6).map((pearl) => (
+                {/* Show all when filtered, limited when 'all' */}
+                {(filterType === 'pearls'
+                  ? [...carouselPearls, ...feedPearls]
+                  : feedPearls.slice(0, 6)
+                ).map((pearl) => (
                   <PearlCardExplore
                     key={pearl.id}
                     pearl={pearl}
                     onVote={handlePearlVote}
                     onSave={handlePearlSave}
-                    onRequireAuth={() => setShowAuthModal(true)}
-                    isAuthenticated={isAuthenticated}
-                    currentUserId={user?.id}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Remaining Sessions (if filtered to meditations) */}
-          {filterType === 'meditations' && feedSessions.length > 4 && (
-            <section className="px-6 mb-12 max-w-lg mx-auto">
-              <div className="space-y-4">
-                {feedSessions.slice(4).map((session) => (
-                  <SessionCard
-                    key={session.id}
-                    session={session}
-                    gradient={getIntentionGradient(session.intention)}
-                    onClick={() => setSelectedSession(session)}
-                    onVote={handleSessionVote}
                     onRequireAuth={() => setShowAuthModal(true)}
                     isAuthenticated={isAuthenticated}
                     currentUserId={user?.id}
