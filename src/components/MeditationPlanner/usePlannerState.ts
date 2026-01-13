@@ -57,6 +57,7 @@ export function usePlannerState({
 
   // Loading states
   const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingPlans, setIsLoadingPlans] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [existingPlan, setExistingPlan] = useState<PlannedSession | null>(null)
   const [pendingPlans, setPendingPlans] = useState<PlannedSession[]>([])
@@ -266,9 +267,11 @@ export function usePlannerState({
   // Load pending plans for this date
   useEffect(() => {
     async function loadPendingPlans() {
+      setIsLoadingPlans(true)
       const dateStart = getStartOfDay(date)
       const plans = await getIncompletePlansForDate(dateStart)
       setPendingPlans(plans)
+      setIsLoadingPlans(false)
     }
     loadPendingPlans()
   }, [date])
@@ -581,8 +584,8 @@ export function usePlannerState({
     hasMultipleSessions,
     isSessionMode,
 
-    // Loading states
-    isLoading,
+    // Loading states - combine both to ensure all data is loaded before render
+    isLoading: isLoading || isLoadingPlans,
     isSaving,
 
     // Plan data

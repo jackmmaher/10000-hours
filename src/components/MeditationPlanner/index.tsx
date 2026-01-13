@@ -62,6 +62,8 @@ export function MeditationPlanner({
       <div
         className="bg-cream rounded-t-3xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-xl animate-slide-up"
         onClick={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
       >
         {/* Handle bar */}
         <div className="flex justify-center pt-3 pb-2">
@@ -332,7 +334,10 @@ export function MeditationPlanner({
                 {attachedPearl ? (
                   <button
                     type="button"
-                    onClick={() => setShowPearlPicker(true)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setShowPearlPicker(true)
+                    }}
                     className="w-full text-left p-3 rounded-xl bg-moss/10 border border-moss/30 touch-manipulation"
                   >
                     <p className="text-xs text-moss mb-1 flex items-center gap-1">
@@ -347,7 +352,10 @@ export function MeditationPlanner({
                 ) : (
                   <button
                     type="button"
-                    onClick={() => setShowPearlPicker(true)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setShowPearlPicker(true)
+                    }}
                     className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-dashed border-ink/20 text-ink/50 hover:border-moss/50 hover:text-moss transition-colors touch-manipulation"
                   >
                     <span className="text-lg">💎</span>
@@ -637,7 +645,10 @@ export function MeditationPlanner({
                     {attachedPearl ? (
                       <button
                         type="button"
-                        onClick={() => setShowPearlPicker(true)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setShowPearlPicker(true)
+                        }}
                         className="w-full text-left p-3 rounded-xl bg-moss/10 border border-moss/30 touch-manipulation"
                       >
                         <p className="text-xs text-moss mb-1 flex items-center gap-1">
@@ -652,7 +663,10 @@ export function MeditationPlanner({
                     ) : (
                       <button
                         type="button"
-                        onClick={() => setShowPearlPicker(true)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setShowPearlPicker(true)
+                        }}
                         className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-dashed border-ink/20 text-ink/50 hover:border-moss/50 hover:text-moss transition-colors touch-manipulation"
                       >
                         <span className="text-lg">💎</span>
@@ -708,8 +722,11 @@ export function MeditationPlanner({
           {/* Add another session button - only show when viewing existing items and not already adding */}
           {state.dayItems.length > 0 && !state.isAddingNewPlan && (
             <button
-              onClick={state.handleAddNewPlan}
-              className="w-full py-3 rounded-xl text-sm font-medium border border-dashed border-ink/20 text-ink/50 hover:border-ink/40 hover:text-ink/70 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation()
+                state.handleAddNewPlan()
+              }}
+              className="w-full py-3 rounded-xl text-sm font-medium border border-dashed border-ink/20 text-ink/50 hover:border-ink/40 hover:text-ink/70 transition-colors touch-manipulation"
             >
               + Add Another Session
             </button>
