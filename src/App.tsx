@@ -25,7 +25,6 @@ import { SessionEditModal } from './components/SessionEditModal'
 import { InsightModal } from './components/InsightModal'
 import { useAuthStore } from './stores/useAuthStore'
 import { Onboarding, hasSeenOnboarding, markOnboardingSeen } from './components/Onboarding'
-import { MilestoneCelebration } from './components/MilestoneCelebration'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { LivingTheme } from './components/LivingTheme'
 import { ZenMessage } from './components/ZenMessage'
@@ -256,9 +255,6 @@ function AppContent() {
             onDelete={handleSessionEditDelete}
           />
         )}
-
-        {/* Milestone celebration overlay */}
-        <MilestoneCelebration />
 
         {/* Toast notifications */}
         <ToastContainer />

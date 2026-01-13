@@ -15,6 +15,7 @@ interface MilestoneSummaryProps {
   previousAchievement: Achievement | null
   sessions: Session[]
   onClose: () => void
+  isNewlyAchieved?: boolean
 }
 
 // Format milestone label (e.g., "2 Hours", "10 Hours", "1,000 Hours")
@@ -32,7 +33,7 @@ function formatAchievementDate(timestamp: number): string {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
-    day: 'numeric'
+    day: 'numeric',
   })
 }
 
@@ -41,7 +42,7 @@ function formatAchievementTime(timestamp: number): string {
   const date = new Date(timestamp)
   return date.toLocaleTimeString('en-US', {
     hour: 'numeric',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -50,7 +51,7 @@ function formatSessionTime(timestamp: number): string {
   const date = new Date(timestamp)
   return date.toLocaleTimeString('en-US', {
     hour: 'numeric',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -59,7 +60,7 @@ function formatSessionDate(timestamp: number): string {
   const date = new Date(timestamp)
   return date.toLocaleDateString('en-US', {
     month: 'short',
-    day: 'numeric'
+    day: 'numeric',
   })
 }
 
@@ -67,7 +68,8 @@ export function MilestoneSummary({
   achievement,
   previousAchievement,
   sessions,
-  onClose
+  onClose,
+  isNewlyAchieved = false,
 }: MilestoneSummaryProps) {
   // Calculate sessions that contributed to this milestone
   const milestoneData = useMemo(() => {
@@ -98,9 +100,8 @@ export function MilestoneSummary({
 
     // Calculate stats
     const totalSeconds = contributingSessions.reduce((sum, s) => sum + s.durationSeconds, 0)
-    const avgSessionSeconds = contributingSessions.length > 0
-      ? totalSeconds / contributingSessions.length
-      : 0
+    const avgSessionSeconds =
+      contributingSessions.length > 0 ? totalSeconds / contributingSessions.length : 0
 
     // Days to reach this milestone from previous
     let daysToReach = 0
@@ -115,7 +116,7 @@ export function MilestoneSummary({
       totalSessions: contributingSessions.length,
       totalSeconds,
       avgSessionSeconds,
-      daysToReach
+      daysToReach,
     }
   }, [achievement, previousAchievement, sessions])
 
@@ -132,17 +133,25 @@ export function MilestoneSummary({
 
         {/* Header */}
         <div className="px-6 pb-4 border-b border-ink/5">
+          {/* Zen message for newly achieved milestones */}
+          {isNewlyAchieved && (
+            <div className="mb-4 py-3 px-4 bg-moss/10 rounded-xl">
+              <p className="text-sm text-moss italic text-center">The path continues.</p>
+            </div>
+          )}
           <div className="flex items-start justify-between">
             <div>
               <p className="font-serif text-2xl text-indigo-deep">
                 {formatMilestoneTitle(achievement.hours)}
               </p>
               <p className="text-sm text-ink/50 mt-1">
-                {formatAchievementDate(achievement.achievedAt)}
+                {isNewlyAchieved ? 'Just achieved' : formatAchievementDate(achievement.achievedAt)}
               </p>
-              <p className="text-xs text-ink/30">
-                at {formatAchievementTime(achievement.achievedAt)}
-              </p>
+              {!isNewlyAchieved && (
+                <p className="text-xs text-ink/30">
+                  at {formatAchievementTime(achievement.achievedAt)}
+                </p>
+              )}
             </div>
             <button
               onClick={onClose}
@@ -150,7 +159,12 @@ export function MilestoneSummary({
               aria-label="Close modal"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -182,14 +196,10 @@ export function MilestoneSummary({
 
         {/* Sessions list */}
         <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
-          <p className="text-xs text-ink/40 mb-3">
-            Sessions that earned this milestone
-          </p>
+          <p className="text-xs text-ink/40 mb-3">Sessions that earned this milestone</p>
 
           {milestoneData.sessions.length === 0 ? (
-            <p className="text-sm text-ink/30 italic py-4">
-              Session data not available
-            </p>
+            <p className="text-sm text-ink/30 italic py-4">Session data not available</p>
           ) : (
             <div className="space-y-2">
               {milestoneData.sessions.map((session, i) => (
@@ -199,17 +209,11 @@ export function MilestoneSummary({
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-6 h-6 rounded-full bg-indigo-deep/10 flex items-center justify-center">
-                      <span className="text-[10px] text-indigo-deep/60 tabular-nums">
-                        {i + 1}
-                      </span>
+                      <span className="text-[10px] text-indigo-deep/60 tabular-nums">{i + 1}</span>
                     </div>
                     <div>
-                      <p className="text-sm text-ink">
-                        {formatSessionDate(session.startTime)}
-                      </p>
-                      <p className="text-xs text-ink/40">
-                        {formatSessionTime(session.startTime)}
-                      </p>
+                      <p className="text-sm text-ink">{formatSessionDate(session.startTime)}</p>
+                      <p className="text-xs text-ink/40">{formatSessionTime(session.startTime)}</p>
                     </div>
                   </div>
                   <p className="text-sm text-ink/70 tabular-nums">

@@ -29,13 +29,13 @@ import {
   PlannedSession,
   SavedTemplate,
   UserCourseProgress,
-  Insight
+  Insight,
 } from '../lib/db'
 import {
   getPracticeShape,
   getCommitmentStats,
   getGrowthTrajectory,
-  getSuggestedActions
+  getSuggestedActions,
 } from '../lib/progressInsights'
 
 // Components
@@ -50,8 +50,19 @@ import { SuggestedActions } from './SuggestedActions'
 import { VoiceDetailModal } from './VoiceDetailModal'
 
 export function Progress() {
-  const { sessions, totalSeconds } = useSessionStore()
+  const { sessions, totalSeconds, justAchievedMilestone, clearMilestoneCelebration } =
+    useSessionStore()
   const { setView, openVoiceModal, clearVoiceModalIntent } = useNavigationStore()
+
+  // Clear non-hour milestones (session count, weekly first) silently
+  // Hour milestones are handled in AchievementGallery
+  useEffect(() => {
+    if (justAchievedMilestone && 'type' in justAchievedMilestone) {
+      // This is a session or weekly milestone, not an hour milestone
+      // Clear it silently - the notification system handles these separately
+      clearMilestoneCelebration()
+    }
+  }, [justAchievedMilestone, clearMilestoneCelebration])
   const { voice } = useVoice()
   const haptic = useTapFeedback()
 
@@ -78,7 +89,7 @@ export function Progress() {
           getAllPlannedSessions(),
           getSavedTemplates(),
           getAllCourseProgress(),
-          getInsightsWithContent()
+          getInsightsWithContent(),
         ])
         setPlannedSessions(plans)
         setSavedTemplates(templates)
@@ -97,20 +108,14 @@ export function Progress() {
   const sessionCount = sessions.length
 
   // Compute insights
-  const practiceShape = useMemo(
-    () => getPracticeShape(sessions),
-    [sessions]
-  )
+  const practiceShape = useMemo(() => getPracticeShape(sessions), [sessions])
 
   const commitmentStats = useMemo(
     () => getCommitmentStats(sessions, plannedSessions),
     [sessions, plannedSessions]
   )
 
-  const growthTrajectory = useMemo(
-    () => getGrowthTrajectory(sessions),
-    [sessions]
-  )
+  const growthTrajectory = useMemo(() => getGrowthTrajectory(sessions), [sessions])
 
   const suggestedActions = useMemo(
     () => getSuggestedActions(sessions, plannedSessions, savedTemplates, courseProgress, insights),
@@ -125,7 +130,7 @@ export function Progress() {
     isPulling,
     isRefreshing,
     pullDistance,
-    handlers: pullHandlers
+    handlers: pullHandlers,
   } = usePullToRefresh({
     onRefresh: async () => {
       // Reload data
@@ -133,13 +138,13 @@ export function Progress() {
         getAllPlannedSessions(),
         getSavedTemplates(),
         getAllCourseProgress(),
-        getInsightsWithContent()
+        getInsightsWithContent(),
       ])
       setPlannedSessions(plans)
       setSavedTemplates(templates)
       setCourseProgress(courses)
       setInsights(insightData)
-    }
+    },
   })
 
   // Swipe navigation
@@ -150,7 +155,7 @@ export function Progress() {
       }
     },
     onSwipeLeft: () => setView('profile'),
-    onSwipeRight: () => setView('explore')
+    onSwipeRight: () => setView('explore'),
   })
 
   return (
@@ -173,7 +178,7 @@ export function Progress() {
         className="flex justify-center overflow-hidden transition-all duration-200"
         style={{
           height: isPulling || isRefreshing ? Math.min(pullDistance, 80) : 0,
-          opacity: isPulling || isRefreshing ? 1 : 0
+          opacity: isPulling || isRefreshing ? 1 : 0,
         }}
       >
         <div className="flex items-center gap-2 py-2">
@@ -187,11 +192,20 @@ export function Progress() {
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 14l-7 7m0 0l-7-7m7 7V3"
+              />
             </svg>
           )}
           <span className="text-sm text-moss">
-            {isRefreshing ? 'Refreshing...' : pullDistance >= 80 ? 'Release to refresh' : 'Pull to refresh'}
+            {isRefreshing
+              ? 'Refreshing...'
+              : pullDistance >= 80
+                ? 'Release to refresh'
+                : 'Pull to refresh'}
           </span>
         </div>
       </div>
@@ -221,8 +235,18 @@ export function Progress() {
             >
               <VoiceBadge score={voice.total} showScore />
               <span className="text-xs text-ink/40">Voice</span>
-              <svg className="w-3 h-3 text-ink/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <svg
+                className="w-3 h-3 text-ink/30"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </button>
           )}
@@ -276,9 +300,7 @@ export function Progress() {
         {/* ============================================ */}
         {/* SECTION 8: All Time Summary (minimal) */}
         {/* ============================================ */}
-        {sessionCount > 0 && (
-          <AllTimeSummary sessions={sessions} />
-        )}
+        {sessionCount > 0 && <AllTimeSummary sessions={sessions} />}
       </div>
 
       {/* Voice detail modal */}
@@ -293,27 +315,21 @@ export function Progress() {
  * Minimal all-time summary - just the essentials
  */
 function AllTimeSummary({ sessions }: { sessions: Session[] }) {
-  const firstSessionDate = sessions.length > 0
-    ? new Date(Math.min(...sessions.map(s => s.startTime)))
-    : null
+  const firstSessionDate =
+    sessions.length > 0 ? new Date(Math.min(...sessions.map((s) => s.startTime))) : null
 
   const totalSeconds = sessions.reduce((sum, s) => sum + s.durationSeconds, 0)
-  const avgMinutes = sessions.length > 0
-    ? Math.round(totalSeconds / sessions.length / 60)
-    : 0
+  const avgMinutes = sessions.length > 0 ? Math.round(totalSeconds / sessions.length / 60) : 0
 
-  const longestSeconds = sessions.length > 0
-    ? Math.max(...sessions.map(s => s.durationSeconds))
-    : 0
+  const longestSeconds =
+    sessions.length > 0 ? Math.max(...sessions.map((s) => s.durationSeconds)) : 0
   const longestMinutes = Math.round(longestSeconds / 60)
 
   if (!firstSessionDate) return null
 
   return (
     <div className="pt-8 border-t border-ink/5">
-      <p className="font-serif text-sm text-ink/30 tracking-wide mb-4">
-        All Time
-      </p>
+      <p className="font-serif text-sm text-ink/30 tracking-wide mb-4">All Time</p>
 
       <div className="grid grid-cols-3 gap-4 text-center">
         <div>

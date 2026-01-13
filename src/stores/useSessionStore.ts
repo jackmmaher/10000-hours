@@ -29,7 +29,7 @@ import { InAppNotification } from '../lib/notifications'
 // Re-export AppView from navigation store for backwards compatibility during migration
 export type { AppView } from './useNavigationStore'
 
-type TimerPhase = 'idle' | 'preparing' | 'running' | 'complete' | 'enlightenment'
+type TimerPhase = 'idle' | 'preparing' | 'running' | 'complete'
 
 interface SessionState {
   // Sessions
@@ -280,7 +280,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     if (crossedThreshold) {
       await markEnlightenmentReached()
       set({
-        timerPhase: 'enlightenment',
+        timerPhase: 'complete',
         startedAt: null,
         sessionStartTime: null,
         lastSessionDuration: durationSeconds,
@@ -343,7 +343,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       timerPhase: 'idle',
       lastSessionDuration: null,
       lastSessionUuid: null,
-      justAchievedMilestone: null,
+      // Note: justAchievedMilestone preserved for Progress tab indicator
     })
   },
 

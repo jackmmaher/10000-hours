@@ -263,7 +263,7 @@ describe('useSessionStore', () => {
   describe('acknowledgeEnlightenment', () => {
     it('clears enlightenment celebration state', () => {
       useSessionStore.setState({
-        timerPhase: 'enlightenment',
+        timerPhase: 'complete',
         justReachedEnlightenment: true,
         lastSessionDuration: 3600,
         justAchievedMilestone: { hours: 10000, achievedAt: Date.now(), name: '10k hours' },
@@ -281,7 +281,7 @@ describe('useSessionStore', () => {
 
     it('preserves hasReachedEnlightenment flag', () => {
       useSessionStore.setState({
-        timerPhase: 'enlightenment',
+        timerPhase: 'complete',
         hasReachedEnlightenment: true,
         justReachedEnlightenment: true,
       })

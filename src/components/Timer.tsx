@@ -11,7 +11,6 @@ import { useAudioFeedback } from '../hooks/useAudioFeedback'
 import { getNearMissInfo } from '../lib/milestones'
 import { getUserPreferences } from '../lib/db'
 import { stageVariants, getLayerOpacity, getLayerTransition } from '../lib/motion'
-import { ZenMessage } from './ZenMessage'
 import { HemingwayTime } from './HemingwayTime'
 import { GooeyOrb } from './GooeyOrb'
 
@@ -29,9 +28,9 @@ export function Timer() {
     timerPhase: storeTimerPhase,
     totalSeconds,
     lastSessionDuration,
-    justReachedEnlightenment,
     lastSessionUuid,
     justAchievedMilestone,
+    justReachedEnlightenment,
     acknowledgeEnlightenment,
     completeSession,
   } = useSessionStore()
@@ -98,6 +97,11 @@ export function Timer() {
       }
 
       const timer = setTimeout(() => {
+        // Silently acknowledge enlightenment if goal was just reached
+        // (shifts welcome message to "After enlightenment..." on next app open)
+        if (justReachedEnlightenment) {
+          acknowledgeEnlightenment()
+        }
         triggerPostSessionFlow(lastSessionUuid, lastSessionDuration, milestoneMessage)
         completeSession()
       }, 800)
@@ -108,6 +112,8 @@ export function Timer() {
     lastSessionUuid,
     lastSessionDuration,
     justAchievedMilestone,
+    justReachedEnlightenment,
+    acknowledgeEnlightenment,
     triggerPostSessionFlow,
     completeSession,
   ])
@@ -121,11 +127,6 @@ export function Timer() {
     },
   })
 
-  // Handle enlightenment acknowledgment
-  const handleEnlightenmentComplete = useCallback(() => {
-    acknowledgeEnlightenment()
-  }, [acknowledgeEnlightenment])
-
   // Get layer opacity and transition based on current phase
   const layerOpacity = useMemo(() => getLayerOpacity(phase), [phase])
   const layerTransition = useMemo(() => getLayerTransition(phase), [phase])
@@ -137,126 +138,116 @@ export function Timer() {
   const shouldHideTime = hideTimeDisplay
 
   return (
-    <>
-      {/* Enlightenment reveal */}
-      {storeTimerPhase === 'enlightenment' && justReachedEnlightenment && (
-        <ZenMessage isEnlightened={true} onComplete={handleEnlightenmentComplete} variant="after" />
-      )}
-
-      {/* Main timer screen - hidden during enlightenment reveal */}
-      {!(storeTimerPhase === 'enlightenment' && justReachedEnlightenment) && (
-        <div
-          className={`
-            flex flex-col items-center justify-center h-full px-8 pb-[10vh]
-            transition-colors duration-400 select-none
-            ${isRunning ? 'bg-cream-dark' : 'bg-cream'}
-          `}
-          onClick={handleTap}
-          {...swipeHandlers}
-        >
-          {/* Timer Stage - THE PERSISTENT CONTAINER */}
-          <motion.div
-            className="relative flex flex-col items-center"
-            variants={stageVariants}
-            animate={phase}
-            initial="resting"
-          >
-            {shouldHideTime ? (
-              // Hide time mode - GooeyOrb with phase
-              <div className="relative">
-                <GooeyOrb phase={phase} />
-                {/* Hint text for resting state */}
-                {phase === 'resting' && (
-                  <motion.p
-                    className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs text-indigo-deep/30 whitespace-nowrap"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3, duration: 0.4 }}
-                  >
-                    tap to begin
-                  </motion.p>
-                )}
-              </div>
-            ) : (
-              // Normal mode - dual layer display
-              <div className="relative">
-                {/* Cumulative Layer - always rendered, opacity controlled */}
-                <motion.div
-                  className="flex flex-col items-center"
-                  initial={{ opacity: 1 }}
-                  animate={{ opacity: layerOpacity.cumulative }}
-                  transition={layerTransition}
-                  style={{
-                    position:
-                      layerOpacity.cumulative === 0 && layerOpacity.active === 1
-                        ? 'absolute'
-                        : 'relative',
-                    pointerEvents: layerOpacity.cumulative > 0.5 ? 'auto' : 'none',
-                  }}
-                >
-                  <HemingwayTime
-                    seconds={totalSeconds}
-                    mode="cumulative"
-                    breathing={showBreathing}
-                    className="text-indigo-deep"
-                  />
-
-                  {/* Near-miss visibility - subtle anticipation trigger */}
-                  {phase === 'resting' && nearMiss && (
-                    <motion.p
-                      className="text-xs text-indigo-deep/40 mt-2"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.5, duration: 0.4 }}
-                    >
-                      {nearMiss.hoursRemaining < 0.1
-                        ? `Almost at ${nearMiss.nextMilestone}h`
-                        : `${(nearMiss.hoursRemaining * 60).toFixed(0)} min to ${nearMiss.nextMilestone}h`}
-                    </motion.p>
-                  )}
-                </motion.div>
-
-                {/* Active Layer - always rendered, opacity controlled */}
-                <motion.div
-                  className="flex flex-col items-center"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: layerOpacity.active }}
-                  transition={layerTransition}
-                  style={{
-                    position:
-                      layerOpacity.active === 0 && layerOpacity.cumulative === 1
-                        ? 'absolute'
-                        : 'relative',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    pointerEvents: layerOpacity.active > 0.5 ? 'auto' : 'none',
-                  }}
-                >
-                  <HemingwayTime
-                    seconds={activeDisplaySeconds}
-                    mode="active"
-                    breathing={false}
-                    className="text-indigo-deep"
-                  />
-                </motion.div>
-              </div>
+    <div
+      className={`
+        flex flex-col items-center justify-center h-full px-8 pb-[10vh]
+        transition-colors duration-400 select-none
+        ${isRunning ? 'bg-cream-dark' : 'bg-cream'}
+      `}
+      onClick={handleTap}
+      {...swipeHandlers}
+    >
+      {/* Timer Stage - THE PERSISTENT CONTAINER */}
+      <motion.div
+        className="relative flex flex-col items-center"
+        variants={stageVariants}
+        animate={phase}
+        initial="resting"
+      >
+        {shouldHideTime ? (
+          // Hide time mode - GooeyOrb with phase
+          <div className="relative">
+            <GooeyOrb phase={phase} />
+            {/* Hint text for resting state */}
+            {phase === 'resting' && (
+              <motion.p
+                className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs text-indigo-deep/30 whitespace-nowrap"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.4 }}
+              >
+                tap to begin
+              </motion.p>
             )}
-          </motion.div>
-
-          {/* Running state hint */}
-          {isRunning && (
-            <motion.p
-              className="absolute bottom-24 text-xs text-ink/25"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5, duration: 0.3 }}
+          </div>
+        ) : (
+          // Normal mode - dual layer display
+          <div className="relative">
+            {/* Cumulative Layer - always rendered, opacity controlled */}
+            <motion.div
+              className="flex flex-col items-center"
+              initial={{ opacity: 1 }}
+              animate={{ opacity: layerOpacity.cumulative }}
+              transition={layerTransition}
+              style={{
+                position:
+                  layerOpacity.cumulative === 0 && layerOpacity.active === 1
+                    ? 'absolute'
+                    : 'relative',
+                pointerEvents: layerOpacity.cumulative > 0.5 ? 'auto' : 'none',
+              }}
             >
-              tap to end
-            </motion.p>
-          )}
-        </div>
+              <HemingwayTime
+                seconds={totalSeconds}
+                mode="cumulative"
+                breathing={showBreathing}
+                className="text-indigo-deep"
+              />
+
+              {/* Near-miss visibility - subtle anticipation trigger */}
+              {phase === 'resting' && nearMiss && (
+                <motion.p
+                  className="text-xs text-indigo-deep/40 mt-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5, duration: 0.4 }}
+                >
+                  {nearMiss.hoursRemaining < 0.1
+                    ? `Almost at ${nearMiss.nextMilestone}h`
+                    : `${(nearMiss.hoursRemaining * 60).toFixed(0)} min to ${nearMiss.nextMilestone}h`}
+                </motion.p>
+              )}
+            </motion.div>
+
+            {/* Active Layer - always rendered, opacity controlled */}
+            <motion.div
+              className="flex flex-col items-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: layerOpacity.active }}
+              transition={layerTransition}
+              style={{
+                position:
+                  layerOpacity.active === 0 && layerOpacity.cumulative === 1
+                    ? 'absolute'
+                    : 'relative',
+                top: 0,
+                left: 0,
+                right: 0,
+                pointerEvents: layerOpacity.active > 0.5 ? 'auto' : 'none',
+              }}
+            >
+              <HemingwayTime
+                seconds={activeDisplaySeconds}
+                mode="active"
+                breathing={false}
+                className="text-indigo-deep"
+              />
+            </motion.div>
+          </div>
+        )}
+      </motion.div>
+
+      {/* Running state hint */}
+      {isRunning && (
+        <motion.p
+          className="absolute bottom-24 text-xs text-ink/25"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5, duration: 0.3 }}
+        >
+          tap to end
+        </motion.p>
       )}
-    </>
+    </div>
   )
 }
