@@ -90,20 +90,25 @@ export function Timer() {
 
     // Immediate haptic acknowledgment
     haptic.medium()
+
+    // CRITICAL: Reset session state BEFORE entering pending
+    // This ensures no stale elapsed time from previous sessions
+    setSessionElapsed(0)
+    setSessionStart(null)
+
     setPhase('pending')
 
     // Wait for breath alignment (next inhale)
     await waitForPhase('inhale')
 
-    // Show seconds segment (fade in with inhale - 4 seconds)
+    // Begin fade-in of seconds segment (synced with inhale - 4 seconds)
     setSecondsOpacity(1)
 
-    // Start counting after slight delay for visual smoothness
-    setTimeout(() => {
-      setSessionStart(performance.now())
-      setPhase('active')
-      startTimer() // Persist to DB for crash recovery
-    }, 500)
+    // Set session start time NOW (not after delay) to ensure accurate counting
+    const startTime = performance.now()
+    setSessionStart(startTime)
+    setPhase('active')
+    startTimer() // Persist to DB for crash recovery
   }, [phase, haptic, waitForPhase, startTimer])
 
   // ============================================

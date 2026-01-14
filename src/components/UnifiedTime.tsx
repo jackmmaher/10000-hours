@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
 /**
  * UnifiedTime - Single unified time display
@@ -17,6 +17,7 @@ import { motion } from 'framer-motion'
  * - No zero-padding (show 8 not 08)
  * - No colons, no labels
  * - Show 0 at minute boundaries
+ * - Stable layout (no position jumping during transitions)
  */
 
 interface UnifiedTimeProps {
@@ -44,41 +45,72 @@ export function UnifiedTime({
   const minutes = Math.floor((totalSeconds % 3600) / 60)
   const seconds = totalSeconds % 60
 
-  // Base container classes - preserved from HemingwayTime
+  // Base container with layout animation for smooth repositioning
   const containerClasses = `
-    flex items-baseline justify-center gap-[0.5em]
+    flex items-baseline justify-center
     tabular-nums font-serif
     ${breathing ? 'animate-box-breathe' : ''}
     ${className}
   `.trim()
 
+  // Spacing between segments - responsive using em units
+  const segmentGap = 'gap-[0.8em] sm:gap-[1em]'
+
   return (
-    <div className={containerClasses}>
+    <motion.div
+      className={`${containerClasses} ${segmentGap}`}
+      layout
+      transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+    >
       {/* Hours segment - only visible when > 0 */}
-      {hours > 0 && <span className="text-display font-semibold opacity-100">{hours}</span>}
+      <AnimatePresence mode="popLayout">
+        {hours > 0 && (
+          <motion.span
+            key="hours"
+            className="text-display font-semibold opacity-100"
+            layout
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.3 }}
+          >
+            {hours}
+          </motion.span>
+        )}
+      </AnimatePresence>
 
       {/* Minutes segment - styling depends on whether hours are present */}
-      <span
+      <motion.span
+        layout
         className={hours > 0 ? 'font-light opacity-60' : 'text-display font-semibold opacity-100'}
         style={hours > 0 ? { fontSize: 'calc(var(--text-display-size) * 0.85)' } : undefined}
+        transition={{ duration: 0.3 }}
       >
         {minutes}
-      </span>
+      </motion.span>
 
-      {/* Seconds segment - only when active, opacity controlled externally */}
-      {showSeconds && (
-        <motion.span
-          className="font-light"
-          style={{
-            fontSize: 'calc(var(--text-display-size) * 0.72)',
-          }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: secondsOpacity * 0.25 }}
-          transition={{ duration: 4, ease: 'linear' }}
-        >
-          {seconds}
-        </motion.span>
-      )}
-    </div>
+      {/* Seconds segment - fade in/out synced with breathing */}
+      <AnimatePresence mode="popLayout">
+        {showSeconds && (
+          <motion.span
+            key="seconds"
+            className="font-light"
+            layout
+            style={{
+              fontSize: 'calc(var(--text-display-size) * 0.72)',
+            }}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{
+              opacity: secondsOpacity * 0.25,
+              x: 0,
+            }}
+            exit={{ opacity: 0, x: -10 }}
+            transition={{ duration: 4, ease: 'easeInOut' }}
+          >
+            {seconds}
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </motion.div>
   )
 }
