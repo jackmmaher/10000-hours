@@ -185,10 +185,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
     await addSession(session)
 
-    // Silent session-plan linking: auto-link to any plan for this day
-    const todayStart = new Date(sessionStartTime)
-    todayStart.setHours(0, 0, 0, 0)
-    const linkedPlan = await linkSessionToPlan(sessionUuid, todayStart.getTime())
+    // Silent session-plan linking: auto-link to a time-matched plan for this day
+    const linkedPlan = await linkSessionToPlan(sessionUuid, sessionStartTime)
 
     // Trigger plan refresh so Journey tab updates immediately
     if (linkedPlan) {

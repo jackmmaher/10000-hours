@@ -96,6 +96,7 @@ export {
   addPlannedSession,
   getPlannedSession,
   getIncompletePlansForDate,
+  getAllPlansForDate,
   getPlannedSessionsForWeek,
   getPlannedSessionsForMonth,
   updatePlannedSession,

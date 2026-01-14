@@ -94,6 +94,8 @@ export function usePlannerState({
   const [plansLocalRefreshKey, setPlansLocalRefreshKey] = useState(0)
 
   // Build unified dayItems array combining sessions and pending plans
+  // Priority order: 1) Incomplete/upcoming plans (user can edit before session)
+  //                 2) Completed sessions (user can review/edit metadata)
   const dayItems: DayItem[] = useMemo(() => {
     const dateStart = getStartOfDay(date)
 
@@ -115,8 +117,12 @@ export function usePlannerState({
       timestamp: dateStart + timeToMinutes(p.plannedTime) * 60 * 1000,
     }))
 
-    // Combine and sort chronologically
-    return [...sessionItems, ...planItems].sort((a, b) => a.timestamp - b.timestamp)
+    // Sort: pending plans first (by time), then sessions (by time)
+    // This ensures the modal opens in "planning mode" when plans exist
+    const sortedPlans = [...planItems].sort((a, b) => a.timestamp - b.timestamp)
+    const sortedSessions = [...sessionItems].sort((a, b) => a.timestamp - b.timestamp)
+
+    return [...sortedPlans, ...sortedSessions]
   }, [sessions, pendingPlans, date])
 
   // Current item from dayItems array
