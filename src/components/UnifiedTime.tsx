@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion'
  * - Fixed-width segments using `min-width: Xch`
  * - Right-aligned text so 9→10 doesn't shift
  * - Breathing animation on OUTER wrapper only
+ * - Seconds ALWAYS rendered (space reserved), just opacity 0 when hidden
  */
 
 interface UnifiedTimeProps {
@@ -79,25 +80,19 @@ export function UnifiedTime({
           {minutes}
         </span>
 
-        {/* Seconds - fixed width, fade only (no position animation) */}
-        <AnimatePresence mode="wait">
-          {showSeconds && (
-            <motion.span
-              key="seconds"
-              className="font-light text-right"
-              style={{
-                minWidth: '2ch',
-                fontSize: 'calc(var(--text-display-size) * 0.72)',
-              }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: secondsOpacity * 0.25 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 4, ease: 'easeInOut' }}
-            >
-              {seconds}
-            </motion.span>
-          )}
-        </AnimatePresence>
+        {/* Seconds - ALWAYS rendered, space always reserved, just invisible until active */}
+        <motion.span
+          className="font-light text-right"
+          style={{
+            minWidth: '2ch',
+            fontSize: 'calc(var(--text-display-size) * 0.72)',
+          }}
+          initial={false}
+          animate={{ opacity: showSeconds ? secondsOpacity * 0.25 : 0 }}
+          transition={{ duration: 4, ease: 'easeInOut' }}
+        >
+          {seconds}
+        </motion.span>
       </div>
     </div>
   )
