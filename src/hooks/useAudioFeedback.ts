@@ -25,8 +25,8 @@ import { useSettingsStore } from '../stores/useSettingsStore'
 
 type AudioCue = 'complete' | 'milestone' | 'tick'
 
-// Animation timing constants (must match useTimerOrchestration.ts)
-// Breath-aligned ceremony: 4 second total transition
+// Animation timing constants for breath-aligned ceremony
+// 4 second total transition synchronized with breathing cycle
 const COMPLETING_DURATION = 1.5 // 1500ms - ceremonial exhale
 const RESOLVING_DURATION = 2.5 // 2500ms - ceremonial inhale
 const CRESCENDO_DURATION = COMPLETING_DURATION + RESOLVING_DURATION // 4s breath cycle

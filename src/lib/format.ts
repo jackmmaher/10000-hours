@@ -129,7 +129,7 @@ export function formatHemingwayCumulative(seconds: number): {
 
   return {
     hours: h.toString(),
-    minutes: m.toString().padStart(2, '0'),
+    minutes: m.toString(),
   }
 }
 
@@ -149,19 +149,19 @@ export function formatHemingwayActive(seconds: number): {
     return { hours: null, minutes: null, seconds: s.toString() }
   }
 
-  // Under 1 hour: minutes and padded seconds
+  // Under 1 hour: minutes and seconds (no padding)
   if (h === 0) {
     return {
       hours: null,
       minutes: m.toString(),
-      seconds: s.toString().padStart(2, '0'),
+      seconds: s.toString(),
     }
   }
 
-  // 1 hour or more: hours, padded minutes, padded seconds
+  // 1 hour or more: hours, minutes, seconds (no padding)
   return {
     hours: h.toString(),
-    minutes: m.toString().padStart(2, '0'),
-    seconds: s.toString().padStart(2, '0'),
+    minutes: m.toString(),
+    seconds: s.toString(),
   }
 }

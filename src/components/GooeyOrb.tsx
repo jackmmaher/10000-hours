@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { springs, layerTransition } from '../lib/motion'
-import type { TimerPhase } from '../lib/motion'
+import { springs } from '../lib/motion'
 
 /**
  * GooeyOrb - Organic, liquid meditation orb
@@ -9,58 +8,32 @@ import type { TimerPhase } from '../lib/motion'
  * Uses SVG gooey filter to create a bioluminescent, living organism effect.
  * Three overlapping circles merge and morph like a lava lamp.
  *
- * Receives the same phase as HemingwayTime for identical choreography:
- * - resting:    16s box breathing cycle, slow morphing
- * - departing:  contracts toward center
- * - arriving:   expands outward
- * - active:     faster, more energetic morphing
- * - completing: rises and disperses upward
- * - resolving:  coalesces from above, settles
+ * Accepts the new 4-phase timer system:
+ * - resting:  16s box breathing cycle, slow morphing
+ * - pending:  waiting for breath alignment (visually same as resting)
+ * - active:   faster, more energetic morphing
+ * - settling: fading out (visually transitioning back to resting)
  */
 
+type OrbPhase = 'resting' | 'pending' | 'active' | 'settling'
+
 interface GooeyOrbProps {
-  phase: TimerPhase
+  phase: OrbPhase
   className?: string
 }
 
 export function GooeyOrb({ phase, className = '' }: GooeyOrbProps) {
   // Map phase to visual states
-  const isActive = phase === 'active'
-  const isResting = phase === 'resting'
-
-  // Determine orb opacity based on phase (mirrors HemingwayTime layers)
-  const orbOpacity = useMemo(() => {
-    switch (phase) {
-      case 'resting':
-      case 'resolving':
-        return 1
-      case 'departing':
-      case 'completing':
-        return 0 // fading out
-      case 'arriving':
-      case 'active':
-        return 1
-      default:
-        return 1
-    }
-  }, [phase])
+  const isActive = phase === 'active' || phase === 'settling'
+  const isResting = phase === 'resting' || phase === 'pending'
 
   // Size varies by phase
   const { width, height, orbSize } = useMemo(() => {
-    switch (phase) {
-      case 'resting':
-      case 'departing':
-      case 'resolving':
-        return { width: 140, height: 140, orbSize: 50 }
-      case 'arriving':
-      case 'active':
-        return { width: 200, height: 200, orbSize: 80 }
-      case 'completing':
-        return { width: 160, height: 160, orbSize: 60 }
-      default:
-        return { width: 140, height: 140, orbSize: 50 }
+    if (isActive) {
+      return { width: 200, height: 200, orbSize: 80 }
     }
-  }, [phase])
+    return { width: 140, height: 140, orbSize: 50 }
+  }, [isActive])
 
   // Animation class based on phase
   const getBlobAnimation = (blobNum: 1 | 2 | 3) => {
@@ -78,11 +51,7 @@ export function GooeyOrb({ phase, className = '' }: GooeyOrbProps) {
   }
 
   return (
-    <motion.div
-      className={`relative flex items-center justify-center ${className}`}
-      animate={{ opacity: orbOpacity }}
-      transition={layerTransition}
-    >
+    <motion.div className={`relative flex items-center justify-center ${className}`}>
       {/* SVG Filter Definition - The "Gooey" effect */}
       <svg style={{ position: 'absolute', width: 0, height: 0 }}>
         <defs>
