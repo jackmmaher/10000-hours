@@ -73,63 +73,80 @@ export function NextSessionSpotlight({ plannedSession, onPlanClick }: NextSessio
   // Session planned state
   if (plannedSession) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center px-6 relative">
-        {/* Background breathing orb */}
+      <div className="mb-8">
+        {/* Card container */}
         <div
-          className="absolute inset-0 flex items-center justify-center pointer-events-none"
-          aria-hidden="true"
+          className="relative rounded-2xl overflow-hidden"
+          style={{
+            background: 'var(--bg-elevated)',
+            boxShadow: 'var(--shadow-elevation-1)',
+          }}
         >
+          {/* Background breathing orb */}
           <div
-            className="w-64 h-64 rounded-full opacity-20 animate-breathe"
-            style={{
-              background: `radial-gradient(circle at 30% 30%, ${ORB_COLORS.moss}60, ${ORB_COLORS.slate}30, transparent 70%)`,
-              animationDuration: `${ANIMATION_BREATHE_DURATION}ms`,
-            }}
-          />
-        </div>
-
-        {/* Content */}
-        <div className="relative z-10 text-center max-w-sm">
-          {/* Date and time */}
-          <p className="text-sm text-ink/50 mb-2">
-            {dateDisplay}
-            {plannedSession.plannedTime && ` at ${plannedSession.plannedTime}`}
-          </p>
-
-          {/* Title or technique */}
-          <h2 className="font-serif text-2xl text-ink mb-3">
-            {plannedSession.title || plannedSession.discipline || 'Meditation'}
-          </h2>
-
-          {/* Details row */}
-          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-ink/50 mb-4">
-            {durationDisplay && <span>{durationDisplay}</span>}
-            {plannedSession.pose && <span>{plannedSession.pose}</span>}
+            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            aria-hidden="true"
+          >
+            <div
+              className="w-48 h-48 rounded-full opacity-30 animate-breathe"
+              style={{
+                background: `radial-gradient(circle at 30% 30%, ${ORB_COLORS.moss}60, ${ORB_COLORS.slate}30, transparent 70%)`,
+                animationDuration: `${ANIMATION_BREATHE_DURATION}ms`,
+              }}
+            />
           </div>
 
-          {/* Notes preview */}
-          {plannedSession.notes && (
-            <p className="text-sm text-ink/40 italic mb-6 line-clamp-2">{plannedSession.notes}</p>
-          )}
+          {/* Content */}
+          <div className="relative z-10 text-center px-6 py-10">
+            {/* Label */}
+            <p
+              className="text-xs font-medium tracking-wider uppercase mb-4"
+              style={{ color: 'var(--accent)' }}
+            >
+              Your next meditation
+            </p>
 
-          {/* Actions */}
-          <div className="flex flex-col items-center gap-3">
-            {isToday && (
-              <button
-                onClick={() => setView('timer')}
-                className="px-8 py-3 bg-moss text-cream rounded-xl text-base font-medium
-                  hover:bg-moss/90 transition-colors active:scale-[0.98] touch-manipulation"
-              >
-                Begin Now
-              </button>
+            {/* Date and time */}
+            <p className="text-sm text-ink/50 mb-2">
+              {dateDisplay}
+              {plannedSession.plannedTime && ` at ${plannedSession.plannedTime}`}
+            </p>
+
+            {/* Title or technique */}
+            <h2 className="font-serif text-2xl text-ink mb-3">
+              {plannedSession.title || plannedSession.discipline || 'Meditation'}
+            </h2>
+
+            {/* Details row */}
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-ink/50 mb-4">
+              {durationDisplay && <span>{durationDisplay}</span>}
+              {plannedSession.pose && <span>{plannedSession.pose}</span>}
+            </div>
+
+            {/* Notes preview */}
+            {plannedSession.notes && (
+              <p className="text-sm text-ink/40 italic mb-6 line-clamp-2">{plannedSession.notes}</p>
             )}
 
-            <button
-              onClick={onPlanClick}
-              className="text-sm text-ink/50 hover:text-ink/70 transition-colors touch-manipulation"
-            >
-              View in Calendar
-            </button>
+            {/* Actions */}
+            <div className="flex flex-col items-center gap-3 mt-6">
+              {isToday && (
+                <button
+                  onClick={() => setView('timer')}
+                  className="px-8 py-3 bg-moss text-cream rounded-xl text-base font-medium
+                    hover:bg-moss/90 transition-colors active:scale-[0.98] touch-manipulation"
+                >
+                  Begin Now
+                </button>
+              )}
+
+              <button
+                onClick={onPlanClick}
+                className="text-sm text-ink/50 hover:text-ink/70 transition-colors touch-manipulation"
+              >
+                View in Calendar
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -138,43 +155,60 @@ export function NextSessionSpotlight({ plannedSession, onPlanClick }: NextSessio
 
   // No session planned state
   return (
-    <div className="min-h-[60vh] flex flex-col items-center justify-center px-6 relative">
-      {/* Background breathing orb */}
+    <div className="mb-8">
+      {/* Card container */}
       <div
-        className="absolute inset-0 flex items-center justify-center pointer-events-none"
-        aria-hidden="true"
+        className="relative rounded-2xl overflow-hidden"
+        style={{
+          background: 'var(--bg-elevated)',
+          boxShadow: 'var(--shadow-elevation-1)',
+        }}
       >
+        {/* Background breathing orb */}
         <div
-          className="w-64 h-64 rounded-full opacity-15 animate-breathe"
-          style={{
-            background: `radial-gradient(circle at 30% 30%, ${ORB_COLORS.moss}40, ${ORB_COLORS.slate}20, transparent 70%)`,
-            animationDuration: `${ANIMATION_BREATHE_DURATION}ms`,
-          }}
-        />
-      </div>
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          aria-hidden="true"
+        >
+          <div
+            className="w-48 h-48 rounded-full opacity-20 animate-breathe"
+            style={{
+              background: `radial-gradient(circle at 30% 30%, ${ORB_COLORS.moss}40, ${ORB_COLORS.slate}20, transparent 70%)`,
+              animationDuration: `${ANIMATION_BREATHE_DURATION}ms`,
+            }}
+          />
+        </div>
 
-      {/* Content */}
-      <div className="relative z-10 text-center max-w-sm">
-        <h2 className="font-serif text-2xl text-ink mb-2">Your next meditation awaits</h2>
-
-        <p className="text-sm text-ink/50 mb-8">Set an intention for your practice</p>
-
-        {/* Actions */}
-        <div className="flex flex-col items-center gap-4">
-          <button
-            onClick={onPlanClick}
-            className="px-8 py-3 bg-accent text-on-accent rounded-xl text-base font-medium
-              hover:bg-accent/90 transition-colors active:scale-[0.98] touch-manipulation"
+        {/* Content */}
+        <div className="relative z-10 text-center px-6 py-10">
+          {/* Label */}
+          <p
+            className="text-xs font-medium tracking-wider uppercase mb-4"
+            style={{ color: 'var(--text-muted)' }}
           >
-            Plan a Session
-          </button>
+            Your next meditation
+          </p>
 
-          <button
-            onClick={() => setView('timer')}
-            className="text-sm text-ink/50 hover:text-ink/70 transition-colors touch-manipulation"
-          >
-            Or just begin now
-          </button>
+          <h2 className="font-serif text-2xl text-ink mb-2">No session planned</h2>
+
+          <p className="text-sm text-ink/50 mb-8">Set an intention for your practice</p>
+
+          {/* Actions */}
+          <div className="flex flex-col items-center gap-4">
+            <button
+              onClick={onPlanClick}
+              className="px-8 py-3 bg-accent text-on-accent rounded-xl text-base font-medium
+                hover:bg-accent/90 transition-colors active:scale-[0.98] touch-manipulation"
+            >
+              Plan a Session
+            </button>
+
+            <button
+              onClick={() => setView('timer')}
+              className="text-sm text-ink/50 hover:text-ink/70 transition-colors touch-manipulation"
+            >
+              Or just begin now
+            </button>
+          </div>
         </div>
       </div>
     </div>

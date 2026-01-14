@@ -396,6 +396,13 @@ export function MeditationPlanner({
                         </span>
                       </div>
                     </div>
+
+                    {/* Backfill prompt - encourage adding details */}
+                    <div className="bg-accent/5 border border-accent/20 rounded-xl p-3">
+                      <p className="text-sm text-ink/70 text-center">
+                        Add details below to remember this session
+                      </p>
+                    </div>
                   </>
                 )}
 
@@ -624,14 +631,14 @@ export function MeditationPlanner({
                 {/* Notes / Intention */}
                 <div>
                   <label className="text-xs text-ink-soft block mb-2">
-                    {state.isSessionMode ? 'Intention' : 'Notes'}
+                    {state.isSessionMode ? 'Reflection' : 'Notes'}
                   </label>
                   <textarea
                     value={state.notes}
                     onChange={(e) => state.setNotes(e.target.value)}
                     placeholder={
                       state.isSessionMode
-                        ? 'What was your intention for this session?'
+                        ? 'How did this session feel? Any insights or observations...'
                         : 'Set your intention for this session...'
                     }
                     className="w-full h-24 px-4 py-3 rounded-xl bg-deep/50 text-ink placeholder:text-ink/30 resize-none focus:outline-none focus:ring-2 focus:ring-accent/20"
