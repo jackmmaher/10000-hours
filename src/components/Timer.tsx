@@ -231,7 +231,6 @@ export function Timer() {
       ) : (
         <UnifiedTime
           totalSeconds={liveTotal}
-          sessionSeconds={sessionElapsed}
           showSeconds={showSeconds}
           secondsOpacity={secondsOpacity}
           breathing={breathing}

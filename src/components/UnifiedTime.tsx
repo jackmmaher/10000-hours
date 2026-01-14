@@ -3,8 +3,13 @@ import { motion } from 'framer-motion'
 /**
  * UnifiedTime - Digital Swiss timer display
  *
- * Format: HH MM SS (always zero-padded)
- * Example: 00 16 00 → 00 16 01 → 00 16 02 ...
+ * Format: HH MM SS (always zero-padded, fully cumulative)
+ * Example: 00 15 58 → 00 15 59 → 00 16 00 → 00 16 01
+ *
+ * ALL values are CUMULATIVE:
+ * - When seconds go 59→00, minute increments
+ * - When minutes go 59→00, hour increments
+ * - Traditional timer behavior, no hybrid confusion
  *
  * Typography hierarchy:
  * - Hours: text-display, font-semibold, opacity-100
@@ -17,12 +22,10 @@ import { motion } from 'framer-motion'
  * - Tabular lining figures (fixed-width digits)
  * - Seconds space always reserved, just invisible until active
  * - Breathing animation on OUTER wrapper only
- * - NO layout props (prevents animation fighting)
  */
 
 interface UnifiedTimeProps {
   totalSeconds: number
-  sessionSeconds?: number
   showSeconds: boolean
   secondsOpacity: number
   breathing: boolean
@@ -31,15 +34,16 @@ interface UnifiedTimeProps {
 
 export function UnifiedTime({
   totalSeconds,
-  sessionSeconds = 0,
   showSeconds,
   secondsOpacity,
   breathing,
   className = '',
 }: UnifiedTimeProps) {
+  // ALL values are CUMULATIVE - H:M:S all update together
+  // When seconds go 59→00, minute increments (traditional timer behavior)
   const hours = Math.floor(totalSeconds / 3600)
   const minutes = Math.floor((totalSeconds % 3600) / 60)
-  const seconds = sessionSeconds % 60
+  const seconds = totalSeconds % 60 // CUMULATIVE seconds, not session
 
   // Zero-pad all values for fixed-width display
   const hoursDisplay = String(hours).padStart(2, '0')
