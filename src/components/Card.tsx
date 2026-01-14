@@ -33,7 +33,7 @@ export function Card({ children, className = '', onClick, variant = 'default' }:
   const variantStyles = {
     default: 'bg-elevated shadow-sm',
     elevated: 'bg-elevated shadow-md',
-    subtle: 'bg-elevated/90 backdrop-blur-sm',
+    subtle: 'bg-elevated shadow-sm', // Was bg-elevated/90 - now full opacity for borderless Hermès design
   }
 
   return (
