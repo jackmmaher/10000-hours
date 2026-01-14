@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from 'react'
+import { useEffect, useCallback, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useNavigationStore } from '../stores/useNavigationStore'
@@ -41,7 +41,7 @@ export function Timer() {
     acknowledgeEnlightenment,
   } = useSessionStore()
 
-  const { setView, triggerPostSessionFlow } = useNavigationStore()
+  const { setView, triggerPostSessionFlow, setIsSettling } = useNavigationStore()
   const { hideTimeDisplay } = useSettingsStore()
 
   // ============================================
@@ -58,6 +58,13 @@ export function Timer() {
   const [sessionElapsed, setSessionElapsed] = useState(0)
   const [secondsOpacity, setSecondsOpacity] = useState(0)
 
+  // Snapshot isolation: capture totalSeconds at session start to prevent
+  // mid-session contamination from edits to past sessions elsewhere in app
+  const [snapshotTotal, setSnapshotTotal] = useState<number | null>(null)
+
+  // Ref to prevent double-interval creation (React.StrictMode fix)
+  const intervalRef = useRef<number | null>(null)
+
   // ============================================
   // HAPTICS & AUDIO
   // ============================================
@@ -68,9 +75,12 @@ export function Timer() {
   // DERIVED STATE
   // ============================================
 
-  // Live total: saved + current session progress
+  // Live total: use snapshot during active session to prevent mid-session contamination
+  // If someone edits a past session elsewhere, our display stays stable
   const liveTotal =
-    phase === 'active' || phase === 'settling' ? savedTotal + sessionElapsed : savedTotal
+    phase === 'active' || phase === 'settling'
+      ? (snapshotTotal ?? savedTotal) + sessionElapsed
+      : savedTotal
 
   // Display state
   const showSeconds = phase === 'active' || phase === 'settling'
@@ -91,6 +101,11 @@ export function Timer() {
     // Immediate haptic acknowledgment
     haptic.medium()
 
+    // CRITICAL: Capture snapshot of totalSeconds BEFORE any async operations
+    // This isolates the session from any edits to past sessions elsewhere in the app
+    // Round down to nearest minute so seconds display always starts at :00
+    setSnapshotTotal(Math.floor(savedTotal / 60) * 60)
+
     // CRITICAL: Reset ALL session state IMMEDIATELY on tap
     // This ensures no stale values from previous sessions
     setSessionElapsed(0)
@@ -107,7 +122,7 @@ export function Timer() {
     setSecondsOpacity(1)
     setPhase('active')
     startTimer() // Persist to DB for crash recovery
-  }, [phase, haptic, waitForPhase, startTimer])
+  }, [phase, haptic, waitForPhase, startTimer, savedTotal])
 
   // ============================================
   // END SESSION
@@ -120,6 +135,9 @@ export function Timer() {
     audio.complete()
     setPhase('settling')
 
+    // LOCK: Prevent navigation during settling window
+    setIsSettling(true)
+
     // Wait for breath alignment (next exhale)
     await waitForPhase('exhale')
 
@@ -128,12 +146,16 @@ export function Timer() {
 
     // Complete after fade finishes
     setTimeout(async () => {
-      await stopTimer() // Persist session to DB
+      // Reset local state BEFORE store update to prevent race condition
+      // (zustand update could trigger re-render with stale sessionElapsed)
       setPhase('resting')
       setSessionStart(null)
       setSessionElapsed(0)
+      setSnapshotTotal(null) // Clear snapshot isolation
+      await stopTimer() // Persist session to DB
+      setIsSettling(false) // UNLOCK: Allow navigation again
     }, 4000)
-  }, [phase, haptic, audio, waitForPhase, stopTimer])
+  }, [phase, haptic, audio, waitForPhase, stopTimer, setIsSettling])
 
   // ============================================
   // POST-SESSION FLOW
@@ -176,7 +198,17 @@ export function Timer() {
   // ELAPSED TIME TICKER
   // ============================================
   useEffect(() => {
-    if (phase !== 'active' || !sessionStart) return
+    // Clear interval when not active
+    if (phase !== 'active' || !sessionStart) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+      return
+    }
+
+    // Prevent double-creation during React.StrictMode
+    if (intervalRef.current) clearInterval(intervalRef.current)
 
     const tick = () => {
       const elapsed = Math.floor((performance.now() - sessionStart) / 1000)
@@ -184,9 +216,14 @@ export function Timer() {
     }
 
     tick() // Initial tick
-    const interval = setInterval(tick, 100) // Update frequently for smooth display
+    intervalRef.current = window.setInterval(tick, 100) // Update frequently for smooth display
 
-    return () => clearInterval(interval)
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+    }
   }, [phase, sessionStart])
 
   // ============================================
@@ -238,44 +275,45 @@ export function Timer() {
         />
       )}
 
-      {/* Pending state feedback - syncing with breath */}
+      {/* Contextual hints - unified position, style, and shimmer animation */}
       <AnimatePresence mode="wait">
+        {phase === 'resting' && (
+          <motion.p
+            key="resting-hint"
+            className="absolute bottom-[38vh] text-xs tracking-wide text-indigo-deep/40"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.3, 0.5, 0.3] }}
+            exit={{ opacity: 0, transition: { duration: 0.2 } }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            tap to meditate
+          </motion.p>
+        )}
         {phase === 'pending' && (
           <motion.p
-            key="pending-message"
-            className="text-sm text-indigo-deep/70 mt-6"
+            key="pending-hint"
+            className="absolute bottom-[38vh] text-xs tracking-wide text-indigo-deep/40"
             initial={{ opacity: 0 }}
-            animate={{ opacity: 0.7 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            animate={{ opacity: [0.4, 0.6, 0.4] }}
+            exit={{ opacity: 0, transition: { duration: 0.2 } }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
           >
-            beginning shortly...
+            beginning meditation...
+          </motion.p>
+        )}
+        {phase === 'active' && (
+          <motion.p
+            key="active-hint"
+            className="absolute bottom-[38vh] text-xs tracking-wide text-indigo-deep/40"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.25, 0.4, 0.25] }}
+            exit={{ opacity: 0, transition: { duration: 0.2 } }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+          >
+            tap to end meditation
           </motion.p>
         )}
       </AnimatePresence>
-
-      {/* Contextual hints */}
-      {phase === 'resting' && (
-        <motion.p
-          className="text-xs text-indigo-deep/30 mt-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.4 }}
-        >
-          tap to begin
-        </motion.p>
-      )}
-
-      {phase === 'active' && (
-        <motion.p
-          className="absolute bottom-24 text-xs text-ink/25"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5, duration: 0.3 }}
-        >
-          tap to end
-        </motion.p>
-      )}
     </div>
   )
 }
