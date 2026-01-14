@@ -74,13 +74,10 @@ export function NextSessionSpotlight({ plannedSession, onPlanClick }: NextSessio
   if (plannedSession) {
     return (
       <div className="mb-8">
-        {/* Card container */}
+        {/* Card container - borderless, background creates natural separation */}
         <div
           className="relative rounded-2xl overflow-hidden"
-          style={{
-            background: 'var(--bg-elevated)',
-            boxShadow: 'var(--shadow-elevation-1)',
-          }}
+          style={{ background: 'var(--bg-elevated)' }}
         >
           {/* Background breathing orb */}
           <div
@@ -156,13 +153,10 @@ export function NextSessionSpotlight({ plannedSession, onPlanClick }: NextSessio
   // No session planned state
   return (
     <div className="mb-8">
-      {/* Card container */}
+      {/* Card container - borderless, background creates natural separation */}
       <div
         className="relative rounded-2xl overflow-hidden"
-        style={{
-          background: 'var(--bg-elevated)',
-          boxShadow: 'var(--shadow-elevation-1)',
-        }}
+        style={{ background: 'var(--bg-elevated)' }}
       >
         {/* Background breathing orb */}
         <div
