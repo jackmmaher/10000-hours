@@ -101,7 +101,11 @@
       "Bash(Select-Object FullName, Length, LastWriteTime)",
       "Bash(Format-Table -AutoSize)",
       "Bash(tasklist:*)",
-      "Bash(npm ls:*)"
+      "Bash(npm ls:*)",
+      "Bash(sort:*)",
+      "Bash(timeout 10 npm run dev:*)",
+      "Bash(curl:*)",
+      "WebFetch(domain:www.mindbowser.com)"
     ]
   }
 }

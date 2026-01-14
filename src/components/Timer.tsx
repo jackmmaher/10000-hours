@@ -233,11 +233,24 @@ export function Timer() {
       ) : (
         <UnifiedTime
           totalSeconds={liveTotal}
+          sessionSeconds={sessionElapsed}
           showSeconds={showSeconds}
           secondsOpacity={secondsOpacity}
           breathing={breathing}
           className="text-indigo-deep"
         />
+      )}
+
+      {/* Pending state feedback - syncing with breath */}
+      {phase === 'pending' && (
+        <motion.p
+          className="text-xs text-indigo-deep/50 mt-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0.3, 0.7, 0.3] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          syncing with your breath...
+        </motion.p>
       )}
 
       {/* Contextual hints */}

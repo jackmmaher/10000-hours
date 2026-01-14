@@ -23,6 +23,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 interface UnifiedTimeProps {
   /** Total seconds to display (live cumulative during session) */
   totalSeconds: number
+  /** Session elapsed seconds (0, 1, 2... for current session only) */
+  sessionSeconds?: number
   /** Whether to show the seconds segment */
   showSeconds: boolean
   /** Opacity of seconds segment (0-1), animated by breath sync */
@@ -35,15 +37,18 @@ interface UnifiedTimeProps {
 
 export function UnifiedTime({
   totalSeconds,
+  sessionSeconds = 0,
   showSeconds,
   secondsOpacity,
   breathing,
   className = '',
 }: UnifiedTimeProps) {
   // Calculate display values - NO ZERO PADDING
+  // Hours and minutes show cumulative total
   const hours = Math.floor(totalSeconds / 3600)
   const minutes = Math.floor((totalSeconds % 3600) / 60)
-  const seconds = totalSeconds % 60
+  // Seconds show SESSION time (0, 1, 2...) not cumulative
+  const seconds = sessionSeconds % 60
 
   // Base container with layout animation for smooth repositioning
   const containerClasses = `
