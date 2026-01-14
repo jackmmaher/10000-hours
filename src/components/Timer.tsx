@@ -275,16 +275,16 @@ export function Timer() {
         />
       )}
 
-      {/* Contextual hints - unified position, style, and shimmer animation */}
+      {/* Contextual hints - fade in/out matching seconds animation pattern */}
       <AnimatePresence mode="wait">
         {phase === 'resting' && (
           <motion.p
             key="resting-hint"
-            className="absolute bottom-[38vh] text-xs tracking-wide text-indigo-deep/40"
+            className="absolute bottom-[38vh] text-sm tracking-wide text-indigo-deep"
             initial={{ opacity: 0 }}
-            animate={{ opacity: [0.3, 0.5, 0.3] }}
-            exit={{ opacity: 0, transition: { duration: 0.2 } }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+            animate={{ opacity: 0.5 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 4, ease: 'easeInOut' }}
           >
             tap to meditate
           </motion.p>
@@ -292,11 +292,11 @@ export function Timer() {
         {phase === 'pending' && (
           <motion.p
             key="pending-hint"
-            className="absolute bottom-[38vh] text-xs tracking-wide text-indigo-deep/40"
+            className="absolute bottom-[38vh] text-sm tracking-wide text-indigo-deep"
             initial={{ opacity: 0 }}
-            animate={{ opacity: [0.4, 0.6, 0.4] }}
-            exit={{ opacity: 0, transition: { duration: 0.2 } }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            animate={{ opacity: 0.5 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 4, ease: 'easeInOut' }}
           >
             beginning meditation...
           </motion.p>
@@ -304,11 +304,11 @@ export function Timer() {
         {phase === 'active' && (
           <motion.p
             key="active-hint"
-            className="absolute bottom-[38vh] text-xs tracking-wide text-indigo-deep/40"
+            className="absolute bottom-[38vh] text-sm tracking-wide text-indigo-deep"
             initial={{ opacity: 0 }}
-            animate={{ opacity: [0.25, 0.4, 0.25] }}
-            exit={{ opacity: 0, transition: { duration: 0.2 } }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+            animate={{ opacity: 0.35 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 4, ease: 'easeInOut' }}
           >
             tap to end meditation
           </motion.p>
