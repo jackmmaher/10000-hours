@@ -1,21 +1,23 @@
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 
 /**
- * UnifiedTime - Single unified time display
+ * UnifiedTime - Digital Swiss timer display
+ *
+ * Format: HH MM SS (always zero-padded)
+ * Example: 00 16 00 → 00 16 01 → 00 16 02 ...
  *
  * Typography hierarchy:
  * - Hours: text-display, font-semibold, opacity-100
- * - Minutes (with hours): 0.85em, font-light, opacity-60
- * - Minutes (no hours): text-display, font-semibold, opacity-100
- * - Seconds: 0.72em, font-light, opacity-25
+ * - Minutes: 0.85em, font-light, opacity-60
+ * - Seconds: 0.72em, font-light, opacity-25 (when visible)
  *
  * CRITICAL LAYOUT RULES:
- * - NO `layout` props (causes animation fighting)
- * - Tabular lining figures (font-variant-numeric: tabular-nums lining-nums)
- * - Fixed-width segments using `min-width: Xch`
- * - Right-aligned text so 9→10 doesn't shift
+ * - Zero-padding on all values (00, 01, 02...)
+ * - All segments ALWAYS rendered (hours, minutes, seconds)
+ * - Tabular lining figures (fixed-width digits)
+ * - Seconds space always reserved, just invisible until active
  * - Breathing animation on OUTER wrapper only
- * - Seconds ALWAYS rendered (space reserved), just opacity 0 when hidden
+ * - NO layout props (prevents animation fighting)
  */
 
 interface UnifiedTimeProps {
@@ -39,6 +41,11 @@ export function UnifiedTime({
   const minutes = Math.floor((totalSeconds % 3600) / 60)
   const seconds = sessionSeconds % 60
 
+  // Zero-pad all values for fixed-width display
+  const hoursDisplay = String(hours).padStart(2, '0')
+  const minutesDisplay = String(minutes).padStart(2, '0')
+  const secondsDisplay = String(seconds).padStart(2, '0')
+
   return (
     // OUTER: Breathing animation wrapper (scale doesn't affect inner layout)
     <div className={breathing ? 'animate-box-breathe' : ''}>
@@ -52,32 +59,20 @@ export function UnifiedTime({
         `}
         style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}
       >
-        {/* Hours - fixed width, right-aligned */}
-        <AnimatePresence mode="wait">
-          {hours > 0 && (
-            <motion.span
-              key="hours"
-              className="text-display font-semibold text-right"
-              style={{ minWidth: '1.5ch' }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              {hours}
-            </motion.span>
-          )}
-        </AnimatePresence>
+        {/* Hours - always visible with zero-padding */}
+        <span className="text-display font-semibold text-right" style={{ minWidth: '2ch' }}>
+          {hoursDisplay}
+        </span>
 
-        {/* Minutes - fixed width, right-aligned */}
+        {/* Minutes - always visible with zero-padding */}
         <span
-          className={`text-right ${hours > 0 ? 'font-light opacity-60' : 'text-display font-semibold opacity-100'}`}
+          className="text-right font-light opacity-60"
           style={{
             minWidth: '2ch',
-            fontSize: hours > 0 ? 'calc(var(--text-display-size) * 0.85)' : undefined,
+            fontSize: 'calc(var(--text-display-size) * 0.85)',
           }}
         >
-          {minutes}
+          {minutesDisplay}
         </span>
 
         {/* Seconds - ALWAYS rendered, space always reserved, just invisible until active */}
@@ -91,7 +86,7 @@ export function UnifiedTime({
           animate={{ opacity: showSeconds ? secondsOpacity * 0.25 : 0 }}
           transition={{ duration: 4, ease: 'easeInOut' }}
         >
-          {seconds}
+          {secondsDisplay}
         </motion.span>
       </div>
     </div>

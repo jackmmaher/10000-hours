@@ -91,18 +91,17 @@ export function Timer() {
     // Immediate haptic acknowledgment
     haptic.medium()
 
-    // Reset session state before entering pending
+    // CRITICAL: Reset ALL session state IMMEDIATELY on tap
+    // This ensures no stale values from previous sessions
+    setSessionElapsed(0)
     setSessionStart(null)
+    setSecondsOpacity(0)
     setPhase('pending')
 
     // Wait for breath alignment (next inhale)
     await waitForPhase('inhale')
 
-    // CRITICAL: Reset elapsed to 0 RIGHT HERE, immediately before starting
-    // This ensures seconds display starts at 0, not accumulated wait time
-    setSessionElapsed(0)
-
-    // Capture start time and begin ATOMICALLY
+    // Capture start time and begin
     const startTime = performance.now()
     setSessionStart(startTime)
     setSecondsOpacity(1)
@@ -241,14 +240,15 @@ export function Timer() {
       )}
 
       {/* Pending state feedback - syncing with breath */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {phase === 'pending' && (
           <motion.p
+            key="pending-message"
             className="text-sm text-indigo-deep/70 mt-6"
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: [0.5, 1, 0.5], y: 0 }}
-            exit={{ opacity: 0, y: -5 }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.7 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
           >
             beginning shortly...
           </motion.p>
