@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useNavigationStore } from '../stores/useNavigationStore'
 import { useSettingsStore } from '../stores/useSettingsStore'
@@ -91,22 +91,21 @@ export function Timer() {
     // Immediate haptic acknowledgment
     haptic.medium()
 
-    // CRITICAL: Reset session state BEFORE entering pending
-    // This ensures no stale elapsed time from previous sessions
-    setSessionElapsed(0)
+    // Reset session state before entering pending
     setSessionStart(null)
-
     setPhase('pending')
 
     // Wait for breath alignment (next inhale)
     await waitForPhase('inhale')
 
-    // Begin fade-in of seconds segment (synced with inhale - 4 seconds)
-    setSecondsOpacity(1)
+    // CRITICAL: Reset elapsed to 0 RIGHT HERE, immediately before starting
+    // This ensures seconds display starts at 0, not accumulated wait time
+    setSessionElapsed(0)
 
-    // Set session start time NOW (not after delay) to ensure accurate counting
+    // Capture start time and begin ATOMICALLY
     const startTime = performance.now()
     setSessionStart(startTime)
+    setSecondsOpacity(1)
     setPhase('active')
     startTimer() // Persist to DB for crash recovery
   }, [phase, haptic, waitForPhase, startTimer])
@@ -242,16 +241,19 @@ export function Timer() {
       )}
 
       {/* Pending state feedback - syncing with breath */}
-      {phase === 'pending' && (
-        <motion.p
-          className="text-xs text-indigo-deep/50 mt-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0.3, 0.7, 0.3] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          syncing with your breath...
-        </motion.p>
-      )}
+      <AnimatePresence>
+        {phase === 'pending' && (
+          <motion.p
+            className="text-sm text-indigo-deep/70 mt-6"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: [0.5, 1, 0.5], y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            syncing with your breath...
+          </motion.p>
+        )}
+      </AnimatePresence>
 
       {/* Contextual hints */}
       {phase === 'resting' && (

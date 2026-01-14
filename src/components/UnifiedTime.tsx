@@ -94,23 +94,23 @@ export function UnifiedTime({
         {minutes}
       </motion.span>
 
-      {/* Seconds segment - fade in/out synced with breathing */}
+      {/* Seconds segment - fade in/out only on enter/exit, NOT on value changes */}
       <AnimatePresence mode="popLayout">
         {showSeconds && (
           <motion.span
-            key="seconds"
+            key="seconds-container"
             className="font-light"
-            layout
             style={{
               fontSize: 'calc(var(--text-display-size) * 0.72)',
+              opacity: secondsOpacity * 0.25,
             }}
             initial={{ opacity: 0, x: -10 }}
-            animate={{
-              opacity: secondsOpacity * 0.25,
-              x: 0,
-            }}
+            animate={{ opacity: secondsOpacity * 0.25, x: 0 }}
             exit={{ opacity: 0, x: -10 }}
-            transition={{ duration: 4, ease: 'easeInOut' }}
+            transition={{
+              opacity: { duration: 4, ease: 'easeInOut' },
+              x: { duration: 0.4, ease: 'easeOut' },
+            }}
           >
             {seconds}
           </motion.span>
