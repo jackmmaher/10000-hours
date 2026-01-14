@@ -6,7 +6,7 @@
  */
 
 import { useState } from 'react'
-import { Card, CardHeader, CardBody, CardEngagement, PearlOrb } from '../Card'
+import { Card, CardHeader, CardBody, CardEngagement, PearlOrb, AccentBar } from '../Card'
 import { VoiceBadgeWithHours } from '../VoiceBadge'
 import { useTapFeedback } from '../../hooks/useTapFeedback'
 import { useToast } from '../../stores/useErrorStore'
@@ -231,13 +231,13 @@ function HeroSessionCard({
       className="min-h-[180px]"
     >
       <div className="flex">
-        {/* Gradient accent bar */}
-        <div className="py-5 pl-5">
-          <div className={`w-1.5 h-full rounded-full bg-gradient-to-b ${gradient}`} />
+        {/* Gradient accent bar - using AccentBar component for consistency */}
+        <div className="py-4 pl-4">
+          <AccentBar gradient={`bg-gradient-to-b ${gradient}`} />
         </div>
 
         {/* Content */}
-        <div className="flex-1 py-4 pr-5">
+        <div className="flex-1 py-4 pr-4">
           {/* Header row */}
           <div className="flex items-start justify-between mb-3">
             <div>

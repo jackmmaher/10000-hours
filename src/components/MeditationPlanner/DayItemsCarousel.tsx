@@ -74,8 +74,8 @@ export function DayItemsCarousel({
 
   return (
     <div className="w-full">
-      {/* Tab navigation - shows what each item is */}
-      <div className="flex justify-center gap-1 mb-4">
+      {/* Tab navigation - shows what each item is (scrollable for many items) */}
+      <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
         {items.map((item, i) => {
           const label = formatItemLabel(item)
           const typeIndicator = getTypeIndicator(item)
@@ -88,7 +88,7 @@ export function DayItemsCarousel({
               aria-label={`View ${item.type === 'plan' ? 'planned session' : 'session'} at ${label}`}
               aria-current={isActive ? 'true' : undefined}
               className={`
-                px-3 py-1.5 rounded-full text-xs font-medium transition-all
+                px-3 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap flex-shrink-0
                 ${isActive ? 'bg-accent text-on-accent' : 'bg-ink/10 text-ink/60 hover:bg-ink/20'}
               `}
             >

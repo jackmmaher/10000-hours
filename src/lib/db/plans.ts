@@ -198,8 +198,17 @@ export async function getAllPlannedSessions(): Promise<PlannedSession[]> {
  * Retroactively link unlinked plans to sessions on the same day
  * Uses time-based matching: prefer sessions closest to the plan's plannedTime
  * Only links if session is within 60 minutes of planned time (or plan has no time set)
+ *
+ * IMPORTANT: Only processes plans from PAST days, not today.
+ * Today's plans should remain available until explicitly linked when a new session starts.
+ * This prevents newly created plans from being auto-linked to existing sessions.
  */
 export async function relinkOrphanedPlans(sessions: Session[]): Promise<number> {
+  // Get start of today to exclude today's plans from auto-linking
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const todayStart = today.getTime()
+
   const unlinkedPlans = await db.plannedSessions
     .filter((p) => !p.completed && !p.linkedSessionUuid)
     .toArray()
@@ -207,6 +216,12 @@ export async function relinkOrphanedPlans(sessions: Session[]): Promise<number> 
   let linkedCount = 0
 
   for (const plan of unlinkedPlans) {
+    // Skip plans from today - they should remain available for new sessions
+    // Only retroactively link plans from past days
+    if (plan.date >= todayStart) {
+      continue
+    }
+
     // Find sessions on the same day as this plan
     const sameDaySessions = sessions.filter((session) => isSameDay(session.startTime, plan.date))
 
