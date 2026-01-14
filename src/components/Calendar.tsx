@@ -499,7 +499,7 @@ export function Calendar({
                   )
                 }
 
-                // Future with plan - accent text + dot indicator
+                // Future with plan - outline style to distinguish from filled past sessions
                 if (isFuture && hasPlan) {
                   return (
                     <div key={index} className="aspect-square relative">
@@ -508,14 +508,15 @@ export function Calendar({
                         className="w-full h-full flex items-center justify-center rounded-lg transition-all active:scale-[0.95]"
                         style={{
                           color: 'var(--accent)',
-                          background: 'var(--accent-muted)',
+                          background: 'transparent',
+                          border: '2px solid var(--accent)',
                         }}
                       >
                         <span className="text-sm font-medium">{day}</span>
                       </button>
                       {/* Plan indicator dot */}
                       <div
-                        className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
+                        className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full"
                         style={{
                           background: 'var(--accent)',
                           border: '2px solid var(--bg-base)',

@@ -134,15 +134,19 @@ export function WeekStone({ status, onClick, size = 'sm' }: WeekStoneProps) {
       <div
         className={`${baseSize} rounded-full cursor-pointer relative`}
         style={{
-          background: 'var(--accent-muted)',
+          background: 'transparent',
+          border: '2px solid var(--accent)',
           boxShadow: '0 0 0 2px var(--accent), 0 0 6px var(--accent-muted)',
         }}
         onClick={onClick}
       >
-        {/* Plan indicator dot */}
+        {/* Plan indicator dot - contrasting border for visibility */}
         <div
-          className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
-          style={{ background: 'var(--accent)' }}
+          className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full"
+          style={{
+            background: 'var(--accent)',
+            border: '2px solid var(--bg-base)',
+          }}
         />
       </div>
     )
@@ -159,10 +163,13 @@ export function WeekStone({ status, onClick, size = 'sm' }: WeekStoneProps) {
         }}
         onClick={onClick}
       >
-        {/* Plan indicator dot - shows there's still a plan coming */}
+        {/* Plan indicator dot - contrasting border for visibility */}
         <div
-          className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
-          style={{ background: 'var(--accent)' }}
+          className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full"
+          style={{
+            background: 'var(--accent)',
+            border: '2px solid var(--bg-base)',
+          }}
         />
       </div>
     )
@@ -170,21 +177,24 @@ export function WeekStone({ status, onClick, size = 'sm' }: WeekStoneProps) {
 
   // FUTURE states
 
-  // Future day with a plan - accent indicator
+  // Future day with a plan - outline style (no fill) to distinguish from completed
   if (status === 'planned') {
     return (
       <div
         className={`${baseSize} rounded-full cursor-pointer relative`}
         style={{
-          background: 'var(--accent-muted)',
+          background: 'transparent',
           border: '2px solid var(--accent)',
         }}
         onClick={onClick}
       >
-        {/* Small plan dot */}
+        {/* Plan indicator dot - contrasting border for visibility */}
         <div
-          className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full"
-          style={{ background: 'var(--accent)' }}
+          className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full"
+          style={{
+            background: 'var(--accent)',
+            border: '2px solid var(--bg-base)',
+          }}
         />
       </div>
     )
