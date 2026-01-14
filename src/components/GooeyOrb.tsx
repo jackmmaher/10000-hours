@@ -24,16 +24,23 @@ interface GooeyOrbProps {
 
 export function GooeyOrb({ phase, className = '' }: GooeyOrbProps) {
   // Map phase to visual states
+  // Active includes 'settling' so orb stays expanded while waiting for breath alignment
   const isActive = phase === 'active' || phase === 'settling'
   const isResting = phase === 'resting' || phase === 'pending'
+  // Transitioning states get subtle visual feedback
+  const isTransitioning = phase === 'pending' || phase === 'settling'
 
-  // Size varies by phase
+  // Size varies by phase - expands when active, contracts when resting
   const { width, height, orbSize } = useMemo(() => {
     if (isActive) {
       return { width: 200, height: 200, orbSize: 80 }
     }
     return { width: 140, height: 140, orbSize: 50 }
   }, [isActive])
+
+  // Subtle opacity during transitions to acknowledge user input
+  // Full opacity when resting or active, slightly reduced when waiting for breath
+  const orbOpacity = isTransitioning ? 0.85 : 1
 
   // Animation class based on phase
   const getBlobAnimation = (blobNum: 1 | 2 | 3) => {
@@ -51,7 +58,11 @@ export function GooeyOrb({ phase, className = '' }: GooeyOrbProps) {
   }
 
   return (
-    <motion.div className={`relative flex items-center justify-center ${className}`}>
+    <motion.div
+      className={`relative flex items-center justify-center ${className}`}
+      animate={{ opacity: orbOpacity }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
+    >
       {/* SVG Filter Definition - The "Gooey" effect */}
       <svg style={{ position: 'absolute', width: 0, height: 0 }}>
         <defs>
