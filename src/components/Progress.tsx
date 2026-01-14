@@ -230,7 +230,7 @@ export function Progress() {
                 setShowVoiceModal(true)
               }}
               className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full
-                bg-card/60 backdrop-blur-sm border border-ink/5
+                bg-card/60 backdrop-blur-sm
                 hover:bg-card/80 transition-all active:scale-[0.98] touch-manipulation"
             >
               <VoiceBadge score={voice.total} showScore />

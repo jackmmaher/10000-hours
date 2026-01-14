@@ -355,7 +355,7 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
               haptic.light()
               setShowPreferences(!showPreferences)
             }}
-            className="w-full flex items-center justify-between p-4 bg-card/90 backdrop-blur-md border border-ink/5 shadow-sm
+            className="w-full flex items-center justify-between p-4 bg-card/90 backdrop-blur-md shadow-sm
               rounded-xl hover:bg-card/95 hover:shadow-md transition-all touch-manipulation"
           >
             <div className="text-left">
@@ -475,7 +475,7 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
               haptic.light()
               setShowGoalSettings(!showGoalSettings)
             }}
-            className="w-full flex items-center justify-between p-4 bg-card/90 backdrop-blur-md border border-ink/5 shadow-sm
+            className="w-full flex items-center justify-between p-4 bg-card/90 backdrop-blur-md shadow-sm
               rounded-xl hover:bg-card/95 hover:shadow-md transition-all touch-manipulation cursor-pointer"
           >
             <div className="text-left">

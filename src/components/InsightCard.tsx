@@ -18,13 +18,7 @@ interface InsightCardProps {
   sessions: Session[]
 }
 
-type InsightType =
-  | 'time_pattern'
-  | 'consistency'
-  | 'growth'
-  | 'first_steps'
-  | 'streak'
-  | 'variety'
+type InsightType = 'time_pattern' | 'consistency' | 'growth' | 'first_steps' | 'streak' | 'variety'
 
 interface Insight {
   type: InsightType
@@ -36,28 +30,32 @@ function generateInsights(sessions: Session[]): Insight[] {
   const insights: Insight[] = []
 
   if (sessions.length === 0) {
-    return [{
-      type: 'first_steps',
-      message: 'Your journey begins with a single breath.',
-      detail: 'Start your first session whenever you\'re ready.'
-    }]
+    return [
+      {
+        type: 'first_steps',
+        message: 'Your journey begins with a single breath.',
+        detail: "Start your first session whenever you're ready.",
+      },
+    ]
   }
 
   if (sessions.length < 3) {
-    return [{
-      type: 'first_steps',
-      message: 'The path is forming beneath your feet.',
-      detail: `${sessions.length} session${sessions.length > 1 ? 's' : ''} in. Keep going.`
-    }]
+    return [
+      {
+        type: 'first_steps',
+        message: 'The path is forming beneath your feet.',
+        detail: `${sessions.length} session${sessions.length > 1 ? 's' : ''} in. Keep going.`,
+      },
+    ]
   }
 
   // Analyze time patterns
-  const morningCount = sessions.filter(s => {
+  const morningCount = sessions.filter((s) => {
     const hour = new Date(s.startTime).getHours()
     return hour >= 5 && hour < 12
   }).length
 
-  const eveningCount = sessions.filter(s => {
+  const eveningCount = sessions.filter((s) => {
     const hour = new Date(s.startTime).getHours()
     return hour >= 17 && hour < 22
   }).length
@@ -68,30 +66,37 @@ function generateInsights(sessions: Session[]): Insight[] {
   if (morningRatio > 0.6) {
     insights.push({
       type: 'time_pattern',
-      message: 'You\'re a morning practitioner.',
-      detail: `${Math.round(morningRatio * 100)}% of your meditations start before noon.`
+      message: "You're a morning practitioner.",
+      detail: `${Math.round(morningRatio * 100)}% of your meditations start before noon.`,
     })
   } else if (eveningRatio > 0.6) {
     insights.push({
       type: 'time_pattern',
       message: 'Evening is your time for stillness.',
-      detail: `${Math.round(eveningRatio * 100)}% of your meditations are in the evening.`
+      detail: `${Math.round(eveningRatio * 100)}% of your meditations are in the evening.`,
     })
   }
 
   // Analyze recent vs older sessions (growth)
   const recentStats = getStatsForWindow(sessions, 30)
   const olderStats = getStatsForWindow(
-    sessions.filter(s => s.startTime < Date.now() - 30 * 24 * 60 * 60 * 1000),
+    sessions.filter((s) => s.startTime < Date.now() - 30 * 24 * 60 * 60 * 1000),
     30
   )
 
-  if (olderStats.sessionCount > 0 && recentStats.avgSessionMinutes > olderStats.avgSessionMinutes * 1.2) {
-    const increase = Math.round(((recentStats.avgSessionMinutes - olderStats.avgSessionMinutes) / olderStats.avgSessionMinutes) * 100)
+  if (
+    olderStats.sessionCount > 0 &&
+    recentStats.avgSessionMinutes > olderStats.avgSessionMinutes * 1.2
+  ) {
+    const increase = Math.round(
+      ((recentStats.avgSessionMinutes - olderStats.avgSessionMinutes) /
+        olderStats.avgSessionMinutes) *
+        100
+    )
     insights.push({
       type: 'growth',
       message: 'Your meditations are getting longer.',
-      detail: `Average meditation up ${increase}% compared to before.`
+      detail: `Average meditation up ${increase}% compared to before.`,
     })
   }
 
@@ -100,7 +105,7 @@ function generateInsights(sessions: Session[]): Insight[] {
   const now = Date.now()
   const weekAgo = now - 7 * 24 * 60 * 60 * 1000
 
-  sessions.forEach(s => {
+  sessions.forEach((s) => {
     if (s.startTime >= weekAgo) {
       const date = new Date(s.startTime)
       last7Days.add(`${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`)
@@ -113,27 +118,28 @@ function generateInsights(sessions: Session[]): Insight[] {
     insights.push({
       type: 'consistency',
       message: 'Strong week.',
-      detail: `${daysThisWeek} days of practice in the last week.`
+      detail: `${daysThisWeek} days of practice in the last week.`,
     })
   } else if (daysThisWeek >= 3) {
     insights.push({
       type: 'consistency',
       message: 'Building rhythm.',
-      detail: `${daysThisWeek} days this week. Consistency compounds.`
+      detail: `${daysThisWeek} days this week. Consistency compounds.`,
     })
   }
 
   // Session length variety
-  const durations = sessions.map(s => s.durationSeconds)
+  const durations = sessions.map((s) => s.durationSeconds)
   const avgDuration = durations.reduce((a, b) => a + b, 0) / durations.length
-  const variance = durations.reduce((sum, d) => sum + Math.pow(d - avgDuration, 2), 0) / durations.length
+  const variance =
+    durations.reduce((sum, d) => sum + Math.pow(d - avgDuration, 2), 0) / durations.length
   const stdDev = Math.sqrt(variance)
 
   if (stdDev < avgDuration * 0.2 && sessions.length > 5) {
     insights.push({
       type: 'variety',
       message: 'Consistent session lengths.',
-      detail: 'You\'ve found your rhythm. Consider occasionally varying duration.'
+      detail: "You've found your rhythm. Consider occasionally varying duration.",
     })
   }
 
@@ -143,7 +149,7 @@ function generateInsights(sessions: Session[]): Insight[] {
     insights.push({
       type: 'growth',
       message: 'The practice continues.',
-      detail: `${Math.round(totalHours * 10) / 10} hours of stillness accumulated.`
+      detail: `${Math.round(totalHours * 10) / 10} hours of stillness accumulated.`,
     })
   }
 
@@ -159,24 +165,18 @@ export function InsightCard({ sessions }: InsightCardProps) {
   if (!insight) return null
 
   return (
-    <div className="mb-8 bg-card/90 backdrop-blur-md border border-ink/5 shadow-sm rounded-xl p-5 relative overflow-hidden">
+    <div className="mb-8 bg-card/90 backdrop-blur-md shadow-sm rounded-xl p-5 relative overflow-hidden">
       {/* Subtle decorative element - uses accent color from Living Theme */}
       <div
         className="absolute -top-4 -right-4 w-16 h-16 rounded-full opacity-20"
         style={{
-          background: 'radial-gradient(circle, var(--accent) 0%, transparent 70%)'
+          background: 'radial-gradient(circle, var(--accent) 0%, transparent 70%)',
         }}
       />
 
       <div className="relative">
-        <p className="font-serif text-lg text-ink leading-relaxed">
-          {insight.message}
-        </p>
-        {insight.detail && (
-          <p className="text-sm text-ink/50 mt-2">
-            {insight.detail}
-          </p>
-        )}
+        <p className="font-serif text-lg text-ink leading-relaxed">{insight.message}</p>
+        {insight.detail && <p className="text-sm text-ink/50 mt-2">{insight.detail}</p>}
       </div>
     </div>
   )

@@ -29,7 +29,7 @@ import { getVoiceVisual, VoiceLevel, getVoiceTier } from '../lib/voice'
 function getVoiceDotStyle(level: VoiceLevel): string {
   switch (level) {
     case 'high':
-      return 'var(--accent)'  // Full intensity + glow handles distinction
+      return 'var(--accent)' // Full intensity + glow handles distinction
     case 'established':
       return 'color-mix(in srgb, var(--accent) 85%, transparent)'
     case 'growing':
@@ -65,31 +65,40 @@ interface VoiceBadgeProps {
   compact?: boolean
 }
 
-export function VoiceBadge({ score, showScore = false, showLabel = false, compact = false }: VoiceBadgeProps) {
+export function VoiceBadge({
+  score,
+  showScore = false,
+  showLabel = false,
+  compact = false,
+}: VoiceBadgeProps) {
   const visual = getVoiceVisual(score)
   const tier = getVoiceTier(score)
 
   // Glow intensity based on level - only high scores get glow
-  const glowStyle = visual.glow !== 'none'
-    ? { boxShadow: `0 0 ${visual.glow === 'strong' ? '12px' : visual.glow === 'medium' ? '8px' : '4px'} var(--accent-glow, rgba(0,0,0,0.1))` }
-    : {}
+  const glowStyle =
+    visual.glow !== 'none'
+      ? {
+          boxShadow: `0 0 ${visual.glow === 'strong' ? '12px' : visual.glow === 'medium' ? '8px' : '4px'} var(--accent-glow, rgba(0,0,0,0.1))`,
+        }
+      : {}
 
   const dotSize = compact ? 'w-1 h-1' : 'w-1.5 h-1.5'
   const gap = compact ? 'gap-0.5' : 'gap-1'
   const padding = compact ? 'px-1.5 py-0.5' : 'px-2 py-1'
 
   // Background classes - uses theme's card background with glassmorphism
-  const bgClass = visual.level === 'high'
-    ? 'bg-card/70'
-    : visual.level === 'established'
-      ? 'bg-card/60'
-      : 'bg-card/50'
+  const bgClass =
+    visual.level === 'high'
+      ? 'bg-card/70'
+      : visual.level === 'established'
+        ? 'bg-card/60'
+        : 'bg-card/50'
 
   return (
     <div
       className={`
         inline-flex items-center ${gap} ${padding} rounded-full
-        ${bgClass} backdrop-blur-sm border border-ink/5
+        ${bgClass} backdrop-blur-sm
         transition-all duration-500
       `}
       style={glowStyle}
@@ -101,9 +110,10 @@ export function VoiceBadge({ score, showScore = false, showLabel = false, compac
             key={dot}
             className={`${dotSize} rounded-full transition-all duration-500`}
             style={{
-              backgroundColor: dot <= visual.dots
-                ? getVoiceDotStyle(visual.level)
-                : 'var(--border-subtle, rgba(0,0,0,0.1))'
+              backgroundColor:
+                dot <= visual.dots
+                  ? getVoiceDotStyle(visual.level)
+                  : 'var(--border-subtle, rgba(0,0,0,0.1))',
             }}
           />
         ))}
@@ -144,22 +154,26 @@ export function VoiceBadgeWithHours({ score }: VoiceBadgeWithScoreProps) {
   const visual = getVoiceVisual(score)
 
   // Glow intensity based on level - only high scores get glow
-  const glowStyle = visual.glow !== 'none'
-    ? { boxShadow: `0 0 ${visual.glow === 'strong' ? '12px' : visual.glow === 'medium' ? '8px' : '4px'} var(--accent-glow, rgba(0,0,0,0.1))` }
-    : {}
+  const glowStyle =
+    visual.glow !== 'none'
+      ? {
+          boxShadow: `0 0 ${visual.glow === 'strong' ? '12px' : visual.glow === 'medium' ? '8px' : '4px'} var(--accent-glow, rgba(0,0,0,0.1))`,
+        }
+      : {}
 
   // Background classes - uses theme's card background with glassmorphism
-  const bgClass = visual.level === 'high'
-    ? 'bg-card/70'
-    : visual.level === 'established'
-      ? 'bg-card/60'
-      : 'bg-card/50'
+  const bgClass =
+    visual.level === 'high'
+      ? 'bg-card/70'
+      : visual.level === 'established'
+        ? 'bg-card/60'
+        : 'bg-card/50'
 
   return (
     <div
       className={`
         inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
-        ${bgClass} backdrop-blur-sm border border-ink/5
+        ${bgClass} backdrop-blur-sm
         transition-all duration-500
       `}
       style={glowStyle}
@@ -171,9 +185,10 @@ export function VoiceBadgeWithHours({ score }: VoiceBadgeWithScoreProps) {
             key={dot}
             className="w-1 h-1 rounded-full transition-all duration-500"
             style={{
-              backgroundColor: dot <= visual.dots
-                ? getVoiceDotStyle(visual.level)
-                : 'var(--border-subtle, rgba(0,0,0,0.1))'
+              backgroundColor:
+                dot <= visual.dots
+                  ? getVoiceDotStyle(visual.level)
+                  : 'var(--border-subtle, rgba(0,0,0,0.1))',
             }}
           />
         ))}

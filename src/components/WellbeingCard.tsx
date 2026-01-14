@@ -17,7 +17,7 @@ import {
   addWellbeingDimension,
   addWellbeingCheckIn,
   archiveWellbeingDimension,
-  getCheckInHistory
+  getCheckInHistory,
 } from '../lib/db'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 
@@ -29,7 +29,7 @@ const SUGGESTED_DIMENSIONS = [
   { name: 'sleep', label: 'Sleep Issues' },
   { name: 'focus', label: 'Focus Issues' },
   { name: 'energy', label: 'Low Energy' },
-  { name: 'restlessness', label: 'Restlessness' }
+  { name: 'restlessness', label: 'Restlessness' },
 ]
 
 interface WellbeingCardProps {
@@ -45,11 +45,7 @@ interface DimensionProgress {
   percentChange: number
 }
 
-export function WellbeingCard({
-  dimensions,
-  latestCheckIns,
-  onRefresh
-}: WellbeingCardProps) {
+export function WellbeingCard({ dimensions, latestCheckIns, onRefresh }: WellbeingCardProps) {
   const haptic = useTapFeedback()
   const [showAddPicker, setShowAddPicker] = useState(false)
   const [expandedAdd, setExpandedAdd] = useState<string | null>(null)
@@ -72,9 +68,7 @@ export function WellbeingCard({
 
     const baseline = history[history.length - 1].score // First check-in
     const current = history[0].score // Latest check-in
-    const percentChange = baseline > 0
-      ? Math.round(((baseline - current) / baseline) * 100)
-      : 0
+    const percentChange = baseline > 0 ? Math.round(((baseline - current) / baseline) * 100) : 0
 
     return { baseline, current, percentChange }
   }
@@ -94,13 +88,13 @@ export function WellbeingCard({
     const dim = await addWellbeingDimension({
       name,
       label,
-      isCustom: !SUGGESTED_DIMENSIONS.some(s => s.name === name)
+      isCustom: !SUGGESTED_DIMENSIONS.some((s) => s.name === name),
     })
 
     // Add initial check-in
     await addWellbeingCheckIn({
       dimensionId: dim.id,
-      score: sliderValue
+      score: sliderValue,
     })
 
     // Reset state
@@ -116,7 +110,7 @@ export function WellbeingCard({
   const handleUpdateScore = async (dimensionId: string) => {
     await addWellbeingCheckIn({
       dimensionId,
-      score: sliderValue
+      score: sliderValue,
     })
 
     setExpandedEdit(null)
@@ -195,7 +189,7 @@ export function WellbeingCard({
 
   // Get available dimensions (not yet added)
   const availableDimensions = SUGGESTED_DIMENSIONS.filter(
-    s => !dimensions.some(d => d.name === s.name)
+    (s) => !dimensions.some((d) => d.name === s.name)
   )
 
   // Expand an item for editing
@@ -210,12 +204,12 @@ export function WellbeingCard({
     // Load fresh progress
     const p = await loadProgress(dim.id)
     if (p) {
-      setProgress(prev => new Map(prev).set(dim.id, p))
+      setProgress((prev) => new Map(prev).set(dim.id, p))
     }
   }
 
   return (
-    <div className="bg-card/90 backdrop-blur-md border border-ink/5 shadow-sm rounded-xl overflow-hidden">
+    <div className="bg-card/90 backdrop-blur-md shadow-sm rounded-xl overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between p-5 pb-3">
         <h3 className="font-serif text-lg text-ink">Wellbeing</h3>
@@ -242,7 +236,7 @@ export function WellbeingCard({
 
           {/* Dimension chips */}
           <div className="flex flex-wrap gap-2 mb-3">
-            {availableDimensions.map(dim => (
+            {availableDimensions.map((dim) => (
               <button
                 key={dim.name}
                 onClick={() => {
@@ -266,9 +260,7 @@ export function WellbeingCard({
                 setExpandedAdd(null)
               }}
               className={`px-3 py-1.5 text-xs rounded-full transition-colors touch-manipulation active:scale-[0.97] ${
-                showCustomInput
-                  ? 'bg-moss text-cream'
-                  : 'bg-cream text-ink/70 hover:bg-cream-deep'
+                showCustomInput ? 'bg-moss text-cream' : 'bg-cream text-ink/70 hover:bg-cream-deep'
               }`}
             >
               + Custom
@@ -281,8 +273,8 @@ export function WellbeingCard({
               <input
                 type="text"
                 value={customLabel}
-                onChange={e => setCustomLabel(e.target.value)}
-                onKeyDown={e => {
+                onChange={(e) => setCustomLabel(e.target.value)}
+                onKeyDown={(e) => {
                   if (e.key === 'Enter' && customLabel.trim()) {
                     haptic.light()
                     setExpandedAdd(`custom:${customLabel.trim()}`)
@@ -312,7 +304,7 @@ export function WellbeingCard({
               <p className="text-sm text-ink font-medium mb-1">
                 {expandedAdd.startsWith('custom:')
                   ? expandedAdd.replace('custom:', '')
-                  : SUGGESTED_DIMENSIONS.find(d => d.name === expandedAdd)?.label}
+                  : SUGGESTED_DIMENSIONS.find((d) => d.name === expandedAdd)?.label}
               </p>
               <p className="text-xs text-ink/50 mb-4">How much is this affecting you?</p>
 
@@ -322,7 +314,7 @@ export function WellbeingCard({
                   min="1"
                   max="10"
                   value={sliderValue}
-                  onChange={e => setSliderValue(parseInt(e.target.value))}
+                  onChange={(e) => setSliderValue(parseInt(e.target.value))}
                   className="w-full h-2 bg-ink/10 rounded-full appearance-none cursor-pointer accent-moss"
                 />
                 <div className="flex justify-between text-xs text-ink/40 mt-1">
@@ -339,7 +331,7 @@ export function WellbeingCard({
                     const label = expandedAdd.replace('custom:', '')
                     handleAddWithScore(label.toLowerCase().replace(/\s+/g, '-'), label)
                   } else {
-                    const dim = SUGGESTED_DIMENSIONS.find(d => d.name === expandedAdd)
+                    const dim = SUGGESTED_DIMENSIONS.find((d) => d.name === expandedAdd)
                     if (dim) handleAddWithScore(dim.name, dim.label)
                   }
                 }}
@@ -360,7 +352,7 @@ export function WellbeingCard({
           )}
 
           <div className="space-y-2">
-            {dimensions.map(dim => {
+            {dimensions.map((dim) => {
               const checkIn = latestCheckIns.get(dim.id)
               const prog = progress.get(dim.id)
               const isExpanded = expandedEdit === dim.id
@@ -384,12 +376,17 @@ export function WellbeingCard({
                   {/* Main content - swipe handlers only when collapsed */}
                   <div
                     className="relative bg-cream rounded-xl transition-transform"
-                    style={{ transform: `translateX(-${isSwiping && !isExpanded ? swipeOffset : 0}px)` }}
-                    {...(!isExpanded ? {
-                      onTouchStart: (e: TouchEvent<HTMLDivElement>) => handleTouchStart(e, dim.id),
-                      onTouchMove: handleTouchMove,
-                      onTouchEnd: handleTouchEnd
-                    } : {})}
+                    style={{
+                      transform: `translateX(-${isSwiping && !isExpanded ? swipeOffset : 0}px)`,
+                    }}
+                    {...(!isExpanded
+                      ? {
+                          onTouchStart: (e: TouchEvent<HTMLDivElement>) =>
+                            handleTouchStart(e, dim.id),
+                          onTouchMove: handleTouchMove,
+                          onTouchEnd: handleTouchEnd,
+                        }
+                      : {})}
                   >
                     {isExpanded ? (
                       /* Expanded edit view */
@@ -403,13 +400,25 @@ export function WellbeingCard({
                             }}
                             className="text-ink/40 hover:text-ink/60 touch-manipulation"
                           >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={1.5}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
                             </svg>
                           </button>
                         </div>
 
-                        <p className="text-xs text-ink/50 mb-3">How much is this affecting you now?</p>
+                        <p className="text-xs text-ink/50 mb-3">
+                          How much is this affecting you now?
+                        </p>
 
                         <div className="mb-4">
                           <input
@@ -417,7 +426,7 @@ export function WellbeingCard({
                             min="1"
                             max="10"
                             value={sliderValue}
-                            onChange={e => setSliderValue(parseInt(e.target.value))}
+                            onChange={(e) => setSliderValue(parseInt(e.target.value))}
                             className="w-full h-2 bg-ink/10 rounded-full appearance-none cursor-pointer accent-moss"
                           />
                           <div className="flex justify-between text-xs text-ink/40 mt-1">
@@ -432,7 +441,8 @@ export function WellbeingCard({
                             Started at {prog.baseline}/10
                             {sliderValue < prog.baseline && (
                               <span className="text-moss ml-1">
-                                ({Math.round(((prog.baseline - sliderValue) / prog.baseline) * 100)}% improvement)
+                                ({Math.round(((prog.baseline - sliderValue) / prog.baseline) * 100)}
+                                % improvement)
                               </span>
                             )}
                           </p>
@@ -461,9 +471,7 @@ export function WellbeingCard({
                           <p className="text-sm text-ink">{dim.label}</p>
                           <div className="flex items-center gap-2">
                             {prog && prog.percentChange > 0 && (
-                              <span className="text-xs text-moss">
-                                ↓{prog.percentChange}%
-                              </span>
+                              <span className="text-xs text-moss">↓{prog.percentChange}%</span>
                             )}
                             {prog && prog.percentChange < 0 && (
                               <span className="text-xs text-amber-600">

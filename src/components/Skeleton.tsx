@@ -19,20 +19,20 @@ export function Skeleton({
   variant = 'text',
   width,
   height,
-  animation = 'pulse'
+  animation = 'pulse',
 }: SkeletonProps) {
   const baseClasses = 'bg-ink/10'
 
   const animationClasses = {
     pulse: 'animate-pulse',
     wave: 'skeleton-wave',
-    none: ''
+    none: '',
   }
 
   const variantClasses = {
     text: 'rounded h-4',
     circular: 'rounded-full',
-    rectangular: 'rounded-lg'
+    rectangular: 'rounded-lg',
   }
 
   const style: React.CSSProperties = {}
@@ -53,7 +53,7 @@ export function Skeleton({
  */
 export function SkeletonCard() {
   return (
-    <div className="bg-cream rounded-2xl p-5 shadow-sm border border-ink/5">
+    <div className="bg-cream rounded-2xl p-5 shadow-sm">
       {/* Header */}
       <div className="flex items-center gap-3 mb-4">
         <Skeleton variant="circular" width={20} height={20} />
@@ -81,7 +81,7 @@ export function SkeletonCard() {
  */
 export function SkeletonSessionCard() {
   return (
-    <div className="bg-cream rounded-2xl overflow-hidden shadow-sm border border-ink/5">
+    <div className="bg-cream rounded-2xl overflow-hidden shadow-sm">
       {/* Gradient header */}
       <div className="h-20 bg-ink/5 animate-pulse" />
 
@@ -104,12 +104,18 @@ export function SkeletonSessionCard() {
 /**
  * SkeletonList - Multiple skeleton cards
  */
-export function SkeletonList({ count = 3, type = 'card' }: { count?: number; type?: 'card' | 'session' }) {
+export function SkeletonList({
+  count = 3,
+  type = 'card',
+}: {
+  count?: number
+  type?: 'card' | 'session'
+}) {
   return (
     <div className="space-y-4">
-      {Array.from({ length: count }).map((_, i) => (
+      {Array.from({ length: count }).map((_, i) =>
         type === 'session' ? <SkeletonSessionCard key={i} /> : <SkeletonCard key={i} />
-      ))}
+      )}
     </div>
   )
 }

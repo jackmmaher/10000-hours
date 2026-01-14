@@ -27,10 +27,12 @@ interface CardProps {
  * Uses --card-bg from Living Theme with backdrop blur.
  */
 export function Card({ children, className = '', onClick, variant = 'default' }: CardProps) {
+  // Borderless design: card color creates visual boundary against background
+  // Glassmorphism maintained via backdrop-blur, shadows for depth/haptics
   const variantStyles = {
-    default: 'bg-card/90 backdrop-blur-md border border-ink/5 shadow-sm',
-    elevated: 'bg-card/95 backdrop-blur-lg border border-ink/10 shadow-md',
-    subtle: 'bg-card/70 backdrop-blur-sm border border-ink/5',
+    default: 'bg-card/90 backdrop-blur-md shadow-sm',
+    elevated: 'bg-card/95 backdrop-blur-lg shadow-md',
+    subtle: 'bg-card/70 backdrop-blur-sm',
   }
 
   return (
@@ -43,10 +45,14 @@ export function Card({ children, className = '', onClick, variant = 'default' }:
         ${className}
       `}
       onClick={onClick}
-      onTouchEnd={onClick ? (e) => {
-        // Stop propagation to prevent parent swipe handlers from interfering
-        e.stopPropagation()
-      } : undefined}
+      onTouchEnd={
+        onClick
+          ? (e) => {
+              // Stop propagation to prevent parent swipe handlers from interfering
+              e.stopPropagation()
+            }
+          : undefined
+      }
     >
       {/* Shimmer highlight - the polished look */}
       <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
@@ -80,37 +86,27 @@ export function CardHeader({
   sublabel,
   voiceScore,
   action,
-  compact = false
+  compact = false,
 }: CardHeaderProps) {
   return (
     <div className={`flex items-center gap-3 ${compact ? 'px-4 pt-3 pb-2' : 'px-5 pt-4 pb-2'}`}>
       {/* Left indicator */}
-      {indicator && (
-        <div className="flex-shrink-0">
-          {indicator}
-        </div>
-      )}
+      {indicator && <div className="flex-shrink-0">{indicator}</div>}
 
       {/* Labels */}
       <div className="flex-1 min-w-0">
         {label && (
           <span className="text-xs text-ink-soft font-medium">
             {label}
-            {sublabel && (
-              <span className="text-ink/40 mx-1.5">·</span>
-            )}
-            {sublabel && (
-              <span className="text-ink/50">{sublabel}</span>
-            )}
+            {sublabel && <span className="text-ink/40 mx-1.5">·</span>}
+            {sublabel && <span className="text-ink/50">{sublabel}</span>}
           </span>
         )}
       </div>
 
       {/* Right side: Voice badge or action */}
       <div className="flex items-center gap-2 flex-shrink-0">
-        {voiceScore !== undefined && voiceScore > 0 && (
-          <VoiceBadgeWithHours score={voiceScore} />
-        )}
+        {voiceScore !== undefined && voiceScore > 0 && <VoiceBadgeWithHours score={voiceScore} />}
         {action}
       </div>
     </div>
@@ -128,11 +124,7 @@ interface CardBodyProps {
 }
 
 export function CardBody({ children, className = '', compact = false }: CardBodyProps) {
-  return (
-    <div className={`${compact ? 'px-4 py-2' : 'px-5 py-3'} ${className}`}>
-      {children}
-    </div>
-  )
+  return <div className={`${compact ? 'px-4 py-2' : 'px-5 py-3'} ${className}`}>{children}</div>
 }
 
 // ============================================================================
@@ -147,11 +139,13 @@ interface CardFooterProps {
 
 export function CardFooter({ children, className = '', compact = false }: CardFooterProps) {
   return (
-    <div className={`
+    <div
+      className={`
       flex items-center gap-4
       ${compact ? 'px-4 pt-2 pb-3' : 'px-5 pt-2 pb-4'}
       ${className}
-    `}>
+    `}
+    >
       {children}
     </div>
   )
@@ -162,16 +156,18 @@ export function CardFooter({ children, className = '', compact = false }: CardFo
 // ============================================================================
 
 /** Pearl orb indicator - for wisdom content */
-export function PearlOrb({ variant = 'personal' }: { variant?: 'personal' | 'community' | 'collected' }) {
+export function PearlOrb({
+  variant = 'personal',
+}: {
+  variant?: 'personal' | 'community' | 'collected'
+}) {
   const styles = {
     personal: 'bg-gradient-to-br from-cream-warm to-cream-deep shadow-sm',
     community: 'bg-gradient-to-br from-white/80 to-cream-warm shadow-sm ring-1 ring-white/20',
     collected: 'bg-gradient-to-br from-[#D8D4CF] to-[#B8B4AF] shadow-sm',
   }
 
-  return (
-    <div className={`w-5 h-5 rounded-full ${styles[variant]}`} />
-  )
+  return <div className={`w-5 h-5 rounded-full ${styles[variant]}`} />
 }
 
 /** Accent bar indicator - for insights and meditations */
@@ -221,10 +217,7 @@ export function CardEngagement({
           }}
           className={`
             flex items-center gap-1.5 text-sm transition-colors
-            ${hasVoted
-              ? 'text-accent font-medium'
-              : 'text-ink-soft hover:text-accent'
-            }
+            ${hasVoted ? 'text-accent font-medium' : 'text-ink-soft hover:text-accent'}
           `}
           aria-label={hasVoted ? 'Remove upvote' : 'Upvote'}
           aria-pressed={hasVoted}
@@ -235,12 +228,7 @@ export function CardEngagement({
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 15l7-7 7 7"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
           </svg>
           <span>{upvotes}</span>
         </button>
@@ -255,10 +243,7 @@ export function CardEngagement({
           }}
           className={`
             flex items-center gap-1.5 text-sm transition-colors
-            ${hasSaved
-              ? 'text-accent font-medium'
-              : 'text-ink-soft hover:text-accent'
-            }
+            ${hasSaved ? 'text-accent font-medium' : 'text-ink-soft hover:text-accent'}
           `}
           aria-label={hasSaved ? 'Unsave' : 'Save'}
           aria-pressed={hasSaved}
@@ -311,28 +296,36 @@ export function CardEngagement({
 // ============================================================================
 
 /** Primary text - for quotes, titles, insights */
-export function CardTitle({ children, className = '' }: { children: ReactNode, className?: string }) {
-  return (
-    <p className={`font-serif text-ink text-base leading-relaxed ${className}`}>
-      {children}
-    </p>
-  )
+export function CardTitle({
+  children,
+  className = '',
+}: {
+  children: ReactNode
+  className?: string
+}) {
+  return <p className={`font-serif text-ink text-base leading-relaxed ${className}`}>{children}</p>
 }
 
 /** Secondary text - for taglines, descriptions */
-export function CardDescription({ children, className = '' }: { children: ReactNode, className?: string }) {
-  return (
-    <p className={`text-sm text-ink-soft italic line-clamp-2 mt-1 ${className}`}>
-      {children}
-    </p>
-  )
+export function CardDescription({
+  children,
+  className = '',
+}: {
+  children: ReactNode
+  className?: string
+}) {
+  return <p className={`text-sm text-ink-soft italic line-clamp-2 mt-1 ${className}`}>{children}</p>
 }
 
 /** Metadata line - for technique, duration, etc. */
-export function CardMeta({ children, className = '' }: { children: ReactNode, className?: string }) {
+export function CardMeta({
+  children,
+  className = '',
+}: {
+  children: ReactNode
+  className?: string
+}) {
   return (
-    <div className={`flex items-center gap-2 text-xs text-ink-soft ${className}`}>
-      {children}
-    </div>
+    <div className={`flex items-center gap-2 text-xs text-ink-soft ${className}`}>{children}</div>
   )
 }

@@ -32,7 +32,7 @@ export function CommitmentCard({ stats, totalSessions }: CommitmentCardProps) {
             haptic.light()
             navigateToJourneyPlanning()
           }}
-          className="w-full text-left bg-card/90 backdrop-blur-md border border-ink/5 shadow-sm
+          className="w-full text-left bg-card/90 backdrop-blur-md shadow-sm
             rounded-xl p-5 hover:bg-card/95 hover:shadow-md transition-all active:scale-[0.99] touch-manipulation"
         >
           <div className="flex items-center gap-4">

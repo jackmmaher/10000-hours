@@ -2,8 +2,8 @@
  * Hermès-Inspired Neutral Theme QA Tests
  *
  * Comprehensive verification that all theme tokens match the design spec:
- * - NEUTRAL_LIGHT: Warm cream (#F5F5F0), Hermès orange (#E35205)
- * - NEUTRAL_DARK: Warm charcoal (#1C1917), boosted orange (#EA580C)
+ * - NEUTRAL_LIGHT: Warm cream (#F6F2EC), Hermès orange (#EA6512) - Figma exact
+ * - NEUTRAL_DARK: Warm charcoal (#1C1917), boosted orange (#F07020)
  */
 
 import { describe, it, expect } from 'vitest'
@@ -135,17 +135,17 @@ describe('Token Existence', () => {
 // ============================================================================
 
 describe('NEUTRAL_LIGHT Values', () => {
-  describe('Backgrounds - Warm Cream', () => {
-    it('bgBase is warm cream #F5F5F0', () => {
-      expect(NEUTRAL_LIGHT.bgBase).toBe('#F5F5F0')
+  describe('Backgrounds - Warm Cream (Figma exact)', () => {
+    it('bgBase is warm cream #F6F2EC (Figma exact)', () => {
+      expect(NEUTRAL_LIGHT.bgBase).toBe('#F6F2EC')
     })
 
     it('bgElevated is pure white #FFFFFF', () => {
       expect(NEUTRAL_LIGHT.bgElevated).toBe('#FFFFFF')
     })
 
-    it('bgDeep is deeper cream #EDEBE5', () => {
-      expect(NEUTRAL_LIGHT.bgDeep).toBe('#EDEBE5')
+    it('bgDeep is deeper cream #EDE9E3', () => {
+      expect(NEUTRAL_LIGHT.bgDeep).toBe('#EDE9E3')
     })
 
     it('bgOverlay uses warm dark rgba', () => {
@@ -171,21 +171,21 @@ describe('NEUTRAL_LIGHT Values', () => {
     })
   })
 
-  describe('Accent - Hermès Orange', () => {
-    it('accent is Hermès orange #E35205', () => {
-      expect(NEUTRAL_LIGHT.accent).toBe('#E35205')
+  describe('Accent - Hermès Orange (Figma exact)', () => {
+    it('accent is Hermès orange #EA6512 (Figma exact)', () => {
+      expect(NEUTRAL_LIGHT.accent).toBe('#EA6512')
     })
 
-    it('accentHover is darker orange #C2410C', () => {
-      expect(NEUTRAL_LIGHT.accentHover).toBe('#C2410C')
+    it('accentHover is darker orange #D55A0F', () => {
+      expect(NEUTRAL_LIGHT.accentHover).toBe('#D55A0F')
     })
 
-    it('accentMuted uses orange base', () => {
-      expect(NEUTRAL_LIGHT.accentMuted).toContain('227, 82, 5')
+    it('accentMuted uses orange base (234, 101, 18)', () => {
+      expect(NEUTRAL_LIGHT.accentMuted).toContain('234, 101, 18')
     })
 
-    it('accentGlow uses orange base', () => {
-      expect(NEUTRAL_LIGHT.accentGlow).toContain('227, 82, 5')
+    it('accentGlow uses orange base (234, 101, 18)', () => {
+      expect(NEUTRAL_LIGHT.accentGlow).toContain('234, 101, 18')
     })
   })
 
@@ -194,22 +194,22 @@ describe('NEUTRAL_LIGHT Values', () => {
       expect(NEUTRAL_LIGHT.orbCore).toBe('#FFFFFF')
     })
 
-    it('orbGlow uses Hermès orange', () => {
-      expect(NEUTRAL_LIGHT.orbGlow).toContain('227, 82, 5')
+    it('orbGlow uses Hermès orange (234, 101, 18)', () => {
+      expect(NEUTRAL_LIGHT.orbGlow).toContain('234, 101, 18')
     })
 
-    it('orbAtmosphere uses Hermès orange', () => {
-      expect(NEUTRAL_LIGHT.orbAtmosphere).toContain('227, 82, 5')
+    it('orbAtmosphere uses Hermès orange (234, 101, 18)', () => {
+      expect(NEUTRAL_LIGHT.orbAtmosphere).toContain('234, 101, 18')
     })
   })
 
   describe('Stones - Orange for Planned', () => {
-    it('stonePlanned uses orange base', () => {
-      expect(NEUTRAL_LIGHT.stonePlanned).toContain('227, 82, 5')
+    it('stonePlanned uses orange base (234, 101, 18)', () => {
+      expect(NEUTRAL_LIGHT.stonePlanned).toContain('234, 101, 18')
     })
 
-    it('stonePlannedBorder uses orange base', () => {
-      expect(NEUTRAL_LIGHT.stonePlannedBorder).toContain('227, 82, 5')
+    it('stonePlannedBorder uses orange base (234, 101, 18)', () => {
+      expect(NEUTRAL_LIGHT.stonePlannedBorder).toContain('234, 101, 18')
     })
 
     it('stoneCompleted is neutral gray', () => {
@@ -217,61 +217,89 @@ describe('NEUTRAL_LIGHT Values', () => {
     })
   })
 
+  describe('Cards - Borderless Design', () => {
+    it('cardBg is white', () => {
+      expect(NEUTRAL_LIGHT.cardBg).toBe('#FFFFFF')
+    })
+
+    it('cardBorder is transparent (borderless design)', () => {
+      expect(NEUTRAL_LIGHT.cardBorder).toBe('transparent')
+    })
+
+    it('cardShadow provides haptic depth', () => {
+      expect(NEUTRAL_LIGHT.cardShadow).toContain('rgba')
+    })
+  })
+
+  describe('Borders - Transparent (Borderless Design)', () => {
+    it('border is transparent', () => {
+      expect(NEUTRAL_LIGHT.border).toBe('transparent')
+    })
+
+    it('borderSubtle is transparent', () => {
+      expect(NEUTRAL_LIGHT.borderSubtle).toBe('transparent')
+    })
+
+    it('divider is very subtle for minimal separation', () => {
+      expect(NEUTRAL_LIGHT.divider).toContain('rgba')
+    })
+  })
+
   describe('Calendar - Orange Intensity Gradient', () => {
     it('calendarIntensity1 uses orange at 15%', () => {
-      expect(NEUTRAL_LIGHT.calendarIntensity1).toBe('rgba(227, 82, 5, 0.15)')
+      expect(NEUTRAL_LIGHT.calendarIntensity1).toBe('rgba(234, 101, 18, 0.15)')
     })
 
     it('calendarIntensity2 uses orange at 30%', () => {
-      expect(NEUTRAL_LIGHT.calendarIntensity2).toBe('rgba(227, 82, 5, 0.30)')
+      expect(NEUTRAL_LIGHT.calendarIntensity2).toBe('rgba(234, 101, 18, 0.30)')
     })
 
     it('calendarIntensity3 uses orange at 50%', () => {
-      expect(NEUTRAL_LIGHT.calendarIntensity3).toBe('rgba(227, 82, 5, 0.50)')
+      expect(NEUTRAL_LIGHT.calendarIntensity3).toBe('rgba(234, 101, 18, 0.50)')
     })
 
     it('calendarIntensity4 uses orange at 70%', () => {
-      expect(NEUTRAL_LIGHT.calendarIntensity4).toBe('rgba(227, 82, 5, 0.70)')
+      expect(NEUTRAL_LIGHT.calendarIntensity4).toBe('rgba(234, 101, 18, 0.70)')
     })
   })
 
   describe('Progress - Orange Fill', () => {
     it('progressFill is Hermès orange', () => {
-      expect(NEUTRAL_LIGHT.progressFill).toBe('#E35205')
+      expect(NEUTRAL_LIGHT.progressFill).toBe('#EA6512')
     })
 
-    it('progressGlow uses orange', () => {
-      expect(NEUTRAL_LIGHT.progressGlow).toContain('227, 82, 5')
+    it('progressGlow uses orange (234, 101, 18)', () => {
+      expect(NEUTRAL_LIGHT.progressGlow).toContain('234, 101, 18')
     })
   })
 
   describe('Interactive - Orange Primary', () => {
     it('buttonPrimaryBg is Hermès orange', () => {
-      expect(NEUTRAL_LIGHT.buttonPrimaryBg).toBe('#E35205')
+      expect(NEUTRAL_LIGHT.buttonPrimaryBg).toBe('#EA6512')
     })
 
     it('toggleOn is Hermès orange', () => {
-      expect(NEUTRAL_LIGHT.toggleOn).toBe('#E35205')
+      expect(NEUTRAL_LIGHT.toggleOn).toBe('#EA6512')
     })
   })
 
   describe('Navigation - Orange Active', () => {
     it('navActive is Hermès orange', () => {
-      expect(NEUTRAL_LIGHT.navActive).toBe('#E35205')
+      expect(NEUTRAL_LIGHT.navActive).toBe('#EA6512')
     })
 
     it('pullIndicator is Hermès orange', () => {
-      expect(NEUTRAL_LIGHT.pullIndicator).toBe('#E35205')
+      expect(NEUTRAL_LIGHT.pullIndicator).toBe('#EA6512')
     })
   })
 
   describe('Voice Badges - Orange Scale', () => {
     it('voiceHighDot is Hermès orange', () => {
-      expect(NEUTRAL_LIGHT.voiceHighDot).toBe('#E35205')
+      expect(NEUTRAL_LIGHT.voiceHighDot).toBe('#EA6512')
     })
 
-    it('voiceHighBg uses orange base', () => {
-      expect(NEUTRAL_LIGHT.voiceHighBg).toContain('227, 82, 5')
+    it('voiceHighBg uses orange base (234, 101, 18)', () => {
+      expect(NEUTRAL_LIGHT.voiceHighBg).toContain('234, 101, 18')
     })
   })
 
@@ -281,7 +309,7 @@ describe('NEUTRAL_LIGHT Values', () => {
     })
 
     it('seasonalAccent is Hermès orange', () => {
-      expect(NEUTRAL_LIGHT.seasonalAccent).toBe('#E35205')
+      expect(NEUTRAL_LIGHT.seasonalAccent).toBe('#EA6512')
     })
   })
 })
@@ -319,75 +347,103 @@ describe('NEUTRAL_DARK Values', () => {
     })
   })
 
-  describe('Accent - Boosted Orange for Dark', () => {
-    it('accent is boosted orange #EA580C', () => {
-      expect(NEUTRAL_DARK.accent).toBe('#EA580C')
+  describe('Accent - Boosted Orange for Dark Visibility', () => {
+    it('accent is boosted orange #F07020', () => {
+      expect(NEUTRAL_DARK.accent).toBe('#F07020')
     })
 
-    it('accentHover is brighter orange #F97316', () => {
-      expect(NEUTRAL_DARK.accentHover).toBe('#F97316')
+    it('accentHover is brighter orange #F8923C', () => {
+      expect(NEUTRAL_DARK.accentHover).toBe('#F8923C')
     })
 
-    it('accentMuted uses boosted orange base', () => {
-      expect(NEUTRAL_DARK.accentMuted).toContain('234, 88, 12')
+    it('accentMuted uses boosted orange base (240, 112, 32)', () => {
+      expect(NEUTRAL_DARK.accentMuted).toContain('240, 112, 32')
     })
 
-    it('accentGlow uses boosted orange base', () => {
-      expect(NEUTRAL_DARK.accentGlow).toContain('234, 88, 12')
+    it('accentGlow uses boosted orange base (240, 112, 32)', () => {
+      expect(NEUTRAL_DARK.accentGlow).toContain('240, 112, 32')
     })
   })
 
   describe('Orb - Orange Glow in Darkness', () => {
-    it('orbGlow uses boosted orange', () => {
-      expect(NEUTRAL_DARK.orbGlow).toContain('234, 88, 12')
+    it('orbGlow uses boosted orange (240, 112, 32)', () => {
+      expect(NEUTRAL_DARK.orbGlow).toContain('240, 112, 32')
     })
 
-    it('orbAtmosphere uses boosted orange', () => {
-      expect(NEUTRAL_DARK.orbAtmosphere).toContain('234, 88, 12')
+    it('orbAtmosphere uses boosted orange (240, 112, 32)', () => {
+      expect(NEUTRAL_DARK.orbAtmosphere).toContain('240, 112, 32')
     })
   })
 
   describe('Stones - Orange for Planned', () => {
-    it('stonePlanned uses boosted orange', () => {
-      expect(NEUTRAL_DARK.stonePlanned).toContain('234, 88, 12')
+    it('stonePlanned uses boosted orange (240, 112, 32)', () => {
+      expect(NEUTRAL_DARK.stonePlanned).toContain('240, 112, 32')
     })
 
-    it('stonePlannedBorder uses boosted orange', () => {
-      expect(NEUTRAL_DARK.stonePlannedBorder).toContain('234, 88, 12')
+    it('stonePlannedBorder uses boosted orange (240, 112, 32)', () => {
+      expect(NEUTRAL_DARK.stonePlannedBorder).toContain('240, 112, 32')
+    })
+  })
+
+  describe('Cards - Borderless Design', () => {
+    it('cardBg is elevated charcoal', () => {
+      expect(NEUTRAL_DARK.cardBg).toBe('#292524')
+    })
+
+    it('cardBorder is transparent (borderless design)', () => {
+      expect(NEUTRAL_DARK.cardBorder).toBe('transparent')
+    })
+
+    it('cardShadow provides depth in dark mode', () => {
+      expect(NEUTRAL_DARK.cardShadow).toContain('rgba')
+    })
+  })
+
+  describe('Borders - Transparent (Borderless Design)', () => {
+    it('border is transparent', () => {
+      expect(NEUTRAL_DARK.border).toBe('transparent')
+    })
+
+    it('borderSubtle is transparent', () => {
+      expect(NEUTRAL_DARK.borderSubtle).toBe('transparent')
+    })
+
+    it('divider is very subtle for minimal separation', () => {
+      expect(NEUTRAL_DARK.divider).toContain('rgba')
     })
   })
 
   describe('Calendar - Orange Intensity Gradient', () => {
     it('calendarIntensity1 uses boosted orange at 15%', () => {
-      expect(NEUTRAL_DARK.calendarIntensity1).toBe('rgba(234, 88, 12, 0.15)')
+      expect(NEUTRAL_DARK.calendarIntensity1).toBe('rgba(240, 112, 32, 0.15)')
     })
 
     it('calendarIntensity2 uses boosted orange at 30%', () => {
-      expect(NEUTRAL_DARK.calendarIntensity2).toBe('rgba(234, 88, 12, 0.30)')
+      expect(NEUTRAL_DARK.calendarIntensity2).toBe('rgba(240, 112, 32, 0.30)')
     })
 
     it('calendarIntensity3 uses boosted orange at 50%', () => {
-      expect(NEUTRAL_DARK.calendarIntensity3).toBe('rgba(234, 88, 12, 0.50)')
+      expect(NEUTRAL_DARK.calendarIntensity3).toBe('rgba(240, 112, 32, 0.50)')
     })
 
     it('calendarIntensity4 uses boosted orange at 70%', () => {
-      expect(NEUTRAL_DARK.calendarIntensity4).toBe('rgba(234, 88, 12, 0.70)')
+      expect(NEUTRAL_DARK.calendarIntensity4).toBe('rgba(240, 112, 32, 0.70)')
     })
   })
 
   describe('Progress - Boosted Orange Fill', () => {
     it('progressFill is boosted orange', () => {
-      expect(NEUTRAL_DARK.progressFill).toBe('#EA580C')
+      expect(NEUTRAL_DARK.progressFill).toBe('#F07020')
     })
 
-    it('progressGlow uses boosted orange', () => {
-      expect(NEUTRAL_DARK.progressGlow).toContain('234, 88, 12')
+    it('progressGlow uses boosted orange (240, 112, 32)', () => {
+      expect(NEUTRAL_DARK.progressGlow).toContain('240, 112, 32')
     })
   })
 
   describe('Interactive - Boosted Orange Primary', () => {
     it('buttonPrimaryBg is boosted orange', () => {
-      expect(NEUTRAL_DARK.buttonPrimaryBg).toBe('#EA580C')
+      expect(NEUTRAL_DARK.buttonPrimaryBg).toBe('#F07020')
     })
 
     it('buttonPrimaryText is white (not dark)', () => {
@@ -395,37 +451,27 @@ describe('NEUTRAL_DARK Values', () => {
     })
 
     it('toggleOn is boosted orange', () => {
-      expect(NEUTRAL_DARK.toggleOn).toBe('#EA580C')
-    })
-  })
-
-  describe('Borders - Light on Dark', () => {
-    it('border uses white with low opacity', () => {
-      expect(NEUTRAL_DARK.border).toBe('rgba(255, 255, 255, 0.08)')
-    })
-
-    it('borderSubtle uses white with very low opacity', () => {
-      expect(NEUTRAL_DARK.borderSubtle).toBe('rgba(255, 255, 255, 0.04)')
+      expect(NEUTRAL_DARK.toggleOn).toBe('#F07020')
     })
   })
 
   describe('Navigation - Boosted Orange Active', () => {
     it('navActive is boosted orange', () => {
-      expect(NEUTRAL_DARK.navActive).toBe('#EA580C')
+      expect(NEUTRAL_DARK.navActive).toBe('#F07020')
     })
 
     it('pullIndicator is boosted orange', () => {
-      expect(NEUTRAL_DARK.pullIndicator).toBe('#EA580C')
+      expect(NEUTRAL_DARK.pullIndicator).toBe('#F07020')
     })
   })
 
   describe('Voice Badges - Boosted Orange Scale', () => {
     it('voiceHighDot is boosted orange', () => {
-      expect(NEUTRAL_DARK.voiceHighDot).toBe('#EA580C')
+      expect(NEUTRAL_DARK.voiceHighDot).toBe('#F07020')
     })
 
-    it('voiceHighBg uses boosted orange', () => {
-      expect(NEUTRAL_DARK.voiceHighBg).toContain('234, 88, 12')
+    it('voiceHighBg uses boosted orange (240, 112, 32)', () => {
+      expect(NEUTRAL_DARK.voiceHighBg).toContain('240, 112, 32')
     })
   })
 
@@ -435,7 +481,7 @@ describe('NEUTRAL_DARK Values', () => {
     })
 
     it('seasonalAccent is boosted orange', () => {
-      expect(NEUTRAL_DARK.seasonalAccent).toBe('#EA580C')
+      expect(NEUTRAL_DARK.seasonalAccent).toBe('#F07020')
     })
   })
 })
@@ -503,6 +549,20 @@ describe('Color Format Validation', () => {
     })
   })
 
+  describe('NEUTRAL_LIGHT transparent borders are valid', () => {
+    it('cardBorder is transparent', () => {
+      expect(NEUTRAL_LIGHT.cardBorder).toBe('transparent')
+    })
+
+    it('border is transparent', () => {
+      expect(NEUTRAL_LIGHT.border).toBe('transparent')
+    })
+
+    it('borderSubtle is transparent', () => {
+      expect(NEUTRAL_LIGHT.borderSubtle).toBe('transparent')
+    })
+  })
+
   describe('NEUTRAL_LIGHT rgba colors are valid', () => {
     const rgbaTokens: (keyof ThemeTokens)[] = [
       'bgOverlay',
@@ -512,15 +572,12 @@ describe('Color Format Validation', () => {
       'orbAtmosphere',
       'stonePlanned',
       'stonePlannedBorder',
-      'cardBorder',
       'cardShadow',
       'calendarIntensity1',
       'calendarIntensity2',
       'calendarIntensity3',
       'calendarIntensity4',
       'progressGlow',
-      'border',
-      'borderSubtle',
       'divider',
       'shadowColor',
       'pearlShimmer',
@@ -571,8 +628,8 @@ describe('Color Format Validation', () => {
 // ============================================================================
 
 describe('Design System Consistency', () => {
-  describe('Hermès Orange Consistency', () => {
-    it('Light mode uses consistent orange base (227, 82, 5)', () => {
+  describe('Hermès Orange Consistency (Figma exact)', () => {
+    it('Light mode uses consistent orange base (234, 101, 18)', () => {
       const orangeTokens = [
         NEUTRAL_LIGHT.accentMuted,
         NEUTRAL_LIGHT.accentGlow,
@@ -591,11 +648,11 @@ describe('Design System Consistency', () => {
       ]
 
       orangeTokens.forEach((token) => {
-        expect(token).toContain('227, 82, 5')
+        expect(token).toContain('234, 101, 18')
       })
     })
 
-    it('Dark mode uses consistent boosted orange base (234, 88, 12)', () => {
+    it('Dark mode uses consistent boosted orange base (240, 112, 32)', () => {
       const orangeTokens = [
         NEUTRAL_DARK.accentMuted,
         NEUTRAL_DARK.accentGlow,
@@ -614,16 +671,30 @@ describe('Design System Consistency', () => {
       ]
 
       orangeTokens.forEach((token) => {
-        expect(token).toContain('234, 88, 12')
+        expect(token).toContain('240, 112, 32')
       })
+    })
+  })
+
+  describe('Borderless Design', () => {
+    it('Light mode uses transparent borders', () => {
+      expect(NEUTRAL_LIGHT.cardBorder).toBe('transparent')
+      expect(NEUTRAL_LIGHT.border).toBe('transparent')
+      expect(NEUTRAL_LIGHT.borderSubtle).toBe('transparent')
+    })
+
+    it('Dark mode uses transparent borders', () => {
+      expect(NEUTRAL_DARK.cardBorder).toBe('transparent')
+      expect(NEUTRAL_DARK.border).toBe('transparent')
+      expect(NEUTRAL_DARK.borderSubtle).toBe('transparent')
     })
   })
 
   describe('Elevation Direction', () => {
     it('Light mode: elevated is lighter than base', () => {
-      // #FFFFFF (white) is lighter than #F5F5F0 (cream)
+      // #FFFFFF (white) is lighter than #F6F2EC (cream)
       expect(NEUTRAL_LIGHT.bgElevated).toBe('#FFFFFF')
-      expect(NEUTRAL_LIGHT.bgBase).toBe('#F5F5F0')
+      expect(NEUTRAL_LIGHT.bgBase).toBe('#F6F2EC')
     })
 
     it('Dark mode: elevated is lighter than base', () => {
@@ -633,8 +704,8 @@ describe('Design System Consistency', () => {
     })
 
     it('Light mode: deep is darker than base', () => {
-      // #EDEBE5 is darker than #F5F5F0
-      expect(NEUTRAL_LIGHT.bgDeep).toBe('#EDEBE5')
+      // #EDE9E3 is darker than #F6F2EC
+      expect(NEUTRAL_LIGHT.bgDeep).toBe('#EDE9E3')
     })
 
     it('Dark mode: deep is darker than base', () => {
@@ -725,15 +796,33 @@ describe('Regression: No Slate Colors Remain', () => {
     })
   })
 
-  describe('Accent colors are orange, not slate', () => {
-    it('NEUTRAL_LIGHT accent is orange, not slate', () => {
+  describe('Accent colors are Figma-exact orange, not slate', () => {
+    it('NEUTRAL_LIGHT accent is Figma orange #EA6512', () => {
       expect(slateColors).not.toContain(NEUTRAL_LIGHT.accent)
-      expect(NEUTRAL_LIGHT.accent).toBe('#E35205')
+      expect(NEUTRAL_LIGHT.accent).toBe('#EA6512')
     })
 
-    it('NEUTRAL_DARK accent is orange, not slate', () => {
+    it('NEUTRAL_DARK accent is boosted orange #F07020', () => {
       expect(slateColors).not.toContain(NEUTRAL_DARK.accent)
-      expect(NEUTRAL_DARK.accent).toBe('#EA580C')
+      expect(NEUTRAL_DARK.accent).toBe('#F07020')
+    })
+  })
+})
+
+// ============================================================================
+// GLASSMORPHISM SUPPORT TESTS
+// ============================================================================
+
+describe('Glassmorphism Support', () => {
+  describe('Semi-transparent backgrounds for blur effect', () => {
+    it('cardShadow provides depth without border', () => {
+      expect(NEUTRAL_LIGHT.cardShadow).toBeTruthy()
+      expect(NEUTRAL_DARK.cardShadow).toBeTruthy()
+    })
+
+    it('navBg uses semi-transparent for blur-through', () => {
+      expect(NEUTRAL_LIGHT.navBg).toContain('rgba')
+      expect(NEUTRAL_DARK.navBg).toContain('rgba')
     })
   })
 })
