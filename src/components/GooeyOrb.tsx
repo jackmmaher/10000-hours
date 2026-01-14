@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { springs } from '../lib/motion'
 
@@ -7,12 +6,13 @@ import { springs } from '../lib/motion'
  *
  * Uses SVG gooey filter to create a bioluminescent, living organism effect.
  * Three overlapping circles merge and morph like a lava lamp.
+ * Fixed size in all phases (200x200) for visual consistency.
  *
- * Accepts the new 4-phase timer system:
+ * Phase behavior:
  * - resting:  16s box breathing cycle, slow morphing
- * - pending:  waiting for breath alignment (visually same as resting)
+ * - pending:  waiting for breath alignment (subtle opacity feedback)
  * - active:   faster, more energetic morphing
- * - settling: fading out (visually transitioning back to resting)
+ * - settling: transitioning back to resting
  */
 
 type OrbPhase = 'resting' | 'pending' | 'active' | 'settling'
@@ -30,13 +30,10 @@ export function GooeyOrb({ phase, className = '' }: GooeyOrbProps) {
   // Transitioning states get subtle visual feedback
   const isTransitioning = phase === 'pending' || phase === 'settling'
 
-  // Size varies by phase - expands when active, contracts when resting
-  const { width, height, orbSize } = useMemo(() => {
-    if (isActive) {
-      return { width: 200, height: 200, orbSize: 80 }
-    }
-    return { width: 140, height: 140, orbSize: 50 }
-  }, [isActive])
+  // Fixed size - same in all phases (using the larger, more appealing size)
+  const width = 200
+  const height = 200
+  const orbSize = 80
 
   // Subtle opacity during transitions to acknowledge user input
   // Full opacity when resting or active, slightly reduced when waiting for breath
