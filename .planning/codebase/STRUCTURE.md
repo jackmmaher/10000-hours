@@ -1,173 +1,203 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-01-10
+**Analysis Date:** 2026-01-14
 
 ## Directory Layout
 
 ```
 10000-hours/
-├── src/
-│   ├── components/       # React components
-│   │   ├── Explore.tsx          # Explore tab - main discovery feed
-│   │   ├── SessionCard.tsx      # Meditation card component
-│   │   ├── SessionDetailModal.tsx # Full meditation details + adopt
-│   │   ├── Card.tsx             # Base card with glassmorphism
-│   │   ├── Journey.tsx          # Journey tab - saved/planned
-│   │   ├── JourneySavedContent.tsx # Collected meditations
-│   │   ├── Timer.tsx            # Timer tab - meditation execution
-│   │   └── ...                  # Other components
-│   ├── data/
-│   │   ├── sessions.json        # 110 seed meditation templates
-│   │   └── pearls.json          # Seed wisdom pearls
-│   ├── lib/
-│   │   ├── db.ts                # IndexedDB schemas & operations
-│   │   ├── recommendations.ts   # Recommendation engine
-│   │   ├── voice.ts             # Voice score algorithm
-│   │   ├── types.ts             # Shared TypeScript types
-│   │   ├── pearls.ts            # Pearl API operations
-│   │   └── templates.ts         # Template API operations
-│   └── App.tsx
-├── .planning/
-│   └── codebase/                # Codebase documentation
-├── supabase/                    # Database migrations
-└── public/                      # Static assets
+├── .planning/              # Planning and codebase documentation
+│   └── codebase/          # This documentation
+├── public/                 # Static assets
+├── src/                    # Application source
+│   ├── components/        # React components
+│   │   ├── canvas/       # Canvas rendering system
+│   │   │   └── renderers/# Individual effect renderers
+│   │   ├── Explore/      # Explore page components
+│   │   ├── Journey/      # Journey page components
+│   │   └── MeditationPlanner/
+│   ├── hooks/             # React hooks
+│   │   └── __tests__/    # Hook tests
+│   ├── lib/               # Core business logic
+│   │   ├── __tests__/    # Library tests
+│   │   ├── db/           # Database operations
+│   │   ├── insights/     # Insight calculation
+│   │   ├── noise/        # Noise generation
+│   │   └── theme/        # Theme token system
+│   │       └── tokens/   # Season/time token files
+│   ├── services/          # External service integrations
+│   ├── stores/            # Zustand state stores
+│   │   └── __tests__/    # Store tests
+│   └── test/              # Test setup
+├── package.json           # Dependencies and scripts
+├── tsconfig.json          # TypeScript config
+├── vite.config.ts         # Vite build config
+└── tailwind.config.js     # Tailwind CSS config
 ```
 
-## Explore Tab Components
+## Directory Purposes
 
-**Main Components:**
+**src/components/**
 
-| File                                    | Purpose                                        |
-| --------------------------------------- | ---------------------------------------------- |
-| `src/components/Explore.tsx`            | Main discovery feed with mixed pearls/sessions |
-| `src/components/SessionCard.tsx`        | Individual meditation card with vote/save      |
-| `src/components/SessionDetailModal.tsx` | Full details modal with adopt flow             |
-| `src/components/Card.tsx`               | Base card system (CardHeader, CardBody, etc.)  |
-| `src/components/SuggestedForYou.tsx`    | Weekly personalized recommendation             |
+- Purpose: React UI components
+- Contains: `.tsx` files, one component per file
+- Key files: `LivingTheme.tsx`, `LivingCanvas.tsx`, `Timer.tsx`, `App.tsx`
+- Subdirectories: Feature-specific components (`canvas/`, `Explore/`, `Journey/`)
 
-**Explore Flow:**
+**src/components/canvas/**
 
-```
-Explore.tsx
-    ├─→ Loads sessions from Supabase or JSON fallback
-    ├─→ Filters by intent (anxiety, stress, sleep, etc.)
-    ├─→ Renders SessionCard for each session
-    └─→ SessionDetailModal opens on click
-        ├─→ Shows full guidance notes
-        ├─→ Shows "Recommended after X+ hours" badge
-        └─→ Adopt button → adds to Journey
-```
+- Purpose: Canvas-based visual effects system
+- Contains: Particle types, constants, render functions
+- Key files: `types.ts`, `constants.ts`, `particles.ts`
+- Subdirectories: `renderers/` (individual effect files)
+
+**src/components/canvas/renderers/**
+
+- Purpose: Individual canvas effect implementations
+- Contains: One file per effect type
+- Key files: `sun.ts`, `moon.ts`, `star.ts`, `snow.ts`, `leaf.ts`, `firefly.ts`, `mist.ts`, `aurora.ts`, `shootingStars.ts`
+
+**src/lib/theme/**
+
+- Purpose: Theme token system (colors, interpolation, CSS)
+- Contains: Type definitions, calculation logic, token sets
+- Key files: `types.ts`, `calculation.ts`, `interpolation.ts`, `cssProperties.ts`
+- Subdirectories: `tokens/` (season/time specific colors)
+
+**src/lib/theme/tokens/**
+
+- Purpose: Theme color token definitions
+- Contains: One file per season + neutral themes
+- Key files: `winter.ts`, `spring.ts`, `summer.ts`, `autumn.ts`, `neutral.ts`, `index.ts`
+
+**src/lib/**
+
+- Purpose: Core business logic and utilities
+- Contains: Non-React code, calculations, utilities
+- Key files: `livingTheme.ts`, `themeEngine.ts`, `solarPosition.ts`, `db.ts`
+
+**src/hooks/**
+
+- Purpose: Custom React hooks
+- Contains: Reusable hook logic
+- Key files: `useTheme.ts`, `useTimer.ts`, `useVoice.ts`
+
+**src/stores/**
+
+- Purpose: Zustand state management
+- Contains: Global state stores
+- Key files: `useSettingsStore.ts`, `useSessionStore.ts`, `useNavigationStore.ts`, `useAuthStore.ts`
+
+**src/lib/db/**
+
+- Purpose: Database operations (Dexie/IndexedDB)
+- Contains: CRUD operations, schema, types
+- Key files: `schema.ts`, `types.ts`, `sessions.ts`, `settings.ts`
 
 ## Key File Locations
 
-**Meditation Data:**
+**Entry Points:**
 
-- `src/data/sessions.json` - 110 meditation templates with `recommended_after_hours`
-- `src/lib/types.ts` - SessionTemplate interface definition
+- `src/main.tsx` - React app entry point
+- `src/App.tsx` - Root component
 
-**Experience Filtering:**
+**Theme System Core:**
 
-- `src/lib/recommendations.ts` - `scoreSession()` filters by hours
-- `src/components/SessionDetailModal.tsx` - Displays hours badge
+- `src/lib/themeEngine.ts` - Theme barrel export
+- `src/lib/livingTheme.ts` - Living theme state calculation
+- `src/lib/solarPosition.ts` - Solar/lunar position math
+- `src/hooks/useTheme.ts` - React theme hook
 
-**Journey Tab Components:**
+**Theme Components:**
 
-| File                                      | Purpose                                  |
-| ----------------------------------------- | ---------------------------------------- |
-| `src/components/Journey.tsx`              | Barrel export (re-exports from Journey/) |
-| `src/components/Journey/index.tsx`        | Main Journey container with state        |
-| `src/components/Journey/TabButton.tsx`    | Sub-tab button component                 |
-| `src/components/Journey/wrappers.tsx`     | Modal wrapper components                 |
-| `src/components/Journey/utils.ts`         | Date/time utilities                      |
-| `src/components/NextSessionSpotlight.tsx` | Hero CTA (60vh) for next session         |
-| `src/components/Calendar.tsx`             | Monthly calendar with plan indicators    |
-| `src/components/WeekStones.tsx`           | Week visualization row                   |
-| `src/components/JourneySavedContent.tsx`  | "Meditations" sub-tab content            |
-| `src/components/JourneyMyPearls.tsx`      | "Pearls" sub-tab content                 |
-| `src/components/InsightStream.tsx`        | "Insights" sub-tab content               |
+- `src/components/LivingTheme.tsx` - Theme provider
+- `src/components/LivingCanvas.tsx` - Canvas effects
 
-**MeditationPlanner Components:**
+**Configuration:**
 
-| File                                                    | Purpose                                            |
-| ------------------------------------------------------- | -------------------------------------------------- |
-| `src/components/MeditationPlanner.tsx`                  | Barrel export (re-exports from MeditationPlanner/) |
-| `src/components/MeditationPlanner/index.tsx`            | Main planning modal                                |
-| `src/components/MeditationPlanner/types.ts`             | DayItem, SessionEdits types                        |
-| `src/components/MeditationPlanner/usePlannerState.ts`   | State management hook                              |
-| `src/components/MeditationPlanner/DayItemsCarousel.tsx` | Swipeable session/plan cards                       |
-| `src/components/MeditationPlanner/PearlPicker.tsx`      | Pearl attachment modal                             |
-| `src/components/MeditationPlanner/RepeatPicker.tsx`     | Recurring session picker                           |
-| `src/components/MeditationPlanner/utils.ts`             | Date formatting utilities                          |
+- `tsconfig.json` - TypeScript, `@/*` path alias
+- `vite.config.ts` - Build, PWA manifest
+- `tailwind.config.js` - Tailwind CSS
 
-**Pearl Components:**
+**Testing:**
 
-| File                             | Purpose                      |
-| -------------------------------- | ---------------------------- |
-| `src/components/SavedPearls.tsx` | Standalone saved pearls view |
-| `src/components/SharePearl.tsx`  | Share insight as pearl flow  |
-| `src/components/PearlsFeed.tsx`  | Community pearls feed        |
-| `src/lib/pearls.ts`              | Pearl CRUD via Supabase      |
-
-**Journey Integration:**
-
-- `src/lib/db.ts` - SavedTemplate, PlannedSession, Insight schemas
-- `src/lib/db/index.ts` - Modular database operations
-
-**Living Theme System:**
-
-- `src/components/LivingTheme.tsx` - Main context provider + DOM effects
-- `src/components/AmbientAtmosphere.tsx` - Gen 2 particle system
-- `src/lib/themeEngine.ts` - Core calculations (90k bytes)
-- `src/lib/solarPosition.ts` - Sun altitude calculations
-- `src/lib/livingTheme.ts` - Theme state helpers
-- `theme-comparison.html` - Standalone Level 1 vs Level 2 testing
-
-**State Management:**
-
-- `src/stores/useAuthStore.ts` - Authentication state
-- `src/stores/useSessionStore.ts` - Meditation session state
-- `src/stores/useSettingsStore.ts` - User preferences
-- `src/stores/useNavigationStore.ts` - Tab navigation
-
-**Hooks:**
-
-- `src/hooks/useTheme.ts` - Theme consumption hook
-- `src/hooks/useVoice.ts` - Voice profile calculations
-- `src/hooks/useTimer.ts` - Meditation timer logic
-- `src/hooks/useSwipe.ts` - Touch gestures
+- `src/test/setup.ts` - Vitest setup
+- `src/lib/__tests__/` - Library tests
+- `src/components/__tests__/` - Component tests
 
 ## Naming Conventions
 
 **Files:**
 
-- PascalCase.tsx for React components
-- camelCase.ts for utilities/services
-- kebab-case.json for data files
+- `PascalCase.tsx` - React components
+- `camelCase.ts` - Utilities, hooks, stores
+- `*.test.ts` - Test files (co-located in `__tests__/`)
 
 **Directories:**
 
-- lowercase for all directories
-- Singular names (lib, data, not libs, datas)
+- `PascalCase/` - Component feature directories
+- `camelCase/` - Utility directories
+- `__tests__/` - Test directories
+
+**Special Patterns:**
+
+- `use*.ts` - React hooks (e.g., `useTheme.ts`)
+- `index.ts` - Barrel exports
+- `types.ts` - Type definitions
 
 ## Where to Add New Code
 
-**New Meditation Feature:**
+**New Component:**
 
-- Component: `src/components/`
-- Business logic: `src/lib/`
-- Data schema: `src/lib/db.ts`
+- Implementation: `src/components/ComponentName.tsx`
+- Tests: `src/components/__tests__/ComponentName.test.tsx`
+- Add to barrel: Update relevant `index.ts`
 
-**New Explore Filter:**
+**New Theme Token Set:**
 
-- Filter options: `src/components/Explore.tsx` (INTENT_OPTIONS array)
-- Filter logic: Same file, `filteredSessions` computation
+- Token file: `src/lib/theme/tokens/seasonname.ts`
+- Export: Add to `src/lib/theme/tokens/index.ts`
+- Register: Add to `SEASON_THEMES` in tokens index
 
-**New Card Type:**
+**New Canvas Effect:**
 
-- Create: `src/components/NewCard.tsx`
-- Use base: Import from `src/components/Card.tsx`
+- Renderer: `src/components/canvas/renderers/effectname.ts`
+- Particle type: Add to `src/components/canvas/types.ts`
+- Factory: Add to `src/components/canvas/particles.ts`
+- Export: Add to `src/components/canvas/renderers/index.ts`
+- Integration: Add to render loop in `LivingCanvas.tsx`
+
+**New Hook:**
+
+- Implementation: `src/hooks/useHookName.ts`
+- Tests: `src/hooks/__tests__/useHookName.test.ts`
+
+**New Store:**
+
+- Implementation: `src/stores/useStoreName.ts`
+- Tests: `src/stores/__tests__/useStoreName.test.ts`
+
+**New Database Table:**
+
+- Schema: Add to `src/lib/db/schema.ts`
+- Types: Add to `src/lib/db/types.ts`
+- Operations: Create `src/lib/db/tablename.ts`
+
+## Special Directories
+
+**src/lib/noise/**
+
+- Purpose: SimplexNoise implementation for particle effects
+- Source: Custom implementation (no external dependency)
+- Committed: Yes
+
+**.planning/**
+
+- Purpose: Project planning and documentation
+- Source: Claude-generated during development
+- Committed: Yes
 
 ---
 
-_Structure analysis: 2026-01-10 (updated 2026-01-13)_
-_Focus: Explore tab, meditation cards, experience-based recommendations, Journey tab_
+_Structure analysis: 2026-01-14_
+_Update when directory structure changes_

@@ -1,309 +1,143 @@
-# Concerns
+# Codebase Concerns
 
-**Analysis Date:** 2026-01-10 (updated 2026-01-13)
+**Analysis Date:** 2026-01-14
 
-## Journey Tab Critical Issues
+## Tech Debt
 
-### Modal Cards Don't Handle Multi-Daypart States
+**Inconsistent Path Aliases:**
 
-**Files:**
+- Issue: Both `@/lib/...` and `../` relative imports used inconsistently
+- Files: Throughout `src/` - mixed usage in `src/components/LivingTheme.tsx`, `src/hooks/useTheme.ts`
+- Why: Historical incremental adoption
+- Impact: Harder to move files, inconsistent import style
+- Fix approach: Standardize on `@/` imports via ESLint rule
 
-- `src/components/MeditationPlanner/usePlannerState.ts` (lines 92-116)
-- `src/components/MeditationPlanner/DayItemsCarousel.tsx`
+**Dual Theme Hook Systems:**
 
-**Issue:** The `dayItems` array combines past sessions + future plans, but the UI doesn't properly distinguish or handle the transition between "reviewing past session" mode and "planning future session" mode.
+- Issue: Both `useTheme` hook and `LivingTheme` context provide theme state
+- Files: `src/hooks/useTheme.ts`, `src/components/LivingTheme.tsx`
+- Why: `useTheme` was original system, `LivingTheme` added for full living theme support
+- Impact: Some components use hook, others use context; potential state mismatch
+- Fix approach: Migrate all consumers to `useLivingTheme()` context, deprecate `useTheme`
 
-**Root Cause:**
+**Theme Engine Barrel Export:**
 
-```typescript
-// usePlannerState.ts line 127
-const isSessionMode = currentItem?.type === 'session'
-```
+- Issue: `src/lib/themeEngine.ts` is just re-exports from `src/lib/theme/`
+- Why: Backward compatibility during refactor
+- Impact: Extra indirection, confusing import sources
+- Fix approach: Update imports to use `src/lib/theme` directly, remove barrel
 
-This boolean is used to toggle between editing session metadata vs planning, but:
+## Known Bugs
 
-1. A day can have BOTH past sessions AND upcoming plans
-2. Swiping between them doesn't reset the form state appropriately
-3. The form fields (pose, discipline, notes) use conditional routing that can leak state
-
-**Impact:**
-
-- User confusion when switching between past/future items
-- Form data from past session may bleed into plan creation
-- "Add New Plan" button behavior unclear when sessions exist
-
-**Fix Approach:**
-
-- Add explicit "viewing" vs "editing" state separate from `isSessionMode`
-- Clear form state when switching between items of different types
-- Visual differentiation between session review cards and plan cards
-
-### Planning Events Don't Propagate to CTA
-
-**Files:**
-
-- `src/components/Journey/index.tsx` - state owner
-- `src/components/NextSessionSpotlight.tsx` - CTA consumer
-- `src/components/MeditationPlanner/index.tsx` - plan creation
-
-**Issue:** When user creates a plan in MeditationPlanner, the NextSessionSpotlight CTA doesn't update until manual refresh or remount.
-
-**Root Cause:**
-
-```
-MeditationPlanner.handleSave()
-  └── calls onSave() callback
-      └── Journey.refreshAllPlanData()
-          └── Should update nextPlannedSession state
-              └── BUT: async timing or key-based refresh may not trigger re-render
-```
-
-**Impact:**
-
-- User plans a session but CTA still shows "No session planned"
-- Confusing UX - seems like plan wasn't saved
-
-**Fix Approach:**
-
-- Verify `refreshAllPlanData()` in `Journey/index.tsx` properly re-fetches `getNextPlannedSession()`
-- Ensure `nextPlannedSession` state triggers NextSessionSpotlight re-render
-- Consider optimistic update in CTA before async refresh completes
-
-### Planning Doesn't Propagate to Meditations Tab
-
-**Files:**
-
-- `src/components/Journey/index.tsx` - manages sub-tabs
-- `src/components/JourneySavedContent.tsx` - meditations tab
-
-**Issue:** Creating a plan doesn't update the "Meditations this week" or "Upcoming meditations" sections in the sub-tabs.
-
-**Root Cause:**
-
-- JourneySavedContent fetches its own data independently
-- No shared state refresh mechanism between planner and sub-tab content
-- `plansRefreshKey` prop may not trigger reload in all child components
-
-**Impact:**
-
-- User creates plan, switches to "Meditations" tab, doesn't see new plan
-- Data inconsistency across Journey tab sections
-
-**Fix Approach:**
-
-- Lift state refresh to Journey/index.tsx level
-- Pass `plansRefreshKey` or refresh callback to JourneySavedContent
-- Or use a shared hook that all components subscribe to
-
-### Pearl Saving Not Persisted to Database
-
-**Files:**
-
-- `src/components/JourneyMyPearls.tsx` - pearl display
-- `src/components/MeditationPlanner/PearlPicker.tsx` - pearl selection
-- `src/lib/pearls.ts` - Supabase operations
-
-**Issue:** The "Save a Pearl" feature (attaching pearls to planned sessions) doesn't persist to the database properly.
-
-**Root Cause Analysis:**
-
-1. `PearlPicker.onSelect()` calls `usePlannerState.handlePearlSelect()`
-2. `handlePearlSelect()` sets `attachedPearl` state (line 476-481)
-3. `handleSave()` passes `attachedPearlId: attachedPearl?.id` to `addPlannedSession()` or `updatePlannedSession()`
-4. **POTENTIAL ISSUE:** The pearl attachment is saved to IndexedDB (`PlannedSession.attachedPearlId`), but:
-   - No verification the pearl ID is valid
-   - No Supabase sync of the attachment relationship
-   - `attachedPearlId` field may not be indexed or queried
-
-**Additional Issue in JourneyMyPearls.tsx:**
-
-```typescript
-// Line 31-47: loadPearls() fetches from Supabase
-const { getMyPearls, getSavedPearls } = await import('../lib/pearls')
-```
-
-This only loads pearls from Supabase - doesn't show pearls created locally without sync.
-
-**Impact:**
-
-- User attaches pearl to plan, but relationship not visible elsewhere
-- Pearl-plan associations lost on app reinstall (no cloud sync)
-- "My Pearls" section may miss locally-created pearls
-
-**Fix Approach:**
-
-- Verify `attachedPearlId` is properly saved in IndexedDB PlannedSession
-- Add Supabase sync for pearl-plan relationships
-- Consider storing pearl text inline in plan for offline resilience
-
-### Above-the-Fold UI Component Mess
-
-**Files:**
-
-- `src/components/Journey/index.tsx` (lines 1-200 approx)
-- `src/components/NextSessionSpotlight.tsx`
-- `src/components/WeekStones.tsx`
-
-**Issues Identified:**
-
-1. **Inconsistent State Sources:**
-   - `NextSessionSpotlight` receives `plannedSession` from parent
-   - `WeekStonesRow` computes `weekDays` from `weekPlans + sessions`
-   - `Calendar` has its own internal fetch via `refreshKey`
-   - No single source of truth
-
-2. **Refresh Mechanism Fragility:**
-   - Uses `plansRefreshKey` counter to force re-renders
-   - Some components don't respond to key changes
-   - Race conditions between fetches
-
-3. **Layout Coupling:**
-   - `NextSessionSpotlight` takes 60vh fixed height
-   - Doesn't adapt to content or screen size
-   - Scroll position management hardcoded
-
-**Impact:**
-
-- Data inconsistencies between visible sections
-- Stale data after mutations
-- Layout issues on different devices
-
-**Fix Approach:**
-
-- Centralize plan/session state in Journey/index.tsx with single fetch
-- Pass computed values down (no child fetching)
-- Replace `refreshKey` pattern with proper state management
-- Make spotlight height responsive to content
-
-## Technical Debt
-
-### Large Files
-
-**Theme Engine:**
-
-- `src/lib/themeEngine.ts` - 90,663 bytes (very large)
-- Contains massive color/effect calculations
-- Could be split into smaller modules
-
-**Ambient Atmosphere:**
-
-- `src/components/AmbientAtmosphere.tsx` - 57,462 bytes
-- Gen 2 DOM-based particle system
-- Being evaluated for Canvas upgrade (Level 2)
-
-### Living Theme Performance
-
-**Current State (Level 1):**
-
-- DOM-based CSS animations
-- Limited to ~25 particles before performance issues
-- Each particle is a `<div>` with CSS transforms
-
-**Planned Improvement (Level 2):**
-
-- Canvas-based rendering with requestAnimationFrame
-- Can handle 150+ particles at 60fps
-- Comparison file: `theme-comparison.html`
-
-## Known Issues
-
-### Limited Test Coverage
-
-**Current:**
-
-- Only `src/lib/__tests__/` has tests (4 files)
-- No component tests
-- No E2E tests
-
-**Risk:**
-
-- Regressions in UI changes
-- Theme calculations untested
-- Voice scoring untested
-
-### No TypeScript Strict Null Checks
-
-**Impact:**
-
-- Potential runtime errors from null/undefined
-- Some implicit `any` types
-
-## Missing Features
-
-### No Error Tracking
-
-**Current:**
-
-- Errors logged to console only
-- No production error monitoring
-- `ErrorBoundary.tsx` catches crashes but doesn't report
-
-### No Analytics
-
-**Current:**
-
-- `src/lib/analytics.ts` exists but basic
-- No user behavior tracking
-- No usage metrics
+**None critical identified during analysis.**
 
 ## Security Considerations
 
-### Environment Variables
+**Supabase Anon Key Exposure:**
 
-**Current:**
+- Risk: Anon key is in client bundle (standard for Supabase, but limits are important)
+- Files: `src/lib/supabase.ts` imports from env vars
+- Current mitigation: Supabase RLS policies (should be configured in Supabase dashboard)
+- Recommendations: Verify RLS policies are properly configured for all tables
 
-- `.env.local` stores Supabase credentials
-- `.gitignore` excludes `.env.local`
+**IP Geolocation over HTTP:**
 
-**Good:**
+- Risk: `ip-api.com` call in `src/lib/solarPosition.ts:40` uses HTTP (not HTTPS)
+- Current mitigation: Data is non-sensitive (approximate location), cached in localStorage
+- Recommendations: Consider using HTTPS endpoint or different geolocation service
 
-- Secrets not committed to repo
+## Performance Bottlenecks
 
-### Auth
+**Canvas Animation Always Running:**
 
-**Current:**
+- Problem: Canvas requestAnimationFrame loop runs continuously when LivingTheme is active
+- File: `src/components/LivingCanvas.tsx:274`
+- Measurement: Constant CPU usage (~5-10% on mobile)
+- Cause: Animation needed for particles, but runs even when minimal effects
+- Improvement path: Throttle frame rate when few particles, skip frames when tab not visible (visibility check exists but could be more aggressive)
 
-- Supabase handles auth
-- No custom JWT implementation
+**Theme Recalculation on Settings Change:**
 
-**Good:**
+- Problem: Full theme recalculation when any setting changes
+- File: `src/components/LivingTheme.tsx:115` - `updateTheme` callback
+- Cause: Callback recreated on many dependency changes
+- Improvement path: Memoize theme calculation, only recalculate affected portions
 
-- Using proven auth service
+## Fragile Areas
 
-## Performance Concerns
+**Theme Interpolation:**
 
-### Initial Load
+- File: `src/lib/theme/interpolation.ts`
+- Why fragile: Complex contrast-preserving logic with many token categories
+- Common failures: New tokens added but not included in interpolation
+- Safe modification: Add new tokens to appropriate category (structural vs functional)
+- Test coverage: No direct tests for interpolation
 
-**Bundle Size:**
+**Canvas Particle System:**
 
-- Large theme engine file
-- Could benefit from code splitting
+- File: `src/components/LivingCanvas.tsx`
+- Why fragile: Many interdependent effects, refs for mutable state
+- Common failures: Particles not cleaned up on theme change, memory leaks
+- Safe modification: Ensure `createParticles` called when dependencies change
+- Test coverage: Invariant tests exist but minimal
 
-### Memory
+## Scaling Limits
 
-**IndexedDB:**
+**IndexedDB Storage:**
 
-- No cleanup of old sessions
-- Could accumulate data over time
+- Current capacity: Browser-dependent (typically 50MB-1GB)
+- Limit: Years of session data could accumulate
+- Symptoms at limit: Storage quota exceeded errors
+- Scaling path: Implement data archival/export older sessions
 
-## Documentation Gaps
+## Dependencies at Risk
 
-### Missing Docs
+**framer-motion:**
 
-**Current:**
+- Risk: Large bundle size (~30KB gzipped), currently used minimally
+- Impact: Slower initial load
+- Migration plan: Consider CSS animations for simple cases
 
-- No README in `src/`
-- No API documentation
-- No component storybook
+## Missing Critical Features
 
-### Inline Comments
+**No Error Tracking:**
 
-**Current:**
+- Problem: No external error tracking (Sentry, etc.)
+- Current workaround: ErrorBoundary catches but only logs to console
+- Blocks: Visibility into production errors
+- Implementation complexity: Low (add Sentry SDK)
 
-- Minimal comments
-- Complex algorithms (voice scoring, theme) could use more explanation
+**No CI/CD Pipeline:**
+
+- Problem: No automated testing on PR/push
+- Current workaround: Local testing via Husky pre-commit
+- Blocks: Confidence in deployments
+- Implementation complexity: Low (add GitHub Actions workflow)
+
+## Test Coverage Gaps
+
+**Theme System:**
+
+- What's not tested: `interpolateThemes`, CSS property generation, LivingTheme component
+- Risk: Regressions in theme blending, visual bugs
+- Priority: Medium
+- Difficulty to test: Theme interpolation is pure function, easy to test
+
+**Canvas Renderers:**
+
+- What's not tested: Individual render functions (`renderSun`, `renderMoon`, etc.)
+- Risk: Visual regressions in effects
+- Priority: Low (visual, hard to assert)
+- Difficulty to test: Would need canvas snapshot testing
+
+**Store Actions:**
+
+- What's not tested: Most store actions beyond basic hydration
+- Risk: State management bugs
+- Priority: Medium
+- Files: `src/stores/useSettingsStore.ts`, `src/stores/useAuthStore.ts`
 
 ---
 
-_Concerns analysis: 2026-01-10_
-_Address as priorities allow_
+_Concerns audit: 2026-01-14_
+_Update as issues are fixed or new ones discovered_

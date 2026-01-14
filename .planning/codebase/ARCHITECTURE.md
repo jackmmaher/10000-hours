@@ -1,304 +1,209 @@
 # Architecture
 
-**Analysis Date:** 2026-01-10
+**Analysis Date:** 2026-01-14
 
 ## Pattern Overview
 
-**Overall:** React SPA with PWA Capabilities + Supabase Backend
+**Overall:** React SPA with Living Theme System
 
 **Key Characteristics:**
 
-- Single-page React application with tab-based navigation
-- Offline-first with IndexedDB local storage
-- Supabase for authentication and cloud sync
-- Community content with local fallbacks
+- Client-side only (no server rendering)
+- Local-first data (IndexedDB via Dexie)
+- Solar-aware theming system
+- PWA with offline capability
 
-## Core Feature: Explore Tab & Meditation Cards
+## Theme System Architecture
 
-### Explore Tab (`src/components/Explore.tsx`)
+The theme system is the visual heart of the application, creating distinct experiences based on time of day and season.
 
-**Purpose:** Community discovery feed for meditation templates and wisdom pearls
+### Core Data Flow
 
-**Content Types:**
-
-- **SessionCards** - Guided meditation templates (from `src/data/sessions.json` or Supabase)
-- **PearlCards** - Wisdom snippets from community members
-
-**Feed Algorithm:**
-
-- Mixed organic randomization: 3-5 pearls → 1-2 sessions → 2-3 pearls → 1 course
-- Intent-based filtering: anxiety, stress, sleep, focus, beginners, body-awareness, self-compassion, letting-go
-- Sorting: rising, new, top
-
-### Meditation Card System
-
-**Card Components:**
-
-- `src/components/SessionCard.tsx` - Renders meditation template
-- `src/components/Card.tsx` - Base card with glassmorphism styling
-- `src/components/SessionDetailModal.tsx` - Full details + adopt flow
-
-**Card Data (`src/data/sessions.json`):**
-
-```json
-{
-  "id": "uuid",
-  "title": "First Breath Awakening",
-  "discipline": "Breath Awareness",
-  "recommended_after_hours": 0, // Experience prerequisite
-  "intent_tags": ["focus", "beginners"],
-  "karma": 156,
-  "saves": 234,
-  "completions": 1567
-}
+```
+Solar Position → Theme Calculation → CSS Variables → UI Rendering
+      ↑               ↑                    ↑              ↑
+   Location      Season/Time          LivingTheme     Components
 ```
 
-### Experience-Based Recommendations
+### Theme Calculation Pipeline
 
-**The `recommendedAfterHours` System:**
+**1. Solar Position** (`src/lib/solarPosition.ts`)
 
-Distribution in seed data:
+- `getLocation()` - Fetches user location (IP API → localStorage cache → timezone fallback)
+- `calculateSunPosition()` - NOAA algorithms for sun altitude/azimuth
+- `calculateMoonPosition()` - Lunar position and phase calculations
+- `calculateMaxSolarAltitude()` - Latitude-aware max sun height for relative positioning
 
-- **0 hours (42 sessions)** - Beginner-friendly, no prerequisite
-- **10+ hours (29 sessions)** - Some foundation needed
-- **50+ hours (25 sessions)** - Intermediate practices
-- **100+ hours (13 sessions)** - Advanced techniques
-- **500+ hours (1 session)** - Master-level
+**2. Living Theme State** (`src/lib/livingTheme.ts`)
 
-**Filtering Logic (`src/lib/recommendations.ts`):**
+- `calculateLivingTheme()` - Main entry point for auto mode
+- `calculateManualTheme()` - Fixed theme for manual mode
+- `calculateEffectIntensities()` - Derives visual effect levels from sun altitude
+- `getSeasonalEffects()` - Season-specific particle types (snow, fireflies, leaves, mist)
+- `applyLivingTheme()` - Writes CSS custom properties to DOM
+
+**3. Theme Tokens** (`src/lib/theme/`)
+
+- `types.ts` - `ThemeTokens` interface (70+ color tokens)
+- `tokens/*.ts` - 16 season/time combinations + 2 neutral themes
+- `calculation.ts` - `calculateThemeBySunPosition()` blends themes by sun altitude
+- `interpolation.ts` - Contrast-preserving interpolation between themes
+- `cssProperties.ts` - Converts tokens to CSS custom properties
+
+### Theme Modes
 
 ```typescript
-// Hard filter - users can't see sessions above their experience level
-if (session.recommendedAfterHours > inputs.totalHours) {
-  return { score: -1, reasons: ['Experience level too high'] }
-}
+type ThemeMode =
+  | 'neutral-auto' // Follow system dark/light (DEFAULT)
+  | 'neutral-light' // Always light
+  | 'neutral-dark' // Always dark
+  | 'living-auto' // Solar-based seasonal theming
+  | 'living-manual' // User-selected season + time
 ```
 
-**Display Logic (`src/components/SessionDetailModal.tsx`):**
+### Visual Effects Pipeline
 
-```typescript
-// Only shows badge if prerequisite > 0
-{session.recommendedAfterHours > 0 && (
-  <div>Recommended after {session.recommendedAfterHours}+ hours of practice</div>
-)}
+**LivingTheme Provider** (`src/components/LivingTheme.tsx`)
+
 ```
+LivingTheme
+├── Context Provider (LivingThemeState)
+├── Breathing Animation (CSS keyframes)
+├── LivingThemeEffects
+│   ├── GrainOverlay (film grain texture)
+│   ├── AtmosphericGradient (day/night sky)
+│   ├── DirectionalLight (golden hour glow)
+│   └── LivingCanvas (particles, celestial)
+└── Children (app content)
+```
+
+**LivingCanvas** (`src/components/LivingCanvas.tsx`)
+
+- requestAnimationFrame loop for 60fps rendering
+- Particle system with wind physics
+- Renders based on `EffectIntensities`:
+  - Stars (fade in as sun sets)
+  - Moon (position, phase, illumination)
+  - Sun (position-based rendering)
+  - Seasonal particles (snow/leaves/fireflies/mist)
+  - Aurora (expressive mode, winter nights)
+  - Shooting stars (expressive mode, nights)
+
+**Canvas Renderers** (`src/components/canvas/renderers/`)
+
+- `sun.ts` - Sun disc with glow
+- `moon.ts` - Moon with accurate phase shadow
+- `star.ts` - Twinkling stars with color temperature
+- `snow.ts` - Falling snowflakes with physics
+- `leaf.ts` - Autumn leaves with rotation
+- `firefly.ts` - Summer evening fireflies
+- `mist.ts` - Spring morning mist
+- `aurora.ts` - Northern lights effect
+- `shootingStars.ts` - Meteor trails
 
 ## Layers
 
 **UI Layer:**
 
-- Purpose: React components with tab-based navigation
-- Contains: Tab components (Home, Explore, Journey, Timer, Me)
-- Location: `src/components/*.tsx`
-- Depends on: State hooks, service layer
+- React components (`src/components/`)
+- Receives theme via CSS custom properties and context
+- No direct theme calculation
 
-**Service Layer:**
+**Theme Layer:**
 
-- Purpose: Business logic and data operations
-- Contains: Database operations, recommendations, voice scoring
-- Location: `src/lib/*.ts`
-- Depends on: IndexedDB, Supabase client
+- `LivingTheme.tsx` - Provider component
+- `livingTheme.ts` - State calculation
+- `themeEngine.ts` - Token management (re-exports from `theme/`)
 
 **Data Layer:**
 
-- Purpose: Persistent storage
-- Contains: IndexedDB schemas, Supabase tables, JSON seeds
-- Location: `src/lib/db.ts`, `src/data/*.json`
+- Zustand stores (`src/stores/`)
+- Dexie database (`src/lib/db/`)
+
+**Utility Layer:**
+
+- Solar calculations (`solarPosition.ts`)
+- Color utilities (`theme/colorUtils.ts`)
+- Noise generation (`noise/SimplexNoise.ts`)
 
 ## Data Flow
 
-### Meditation Discovery → Practice Flow
+**Theme Update Cycle:**
 
-1. **Explore Tab** loads sessions from Supabase (fallback to JSON)
-2. **Filter** by intent tags and experience level
-3. **User browses** SessionCards with vote/save/view actions
-4. **SessionDetailModal** shows full details + "Adopt" button
-5. **Adopt** creates PlannedSession in IndexedDB
-6. **Journey Tab** shows saved meditations and planned sessions
-7. **Timer Tab** executes the meditation
+1. App mounts → `LivingTheme` provider initializes
+2. Fetches location (cached or API)
+3. Calculates sun position for current time
+4. Derives theme tokens and effect intensities
+5. Applies CSS custom properties to `<html>`
+6. Starts canvas animation loop
+7. Updates every 60 seconds (solar tracking)
 
-### State Management
+**State Management:**
 
-**Local Storage (IndexedDB via `src/lib/db.ts`):**
-
-- Sessions, SessionInsights, PlannedSessions
-- SavedPearls, SavedTemplates, TemplateDrafts
-
-**Remote Storage (Supabase):**
-
-- session_templates, session_template_votes
-- pearls, pearl_votes
-- User profiles
+- `useSettingsStore` - Theme mode, visual effects preference
+- `LivingThemeContext` - Current theme state for consumers
 
 ## Key Abstractions
 
-**SessionTemplate:**
+**ThemeTokens:**
 
-- Purpose: Community meditation blueprint
-- Examples: "First Breath Awakening", "Loving-Kindness for Self"
-- Contains: guidance, duration, discipline, recommendedAfterHours
+- 70+ design tokens covering all UI elements
+- Semantic naming (bgBase, textPrimary, orbCore, etc.)
+- Includes isDark boolean for class toggling
 
-**Pearl:**
+**EffectIntensities:**
 
-- Purpose: Wisdom nugget shared by practitioners
-- Contains: text, upvotes, saves, intentTags, creatorVoiceScore
+- Normalized 0-1 values for visual effects
+- Derived from sun altitude via unified thresholds
+- Used by both CSS and canvas rendering
 
-**Voice Score (`src/lib/voice.ts`):**
+**Particle System:**
 
-- Purpose: Credibility metric for content creators
-- Formula: Weighs hours, karma, saves, completions
-- Used on: Card badges to show creator credibility
+- Type-discriminated union (`Particle` type)
+- Factory functions in `particles.ts`
+- Render functions in `renderers/`
 
 ## Entry Points
 
 **App Entry:**
 
-- Location: `src/App.tsx`
-- Triggers: User loads app
-- Responsibilities: Auth check, route to tabs, PWA setup
+- `src/main.tsx` - React root mounting
+- `src/App.tsx` - Root component, wraps in LivingTheme
 
-**Tab Navigation:**
+**Theme Entry:**
 
-- Location: `src/components/TabBar.tsx`
-- Tabs: Home, Explore, Journey, Timer, Me
+- `src/components/LivingTheme.tsx` - Main theme provider
+- `src/hooks/useTheme.ts` - Legacy hook (still used by some components)
 
-## Living Theme System
+## Error Handling
 
-**Purpose:** Dynamic visual atmosphere that changes with time of day, season, and weather
+**Strategy:** React ErrorBoundary at app root
 
-**Core Files:**
+**Theme Fallbacks:**
 
-- `src/components/LivingTheme.tsx` - React context provider + DOM effects renderer
-- `src/lib/livingTheme.ts` - Theme state calculations
-- `src/lib/themeEngine.ts` - Core theme calculations (90k+ lines of logic)
-- `src/lib/solarPosition.ts` - Real-time sun altitude calculations
-- `src/components/AmbientAtmosphere.tsx` - Gen 2 particle system
-
-**Architecture:**
-
-```
-LivingTheme.tsx (brain)
-    ├─→ Calculates sun altitude via solarPosition.ts
-    ├─→ Determines season, time of day, effects
-    ├─→ Provides LivingThemeContext to all components
-    └─→ Renders visual effects:
-        ├─→ Stars (parallax depth layers)
-        ├─→ Snow/leaves (per-particle drift)
-        ├─→ Directional light (blend modes)
-        └─→ Grain overlay
-```
-
-**Effect Levels:**
-
-- **Level 1 (Current)**: DOM-based CSS animations (~25 particles)
-- **Level 2 (Planned)**: Canvas-based physics engine (~150 particles)
-
-**Standalone Testing:**
-
-- `theme-comparison.html` - Side-by-side Level 1 vs Level 2 comparison
-
-## Journey Tab Architecture
-
-**Purpose:** Personal meditation space for planning, tracking, and reflecting on practice
-
-### Component Hierarchy
-
-```
-Journey/index.tsx (main container)
-├── NextSessionSpotlight.tsx (hero CTA - 60vh)
-│   └── Receives `plannedSession` prop from parent
-├── Calendar.tsx (embedded month view)
-│   └── Receives `refreshKey` prop for re-renders
-├── WeekStones.tsx (week summary row)
-│   └── Receives computed `weekDays` statuses
-├── Sub-tabs (sessions | pearls | saved)
-│   ├── InsightStream.tsx (sessions tab)
-│   ├── JourneyMyPearls.tsx (pearls tab)
-│   └── JourneySavedContent.tsx (saved tab)
-└── Modals:
-    ├── MeditationPlanner/ (planning modal)
-    │   ├── index.tsx (main modal)
-    │   ├── usePlannerState.ts (state hook)
-    │   ├── DayItemsCarousel.tsx (swipeable cards)
-    │   ├── PearlPicker.tsx (attach pearl modal)
-    │   └── RepeatPicker.tsx (recurring sessions)
-    ├── InsightCaptureWrapper
-    ├── SharePearlWrapper
-    └── TemplateEditorWrapper
-```
-
-### Data Flow
-
-**Plan Creation Flow:**
-
-```
-1. User clicks day in Calendar/WeekStones
-   └── Journey calls `scrollToCalendarAndPlan(date)`
-2. MeditationPlanner modal opens with date
-   └── usePlannerState loads:
-       - Existing plans via `getPlannedSession()`
-       - Pending plans via `getIncompletePlansForDate()`
-       - Sessions via props from parent
-3. User fills form → handleSave()
-   └── addPlannedSession() writes to IndexedDB
-4. Modal closes → refreshAllPlanData() callback
-   └── Journey re-fetches weekPlans, nextPlannedSession
-5. NextSessionSpotlight re-renders with new data
-```
-
-**State Ownership:**
-
-| State                | Owner             | Consumers                      |
-| -------------------- | ----------------- | ------------------------------ |
-| `nextPlannedSession` | Journey/index.tsx | NextSessionSpotlight           |
-| `weekPlans`          | Journey/index.tsx | WeekStonesRow (via `weekDays`) |
-| `plansRefreshKey`    | Journey/index.tsx | Calendar, child refreshes      |
-| `dayItems`           | usePlannerState   | DayItemsCarousel               |
-| `attachedPearl`      | usePlannerState   | PearlPicker, form display      |
-
-### DayItems Carousel Architecture
-
-**Purpose:** Unified handling of past sessions and future plans for a given date
-
-**Types (`MeditationPlanner/types.ts`):**
-
-```typescript
-type DayItem = {
-  type: 'session' | 'plan'
-  id: string
-  session?: Session // Present when type='session'
-  plan?: PlannedSession // Present when type='plan'
-  timestamp: number // For chronological sorting
-}
-```
-
-**State Management (`usePlannerState.ts`):**
-
-- Combines `sessions` (props) + `pendingPlans` (fetched) into `dayItems`
-- Sorted by timestamp
-- Single `selectedItemIndex` controls carousel position
-- `isSessionMode` derived from `currentItem?.type === 'session'`
+- Location: timezone estimation if IP lookup fails
+- Theme: neutral mode if living theme errors
+- Canvas: visibility change pauses/resumes animation
 
 ## Cross-Cutting Concerns
 
-**Offline Support:**
+**Performance:**
 
-- IndexedDB for local storage
-- Fallback JSON when Supabase unavailable
-- Sync on reconnect
+- Canvas uses `requestAnimationFrame` with visibility check
+- Theme updates throttled to 60-second intervals
+- Particles culled when off-screen
 
-**Recommendations:**
+**Accessibility:**
 
-- `src/lib/recommendations.ts` - Personalized suggestions
-- Based on: discipline, intent, time of day, experience level
+- `prefers-reduced-motion` disables breathing animation
+- Theme respects system dark mode preference in neutral-auto
 
-**Theming:**
+**Memory:**
 
-- LivingTheme context provides colors/effects globally
-- CSS variables for dynamic theming
-- Tailwind for component styling
+- Canvas animation cancelled on unmount
+- Particles recreated only on theme/mode change
 
 ---
 
-_Architecture analysis: 2026-01-10 (updated 2026-01-13)_
-_Includes: Explore tab, meditation cards, Living Theme atmosphere, Journey tab_
+_Architecture analysis: 2026-01-14_
+_Update when major patterns change_
