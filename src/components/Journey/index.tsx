@@ -132,9 +132,6 @@ export function Journey() {
     const monday = new Date(todayStart)
     monday.setDate(todayStart.getDate() - daysFromMonday)
 
-    const tomorrow = new Date(todayStart)
-    tomorrow.setDate(todayStart.getDate() + 1)
-
     return Array.from({ length: 7 }, (_, i) => {
       const dayDate = new Date(monday)
       dayDate.setDate(monday.getDate() + i)
@@ -147,12 +144,10 @@ export function Journey() {
       })
 
       const isToday = dayDate.getTime() === todayStart.getTime()
-      const isTomorrow = dayDate.getTime() === tomorrow.getTime()
       const isFuture = dayDate.getTime() > todayStart.getTime()
       const isPast = dayDate.getTime() < todayStart.getTime()
-      const isNextPlannable = isTomorrow && !hasSession
 
-      return getDayStatusWithPlan(hasSession, hasPlan, isToday, isFuture, isNextPlannable, isPast)
+      return getDayStatusWithPlan(hasSession, hasPlan, isToday, isFuture, false, isPast)
     })
   }, [sessions, weekPlans])
 

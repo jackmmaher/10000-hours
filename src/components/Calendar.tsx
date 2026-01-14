@@ -426,21 +426,42 @@ export function Calendar({
                   )
                 }
 
-                // Today
+                // Today - always has a glow ring to pinpoint it on the calendar
                 if (isTodayDate) {
+                  // Determine background based on state
+                  let todayBg = 'var(--bg-elevated)'
+                  if (hasSession && hasPlan) {
+                    // Dual state: completed session + future plan
+                    todayBg = 'var(--calendar-intensity-1)'
+                  } else if (hasSession) {
+                    todayBg = 'var(--calendar-intensity-1)'
+                  } else if (hasPlan) {
+                    todayBg = 'var(--accent-muted)'
+                  }
+
                   return (
-                    <div key={index} className="aspect-square">
+                    <div key={index} className="aspect-square relative">
                       <button
                         onClick={handleDayClick}
                         className="w-full h-full flex items-center justify-center rounded-lg transition-all active:scale-[0.95]"
                         style={{
-                          background:
-                            hasSession || hasPlan ? 'var(--accent-muted)' : 'var(--bg-elevated)',
+                          background: todayBg,
                           color: 'var(--text-primary)',
+                          boxShadow: '0 0 0 2px var(--accent), 0 0 8px var(--accent-muted)',
                         }}
                       >
-                        <span className="text-sm font-medium">{day}</span>
+                        <span className="text-sm font-bold">{day}</span>
                       </button>
+                      {/* Plan indicator dot for today with future plan */}
+                      {hasPlan && (
+                        <div
+                          className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full"
+                          style={{
+                            background: 'var(--accent)',
+                            border: '2px solid var(--bg-base)',
+                          }}
+                        />
+                      )}
                     </div>
                   )
                 }
@@ -478,17 +499,28 @@ export function Calendar({
                   )
                 }
 
-                // Future with plan
+                // Future with plan - accent text + dot indicator
                 if (isFuture && hasPlan) {
                   return (
-                    <div key={index} className="aspect-square">
+                    <div key={index} className="aspect-square relative">
                       <button
                         onClick={handleDayClick}
                         className="w-full h-full flex items-center justify-center rounded-lg transition-all active:scale-[0.95]"
-                        style={{ color: 'var(--accent)' }}
+                        style={{
+                          color: 'var(--accent)',
+                          background: 'var(--accent-muted)',
+                        }}
                       >
                         <span className="text-sm font-medium">{day}</span>
                       </button>
+                      {/* Plan indicator dot */}
+                      <div
+                        className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
+                        style={{
+                          background: 'var(--accent)',
+                          border: '2px solid var(--bg-base)',
+                        }}
+                      />
                     </div>
                   )
                 }

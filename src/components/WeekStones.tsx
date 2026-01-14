@@ -7,11 +7,14 @@
  *
  * States:
  * - completed: Session done (any session, planned or not)
- * - fulfilled: Planned + completed (the plan was executed)
- * - planned: Upcoming plan exists (including today with a plan)
- * - today: Current day without plan (cream orb, same as future)
- * - next: Tomorrow - breathing animation to encourage planning ahead
- * - future: No plan yet
+ * - fulfilled: Planned + completed (past plan was executed)
+ * - today: Current day without session or plan (prominent glow)
+ * - today-with-session: Today with completed session (prominent glow + filled)
+ * - today-with-plan: Today with future plan (prominent glow + plan indicator)
+ * - today-dual: Today with both session and future plan
+ * - planned: Future day with a plan (accent indicator)
+ * - future: Future day, no plan yet (neutral)
+ * - missed: Past day with no session
  *
  * Journey tab usage: Display-only, clicks scroll to Calendar
  * Progress tab usage: Display-only streak visualization
@@ -23,8 +26,14 @@ import { useTapFeedback } from '../hooks/useTapFeedback'
 
 const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
-// Extended status types for Journey tab (adds 'fulfilled' and 'planned')
-export type ExtendedDayStatus = DayStatus | 'fulfilled' | 'planned'
+// Extended status types for Journey tab
+export type ExtendedDayStatus =
+  | DayStatus
+  | 'fulfilled'
+  | 'planned'
+  | 'today-with-session'
+  | 'today-with-plan'
+  | 'today-dual'
 
 interface WeekStoneProps {
   status: ExtendedDayStatus
@@ -40,21 +49,13 @@ export function WeekStone({ status, onClick, size = 'sm' }: WeekStoneProps) {
     lg: 'w-5 h-5',
   }
 
-  // Animated sizes must be slightly larger than base for breathing effect
-  const animatedSizeClasses = {
-    sm: 'w-3.5 h-3.5',
-    md: 'w-[1.125rem] h-[1.125rem]',
-    lg: 'w-[1.375rem] h-[1.375rem]',
-  }
-
   const baseSize = sizeClasses[size]
-  const animatedSize = animatedSizeClasses[size]
 
-  // Completed session (any session done)
+  // Past day: Completed session (any session done, not today)
   if (status === 'completed') {
     return (
       <div
-        className={`${baseSize} rounded-full cursor-default`}
+        className={`${baseSize} rounded-full cursor-pointer`}
         style={{
           background: `radial-gradient(circle at 30% 30%, var(--stone-completed-inner), var(--stone-completed))`,
           boxShadow: 'var(--shadow-elevation-1)',
@@ -64,7 +65,7 @@ export function WeekStone({ status, onClick, size = 'sm' }: WeekStoneProps) {
     )
   }
 
-  // Fulfilled: planned AND completed (the best state)
+  // Past day: Fulfilled - planned AND completed (the best state for past days)
   if (status === 'fulfilled') {
     return (
       <div
@@ -97,47 +98,99 @@ export function WeekStone({ status, onClick, size = 'sm' }: WeekStoneProps) {
     )
   }
 
-  // Next plannable day (tomorrow) - breathing animation to encourage planning ahead
-  if (status === 'next') {
-    return (
-      <div
-        className={`${animatedSize} rounded-full animate-breathe cursor-pointer`}
-        style={{
-          background: `radial-gradient(circle at 30% 30%, var(--accent), var(--stone-completed))`,
-          boxShadow: `0 0 0 2px var(--bg-base), 0 0 0 4px var(--border)`,
-          animationDuration: '3000ms',
-        }}
-        onClick={onClick}
-      />
-    )
-  }
+  // TODAY states - all have prominent glow ring to draw the eye
 
-  // Today without a session - render as neutral
+  // Today without session or plan - neutral with glow
   if (status === 'today') {
-    return (
-      <div
-        className={`${baseSize} rounded-full cursor-pointer transition-colors`}
-        style={{ background: 'var(--stone-today)' }}
-        onClick={onClick}
-      />
-    )
-  }
-
-  // Planned (future day with a plan)
-  if (status === 'planned') {
     return (
       <div
         className={`${baseSize} rounded-full cursor-pointer`}
         style={{
-          background: 'var(--stone-planned)',
-          border: '2px solid var(--stone-planned-border)',
+          background: 'var(--stone-today)',
+          boxShadow: '0 0 0 2px var(--accent), 0 0 6px var(--accent-muted)',
         }}
         onClick={onClick}
       />
     )
   }
 
-  // Future or empty - just a subtle dot
+  // Today with completed session only - filled with glow
+  if (status === 'today-with-session') {
+    return (
+      <div
+        className={`${baseSize} rounded-full cursor-pointer`}
+        style={{
+          background: `radial-gradient(circle at 30% 30%, var(--stone-completed-inner), var(--stone-completed))`,
+          boxShadow: '0 0 0 2px var(--accent), 0 0 6px var(--accent-muted)',
+        }}
+        onClick={onClick}
+      />
+    )
+  }
+
+  // Today with future plan only - glow + plan dot
+  if (status === 'today-with-plan') {
+    return (
+      <div
+        className={`${baseSize} rounded-full cursor-pointer relative`}
+        style={{
+          background: 'var(--accent-muted)',
+          boxShadow: '0 0 0 2px var(--accent), 0 0 6px var(--accent-muted)',
+        }}
+        onClick={onClick}
+      >
+        {/* Plan indicator dot */}
+        <div
+          className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
+          style={{ background: 'var(--accent)' }}
+        />
+      </div>
+    )
+  }
+
+  // Today with both session AND future plan - filled with glow + plan dot
+  if (status === 'today-dual') {
+    return (
+      <div
+        className={`${baseSize} rounded-full cursor-pointer relative`}
+        style={{
+          background: `radial-gradient(circle at 30% 30%, var(--stone-completed-inner), var(--stone-completed))`,
+          boxShadow: '0 0 0 2px var(--accent), 0 0 6px var(--accent-muted)',
+        }}
+        onClick={onClick}
+      >
+        {/* Plan indicator dot - shows there's still a plan coming */}
+        <div
+          className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
+          style={{ background: 'var(--accent)' }}
+        />
+      </div>
+    )
+  }
+
+  // FUTURE states
+
+  // Future day with a plan - accent indicator
+  if (status === 'planned') {
+    return (
+      <div
+        className={`${baseSize} rounded-full cursor-pointer relative`}
+        style={{
+          background: 'var(--accent-muted)',
+          border: '2px solid var(--accent)',
+        }}
+        onClick={onClick}
+      >
+        {/* Small plan dot */}
+        <div
+          className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full"
+          style={{ background: 'var(--accent)' }}
+        />
+      </div>
+    )
+  }
+
+  // Future or empty - neutral dot (no special treatment for "tomorrow")
   return (
     <div
       className={`${baseSize} rounded-full cursor-pointer transition-colors`}
@@ -212,15 +265,29 @@ export function getDayStatusWithPlan(
   hasPlan: boolean,
   isToday: boolean,
   isFuture: boolean,
-  isNextPlannable: boolean,
+  _isNextPlannable: boolean, // Deprecated - kept for backward compatibility, ignored
   isPast: boolean = false
 ): ExtendedDayStatus {
-  if (hasSession && hasPlan) return 'fulfilled'
-  if (hasSession) return 'completed'
-  if (isPast && !hasSession) return 'missed'
-  if (isNextPlannable) return 'next'
-  if (hasPlan && (isFuture || isToday)) return 'planned'
-  if (isToday) return 'today'
-  if (isFuture) return 'future'
+  // TODAY states - always draw attention to today
+  if (isToday) {
+    if (hasSession && hasPlan) return 'today-dual' // Session done + future plan
+    if (hasSession) return 'today-with-session' // Session done, no more plans
+    if (hasPlan) return 'today-with-plan' // Future plan today
+    return 'today' // Empty today
+  }
+
+  // PAST states
+  if (isPast) {
+    if (hasSession && hasPlan) return 'fulfilled' // Plan was executed
+    if (hasSession) return 'completed' // Session done (unplanned)
+    return 'missed' // No session
+  }
+
+  // FUTURE states
+  if (isFuture) {
+    if (hasPlan) return 'planned' // Future day with plan
+    return 'future' // Future day, no plan
+  }
+
   return 'missed'
 }
