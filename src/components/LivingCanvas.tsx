@@ -56,10 +56,13 @@ export function LivingCanvas({
     (width: number, height: number) => {
       const particles: Particle[] = []
       const now = Date.now()
+      // Read current values from refs to avoid callback recreation
+      const currentEffects = effectsRef.current
+      const currentSeasonalEffects = seasonalEffectsRef.current
 
       // Stars appear as soon as sky begins darkening (effects.stars > 0)
-      if (effects.stars > 0) {
-        const count = Math.floor(60 * effects.stars)
+      if (currentEffects.stars > 0) {
+        const count = Math.floor(60 * currentEffects.stars)
         for (let i = 0; i < count; i++) {
           const z = Math.random()
           particles.push({
@@ -82,8 +85,8 @@ export function LivingCanvas({
       }
 
       // Seasonal particles
-      const particleType = seasonalEffects.particleType
-      const intensity = effects.particles * seasonalEffects.particleMultiplier
+      const particleType = currentSeasonalEffects.particleType
+      const intensity = currentEffects.particles * currentSeasonalEffects.particleMultiplier
 
       if (intensity >= 0.1) {
         const particleConfig: Record<string, { count: number; create: () => Particle }> = {
@@ -114,14 +117,13 @@ export function LivingCanvas({
         }
       }
 
+      // Pre-sort by z-depth (far to near) to avoid sorting every frame
+      particles.sort((a, b) => a.z - b.z)
       particlesRef.current = particles
     },
-    [
-      effects.stars,
-      effects.particles,
-      seasonalEffects.particleType,
-      seasonalEffects.particleMultiplier,
-    ]
+    // Use refs for continuous values to avoid callback recreation during transitions
+    // Only particle type changes should recreate the callback
+    [seasonalEffects.particleType]
   )
 
   // Inline star renderer (needs access to effectsRef)
@@ -167,7 +169,14 @@ export function LivingCanvas({
       const canvas = canvasRef.current
       if (!canvas) return
 
-      const ctx = canvas.getContext('2d')
+      let ctx: CanvasRenderingContext2D | null = null
+      try {
+        ctx = canvas.getContext('2d')
+      } catch {
+        // Canvas context unavailable (rare edge case)
+        console.warn('LivingCanvas: Unable to get 2D context')
+        return
+      }
       if (!ctx) return
 
       const width = window.innerWidth
@@ -204,11 +213,9 @@ export function LivingCanvas({
         }
       }
 
-      // Sort particles by z-depth (far to near)
-      const sorted = [...particlesRef.current].sort((a, b) => a.z - b.z)
-
+      // Particles are pre-sorted by z-depth at creation time
       // Render particles
-      sorted.forEach((p) => {
+      particlesRef.current.forEach((p) => {
         const noiseX = noise.noise2D(p.noiseOffsetX + t * 0.5, p.y * 0.01) * 2
         const noiseY = noise.noise2D(p.noiseOffsetY + t * 0.3, p.x * 0.01) * 0.5
 
@@ -279,8 +286,9 @@ export function LivingCanvas({
   }, [render])
 
   useEffect(() => {
-    const currentStarsVisible = effects.stars > 0
-    const currentParticleType = seasonalEffects.particleType
+    // Use threshold to determine if stars are visible (avoids recreation during smooth transitions)
+    const currentStarsVisible = effectsRef.current.stars > 0.05
+    const currentParticleType = seasonalEffectsRef.current.particleType
 
     // On first run, always create particles (initial setup)
     if (!hasInitializedRef.current) {
@@ -302,7 +310,7 @@ export function LivingCanvas({
       lastPropsRef.current.timeOfDay !== timeOfDay ||
       lastPropsRef.current.expressive !== expressive
 
-    // Particle existence changed
+    // Particle existence changed (threshold prevents recreation during smooth transitions)
     const particleExistenceChanged =
       lastPropsRef.current.starsVisible !== currentStarsVisible ||
       lastPropsRef.current.particleType !== currentParticleType
@@ -318,7 +326,7 @@ export function LivingCanvas({
       createParticles(window.innerWidth, window.innerHeight)
       shootingStarsRef.current = []
     }
-  }, [season, timeOfDay, expressive, effects.stars, seasonalEffects.particleType, createParticles])
+  }, [season, timeOfDay, expressive, seasonalEffects.particleType, createParticles])
 
   useEffect(() => {
     const handleResize = () => {

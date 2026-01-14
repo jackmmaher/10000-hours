@@ -35,10 +35,10 @@ export async function getLocation(): Promise<Location> {
     }
   }
 
-  // Try IP-based geolocation
+  // Try IP-based geolocation (HTTPS for security)
   try {
-    const response = await fetch('http://ip-api.com/json/?fields=lat,lon', {
-      signal: AbortSignal.timeout(5000) // 5 second timeout
+    const response = await fetch('https://ip-api.com/json/?fields=lat,lon', {
+      signal: AbortSignal.timeout(5000), // 5 second timeout
     })
 
     if (response.ok) {
@@ -141,12 +141,12 @@ export function estimateLocationFromTimezone(): Location {
   // Try to find a partial match (e.g., "Europe/Dublin" matches "Europe")
   const region = tz.split('/')[0]
   const regionDefaults: Record<string, Location> = {
-    'Europe': { lat: 50, long: 10 },      // Central Europe
-    'America': { lat: 40, long: -100 },   // Central US
-    'Asia': { lat: 35, long: 105 },       // Central Asia
-    'Australia': { lat: -25, long: 135 }, // Central Australia
-    'Pacific': { lat: -20, long: 170 },   // Pacific islands
-    'Africa': { lat: 0, long: 20 },       // Central Africa
+    Europe: { lat: 50, long: 10 }, // Central Europe
+    America: { lat: 40, long: -100 }, // Central US
+    Asia: { lat: 35, long: 105 }, // Central Asia
+    Australia: { lat: -25, long: 135 }, // Central Australia
+    Pacific: { lat: -20, long: 170 }, // Pacific islands
+    Africa: { lat: 0, long: 20 }, // Central Africa
   }
 
   if (regionDefaults[region]) {
@@ -194,7 +194,6 @@ export function calculateSunPosition(
   long: number,
   date: Date = new Date()
 ): { altitude: number; azimuth: number; isRising: boolean } {
-
   const jd = toJulianDate(date)
   const jc = (jd - 2451545) / 36525 // Julian century
 
@@ -203,28 +202,38 @@ export function calculateSunPosition(
   const geomMeanAnomSun = 357.52911 + jc * (35999.05029 - 0.0001537 * jc)
   const eccentEarthOrbit = 0.016708634 - jc * (0.000042037 + 0.0000001267 * jc)
 
-  const sunEqOfCtr = Math.sin(toRadians(geomMeanAnomSun)) * (1.914602 - jc * (0.004817 + 0.000014 * jc)) +
-                     Math.sin(toRadians(2 * geomMeanAnomSun)) * (0.019993 - 0.000101 * jc) +
-                     Math.sin(toRadians(3 * geomMeanAnomSun)) * 0.000289
+  const sunEqOfCtr =
+    Math.sin(toRadians(geomMeanAnomSun)) * (1.914602 - jc * (0.004817 + 0.000014 * jc)) +
+    Math.sin(toRadians(2 * geomMeanAnomSun)) * (0.019993 - 0.000101 * jc) +
+    Math.sin(toRadians(3 * geomMeanAnomSun)) * 0.000289
 
   const sunTrueLong = geomMeanLongSun + sunEqOfCtr
   const sunAppLong = sunTrueLong - 0.00569 - 0.00478 * Math.sin(toRadians(125.04 - 1934.136 * jc))
 
-  const meanObliqEcliptic = 23 + (26 + ((21.448 - jc * (46.815 + jc * (0.00059 - jc * 0.001813)))) / 60) / 60
+  const meanObliqEcliptic =
+    23 + (26 + (21.448 - jc * (46.815 + jc * (0.00059 - jc * 0.001813))) / 60) / 60
   const obliqCorr = meanObliqEcliptic + 0.00256 * Math.cos(toRadians(125.04 - 1934.136 * jc))
 
   // Sun declination
-  const sunDeclin = toDegrees(Math.asin(Math.sin(toRadians(obliqCorr)) * Math.sin(toRadians(sunAppLong))))
+  const sunDeclin = toDegrees(
+    Math.asin(Math.sin(toRadians(obliqCorr)) * Math.sin(toRadians(sunAppLong)))
+  )
 
   // Equation of time (minutes)
   const varY = Math.tan(toRadians(obliqCorr / 2)) * Math.tan(toRadians(obliqCorr / 2))
-  const eqOfTime = 4 * toDegrees(
-    varY * Math.sin(2 * toRadians(geomMeanLongSun)) -
-    2 * eccentEarthOrbit * Math.sin(toRadians(geomMeanAnomSun)) +
-    4 * eccentEarthOrbit * varY * Math.sin(toRadians(geomMeanAnomSun)) * Math.cos(2 * toRadians(geomMeanLongSun)) -
-    0.5 * varY * varY * Math.sin(4 * toRadians(geomMeanLongSun)) -
-    1.25 * eccentEarthOrbit * eccentEarthOrbit * Math.sin(2 * toRadians(geomMeanAnomSun))
-  )
+  const eqOfTime =
+    4 *
+    toDegrees(
+      varY * Math.sin(2 * toRadians(geomMeanLongSun)) -
+        2 * eccentEarthOrbit * Math.sin(toRadians(geomMeanAnomSun)) +
+        4 *
+          eccentEarthOrbit *
+          varY *
+          Math.sin(toRadians(geomMeanAnomSun)) *
+          Math.cos(2 * toRadians(geomMeanLongSun)) -
+        0.5 * varY * varY * Math.sin(4 * toRadians(geomMeanLongSun)) -
+        1.25 * eccentEarthOrbit * eccentEarthOrbit * Math.sin(2 * toRadians(geomMeanAnomSun))
+    )
 
   // Time calculations
   const timeOffset = date.getTimezoneOffset()
@@ -240,25 +249,39 @@ export function calculateSunPosition(
   }
 
   // Solar zenith and altitude
-  const solarZenith = toDegrees(Math.acos(
-    Math.sin(toRadians(lat)) * Math.sin(toRadians(sunDeclin)) +
-    Math.cos(toRadians(lat)) * Math.cos(toRadians(sunDeclin)) * Math.cos(toRadians(hourAngle))
-  ))
+  const solarZenith = toDegrees(
+    Math.acos(
+      Math.sin(toRadians(lat)) * Math.sin(toRadians(sunDeclin)) +
+        Math.cos(toRadians(lat)) * Math.cos(toRadians(sunDeclin)) * Math.cos(toRadians(hourAngle))
+    )
+  )
 
   const solarAltitude = 90 - solarZenith
 
   // Solar azimuth
   let solarAzimuth: number
   if (hourAngle > 0) {
-    solarAzimuth = (toDegrees(Math.acos(
-      ((Math.sin(toRadians(lat)) * Math.cos(toRadians(solarZenith))) - Math.sin(toRadians(sunDeclin))) /
-      (Math.cos(toRadians(lat)) * Math.sin(toRadians(solarZenith)))
-    )) + 180) % 360
+    solarAzimuth =
+      (toDegrees(
+        Math.acos(
+          (Math.sin(toRadians(lat)) * Math.cos(toRadians(solarZenith)) -
+            Math.sin(toRadians(sunDeclin))) /
+            (Math.cos(toRadians(lat)) * Math.sin(toRadians(solarZenith)))
+        )
+      ) +
+        180) %
+      360
   } else {
-    solarAzimuth = (540 - toDegrees(Math.acos(
-      ((Math.sin(toRadians(lat)) * Math.cos(toRadians(solarZenith))) - Math.sin(toRadians(sunDeclin))) /
-      (Math.cos(toRadians(lat)) * Math.sin(toRadians(solarZenith)))
-    ))) % 360
+    solarAzimuth =
+      (540 -
+        toDegrees(
+          Math.acos(
+            (Math.sin(toRadians(lat)) * Math.cos(toRadians(solarZenith)) -
+              Math.sin(toRadians(sunDeclin))) /
+              (Math.cos(toRadians(lat)) * Math.sin(toRadians(solarZenith)))
+          )
+        )) %
+      360
   }
 
   // Determine if sun is rising or setting based on hour angle
@@ -268,7 +291,7 @@ export function calculateSunPosition(
   return {
     altitude: solarAltitude,
     azimuth: solarAzimuth,
-    isRising
+    isRising,
   }
 }
 
@@ -293,7 +316,6 @@ export function calculateSunriseSunset(
   long: number,
   date: Date = new Date()
 ): { sunrise: number; sunset: number; solarNoon: number } {
-
   const jd = toJulianDate(new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0))
   const jc = (jd - 2451545) / 36525
 
@@ -301,37 +323,49 @@ export function calculateSunriseSunset(
   const geomMeanAnomSun = 357.52911 + jc * (35999.05029 - 0.0001537 * jc)
   const eccentEarthOrbit = 0.016708634 - jc * (0.000042037 + 0.0000001267 * jc)
 
-  const sunEqOfCtr = Math.sin(toRadians(geomMeanAnomSun)) * (1.914602 - jc * (0.004817 + 0.000014 * jc)) +
-                     Math.sin(toRadians(2 * geomMeanAnomSun)) * (0.019993 - 0.000101 * jc) +
-                     Math.sin(toRadians(3 * geomMeanAnomSun)) * 0.000289
+  const sunEqOfCtr =
+    Math.sin(toRadians(geomMeanAnomSun)) * (1.914602 - jc * (0.004817 + 0.000014 * jc)) +
+    Math.sin(toRadians(2 * geomMeanAnomSun)) * (0.019993 - 0.000101 * jc) +
+    Math.sin(toRadians(3 * geomMeanAnomSun)) * 0.000289
 
   const sunTrueLong = geomMeanLongSun + sunEqOfCtr
   const sunAppLong = sunTrueLong - 0.00569 - 0.00478 * Math.sin(toRadians(125.04 - 1934.136 * jc))
 
-  const meanObliqEcliptic = 23 + (26 + ((21.448 - jc * (46.815 + jc * (0.00059 - jc * 0.001813)))) / 60) / 60
+  const meanObliqEcliptic =
+    23 + (26 + (21.448 - jc * (46.815 + jc * (0.00059 - jc * 0.001813))) / 60) / 60
   const obliqCorr = meanObliqEcliptic + 0.00256 * Math.cos(toRadians(125.04 - 1934.136 * jc))
 
-  const sunDeclin = toDegrees(Math.asin(Math.sin(toRadians(obliqCorr)) * Math.sin(toRadians(sunAppLong))))
-
-  const varY = Math.tan(toRadians(obliqCorr / 2)) * Math.tan(toRadians(obliqCorr / 2))
-  const eqOfTime = 4 * toDegrees(
-    varY * Math.sin(2 * toRadians(geomMeanLongSun)) -
-    2 * eccentEarthOrbit * Math.sin(toRadians(geomMeanAnomSun)) +
-    4 * eccentEarthOrbit * varY * Math.sin(toRadians(geomMeanAnomSun)) * Math.cos(2 * toRadians(geomMeanLongSun)) -
-    0.5 * varY * varY * Math.sin(4 * toRadians(geomMeanLongSun)) -
-    1.25 * eccentEarthOrbit * eccentEarthOrbit * Math.sin(2 * toRadians(geomMeanAnomSun))
+  const sunDeclin = toDegrees(
+    Math.asin(Math.sin(toRadians(obliqCorr)) * Math.sin(toRadians(sunAppLong)))
   )
 
+  const varY = Math.tan(toRadians(obliqCorr / 2)) * Math.tan(toRadians(obliqCorr / 2))
+  const eqOfTime =
+    4 *
+    toDegrees(
+      varY * Math.sin(2 * toRadians(geomMeanLongSun)) -
+        2 * eccentEarthOrbit * Math.sin(toRadians(geomMeanAnomSun)) +
+        4 *
+          eccentEarthOrbit *
+          varY *
+          Math.sin(toRadians(geomMeanAnomSun)) *
+          Math.cos(2 * toRadians(geomMeanLongSun)) -
+        0.5 * varY * varY * Math.sin(4 * toRadians(geomMeanLongSun)) -
+        1.25 * eccentEarthOrbit * eccentEarthOrbit * Math.sin(2 * toRadians(geomMeanAnomSun))
+    )
+
   // Hour angle at sunrise/sunset (when sun is at horizon, -0.833 degrees to account for refraction)
-  const haRise = toDegrees(Math.acos(
-    Math.cos(toRadians(90.833)) / (Math.cos(toRadians(lat)) * Math.cos(toRadians(sunDeclin))) -
-    Math.tan(toRadians(lat)) * Math.tan(toRadians(sunDeclin))
-  ))
+  const haRise = toDegrees(
+    Math.acos(
+      Math.cos(toRadians(90.833)) / (Math.cos(toRadians(lat)) * Math.cos(toRadians(sunDeclin))) -
+        Math.tan(toRadians(lat)) * Math.tan(toRadians(sunDeclin))
+    )
+  )
 
   const timeOffset = date.getTimezoneOffset()
   const solarNoon = (720 - 4 * long - eqOfTime + timeOffset * -1) / 60
-  const sunrise = solarNoon - haRise * 4 / 60
-  const sunset = solarNoon + haRise * 4 / 60
+  const sunrise = solarNoon - (haRise * 4) / 60
+  const sunset = solarNoon + (haRise * 4) / 60
 
   return { sunrise, sunset, solarNoon }
 }
@@ -347,10 +381,7 @@ export function calculateSunriseSunset(
  * By using relative position (current / max), all locations experience
  * the full range of themes relative to THEIR sky.
  */
-export function calculateMaxSolarAltitude(
-  lat: number,
-  date: Date = new Date()
-): number {
+export function calculateMaxSolarAltitude(lat: number, date: Date = new Date()): number {
   // Calculate sun declination for this date
   const jd = toJulianDate(new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0))
   const jc = (jd - 2451545) / 36525
@@ -358,17 +389,21 @@ export function calculateMaxSolarAltitude(
   const geomMeanLongSun = (280.46646 + jc * (36000.76983 + 0.0003032 * jc)) % 360
   const geomMeanAnomSun = 357.52911 + jc * (35999.05029 - 0.0001537 * jc)
 
-  const sunEqOfCtr = Math.sin(toRadians(geomMeanAnomSun)) * (1.914602 - jc * (0.004817 + 0.000014 * jc)) +
-                     Math.sin(toRadians(2 * geomMeanAnomSun)) * (0.019993 - 0.000101 * jc) +
-                     Math.sin(toRadians(3 * geomMeanAnomSun)) * 0.000289
+  const sunEqOfCtr =
+    Math.sin(toRadians(geomMeanAnomSun)) * (1.914602 - jc * (0.004817 + 0.000014 * jc)) +
+    Math.sin(toRadians(2 * geomMeanAnomSun)) * (0.019993 - 0.000101 * jc) +
+    Math.sin(toRadians(3 * geomMeanAnomSun)) * 0.000289
 
   const sunTrueLong = geomMeanLongSun + sunEqOfCtr
   const sunAppLong = sunTrueLong - 0.00569 - 0.00478 * Math.sin(toRadians(125.04 - 1934.136 * jc))
 
-  const meanObliqEcliptic = 23 + (26 + ((21.448 - jc * (46.815 + jc * (0.00059 - jc * 0.001813)))) / 60) / 60
+  const meanObliqEcliptic =
+    23 + (26 + (21.448 - jc * (46.815 + jc * (0.00059 - jc * 0.001813))) / 60) / 60
   const obliqCorr = meanObliqEcliptic + 0.00256 * Math.cos(toRadians(125.04 - 1934.136 * jc))
 
-  const sunDeclin = toDegrees(Math.asin(Math.sin(toRadians(obliqCorr)) * Math.sin(toRadians(sunAppLong))))
+  const sunDeclin = toDegrees(
+    Math.asin(Math.sin(toRadians(obliqCorr)) * Math.sin(toRadians(sunAppLong)))
+  )
 
   // Maximum altitude occurs at solar noon
   // Formula: maxAlt = 90 - |latitude - declination|
@@ -406,7 +441,7 @@ export function calculateMoonPosition(
   const D = (297.8501921 + 445267.1114034 * T - 0.0018819 * T * T) % 360
 
   // Moon's argument of latitude (degrees)
-  const F = (93.2720950 + 483202.0175233 * T - 0.0036539 * T * T) % 360
+  const F = (93.272095 + 483202.0175233 * T - 0.0036539 * T * T) % 360
 
   // Sun's mean anomaly (degrees)
   const Ms = (357.5291092 + 35999.0502909 * T - 0.0001536 * T * T) % 360
@@ -444,15 +479,12 @@ export function calculateMoonPosition(
   const cosObl = Math.cos(toRadians(obliquity))
 
   // Right Ascension
-  const ra = toDegrees(Math.atan2(
-    sinLong * cosObl - Math.tan(toRadians(moonLat)) * sinObl,
-    cosLong
-  ))
+  const ra = toDegrees(
+    Math.atan2(sinLong * cosObl - Math.tan(toRadians(moonLat)) * sinObl, cosLong)
+  )
 
   // Declination
-  const dec = toDegrees(Math.asin(
-    sinLat * cosObl + cosLat * sinObl * sinLong
-  ))
+  const dec = toDegrees(Math.asin(sinLat * cosObl + cosLat * sinObl * sinLong))
 
   // Calculate Local Sidereal Time
   const JD0 = Math.floor(jd - 0.5) + 0.5
@@ -481,15 +513,12 @@ export function calculateMoonPosition(
   const cosHA = Math.cos(toRadians(HA))
 
   // Altitude
-  const altitude = toDegrees(Math.asin(
-    sinDec * sinLat2 + cosDec * cosLat2 * cosHA
-  ))
+  const altitude = toDegrees(Math.asin(sinDec * sinLat2 + cosDec * cosLat2 * cosHA))
 
   // Azimuth
-  let azimuth = toDegrees(Math.atan2(
-    Math.sin(toRadians(HA)),
-    cosHA * sinLat2 - Math.tan(toRadians(dec)) * cosLat2
-  ))
+  let azimuth = toDegrees(
+    Math.atan2(Math.sin(toRadians(HA)), cosHA * sinLat2 - Math.tan(toRadians(dec)) * cosLat2)
+  )
   azimuth = (azimuth + 180) % 360
 
   // Determine if moon is rising (hour angle approaching 0 from negative)
@@ -503,7 +532,15 @@ export function calculateMoonPosition(
  * Returns phase name and illumination percentage (0-100)
  */
 export function calculateMoonPhase(date: Date = new Date()): {
-  phase: 'new' | 'waxing-crescent' | 'first-quarter' | 'waxing-gibbous' | 'full' | 'waning-gibbous' | 'last-quarter' | 'waning-crescent'
+  phase:
+    | 'new'
+    | 'waxing-crescent'
+    | 'first-quarter'
+    | 'waxing-gibbous'
+    | 'full'
+    | 'waning-gibbous'
+    | 'last-quarter'
+    | 'waning-crescent'
   illumination: number
   angle: number // Angle for rendering the shadow
 } {
@@ -517,13 +554,21 @@ export function calculateMoonPhase(date: Date = new Date()): {
   // Calculate illumination (0-100%)
   // Illumination follows a cosine curve through the lunar cycle
   const phaseAngle = (lunarAge / synodicMonth) * 2 * Math.PI
-  const illumination = Math.round((1 - Math.cos(phaseAngle)) / 2 * 100)
+  const illumination = Math.round(((1 - Math.cos(phaseAngle)) / 2) * 100)
 
   // Angle for rendering (0 = new moon shadow on right, 180 = full, 360 = new moon shadow on left)
   const angle = (lunarAge / synodicMonth) * 360
 
   // Determine phase name
-  let phase: 'new' | 'waxing-crescent' | 'first-quarter' | 'waxing-gibbous' | 'full' | 'waning-gibbous' | 'last-quarter' | 'waning-crescent'
+  let phase:
+    | 'new'
+    | 'waxing-crescent'
+    | 'first-quarter'
+    | 'waxing-gibbous'
+    | 'full'
+    | 'waning-gibbous'
+    | 'last-quarter'
+    | 'waning-crescent'
 
   if (lunarAge < 1.85) {
     phase = 'new'

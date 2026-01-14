@@ -76,6 +76,14 @@ export function LivingTheme({ children, breathingIntensity = 0.015 }: LivingThem
       root.style.setProperty(key, value)
     })
 
+    // Clear effect intensity variables to prevent visual bleed-through
+    root.style.setProperty('--effect-stars', '0')
+    root.style.setProperty('--effect-moon', '0')
+    root.style.setProperty('--effect-shooting-stars', '0')
+    root.style.setProperty('--effect-particles', '0')
+    root.style.setProperty('--effect-grain', '0')
+    root.style.setProperty('--effect-ambient-darkness', '0')
+
     if (isDark) {
       root.classList.add('dark')
     } else {
