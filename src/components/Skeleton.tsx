@@ -53,7 +53,7 @@ export function Skeleton({
  */
 export function SkeletonCard() {
   return (
-    <div className="bg-cream rounded-2xl p-5 shadow-sm">
+    <div className="bg-elevated rounded-2xl p-5 shadow-sm">
       {/* Header */}
       <div className="flex items-center gap-3 mb-4">
         <Skeleton variant="circular" width={20} height={20} />
@@ -81,7 +81,7 @@ export function SkeletonCard() {
  */
 export function SkeletonSessionCard() {
   return (
-    <div className="bg-cream rounded-2xl overflow-hidden shadow-sm">
+    <div className="bg-elevated rounded-2xl overflow-hidden shadow-sm">
       {/* Gradient header */}
       <div className="h-20 bg-ink/5 animate-pulse" />
 

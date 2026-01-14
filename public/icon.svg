@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Warm cream background -->
-  <rect width="512" height="512" fill="#F7F5F2"/>
+  <!-- Hermès cream background - Figma exact -->
+  <rect width="512" height="512" fill="#F6F2EC"/>
 
-  <!-- Deep indigo circle - representing wholeness, the path, completion -->
-  <circle cx="256" cy="256" r="180" fill="none" stroke="#1a1a2e" stroke-width="24"/>
+  <!-- Hermès orange circle - representing wholeness, the path, completion -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#EA6512" stroke-width="24"/>
 
-  <!-- Small solid circle at top - representing current position on the journey -->
-  <circle cx="256" cy="76" r="18" fill="#1a1a2e"/>
+  <!-- Small solid circle at top - current position on the journey -->
+  <circle cx="256" cy="76" r="18" fill="#EA6512"/>
 </svg>

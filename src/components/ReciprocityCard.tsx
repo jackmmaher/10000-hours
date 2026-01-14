@@ -37,7 +37,7 @@ export function ReciprocityCard({ data }: Props) {
   }
 
   return (
-    <div className="bg-card/90 backdrop-blur-md rounded-2xl p-4 shadow-sm">
+    <div className="bg-elevated rounded-2xl p-4 shadow-sm">
       {/* Header */}
       <div className="text-center mb-4">
         <h3 className="font-serif text-lg text-ink">Community Flow</h3>

@@ -27,12 +27,13 @@ interface CardProps {
  * Uses --card-bg from Living Theme with backdrop blur.
  */
 export function Card({ children, className = '', onClick, variant = 'default' }: CardProps) {
-  // Borderless design: card color creates visual boundary against background
-  // Glassmorphism maintained via backdrop-blur, shadows for depth/haptics
+  // Borderless Hermès design: full opacity white on cream creates visual boundary
+  // No glassmorphism opacity - color contrast IS the boundary
+  // Shadows provide depth and haptic feedback
   const variantStyles = {
-    default: 'bg-card/90 backdrop-blur-md shadow-sm',
-    elevated: 'bg-card/95 backdrop-blur-lg shadow-md',
-    subtle: 'bg-card/70 backdrop-blur-sm',
+    default: 'bg-elevated shadow-sm',
+    elevated: 'bg-elevated shadow-md',
+    subtle: 'bg-elevated/90 backdrop-blur-sm',
   }
 
   return (

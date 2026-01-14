@@ -209,7 +209,7 @@ export function WellbeingCard({ dimensions, latestCheckIns, onRefresh }: Wellbei
   }
 
   return (
-    <div className="bg-card/90 backdrop-blur-md shadow-sm rounded-xl overflow-hidden">
+    <div className="bg-elevated shadow-sm rounded-xl overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between p-5 pb-3">
         <h3 className="font-serif text-lg text-ink">Wellbeing</h3>

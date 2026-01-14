@@ -86,19 +86,19 @@ export function VoiceBadge({
   const gap = compact ? 'gap-0.5' : 'gap-1'
   const padding = compact ? 'px-1.5 py-0.5' : 'px-2 py-1'
 
-  // Background classes - uses theme's card background with glassmorphism
+  // Background classes - elevated background for visibility
   const bgClass =
     visual.level === 'high'
-      ? 'bg-card/70'
+      ? 'bg-elevated shadow-sm'
       : visual.level === 'established'
-        ? 'bg-card/60'
-        : 'bg-card/50'
+        ? 'bg-elevated/90'
+        : 'bg-elevated/80'
 
   return (
     <div
       className={`
         inline-flex items-center ${gap} ${padding} rounded-full
-        ${bgClass} backdrop-blur-sm
+        ${bgClass}
         transition-all duration-500
       `}
       style={glowStyle}
@@ -161,19 +161,19 @@ export function VoiceBadgeWithHours({ score }: VoiceBadgeWithScoreProps) {
         }
       : {}
 
-  // Background classes - uses theme's card background with glassmorphism
+  // Background classes - elevated background for visibility
   const bgClass =
     visual.level === 'high'
-      ? 'bg-card/70'
+      ? 'bg-elevated shadow-sm'
       : visual.level === 'established'
-        ? 'bg-card/60'
-        : 'bg-card/50'
+        ? 'bg-elevated/90'
+        : 'bg-elevated/80'
 
   return (
     <div
       className={`
         inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
-        ${bgClass} backdrop-blur-sm
+        ${bgClass}
         transition-all duration-500
       `}
       style={glowStyle}

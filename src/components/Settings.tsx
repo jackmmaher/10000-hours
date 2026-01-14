@@ -168,7 +168,7 @@ export function Settings({ onBack }: SettingsProps) {
           <p className="font-serif text-sm text-ink/50 tracking-wide mb-4">Account</p>
 
           {isAuthenticated && user ? (
-            <div className="p-5 bg-card/90 backdrop-blur-md shadow-sm rounded-xl">
+            <div className="p-5 bg-elevated shadow-sm rounded-xl">
               <p className="text-sm text-ink/60 mb-2">{user.email}</p>
               <p className="text-xs text-ink/40 mb-4">You can create and share pearls</p>
               <button
@@ -188,8 +188,8 @@ export function Settings({ onBack }: SettingsProps) {
                 haptic.light()
                 setShowAuthModal(true)
               }}
-              className="w-full p-5 bg-card/90 backdrop-blur-md shadow-sm
-                rounded-xl text-left hover:bg-card/95 hover:shadow-md transition-all
+              className="w-full p-5 bg-elevated shadow-sm
+                rounded-xl text-left hover:shadow-md transition-all
                 active:scale-[0.99] touch-manipulation"
             >
               <p className="text-sm text-ink font-medium">Sign in to create</p>

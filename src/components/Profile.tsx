@@ -355,8 +355,8 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
               haptic.light()
               setShowPreferences(!showPreferences)
             }}
-            className="w-full flex items-center justify-between p-4 bg-card/90 backdrop-blur-md shadow-sm
-              rounded-xl hover:bg-card/95 hover:shadow-md transition-all touch-manipulation"
+            className="w-full flex items-center justify-between p-4 bg-elevated shadow-sm
+              rounded-xl hover:shadow-md transition-all touch-manipulation"
           >
             <div className="text-left">
               <p className="text-sm text-ink font-medium">Meditation Preferences</p>
@@ -475,8 +475,8 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
               haptic.light()
               setShowGoalSettings(!showGoalSettings)
             }}
-            className="w-full flex items-center justify-between p-4 bg-card/90 backdrop-blur-md shadow-sm
-              rounded-xl hover:bg-card/95 hover:shadow-md transition-all touch-manipulation cursor-pointer"
+            className="w-full flex items-center justify-between p-4 bg-elevated shadow-sm
+              rounded-xl hover:shadow-md transition-all touch-manipulation cursor-pointer"
           >
             <div className="text-left">
               <p className="text-sm font-medium text-ink">Practice Goal</p>

@@ -101,15 +101,15 @@ function ActionCard({ action, onClick }: { action: SuggestedAction; onClick: () 
     return (
       <button
         onClick={onClick}
-        className="w-full text-left bg-card/90 backdrop-blur-md shadow-sm
-          rounded-xl p-4 hover:bg-card/95 hover:shadow-md transition-all active:scale-[0.99] touch-manipulation"
+        className="w-full text-left bg-elevated shadow-sm
+          rounded-xl p-4 hover:shadow-md transition-all active:scale-[0.99] touch-manipulation"
       >
         {content}
       </button>
     )
   }
 
-  return <div className="bg-card/60 backdrop-blur-sm rounded-xl p-4">{content}</div>
+  return <div className="bg-elevated/90 rounded-xl p-4">{content}</div>
 }
 
 function ActionIcon({ type }: { type: SuggestedAction['type'] }) {
