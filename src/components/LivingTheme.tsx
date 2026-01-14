@@ -23,6 +23,7 @@ import {
   Season,
   SeasonOption,
 } from '../lib/livingTheme'
+import { NEUTRAL_LIGHT, NEUTRAL_DARK, themeToCSSProperties } from '../lib/themeEngine'
 import { useSettingsStore } from '../stores/useSettingsStore'
 
 interface LivingThemeContextValue extends LivingThemeState {
@@ -54,13 +55,44 @@ const UPDATE_INTERVAL = 60 * 1000
 export function LivingTheme({ children, breathingIntensity = 0.015 }: LivingThemeProps) {
   const { visualEffects, themeMode, manualSeason, manualTime } = useSettingsStore()
   const expressive = visualEffects === 'expressive'
-  const isManualMode = themeMode === 'manual'
+
+  // Check for new theme modes
+  const isManualMode = themeMode === 'living-manual' || themeMode === 'manual' // backward compat
+  const isNeutralTheme =
+    themeMode === 'neutral-auto' || themeMode === 'neutral-light' || themeMode === 'neutral-dark'
 
   const [location, setLocation] = useState<{ lat: number; long: number } | null>(null)
   const locationFetched = useRef(false)
   const [lastUpdate, setLastUpdate] = useState(new Date())
 
+  // Helper to apply neutral theme CSS
+  const applyNeutralTheme = useCallback((isDark: boolean) => {
+    const tokens = isDark ? NEUTRAL_DARK : NEUTRAL_LIGHT
+    const properties = themeToCSSProperties(tokens)
+    const root = document.documentElement
+
+    root.style.setProperty('--theme-transition', '2s ease')
+    Object.entries(properties).forEach(([key, value]) => {
+      root.style.setProperty(key, value)
+    })
+
+    if (isDark) {
+      root.classList.add('dark')
+    } else {
+      root.classList.remove('dark')
+    }
+  }, [])
+
   const [themeState, setThemeState] = useState<LivingThemeState>(() => {
+    // For neutral themes, use a minimal state (effects will be hidden)
+    if (isNeutralTheme) {
+      const isDark =
+        themeMode === 'neutral-dark' ||
+        (themeMode === 'neutral-auto' &&
+          typeof window !== 'undefined' &&
+          window.matchMedia('(prefers-color-scheme: dark)').matches)
+      return calculateManualTheme('neutral', isDark ? 'night' : 'daytime', false, true)
+    }
     if (isManualMode) {
       return calculateManualTheme(manualSeason as SeasonOption, manualTime, expressive, true)
     }
@@ -69,7 +101,7 @@ export function LivingTheme({ children, breathingIntensity = 0.015 }: LivingThem
   })
 
   useEffect(() => {
-    if (isManualMode) return
+    if (isManualMode || isNeutralTheme) return
     if (locationFetched.current) return
     locationFetched.current = true
 
@@ -78,10 +110,26 @@ export function LivingTheme({ children, breathingIntensity = 0.015 }: LivingThem
       .catch(() => {
         setLocation(estimateLocationFromTimezone())
       })
-  }, [isManualMode])
+  }, [isManualMode, isNeutralTheme])
 
   const updateTheme = useCallback(() => {
     const now = new Date()
+
+    // Handle neutral themes - apply CSS and return early
+    if (isNeutralTheme) {
+      const systemPrefersDark =
+        typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches
+      const isDark =
+        themeMode === 'neutral-dark' || (themeMode === 'neutral-auto' && systemPrefersDark)
+
+      applyNeutralTheme(isDark)
+
+      // Still update state for context consumers (minimal effects)
+      const newState = calculateManualTheme('neutral', isDark ? 'night' : 'daytime', false, true)
+      setThemeState(newState)
+      setLastUpdate(now)
+      return
+    }
 
     let newState: LivingThemeState
     if (isManualMode) {
@@ -94,18 +142,38 @@ export function LivingTheme({ children, breathingIntensity = 0.015 }: LivingThem
     setThemeState(newState)
     applyLivingTheme(newState)
     setLastUpdate(now)
-  }, [location, expressive, isManualMode, manualSeason, manualTime])
+  }, [
+    location,
+    expressive,
+    isManualMode,
+    isNeutralTheme,
+    themeMode,
+    manualSeason,
+    manualTime,
+    applyNeutralTheme,
+  ])
 
   useEffect(() => {
     updateTheme()
   }, [updateTheme])
 
   useEffect(() => {
-    if (isManualMode) return
+    // Don't run periodic updates for manual or neutral themes
+    if (isManualMode || isNeutralTheme) return
 
     const interval = setInterval(updateTheme, UPDATE_INTERVAL)
     return () => clearInterval(interval)
-  }, [updateTheme, isManualMode])
+  }, [updateTheme, isManualMode, isNeutralTheme])
+
+  // Listen for system preference changes (for neutral-auto)
+  useEffect(() => {
+    if (themeMode !== 'neutral-auto') return
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    const handleChange = () => updateTheme()
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [themeMode, updateTheme])
 
   useEffect(() => {
     const handleReset = () => updateTheme()
@@ -117,8 +185,8 @@ export function LivingTheme({ children, breathingIntensity = 0.015 }: LivingThem
     ? getManualSeasonalEffects(manualSeason as SeasonOption, manualTime, expressive)
     : getSeasonalEffects(themeState.season, themeState.timeOfDay, expressive)
 
-  // Hide sun and moon for neutral themes (neutral light / neutral dark)
-  const hideCelestialBodies = isManualMode && manualSeason === 'neutral'
+  // Hide sun and moon for neutral themes
+  const hideCelestialBodies = isNeutralTheme || (isManualMode && manualSeason === 'neutral')
 
   const contextValue: LivingThemeContextValue = {
     ...themeState,
@@ -161,17 +229,20 @@ export function LivingTheme({ children, breathingIntensity = 0.015 }: LivingThem
           }
         `}</style>
 
-        <LivingThemeEffects
-          effects={themeState.effects}
-          season={themeState.season}
-          timeOfDay={themeState.timeOfDay}
-          expressive={expressive}
-          seasonalEffects={seasonalEffects}
-          sunAltitude={themeState.sunAltitude}
-          moonIllumination={themeState.moonIllumination}
-          moonPhaseAngle={themeState.moonPhaseAngle}
-          hideCelestialBodies={hideCelestialBodies}
-        />
+        {/* Only show living theme effects when not in neutral mode */}
+        {!isNeutralTheme && (
+          <LivingThemeEffects
+            effects={themeState.effects}
+            season={themeState.season}
+            timeOfDay={themeState.timeOfDay}
+            expressive={expressive}
+            seasonalEffects={seasonalEffects}
+            sunAltitude={themeState.sunAltitude}
+            moonIllumination={themeState.moonIllumination}
+            moonPhaseAngle={themeState.moonPhaseAngle}
+            hideCelestialBodies={hideCelestialBodies}
+          />
+        )}
 
         {children}
       </div>
