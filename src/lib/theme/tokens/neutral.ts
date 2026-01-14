@@ -1,207 +1,225 @@
 import { ThemeTokens } from '../types'
 
+/**
+ * Hermès-Inspired Neutral Theme - Light Mode
+ *
+ * Design Language:
+ * - Warm cream backgrounds (paper/parchment quality)
+ * - Hermès signature orange accent (#E35205)
+ * - Warm neutral text (stone/neutral family)
+ * - Borderless elegance (color creates separation)
+ */
 export const NEUTRAL_LIGHT: ThemeTokens = {
-  // Backgrounds - Clean slate
-  bgBase: '#F8FAFC',
+  // Backgrounds - Warm cream (paper quality)
+  bgBase: '#F5F5F0',
   bgElevated: '#FFFFFF',
-  bgDeep: '#F1F5F9',
-  bgOverlay: 'rgba(15, 23, 42, 0.4)',
+  bgDeep: '#EDEBE5',
+  bgOverlay: 'rgba(23, 23, 23, 0.5)',
 
-  // Text - Slate scale
-  textPrimary: '#1E293B',
-  textSecondary: '#475569',
-  textMuted: '#64748B',
+  // Text - Warm neutrals
+  textPrimary: '#171717',
+  textSecondary: '#525252',
+  textMuted: '#737373',
   textOnAccent: '#FFFFFF',
 
-  // Accent - Slate blue (functional, not decorative)
-  accent: '#475569',
-  accentHover: '#334155',
-  accentMuted: 'rgba(71, 85, 105, 0.12)',
-  accentGlow: 'rgba(71, 85, 105, 0.25)',
+  // Accent - Hermès Orange
+  accent: '#E35205',
+  accentHover: '#C2410C',
+  accentMuted: 'rgba(227, 82, 5, 0.12)',
+  accentGlow: 'rgba(227, 82, 5, 0.25)',
 
-  // Orb - Soft neutral gradient
+  // Orb - Warm with orange glow
   orbCore: '#FFFFFF',
-  orbMid: '#E2E8F0',
-  orbEdge: '#CBD5E1',
-  orbGlow: 'rgba(148, 163, 184, 0.3)',
-  orbAtmosphere: 'rgba(148, 163, 184, 0.1)',
+  orbMid: '#F5F5F0',
+  orbEdge: '#E7E5DF',
+  orbGlow: 'rgba(227, 82, 5, 0.25)',
+  orbAtmosphere: 'rgba(227, 82, 5, 0.08)',
 
-  // Stones - Slate scale
-  stoneCompleted: '#334155',
-  stoneCompletedInner: '#475569',
-  stonePlanned: 'rgba(71, 85, 105, 0.2)',
-  stonePlannedBorder: 'rgba(71, 85, 105, 0.4)',
-  stoneEmpty: '#F1F5F9',
-  stoneToday: '#E2E8F0',
+  // Stones - Warm neutrals with orange for planned
+  stoneCompleted: '#525252',
+  stoneCompletedInner: '#737373',
+  stonePlanned: 'rgba(227, 82, 5, 0.15)',
+  stonePlannedBorder: 'rgba(227, 82, 5, 0.5)',
+  stoneEmpty: '#EDEBE5',
+  stoneToday: '#E7E5DF',
 
-  // Cards - Clean white
+  // Cards - Clean white on cream
   cardBg: '#FFFFFF',
-  cardBorder: 'rgba(71, 85, 105, 0.1)',
-  cardShadow: 'rgba(15, 23, 42, 0.05)',
+  cardBorder: 'rgba(0, 0, 0, 0.06)',
+  cardShadow: 'rgba(0, 0, 0, 0.06)',
 
-  // Calendar
+  // Calendar - Orange intensity gradient
   calendarDayBg: '#FFFFFF',
-  calendarDayText: '#475569',
-  calendarIntensity1: 'rgba(71, 85, 105, 0.15)',
-  calendarIntensity2: 'rgba(71, 85, 105, 0.30)',
-  calendarIntensity3: 'rgba(71, 85, 105, 0.50)',
-  calendarIntensity4: 'rgba(71, 85, 105, 0.70)',
+  calendarDayText: '#525252',
+  calendarIntensity1: 'rgba(227, 82, 5, 0.15)',
+  calendarIntensity2: 'rgba(227, 82, 5, 0.30)',
+  calendarIntensity3: 'rgba(227, 82, 5, 0.50)',
+  calendarIntensity4: 'rgba(227, 82, 5, 0.70)',
 
-  // Progress
-  progressTrack: '#E2E8F0',
-  progressFill: '#475569',
-  progressGlow: 'rgba(71, 85, 105, 0.25)',
+  // Progress - Orange fill
+  progressTrack: '#E7E5DF',
+  progressFill: '#E35205',
+  progressGlow: 'rgba(227, 82, 5, 0.25)',
 
-  // Interactive
-  buttonPrimaryBg: '#334155',
+  // Interactive - Orange primary
+  buttonPrimaryBg: '#E35205',
   buttonPrimaryText: '#FFFFFF',
-  buttonSecondaryBg: '#F1F5F9',
-  buttonSecondaryText: '#1E293B',
-  toggleOn: '#475569',
-  toggleOff: '#CBD5E1',
+  buttonSecondaryBg: '#EDEBE5',
+  buttonSecondaryText: '#171717',
+  toggleOn: '#E35205',
+  toggleOff: '#D6D3D1',
   toggleThumb: '#FFFFFF',
 
-  // Borders
-  border: 'rgba(71, 85, 105, 0.15)',
-  borderSubtle: 'rgba(71, 85, 105, 0.08)',
-  divider: 'rgba(71, 85, 105, 0.08)',
+  // Borders - Subtle, near-invisible
+  border: 'rgba(0, 0, 0, 0.08)',
+  borderSubtle: 'rgba(0, 0, 0, 0.04)',
+  divider: 'rgba(0, 0, 0, 0.06)',
 
-  // Shadows
-  shadowColor: 'rgba(15, 23, 42, 0.06)',
-  shadowElevation1: '0 1px 3px rgba(15, 23, 42, 0.04)',
-  shadowElevation2: '0 4px 12px rgba(15, 23, 42, 0.06)',
-  shadowElevation3: '0 8px 24px rgba(15, 23, 42, 0.08)',
+  // Shadows - Neutral black
+  shadowColor: 'rgba(0, 0, 0, 0.06)',
+  shadowElevation1: '0 1px 3px rgba(0, 0, 0, 0.04)',
+  shadowElevation2: '0 4px 12px rgba(0, 0, 0, 0.06)',
+  shadowElevation3: '0 8px 24px rgba(0, 0, 0, 0.08)',
 
-  // Pearls - Subtle shimmer
+  // Pearls - Warm shimmer
   pearlBg: '#FFFFFF',
-  pearlShimmer: 'rgba(248, 250, 252, 0.8)',
-  pearlOrb: '#F1F5F9',
-  pearlOrbInner: '#E2E8F0',
+  pearlShimmer: 'rgba(255, 255, 255, 0.8)',
+  pearlOrb: '#F5F5F0',
+  pearlOrbInner: '#E7E5DF',
 
-  // Navigation
-  navBg: 'rgba(248, 250, 252, 0.95)',
-  navActive: '#1E293B',
-  navInactive: '#64748B',
-  pullIndicator: '#475569',
+  // Navigation - Orange active
+  navBg: 'rgba(245, 245, 240, 0.95)',
+  navActive: '#E35205',
+  navInactive: '#737373',
+  pullIndicator: '#E35205',
 
-  // Voice Badge - Neutral slate scale
-  voiceHighBg: 'rgba(34, 197, 94, 0.12)',
-  voiceHighText: '#166534',
-  voiceHighDot: '#22C55E',
-  voiceEstablishedBg: 'rgba(59, 130, 246, 0.12)',
-  voiceEstablishedText: '#1D4ED8',
-  voiceEstablishedDot: '#3B82F6',
-  voiceGrowingBg: 'rgba(71, 85, 105, 0.12)',
-  voiceGrowingText: '#334155',
-  voiceGrowingDot: '#64748B',
-  voiceNewBg: '#F1F5F9',
-  voiceNewText: '#64748B',
-  voiceNewDot: '#94A3B8',
+  // Voice Badge - Orange intensity scale
+  voiceHighBg: 'rgba(227, 82, 5, 0.15)',
+  voiceHighText: '#C2410C',
+  voiceHighDot: '#E35205',
+  voiceEstablishedBg: 'rgba(227, 82, 5, 0.10)',
+  voiceEstablishedText: '#525252',
+  voiceEstablishedDot: '#E9762B',
+  voiceGrowingBg: 'rgba(227, 82, 5, 0.06)',
+  voiceGrowingText: '#737373',
+  voiceGrowingDot: '#EFA06A',
+  voiceNewBg: '#EDEBE5',
+  voiceNewText: '#737373',
+  voiceNewDot: '#D6D3D1',
 
   // Meta
   isDark: false,
-  seasonalAccent: '#475569',
+  seasonalAccent: '#E35205',
 }
 
+/**
+ * Hermès-Inspired Neutral Theme - Dark Mode
+ *
+ * Design Language:
+ * - Warm charcoal backgrounds (aged leather quality)
+ * - Boosted orange accent for dark visibility (#EA580C)
+ * - Warm stone text tones
+ * - Elevated surfaces are lighter (inverted from light mode)
+ */
 export const NEUTRAL_DARK: ThemeTokens = {
-  // Backgrounds - Deep slate
-  bgBase: '#0F172A',
-  bgElevated: '#1E293B',
-  bgDeep: '#0B1120',
-  bgOverlay: 'rgba(0, 0, 0, 0.6)',
+  // Backgrounds - Warm charcoal (leather quality)
+  bgBase: '#1C1917',
+  bgElevated: '#292524',
+  bgDeep: '#0C0A09',
+  bgOverlay: 'rgba(0, 0, 0, 0.7)',
 
-  // Text - Light slate
-  textPrimary: '#F1F5F9',
-  textSecondary: '#CBD5E1',
-  textMuted: '#94A3B8',
+  // Text - Warm stone tones
+  textPrimary: '#FAFAF9',
+  textSecondary: '#A8A29E',
+  textMuted: '#78716C',
   textOnAccent: '#FFFFFF',
 
-  // Accent - Brighter slate for visibility
-  accent: '#94A3B8',
-  accentHover: '#CBD5E1',
-  accentMuted: 'rgba(148, 163, 184, 0.15)',
-  accentGlow: 'rgba(148, 163, 184, 0.3)',
+  // Accent - Boosted Hermès Orange for dark
+  accent: '#EA580C',
+  accentHover: '#F97316',
+  accentMuted: 'rgba(234, 88, 12, 0.15)',
+  accentGlow: 'rgba(234, 88, 12, 0.35)',
 
-  // Orb - Soft glow in darkness
-  orbCore: '#F1F5F9',
-  orbMid: '#94A3B8',
-  orbEdge: '#64748B',
-  orbGlow: 'rgba(148, 163, 184, 0.35)',
-  orbAtmosphere: 'rgba(148, 163, 184, 0.12)',
+  // Orb - Warm glow in darkness
+  orbCore: '#FAFAF9',
+  orbMid: '#78716C',
+  orbEdge: '#44403C',
+  orbGlow: 'rgba(234, 88, 12, 0.35)',
+  orbAtmosphere: 'rgba(234, 88, 12, 0.12)',
 
-  // Stones - Slate variations
-  stoneCompleted: '#94A3B8',
-  stoneCompletedInner: '#CBD5E1',
-  stonePlanned: 'rgba(148, 163, 184, 0.25)',
-  stonePlannedBorder: 'rgba(148, 163, 184, 0.5)',
-  stoneEmpty: '#1E293B',
-  stoneToday: '#334155',
+  // Stones - Stone tones with orange for planned
+  stoneCompleted: '#A8A29E',
+  stoneCompletedInner: '#D6D3D1',
+  stonePlanned: 'rgba(234, 88, 12, 0.2)',
+  stonePlannedBorder: 'rgba(234, 88, 12, 0.6)',
+  stoneEmpty: '#292524',
+  stoneToday: '#3D3836',
 
-  // Cards - Elevated slate
-  cardBg: '#1E293B',
-  cardBorder: 'rgba(148, 163, 184, 0.1)',
-  cardShadow: 'rgba(0, 0, 0, 0.3)',
+  // Cards - Elevated charcoal
+  cardBg: '#292524',
+  cardBorder: 'rgba(255, 255, 255, 0.06)',
+  cardShadow: 'rgba(0, 0, 0, 0.4)',
 
-  // Calendar
-  calendarDayBg: '#1E293B',
-  calendarDayText: '#CBD5E1',
-  calendarIntensity1: 'rgba(148, 163, 184, 0.15)',
-  calendarIntensity2: 'rgba(148, 163, 184, 0.30)',
-  calendarIntensity3: 'rgba(148, 163, 184, 0.50)',
-  calendarIntensity4: 'rgba(148, 163, 184, 0.70)',
+  // Calendar - Orange intensity gradient
+  calendarDayBg: '#292524',
+  calendarDayText: '#A8A29E',
+  calendarIntensity1: 'rgba(234, 88, 12, 0.15)',
+  calendarIntensity2: 'rgba(234, 88, 12, 0.30)',
+  calendarIntensity3: 'rgba(234, 88, 12, 0.50)',
+  calendarIntensity4: 'rgba(234, 88, 12, 0.70)',
 
-  // Progress
-  progressTrack: '#334155',
-  progressFill: '#94A3B8',
-  progressGlow: 'rgba(148, 163, 184, 0.3)',
+  // Progress - Orange fill
+  progressTrack: '#3D3836',
+  progressFill: '#EA580C',
+  progressGlow: 'rgba(234, 88, 12, 0.35)',
 
-  // Interactive
-  buttonPrimaryBg: '#94A3B8',
-  buttonPrimaryText: '#0F172A',
-  buttonSecondaryBg: '#334155',
-  buttonSecondaryText: '#F1F5F9',
-  toggleOn: '#94A3B8',
-  toggleOff: '#334155',
+  // Interactive - Orange primary
+  buttonPrimaryBg: '#EA580C',
+  buttonPrimaryText: '#FFFFFF',
+  buttonSecondaryBg: '#3D3836',
+  buttonSecondaryText: '#FAFAF9',
+  toggleOn: '#EA580C',
+  toggleOff: '#3D3836',
   toggleThumb: '#FFFFFF',
 
-  // Borders
-  border: 'rgba(148, 163, 184, 0.15)',
-  borderSubtle: 'rgba(148, 163, 184, 0.08)',
-  divider: 'rgba(148, 163, 184, 0.08)',
+  // Borders - Subtle light on dark
+  border: 'rgba(255, 255, 255, 0.08)',
+  borderSubtle: 'rgba(255, 255, 255, 0.04)',
+  divider: 'rgba(255, 255, 255, 0.06)',
 
-  // Shadows
+  // Shadows - Deep black
   shadowColor: 'rgba(0, 0, 0, 0.4)',
   shadowElevation1: '0 1px 3px rgba(0, 0, 0, 0.2)',
   shadowElevation2: '0 4px 12px rgba(0, 0, 0, 0.3)',
   shadowElevation3: '0 8px 24px rgba(0, 0, 0, 0.4)',
 
-  // Pearls - Subtle shimmer
-  pearlBg: '#1E293B',
-  pearlShimmer: 'rgba(30, 41, 59, 0.8)',
-  pearlOrb: '#334155',
-  pearlOrbInner: '#475569',
+  // Pearls - Warm elevated shimmer
+  pearlBg: '#292524',
+  pearlShimmer: 'rgba(41, 37, 36, 0.8)',
+  pearlOrb: '#3D3836',
+  pearlOrbInner: '#44403C',
 
-  // Navigation
-  navBg: 'rgba(15, 23, 42, 0.95)',
-  navActive: '#F1F5F9',
-  navInactive: '#94A3B8',
-  pullIndicator: '#94A3B8',
+  // Navigation - Orange active
+  navBg: 'rgba(28, 25, 23, 0.95)',
+  navActive: '#EA580C',
+  navInactive: '#78716C',
+  pullIndicator: '#EA580C',
 
-  // Voice Badge - Neutral but visible
-  voiceHighBg: 'rgba(34, 197, 94, 0.15)',
-  voiceHighText: '#86EFAC',
-  voiceHighDot: '#22C55E',
-  voiceEstablishedBg: 'rgba(59, 130, 246, 0.15)',
-  voiceEstablishedText: '#93C5FD',
-  voiceEstablishedDot: '#3B82F6',
-  voiceGrowingBg: 'rgba(148, 163, 184, 0.15)',
-  voiceGrowingText: '#CBD5E1',
-  voiceGrowingDot: '#94A3B8',
-  voiceNewBg: '#334155',
-  voiceNewText: '#94A3B8',
-  voiceNewDot: '#64748B',
+  // Voice Badge - Orange intensity scale
+  voiceHighBg: 'rgba(234, 88, 12, 0.18)',
+  voiceHighText: '#FB923C',
+  voiceHighDot: '#EA580C',
+  voiceEstablishedBg: 'rgba(234, 88, 12, 0.12)',
+  voiceEstablishedText: '#A8A29E',
+  voiceEstablishedDot: '#F97316',
+  voiceGrowingBg: 'rgba(234, 88, 12, 0.08)',
+  voiceGrowingText: '#78716C',
+  voiceGrowingDot: '#FB923C',
+  voiceNewBg: '#292524',
+  voiceNewText: '#78716C',
+  voiceNewDot: '#57534E',
 
   // Meta
   isDark: true,
-  seasonalAccent: '#94A3B8',
+  seasonalAccent: '#EA580C',
 }
