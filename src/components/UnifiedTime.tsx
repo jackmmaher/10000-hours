@@ -3,35 +3,26 @@ import { motion, AnimatePresence } from 'framer-motion'
 /**
  * UnifiedTime - Single unified time display
  *
- * Replaces the dual-layer HemingwayTime architecture.
- * One component that extends (shows seconds) when active
- * and contracts (hides seconds) when resting.
- *
- * Typography hierarchy (preserved from original):
+ * Typography hierarchy:
  * - Hours: text-display, font-semibold, opacity-100
  * - Minutes (with hours): 0.85em, font-light, opacity-60
  * - Minutes (no hours): text-display, font-semibold, opacity-100
  * - Seconds: 0.72em, font-light, opacity-25
  *
- * Constraints:
- * - No zero-padding (show 8 not 08)
- * - No colons, no labels
- * - Show 0 at minute boundaries
- * - Stable layout (no position jumping during transitions)
+ * CRITICAL LAYOUT RULES:
+ * - NO `layout` props (causes animation fighting)
+ * - Tabular lining figures (font-variant-numeric: tabular-nums lining-nums)
+ * - Fixed-width segments using `min-width: Xch`
+ * - Right-aligned text so 9→10 doesn't shift
+ * - Breathing animation on OUTER wrapper only
  */
 
 interface UnifiedTimeProps {
-  /** Total seconds to display (live cumulative during session) */
   totalSeconds: number
-  /** Session elapsed seconds (0, 1, 2... for current session only) */
   sessionSeconds?: number
-  /** Whether to show the seconds segment */
   showSeconds: boolean
-  /** Opacity of seconds segment (0-1), animated by breath sync */
   secondsOpacity: number
-  /** Whether to apply breathing animation */
   breathing: boolean
-  /** Additional className for the container */
   className?: string
 }
 
@@ -43,79 +34,71 @@ export function UnifiedTime({
   breathing,
   className = '',
 }: UnifiedTimeProps) {
-  // Calculate display values - NO ZERO PADDING
-  // Hours and minutes show cumulative total
   const hours = Math.floor(totalSeconds / 3600)
   const minutes = Math.floor((totalSeconds % 3600) / 60)
-  // Seconds show SESSION time (0, 1, 2...) not cumulative
   const seconds = sessionSeconds % 60
 
-  // Base container with layout animation for smooth repositioning
-  const containerClasses = `
-    flex items-baseline justify-center
-    tabular-nums font-serif
-    ${breathing ? 'animate-box-breathe' : ''}
-    ${className}
-  `.trim()
-
-  // Spacing between segments - responsive using em units
-  const segmentGap = 'gap-[0.8em] sm:gap-[1em]'
-
   return (
-    <motion.div
-      className={`${containerClasses} ${segmentGap}`}
-      layout
-      transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-    >
-      {/* Hours segment - only visible when > 0 */}
-      <AnimatePresence mode="popLayout">
-        {hours > 0 && (
-          <motion.span
-            key="hours"
-            className="text-display font-semibold opacity-100"
-            layout
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.3 }}
-          >
-            {hours}
-          </motion.span>
-        )}
-      </AnimatePresence>
-
-      {/* Minutes segment - styling depends on whether hours are present */}
-      <motion.span
-        layout
-        className={hours > 0 ? 'font-light opacity-60' : 'text-display font-semibold opacity-100'}
-        style={hours > 0 ? { fontSize: 'calc(var(--text-display-size) * 0.85)' } : undefined}
-        transition={{ duration: 0.3 }}
+    // OUTER: Breathing animation wrapper (scale doesn't affect inner layout)
+    <div className={breathing ? 'animate-box-breathe' : ''}>
+      {/* INNER: Static layout - no layout props, fixed widths, tabular lining figures */}
+      <div
+        className={`
+          flex items-baseline justify-center
+          font-serif
+          gap-[0.8em] sm:gap-[1em]
+          ${className}
+        `}
+        style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}
       >
-        {minutes}
-      </motion.span>
+        {/* Hours - fixed width, right-aligned */}
+        <AnimatePresence mode="wait">
+          {hours > 0 && (
+            <motion.span
+              key="hours"
+              className="text-display font-semibold text-right"
+              style={{ minWidth: '1.5ch' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {hours}
+            </motion.span>
+          )}
+        </AnimatePresence>
 
-      {/* Seconds segment - fade in/out only on enter/exit, NOT on value changes */}
-      <AnimatePresence mode="popLayout">
-        {showSeconds && (
-          <motion.span
-            key="seconds-container"
-            className="font-light"
-            style={{
-              fontSize: 'calc(var(--text-display-size) * 0.72)',
-              opacity: secondsOpacity * 0.25,
-            }}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: secondsOpacity * 0.25, x: 0 }}
-            exit={{ opacity: 0, x: -10 }}
-            transition={{
-              opacity: { duration: 4, ease: 'easeInOut' },
-              x: { duration: 0.4, ease: 'easeOut' },
-            }}
-          >
-            {seconds}
-          </motion.span>
-        )}
-      </AnimatePresence>
-    </motion.div>
+        {/* Minutes - fixed width, right-aligned */}
+        <span
+          className={`text-right ${hours > 0 ? 'font-light opacity-60' : 'text-display font-semibold opacity-100'}`}
+          style={{
+            minWidth: '2ch',
+            fontSize: hours > 0 ? 'calc(var(--text-display-size) * 0.85)' : undefined,
+          }}
+        >
+          {minutes}
+        </span>
+
+        {/* Seconds - fixed width, fade only (no position animation) */}
+        <AnimatePresence mode="wait">
+          {showSeconds && (
+            <motion.span
+              key="seconds"
+              className="font-light text-right"
+              style={{
+                minWidth: '2ch',
+                fontSize: 'calc(var(--text-display-size) * 0.72)',
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: secondsOpacity * 0.25 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 4, ease: 'easeInOut' }}
+            >
+              {seconds}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
   )
 }

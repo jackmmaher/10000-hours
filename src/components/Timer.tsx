@@ -250,7 +250,7 @@ export function Timer() {
             exit={{ opacity: 0, y: -5 }}
             transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
           >
-            syncing with your breath...
+            beginning shortly...
           </motion.p>
         )}
       </AnimatePresence>
