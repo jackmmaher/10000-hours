@@ -26,6 +26,8 @@ interface NavigationState {
   view: AppView
   // Intent flags - consumed by target views
   openVoiceModal: boolean
+  // Timer settling lock - prevents navigation during 4-second settle window
+  isSettling: boolean
   // Post-session insight capture flow
   pendingInsightSessionId: string | null // Session awaiting insight capture
   showInsightModal: boolean // Whether to show insight modal
@@ -41,6 +43,7 @@ interface NavigationState {
   welcomeCutsceneShown: boolean // Tracks if shown this session (in-memory only)
   // Actions
   setView: (view: AppView) => void
+  setIsSettling: (settling: boolean) => void
   setViewWithVoiceModal: () => void
   clearVoiceModalIntent: () => void
   // Post-session actions
@@ -63,6 +66,7 @@ interface NavigationState {
 export const useNavigationStore = create<NavigationState>((set) => ({
   view: 'timer',
   openVoiceModal: false,
+  isSettling: false,
   pendingInsightSessionId: null,
   showInsightModal: false,
   pendingInsightSessionDuration: null,
@@ -78,6 +82,13 @@ export const useNavigationStore = create<NavigationState>((set) => ({
 
   setView: (view) =>
     set((state) => {
+      // GUARD: Block navigation during timer settling window
+      // This prevents race conditions between navigation and stopTimer()
+      if (state.isSettling) {
+        console.warn('[NavigationStore] Navigation blocked: timer settling')
+        return state // Return unchanged state
+      }
+
       // Trigger insight modal when navigating AWAY from timer with pending insight
       // This keeps the timer experience sacred - modal appears on the destination tab
       const leavingTimer = state.view === 'timer' && view !== 'timer'
@@ -88,6 +99,8 @@ export const useNavigationStore = create<NavigationState>((set) => ({
         showInsightModal: leavingTimer && hasPendingInsight ? true : state.showInsightModal,
       }
     }),
+
+  setIsSettling: (settling) => set({ isSettling: settling }),
   setViewWithVoiceModal: () => set({ view: 'progress', openVoiceModal: true }),
   clearVoiceModalIntent: () => set({ openVoiceModal: false }),
 
