@@ -3,14 +3,25 @@
  *
  * Currently tracks:
  * - hideTimeDisplay: Premium feature to hide numbers during meditation
- * - themeMode: Auto (syncs to real time) or Manual (user-selected)
+ * - themeMode: Neutral (light/dark) or Living (seasonal) with auto/manual variants
  * - visualEffects: Calm (minimal) or Expressive (aurora, shooting stars, etc.)
- * - manualSeason/manualTime: User's chosen theme when in manual mode
+ * - manualSeason/manualTime: User's chosen theme when in living-manual mode
  */
 
 import { create } from 'zustand'
-import { getSettings, updateSettings, ThemeMode, VisualEffects, SeasonOverride, TimeOverride } from '../lib/db'
+import {
+  getSettings,
+  updateSettings,
+  ThemeMode,
+  VisualEffects,
+  SeasonOverride,
+  TimeOverride,
+} from '../lib/db'
 import { NotificationPreferences, DEFAULT_NOTIFICATION_PREFERENCES } from '../lib/notifications'
+
+// Helper types for theme mode categories
+type NeutralMode = 'auto' | 'light' | 'dark'
+type LivingMode = 'auto' | 'manual'
 
 interface SettingsState {
   // State
@@ -31,12 +42,18 @@ interface SettingsState {
   setAudioFeedbackEnabled: (value: boolean) => Promise<void>
   setNotificationPreferences: (prefs: Partial<NotificationPreferences>) => Promise<void>
   setManualTheme: (season: SeasonOverride, time: TimeOverride) => Promise<void>
+
+  // New theme mode helpers
+  isLivingTheme: () => boolean
+  setNeutralMode: (mode: NeutralMode) => Promise<void>
+  setLivingMode: (mode: LivingMode) => Promise<void>
+  toggleLivingTheme: (enabled: boolean) => Promise<void>
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
-  // Initial state
+  // Initial state - neutral-auto is the new default
   hideTimeDisplay: false,
-  themeMode: 'auto',
+  themeMode: 'neutral-auto',
   visualEffects: 'calm',
   audioFeedbackEnabled: false,
   notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES,
@@ -54,7 +71,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       notificationPreferences: settings.notificationPreferences ?? DEFAULT_NOTIFICATION_PREFERENCES,
       manualSeason: settings.manualSeason ?? 'winter',
       manualTime: settings.manualTime ?? 'evening',
-      isLoading: false
+      isLoading: false,
     })
   },
 
@@ -86,7 +103,37 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   },
 
   setManualTheme: async (season, time) => {
-    await updateSettings({ manualSeason: season, manualTime: time, themeMode: 'manual' })
-    set({ manualSeason: season, manualTime: time, themeMode: 'manual' })
-  }
+    await updateSettings({ manualSeason: season, manualTime: time, themeMode: 'living-manual' })
+    set({ manualSeason: season, manualTime: time, themeMode: 'living-manual' })
+  },
+
+  // New theme mode helpers
+  isLivingTheme: () => {
+    const mode = get().themeMode
+    return mode === 'living-auto' || mode === 'living-manual'
+  },
+
+  setNeutralMode: async (mode) => {
+    const themeMode: ThemeMode = `neutral-${mode}` as ThemeMode
+    await updateSettings({ themeMode })
+    set({ themeMode })
+  },
+
+  setLivingMode: async (mode) => {
+    const themeMode: ThemeMode = `living-${mode}` as ThemeMode
+    await updateSettings({ themeMode })
+    set({ themeMode })
+  },
+
+  toggleLivingTheme: async (enabled) => {
+    if (enabled) {
+      // Switch to living theme (auto mode by default)
+      await updateSettings({ themeMode: 'living-auto' })
+      set({ themeMode: 'living-auto' })
+    } else {
+      // Switch back to neutral (auto mode by default)
+      await updateSettings({ themeMode: 'neutral-auto' })
+      set({ themeMode: 'neutral-auto' })
+    }
+  },
 }))

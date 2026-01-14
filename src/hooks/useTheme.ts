@@ -1,14 +1,15 @@
 /**
- * useTheme - React hook for the Solar-Aware Living Theme System
+ * useTheme - React hook for the Theme System
  *
  * Provides current theme tokens and applies CSS custom properties.
- * Updates automatically based on actual sun position for user's location.
- * Respects user's theme mode preference (auto/manual).
+ * Supports both neutral themes (light/dark) and living themes (solar-based).
  *
- * Key features:
- * - Continuous theme blending based on sun altitude (not hard time boundaries)
- * - Location-aware via one-time IP geolocation (cached)
- * - Falls back gracefully if location unavailable
+ * Theme modes:
+ * - neutral-auto: Follows system light/dark preference
+ * - neutral-light: Always light mode
+ * - neutral-dark: Always dark mode
+ * - living-auto: Solar-based seasonal theming
+ * - living-manual: User-selected season + time
  */
 
 import { useEffect, useState, useCallback, useRef } from 'react'
@@ -19,12 +20,14 @@ import {
   calculateTheme,
   calculateThemeBySunPosition,
   getTimeOfDayFromSunPosition,
-  themeToCSSProperties
+  themeToCSSProperties,
+  NEUTRAL_LIGHT,
+  NEUTRAL_DARK,
 } from '../lib/themeEngine'
 import {
   getLocation,
   calculateSunPosition,
-  estimateLocationFromTimezone
+  estimateLocationFromTimezone,
 } from '../lib/solarPosition'
 import { useSettingsStore } from '../stores/useSettingsStore'
 import type { Season } from '../lib/themeEngine'
@@ -42,7 +45,7 @@ export interface ThemeState {
   season: Season
   tokens: ThemeTokens
   isTransitioning: boolean // Kept for API compatibility, always true in solar mode
-  sunAltitude?: number     // For debugging/display
+  sunAltitude?: number // For debugging/display
 }
 
 export function useTheme(): ThemeState {
@@ -54,27 +57,51 @@ export function useTheme(): ThemeState {
 
   // Theme state
   const [themeState, setThemeState] = useState<ThemeState>(() => {
-    // Initial state uses timezone-based fallback until location loads
-    const fallbackLocation = estimateLocationFromTimezone()
-    const now = new Date()
-    const { altitude, isRising } = calculateSunPosition(fallbackLocation.lat, fallbackLocation.long, now)
-    const season = getSeason(now, fallbackLocation.lat < 0)
+    // Handle neutral themes
+    if (
+      themeMode === 'neutral-auto' ||
+      themeMode === 'neutral-light' ||
+      themeMode === 'neutral-dark'
+    ) {
+      const systemPrefersDark =
+        typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches
+      const isDark =
+        themeMode === 'neutral-dark' || (themeMode === 'neutral-auto' && systemPrefersDark)
+      const tokens = isDark ? NEUTRAL_DARK : NEUTRAL_LIGHT
+      return {
+        timeOfDay: isDark ? 'night' : 'daytime',
+        season: 'neutral' as Season,
+        tokens,
+        isTransitioning: false,
+      }
+    }
 
-    if (themeMode === 'manual') {
+    // Handle living-manual mode
+    if (themeMode === 'living-manual') {
       return {
         timeOfDay: manualTime,
         season: manualSeason as Season,
         tokens: calculateTheme(manualTime, manualSeason as Season),
-        isTransitioning: false
+        isTransitioning: false,
       }
     }
+
+    // Handle living-auto mode (and legacy 'auto')
+    const fallbackLocation = estimateLocationFromTimezone()
+    const now = new Date()
+    const { altitude, isRising } = calculateSunPosition(
+      fallbackLocation.lat,
+      fallbackLocation.long,
+      now
+    )
+    const season = getSeason(now, fallbackLocation.lat < 0)
 
     return {
       timeOfDay: getTimeOfDayFromSunPosition(altitude, isRising),
       season,
       tokens: calculateThemeBySunPosition(altitude, isRising, season),
       isTransitioning: true, // Solar mode is always "transitioning" (continuously blending)
-      sunAltitude: altitude
+      sunAltitude: altitude,
     }
   })
 
@@ -112,23 +139,40 @@ export function useTheme(): ThemeState {
     }
   }, [])
 
-  // Update theme based on sun position
+  // System preference state for neutral-auto mode
+  const [systemPrefersDark, setSystemPrefersDark] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches
+  )
+
+  // Listen for system preference changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    const handleChange = (e: MediaQueryListEvent) => setSystemPrefersDark(e.matches)
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [])
+
+  // Update theme based on mode
   const updateTheme = useCallback(() => {
-    const now = new Date()
+    // Handle neutral themes
+    if (
+      themeMode === 'neutral-auto' ||
+      themeMode === 'neutral-light' ||
+      themeMode === 'neutral-dark'
+    ) {
+      const isDark =
+        themeMode === 'neutral-dark' || (themeMode === 'neutral-auto' && systemPrefersDark)
+      const tokens = isDark ? NEUTRAL_DARK : NEUTRAL_LIGHT
+      const timeOfDay: TimeOfDay = isDark ? 'night' : 'daytime'
 
-    // For manual mode, use user-selected season and time (no solar calculation)
-    if (themeMode === 'manual') {
-      const tokens = calculateTheme(manualTime, manualSeason as Season)
-
-      setThemeState(prev => {
-        if (prev.timeOfDay === manualTime && prev.season === manualSeason) {
-          return prev
-        }
+      setThemeState((prev) => {
+        if (prev.tokens === tokens) return prev
         return {
-          timeOfDay: manualTime,
-          season: manualSeason as Season,
+          timeOfDay,
+          season: 'neutral' as Season,
           tokens,
-          isTransitioning: false
+          isTransitioning: false,
         }
       })
 
@@ -136,9 +180,34 @@ export function useTheme(): ThemeState {
       return
     }
 
-    // Auto mode - use solar position
+    // Handle living-manual mode
+    if (themeMode === 'living-manual') {
+      const tokens = calculateTheme(manualTime, manualSeason as Season)
+
+      setThemeState((prev) => {
+        if (prev.timeOfDay === manualTime && prev.season === manualSeason) {
+          return prev
+        }
+        return {
+          timeOfDay: manualTime,
+          season: manualSeason as Season,
+          tokens,
+          isTransitioning: false,
+        }
+      })
+
+      applyTheme(tokens)
+      return
+    }
+
+    // Handle living-auto mode (and legacy 'auto')
+    const now = new Date()
     const currentLocation = location ?? estimateLocationFromTimezone()
-    const { altitude, isRising } = calculateSunPosition(currentLocation.lat, currentLocation.long, now)
+    const { altitude, isRising } = calculateSunPosition(
+      currentLocation.lat,
+      currentLocation.long,
+      now
+    )
     const season = getSeason(now, currentLocation.lat < 0)
     const timeOfDay = getTimeOfDayFromSunPosition(altitude, isRising)
     const tokens = calculateThemeBySunPosition(altitude, isRising, season)
@@ -148,11 +217,11 @@ export function useTheme(): ThemeState {
       season,
       tokens,
       isTransitioning: true, // Solar mode is continuously blending
-      sunAltitude: altitude
+      sunAltitude: altitude,
     })
 
     applyTheme(tokens)
-  }, [applyTheme, themeMode, manualSeason, manualTime, location])
+  }, [applyTheme, themeMode, manualSeason, manualTime, location, systemPrefersDark])
 
   // Re-apply theme when mode or location changes
   useEffect(() => {
@@ -184,9 +253,11 @@ export function useThemeInfo() {
   const [location, setLocation] = useState<Location | null>(null)
 
   useEffect(() => {
-    getLocation().then(setLocation).catch(() => {
-      setLocation(estimateLocationFromTimezone())
-    })
+    getLocation()
+      .then(setLocation)
+      .catch(() => {
+        setLocation(estimateLocationFromTimezone())
+      })
   }, [])
 
   const [info, setInfo] = useState(() => {
@@ -197,7 +268,7 @@ export function useThemeInfo() {
     return {
       timeOfDay: getTimeOfDayFromSunPosition(altitude, isRising),
       season,
-      sunAltitude: altitude
+      sunAltitude: altitude,
     }
   })
 
@@ -211,7 +282,7 @@ export function useThemeInfo() {
       setInfo({
         timeOfDay: getTimeOfDayFromSunPosition(altitude, isRising),
         season,
-        sunAltitude: altitude
+        sunAltitude: altitude,
       })
     }
 
@@ -227,10 +298,25 @@ export function useThemeInfo() {
 export function useThemeTokens(): ThemeTokens {
   const { themeMode, manualSeason, manualTime } = useSettingsStore()
 
-  if (themeMode === 'manual') {
+  // Handle neutral themes
+  if (
+    themeMode === 'neutral-auto' ||
+    themeMode === 'neutral-light' ||
+    themeMode === 'neutral-dark'
+  ) {
+    const systemPrefersDark =
+      typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches
+    const isDark =
+      themeMode === 'neutral-dark' || (themeMode === 'neutral-auto' && systemPrefersDark)
+    return isDark ? NEUTRAL_DARK : NEUTRAL_LIGHT
+  }
+
+  // Handle living-manual mode
+  if (themeMode === 'living-manual') {
     return calculateTheme(manualTime, manualSeason as Season)
   }
 
+  // Handle living-auto mode (and legacy 'auto')
   const location = estimateLocationFromTimezone() // Sync fallback for initial render
   const now = new Date()
   const { altitude, isRising } = calculateSunPosition(location.lat, location.long, now)

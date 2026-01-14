@@ -19,8 +19,8 @@ import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 import { useAudioFeedback } from '../hooks/useAudioFeedback'
 import { trackHideTimeToggle } from '../lib/analytics'
-import { SeasonOverride, TimeOverride } from '../lib/db'
-import { getThemeName } from '../lib/themeEngine'
+import { TimeOverride, ThemeMode } from '../lib/db'
+import { getThemeName, Season } from '../lib/themeEngine'
 import { exportData } from '../lib/export'
 import { AuthModal } from './AuthModal'
 
@@ -28,12 +28,12 @@ interface SettingsProps {
   onBack: () => void
 }
 
-const SEASON_OPTIONS: { value: SeasonOverride; label: string; icon: string }[] = [
+// Living theme season options (no neutral - that's handled separately)
+const LIVING_SEASON_OPTIONS: { value: Season; label: string; icon: string }[] = [
   { value: 'spring', label: 'Spring', icon: '🌱' },
   { value: 'summer', label: 'Summer', icon: '☀️' },
   { value: 'autumn', label: 'Autumn', icon: '🍂' },
   { value: 'winter', label: 'Winter', icon: '❄️' },
-  { value: 'neutral', label: 'Neutral', icon: '○' },
 ]
 
 const TIME_OPTIONS: { value: TimeOverride; label: string }[] = [
@@ -43,21 +43,21 @@ const TIME_OPTIONS: { value: TimeOverride; label: string }[] = [
   { value: 'night', label: 'Night' },
 ]
 
-const QUICK_PRESETS: { label: string; season: SeasonOverride; time: TimeOverride }[] = [
-  { label: 'Neutral Light', season: 'neutral', time: 'daytime' },
-  { label: 'Neutral Dark', season: 'neutral', time: 'night' },
-  { label: 'Spring Dawn', season: 'spring', time: 'morning' },
-  { label: 'Summer Day', season: 'summer', time: 'daytime' },
-  { label: 'Autumn Evening', season: 'autumn', time: 'evening' },
-  { label: 'Winter Night', season: 'winter', time: 'night' },
-]
+// Helper to check if using living theme
+const isLivingTheme = (mode: ThemeMode) => mode === 'living-auto' || mode === 'living-manual'
+
+// Helper to get neutral mode from themeMode
+const getNeutralMode = (mode: ThemeMode): 'auto' | 'light' | 'dark' => {
+  if (mode === 'neutral-light') return 'light'
+  if (mode === 'neutral-dark') return 'dark'
+  return 'auto'
+}
 
 export function Settings({ onBack }: SettingsProps) {
   const {
     hideTimeDisplay,
     setHideTimeDisplay,
     themeMode,
-    setThemeMode,
     visualEffects,
     setVisualEffects,
     audioFeedbackEnabled,
@@ -67,12 +67,14 @@ export function Settings({ onBack }: SettingsProps) {
     manualSeason,
     manualTime,
     setManualTheme,
+    setNeutralMode,
+    setLivingMode,
+    toggleLivingTheme,
   } = useSettingsStore()
   const { user, isAuthenticated, signOut, isLoading: authLoading, refreshProfile } = useAuthStore()
   const { timeOfDay, season } = useThemeInfo()
   const haptic = useTapFeedback()
   const audio = useAudioFeedback()
-  const [showThemeDetail, setShowThemeDetail] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
 
   // Pull-to-refresh
@@ -465,15 +467,52 @@ export function Settings({ onBack }: SettingsProps) {
           )}
         </div>
 
-        {/* Theme Personalization */}
+        {/* Theme */}
         <div className="mb-8">
           <p className="font-serif text-sm text-ink/50 tracking-wide mb-4">Theme</p>
 
-          {/* Auto/Manual Toggle */}
+          {/* Neutral Theme Picker: Auto / Light / Dark */}
+          <div className="mb-4">
+            <div className="flex gap-2">
+              {(['auto', 'light', 'dark'] as const).map((mode) => {
+                const isActive = !isLivingTheme(themeMode) && getNeutralMode(themeMode) === mode
+                return (
+                  <button
+                    key={mode}
+                    onClick={() => {
+                      haptic.light()
+                      setNeutralMode(mode)
+                    }}
+                    className={`
+                      flex-1 py-3 rounded-xl text-center transition-all duration-200 touch-manipulation active:scale-[0.97]
+                      ${
+                        isActive
+                          ? 'bg-moss text-cream'
+                          : 'bg-cream-warm text-ink hover:bg-cream-deep'
+                      }
+                    `}
+                  >
+                    <p className={`text-sm font-medium ${isActive ? 'text-cream' : 'text-ink/80'}`}>
+                      {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                    </p>
+                  </button>
+                )
+              })}
+            </div>
+            <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
+              {isLivingTheme(themeMode)
+                ? 'Living theme is active'
+                : getNeutralMode(themeMode) === 'auto'
+                  ? 'Follows your system preference'
+                  : `Always ${getNeutralMode(themeMode)} mode`}
+            </p>
+          </div>
+
+          {/* Living Theme Toggle */}
           <button
             onClick={() => {
               haptic.light()
-              setThemeMode(themeMode === 'auto' ? 'manual' : 'auto')
+              toggleLivingTheme(!isLivingTheme(themeMode))
             }}
             className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform touch-manipulation"
           >
@@ -482,149 +521,44 @@ export function Settings({ onBack }: SettingsProps) {
                 Living theme
               </p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                {themeMode === 'auto'
-                  ? `Adapts to time & season — ${currentThemeName}`
-                  : 'Fixed to your selection'}
+                {isLivingTheme(themeMode)
+                  ? themeMode === 'living-auto'
+                    ? `Adapts to time & season — ${currentThemeName}`
+                    : `Fixed to ${manualSeason} ${manualTime}`
+                  : 'Seasonal colors based on time and location'}
               </p>
             </div>
-            {/* Custom organic toggle - theme aware */}
             <div
               className="relative w-12 h-7 rounded-full transition-colors duration-300"
               style={{
-                background: themeMode === 'auto' ? 'var(--toggle-on)' : 'var(--toggle-off)',
+                background: isLivingTheme(themeMode) ? 'var(--toggle-on)' : 'var(--toggle-off)',
               }}
             >
               <div
                 className={`
                   absolute top-1 w-5 h-5 rounded-full shadow-sm
                   transition-transform duration-300
-                  ${themeMode === 'auto' ? 'translate-x-6' : 'translate-x-1'}
+                  ${isLivingTheme(themeMode) ? 'translate-x-6' : 'translate-x-1'}
                 `}
                 style={{ background: 'var(--toggle-thumb)' }}
               />
             </div>
           </button>
 
-          {/* Expandable section header */}
-          <button
-            onClick={() => {
-              haptic.light()
-              setShowThemeDetail(!showThemeDetail)
-            }}
-            className="w-full flex items-center justify-between py-4 touch-manipulation"
-          >
-            <div className="text-left">
-              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
-                Personalize
-              </p>
-              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                {themeMode === 'manual'
-                  ? `${manualSeason.charAt(0).toUpperCase() + manualSeason.slice(1)} ${manualTime}`
-                  : 'Choose a fixed theme'}
-              </p>
-            </div>
-            <svg
-              className={`w-5 h-5 transition-transform ${showThemeDetail ? 'rotate-180' : ''}`}
-              style={{ color: 'var(--text-muted)' }}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </button>
-
-          {showThemeDetail && (
-            <div className="mt-2 space-y-4">
-              {/* Quick Presets */}
+          {/* Living Theme Options (expanded when living theme is on) */}
+          {isLivingTheme(themeMode) && (
+            <div className="mt-2 space-y-4 pl-1">
+              {/* Auto / Manual Toggle */}
               <div>
-                <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
-                  Quick presets
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  {QUICK_PRESETS.map((preset) => {
-                    const isActive =
-                      themeMode === 'manual' &&
-                      manualSeason === preset.season &&
-                      manualTime === preset.time
-                    return (
-                      <button
-                        key={preset.label}
-                        onClick={() => {
-                          haptic.light()
-                          setManualTheme(preset.season, preset.time)
-                        }}
-                        className={`
-                          p-3 rounded-xl text-left transition-all duration-200 touch-manipulation active:scale-[0.97]
-                          ${
-                            isActive
-                              ? 'bg-moss text-cream'
-                              : 'bg-cream-warm text-ink hover:bg-cream-deep'
-                          }
-                        `}
-                      >
-                        <p className={`text-xs font-medium ${isActive ? 'text-cream' : ''}`}>
-                          {preset.label}
-                        </p>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Season Picker */}
-              <div>
-                <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
-                  Season
-                </p>
                 <div className="flex gap-2">
-                  {SEASON_OPTIONS.map((option) => {
-                    const isActive = themeMode === 'manual' && manualSeason === option.value
+                  {(['auto', 'manual'] as const).map((mode) => {
+                    const isActive = themeMode === `living-${mode}`
                     return (
                       <button
-                        key={option.value}
+                        key={mode}
                         onClick={() => {
                           haptic.light()
-                          setManualTheme(option.value, manualTime)
-                        }}
-                        className={`
-                          flex-1 py-2.5 px-1 rounded-xl text-center transition-all duration-200 touch-manipulation active:scale-[0.97]
-                          ${
-                            isActive
-                              ? 'bg-moss text-cream'
-                              : 'bg-cream-warm text-ink hover:bg-cream-deep'
-                          }
-                        `}
-                      >
-                        <span className="text-sm">{option.icon}</span>
-                        <p className={`text-xs mt-0.5 ${isActive ? 'text-cream' : 'text-ink/60'}`}>
-                          {option.label}
-                        </p>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Time of Day Picker */}
-              <div>
-                <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
-                  Time of day
-                </p>
-                <div className="flex gap-2">
-                  {TIME_OPTIONS.map((option) => {
-                    const isActive = themeMode === 'manual' && manualTime === option.value
-                    return (
-                      <button
-                        key={option.value}
-                        onClick={() => {
-                          haptic.light()
-                          setManualTheme(manualSeason, option.value)
+                          setLivingMode(mode)
                         }}
                         className={`
                           flex-1 py-2.5 rounded-xl text-center transition-all duration-200 touch-manipulation active:scale-[0.97]
@@ -635,14 +569,90 @@ export function Settings({ onBack }: SettingsProps) {
                           }
                         `}
                       >
-                        <p className={`text-xs ${isActive ? 'text-cream' : 'text-ink/60'}`}>
-                          {option.label}
+                        <p
+                          className={`text-xs font-medium ${isActive ? 'text-cream' : 'text-ink/70'}`}
+                        >
+                          {mode === 'auto' ? 'Auto' : 'Manual'}
                         </p>
                       </button>
                     )
                   })}
                 </div>
               </div>
+
+              {/* Season and Time pickers (only when manual) */}
+              {themeMode === 'living-manual' && (
+                <>
+                  {/* Season Picker */}
+                  <div>
+                    <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
+                      Season
+                    </p>
+                    <div className="flex gap-2">
+                      {LIVING_SEASON_OPTIONS.map((option) => {
+                        const isActive = manualSeason === option.value
+                        return (
+                          <button
+                            key={option.value}
+                            onClick={() => {
+                              haptic.light()
+                              setManualTheme(option.value, manualTime)
+                            }}
+                            className={`
+                              flex-1 py-2.5 px-1 rounded-xl text-center transition-all duration-200 touch-manipulation active:scale-[0.97]
+                              ${
+                                isActive
+                                  ? 'bg-moss text-cream'
+                                  : 'bg-cream-warm text-ink hover:bg-cream-deep'
+                              }
+                            `}
+                          >
+                            <span className="text-sm">{option.icon}</span>
+                            <p
+                              className={`text-xs mt-0.5 ${isActive ? 'text-cream' : 'text-ink/60'}`}
+                            >
+                              {option.label}
+                            </p>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Time of Day Picker */}
+                  <div>
+                    <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
+                      Time of day
+                    </p>
+                    <div className="flex gap-2">
+                      {TIME_OPTIONS.map((option) => {
+                        const isActive = manualTime === option.value
+                        return (
+                          <button
+                            key={option.value}
+                            onClick={() => {
+                              haptic.light()
+                              setManualTheme(manualSeason as Season, option.value)
+                            }}
+                            className={`
+                              flex-1 py-2.5 rounded-xl text-center transition-all duration-200 touch-manipulation active:scale-[0.97]
+                              ${
+                                isActive
+                                  ? 'bg-moss text-cream'
+                                  : 'bg-cream-warm text-ink hover:bg-cream-deep'
+                              }
+                            `}
+                          >
+                            <p className={`text-xs ${isActive ? 'text-cream' : 'text-ink/60'}`}>
+                              {option.label}
+                            </p>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>

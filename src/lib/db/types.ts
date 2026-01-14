@@ -46,9 +46,20 @@ export interface UserProfile {
   achievements?: Achievement[] // Recorded milestone achievements
 }
 
-export type ThemeMode = 'auto' | 'manual'
+// Theme modes - neutral is default, living is optional override
+export type ThemeMode =
+  | 'neutral-auto' // Follow system light/dark preference (NEW DEFAULT)
+  | 'neutral-light' // Always light
+  | 'neutral-dark' // Always dark
+  | 'living-auto' // Solar-based seasonal (was 'auto')
+  | 'living-manual' // Fixed season + time (was 'manual')
+  // Legacy values for migration (will be converted on load)
+  | 'auto'
+  | 'manual'
+
 export type VisualEffects = 'calm' | 'expressive'
-export type SeasonOverride = 'spring' | 'summer' | 'autumn' | 'winter' | 'neutral'
+export type Season = 'spring' | 'summer' | 'autumn' | 'winter' // For living theme (no neutral)
+export type SeasonOverride = Season | 'neutral' // Includes neutral for backward compat
 export type TimeOverride = 'morning' | 'daytime' | 'evening' | 'night'
 
 export interface UserSettings {

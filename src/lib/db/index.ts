@@ -13,6 +13,7 @@ export type {
   UserProfile,
   ThemeMode,
   VisualEffects,
+  Season,
   SeasonOverride,
   TimeOverride,
   UserSettings,

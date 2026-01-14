@@ -11,20 +11,30 @@ import type { UserSettings } from './types'
 export async function getSettings(): Promise<UserSettings> {
   let settings = await db.settings.get(1)
   if (!settings) {
+    // NEW users get neutral-auto as default
     settings = {
       id: 1,
       hideTimeDisplay: false,
       skipInsightCapture: false,
-      themeMode: 'auto',
+      themeMode: 'neutral-auto',
       visualEffects: 'calm',
       audioFeedbackEnabled: false,
       notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES,
     }
     await db.settings.put(settings)
   }
-  // Backfill themeMode for existing users
-  if (!settings.themeMode) {
-    settings.themeMode = 'auto'
+  // Migrate legacy theme modes for EXISTING users
+  // 'auto' -> 'living-auto' (preserve their living theme experience)
+  // 'manual' -> 'living-manual' (preserve their manual selection)
+  if (settings.themeMode === 'auto') {
+    settings.themeMode = 'living-auto'
+    await db.settings.put(settings)
+  } else if (settings.themeMode === 'manual') {
+    settings.themeMode = 'living-manual'
+    await db.settings.put(settings)
+  } else if (!settings.themeMode) {
+    // Backfill missing themeMode for very old users
+    settings.themeMode = 'neutral-auto'
     await db.settings.put(settings)
   }
   // Backfill visualEffects for existing users
