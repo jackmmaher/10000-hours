@@ -255,32 +255,82 @@ export function Timer() {
   return (
     <div
       className={`
-        flex flex-col items-center justify-center h-full px-8 pb-[10vh]
+        relative flex flex-col items-center justify-center h-full px-8 pb-[10vh]
         transition-colors duration-400 select-none
-        ${isRunning ? 'bg-cream-dark' : 'bg-cream'}
+        bg-cream
       `}
       onClick={handleTap}
       {...swipeHandlers}
     >
-      {/* Timer Display */}
-      {hideTimeDisplay ? (
-        <GooeyOrb phase={phase} />
-      ) : (
-        <UnifiedTime
-          totalSeconds={liveTotal}
-          showSeconds={showSeconds}
-          secondsOpacity={secondsOpacity}
-          breathing={breathing}
-          className="text-indigo-deep"
-        />
-      )}
+      {/* Layer 1: Theater background - dims the whole room */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
+        style={{ backgroundColor: 'var(--theater-center)' }}
+        initial={{ opacity: 0 }}
+        animate={{
+          opacity: phase === 'pending' || phase === 'active' || phase === 'settling' ? 1 : 0,
+        }}
+        transition={{
+          duration: phase === 'pending' ? 8 : 4,
+          ease: [0.25, 0.1, 0.25, 1],
+        }}
+      />
+
+      {/* Layer 2: Radial spotlight vignette - seamless gradient, tight center focus */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none animate-spotlight-breathe"
+        style={{
+          background: `radial-gradient(
+            ellipse 55% 40% at center 45%,
+            transparent 0%,
+            transparent 5%,
+            color-mix(in oklab, var(--theater-edge) 2%, transparent) 8%,
+            color-mix(in oklab, var(--theater-edge) 5%, transparent) 12%,
+            color-mix(in oklab, var(--theater-edge) 9%, transparent) 16%,
+            color-mix(in oklab, var(--theater-edge) 14%, transparent) 21%,
+            color-mix(in oklab, var(--theater-edge) 20%, transparent) 27%,
+            color-mix(in oklab, var(--theater-edge) 27%, transparent) 33%,
+            color-mix(in oklab, var(--theater-edge) 35%, transparent) 40%,
+            color-mix(in oklab, var(--theater-edge) 44%, transparent) 48%,
+            color-mix(in oklab, var(--theater-edge) 54%, transparent) 56%,
+            color-mix(in oklab, var(--theater-edge) 65%, transparent) 65%,
+            color-mix(in oklab, var(--theater-edge) 76%, transparent) 74%,
+            color-mix(in oklab, var(--theater-edge) 87%, transparent) 84%,
+            color-mix(in oklab, var(--theater-edge) 95%, transparent) 92%,
+            var(--theater-edge) 100%
+          )`,
+        }}
+        initial={{ opacity: 0 }}
+        animate={{
+          opacity: phase === 'pending' || phase === 'active' || phase === 'settling' ? 1 : 0,
+        }}
+        transition={{
+          duration: phase === 'pending' ? 8 : 4,
+          ease: [0.25, 0.1, 0.25, 1],
+        }}
+      />
+
+      {/* Timer Display - z-10 to stay above theater layers */}
+      <div className="relative z-10">
+        {hideTimeDisplay ? (
+          <GooeyOrb phase={phase} />
+        ) : (
+          <UnifiedTime
+            totalSeconds={liveTotal}
+            showSeconds={showSeconds}
+            secondsOpacity={secondsOpacity}
+            breathing={breathing}
+            className="text-indigo-deep"
+          />
+        )}
+      </div>
 
       {/* Contextual hints - fade in/out matching seconds animation pattern */}
       <AnimatePresence mode="wait">
         {phase === 'resting' && (
           <motion.p
             key="resting-hint"
-            className="absolute bottom-[38vh] text-sm tracking-wide text-indigo-deep"
+            className="absolute bottom-[38vh] z-10 text-sm tracking-wide text-indigo-deep"
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.5 }}
             exit={{ opacity: 0 }}
@@ -292,7 +342,7 @@ export function Timer() {
         {phase === 'pending' && (
           <motion.p
             key="pending-hint"
-            className="absolute bottom-[38vh] text-sm tracking-wide text-indigo-deep"
+            className="absolute bottom-[38vh] z-10 text-sm tracking-wide text-indigo-deep"
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.5 }}
             exit={{ opacity: 0 }}
@@ -304,7 +354,7 @@ export function Timer() {
         {phase === 'active' && (
           <motion.p
             key="active-hint"
-            className="absolute bottom-[38vh] text-sm tracking-wide text-indigo-deep"
+            className="absolute bottom-[38vh] z-10 text-sm tracking-wide text-indigo-deep"
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.35 }}
             exit={{ opacity: 0 }}

@@ -112,6 +112,10 @@ export const NEUTRAL_LIGHT: ThemeTokens = {
   voiceNewText: '#737373',
   voiceNewDot: '#D6D3D1',
 
+  // Timer theater mode (cinematic focus)
+  theaterCenter: '#D8D4CE', // Dimmed cream (center glow)
+  theaterEdge: '#A8A49E', // Warm shadow (edge vignette)
+
   // Meta
   isDark: false,
   seasonalAccent: '#EA6512',
@@ -224,6 +228,10 @@ export const NEUTRAL_DARK: ThemeTokens = {
   voiceNewBg: '#292524',
   voiceNewText: '#78716C',
   voiceNewDot: '#57534E',
+
+  // Timer theater mode (cinematic focus)
+  theaterCenter: '#0C0A09', // Deep charcoal (center glow)
+  theaterEdge: '#030201', // Near-black (edge vignette)
 
   // Meta
   isDark: true,

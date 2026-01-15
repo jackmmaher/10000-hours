@@ -2,10 +2,11 @@
  * Navigation - Bottom navigation bar
  *
  * Minimal tab bar for main app sections.
- * Only visible when not in timer running state.
+ * Fades out smoothly when timer starts, fades back when timer ends.
  * Now fully theme-aware using CSS variables.
  */
 
+import { motion, AnimatePresence } from 'framer-motion'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useNavigationStore } from '../stores/useNavigationStore'
 import { useTapFeedback } from '../hooks/useTapFeedback'
@@ -90,49 +91,55 @@ export function Navigation() {
   const { timerPhase } = useSessionStore()
   const haptic = useTapFeedback()
 
-  // Hide during active meditation phases
+  // Hide during active meditation phases (with smooth fade)
   const isTimerActive = timerPhase === 'preparing' || timerPhase === 'running'
 
-  if (isTimerActive) return null
-
   return (
-    <nav
-      className="fixed bottom-0 left-0 right-0 z-40 backdrop-blur-sm safe-area-bottom"
-      style={{
-        background: 'var(--nav-bg)',
-        borderTop: '1px solid var(--border-subtle)',
-      }}
-    >
-      <div className="flex justify-around items-center h-16 max-w-lg mx-auto px-2">
-        {navItems.map((item) => {
-          const isActive =
-            view === item.view ||
-            // Legacy view mappings for backwards compatibility during transition
-            (item.view === 'progress' && view === 'calendar') ||
-            (item.view === 'explore' && (view === 'pearls' || view === 'saved-pearls')) ||
-            (item.view === 'journey' && view === 'insights') ||
-            (item.view === 'profile' && view === 'settings')
+    <AnimatePresence>
+      {!isTimerActive && (
+        <motion.nav
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          transition={{ duration: 4, ease: [0.25, 0.1, 0.25, 1] }}
+          className="fixed bottom-0 left-0 right-0 z-40 backdrop-blur-sm safe-area-bottom"
+          style={{
+            background: 'var(--nav-bg)',
+            borderTop: '1px solid var(--border-subtle)',
+          }}
+        >
+          <div className="flex justify-around items-center h-16 max-w-lg mx-auto px-2">
+            {navItems.map((item) => {
+              const isActive =
+                view === item.view ||
+                // Legacy view mappings for backwards compatibility during transition
+                (item.view === 'progress' && view === 'calendar') ||
+                (item.view === 'explore' && (view === 'pearls' || view === 'saved-pearls')) ||
+                (item.view === 'journey' && view === 'insights') ||
+                (item.view === 'profile' && view === 'settings')
 
-          return (
-            <button
-              key={item.view}
-              onClick={() => {
-                haptic.light()
-                setView(item.view)
-              }}
-              aria-label={`Navigate to ${item.label}`}
-              aria-current={isActive ? 'page' : undefined}
-              className="flex flex-col items-center justify-center flex-1 py-2 transition-colors active:scale-95"
-              style={{
-                color: isActive ? 'var(--nav-active)' : 'var(--nav-inactive)',
-              }}
-            >
-              {item.icon}
-              <span className="text-caption mt-1 font-medium">{item.label}</span>
-            </button>
-          )
-        })}
-      </div>
-    </nav>
+              return (
+                <button
+                  key={item.view}
+                  onClick={() => {
+                    haptic.light()
+                    setView(item.view)
+                  }}
+                  aria-label={`Navigate to ${item.label}`}
+                  aria-current={isActive ? 'page' : undefined}
+                  className="flex flex-col items-center justify-center flex-1 py-2 transition-colors active:scale-95"
+                  style={{
+                    color: isActive ? 'var(--nav-active)' : 'var(--nav-inactive)',
+                  }}
+                >
+                  {item.icon}
+                  <span className="text-caption mt-1 font-medium">{item.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        </motion.nav>
+      )}
+    </AnimatePresence>
   )
 }

@@ -105,6 +105,10 @@ export interface ThemeTokens {
   voiceNewText: string
   voiceNewDot: string
 
+  // === TIMER THEATER MODE ===
+  theaterCenter: string // Dimmed background center (spotlight glow)
+  theaterEdge: string // Dark vignette edges
+
   // === META ===
   isDark: boolean
   seasonalAccent: string // Accent color

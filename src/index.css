@@ -115,6 +115,10 @@
   --voice-new-text: var(--text-muted);
   --voice-new-dot: var(--text-muted);
 
+  /* === TIMER THEATER MODE === */
+  --theater-center: #D8D4CE;
+  --theater-edge: #A8A49E;
+
   /* === SEASONAL === */
   --seasonal-accent: #0EA5E9;
 

@@ -116,5 +116,9 @@ export function themeToCSSProperties(tokens: ThemeTokens): Record<string, string
     '--voice-new-dot': tokens.voiceNewDot,
 
     '--seasonal-accent': tokens.seasonalAccent,
+
+    // Timer theater mode
+    '--theater-center': tokens.theaterCenter,
+    '--theater-edge': tokens.theaterEdge,
   }
 }

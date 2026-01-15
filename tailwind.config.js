@@ -95,6 +95,7 @@ export default {
         'orb-breathe': 'orbBreathe 4s ease-in-out infinite',
         'orb-glow': 'orbGlow 4s ease-in-out infinite',
         'box-breathe': 'boxBreathe 16s ease-in-out infinite',
+        'spotlight-breathe': 'spotlightBreathe 16s ease-in-out infinite',
         // Timer transitions now handled by Framer Motion
       },
       keyframes: {
@@ -137,6 +138,18 @@ export default {
           '0%, 100%': { transform: 'scale(1)', opacity: '1' },
           '25%, 50%': { transform: 'scale(1.03)', opacity: '1' },
           '75%': { transform: 'scale(1)', opacity: '1' },
+        },
+        // Spotlight breathing - synced to box-breathe, gentle contraction draws eye in
+        spotlightBreathe: {
+          '0%': { backgroundSize: '200% 200%', backgroundPosition: 'center 45%' },
+          '12.5%': { backgroundSize: '192% 192%', backgroundPosition: 'center 45%' },
+          '25%': { backgroundSize: '185% 185%', backgroundPosition: 'center 45%' },
+          '37.5%': { backgroundSize: '182% 182%', backgroundPosition: 'center 45%' },
+          '50%': { backgroundSize: '185% 185%', backgroundPosition: 'center 45%' },
+          '62.5%': { backgroundSize: '192% 192%', backgroundPosition: 'center 45%' },
+          '75%': { backgroundSize: '200% 200%', backgroundPosition: 'center 45%' },
+          '87.5%': { backgroundSize: '200% 200%', backgroundPosition: 'center 45%' },
+          '100%': { backgroundSize: '200% 200%', backgroundPosition: 'center 45%' },
         },
         // Timer transitions now handled by Framer Motion (see src/lib/motion.ts)
       },
