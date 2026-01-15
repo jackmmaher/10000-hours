@@ -93,6 +93,21 @@ export function Timer() {
   useWakeLock(isRunning)
 
   // ============================================
+  // iOS SAFE AREA THEATER MODE
+  // ============================================
+  // iOS paints <html> background into safe area regions at OS level.
+  // Toggle theater-mode class to match safe areas with theater effect.
+  useEffect(() => {
+    const html = document.documentElement
+    if (phase === 'pending' || phase === 'active' || phase === 'settling') {
+      html.classList.add('theater-mode')
+    } else {
+      html.classList.remove('theater-mode')
+    }
+    return () => html.classList.remove('theater-mode')
+  }, [phase])
+
+  // ============================================
   // START SESSION
   // ============================================
   const handleStart = useCallback(async () => {

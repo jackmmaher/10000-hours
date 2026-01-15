@@ -219,6 +219,12 @@ html, body, #root {
   color: var(--text-primary);
 }
 
+/* Theater mode - applied to html element during timer animation
+   iOS paints html background into safe area regions at OS level */
+html.theater-mode {
+  background-color: var(--theater-center) !important;
+}
+
 body {
   font-family: 'Raleway', system-ui, sans-serif;
   font-weight: 400;
