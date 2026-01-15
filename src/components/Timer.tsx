@@ -262,10 +262,10 @@ export function Timer() {
       onClick={handleTap}
       {...swipeHandlers}
     >
-      {/* Layer 1: Theater background - dims the whole room (fixed covers iOS safe areas) */}
+      {/* Layer 1: Theater background - dims the whole room (extends beyond viewport for iOS safe areas) */}
       <motion.div
-        className="fixed inset-0 pointer-events-none"
-        style={{ backgroundColor: 'var(--theater-center)' }}
+        className="fixed pointer-events-none"
+        style={{ inset: '-100px', backgroundColor: 'var(--theater-center)' }}
         initial={{ opacity: 0 }}
         animate={{
           opacity: phase === 'pending' || phase === 'active' || phase === 'settling' ? 1 : 0,
