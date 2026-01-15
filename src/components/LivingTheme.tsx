@@ -53,8 +53,9 @@ interface LivingThemeProps {
 const UPDATE_INTERVAL = 60 * 1000
 
 export function LivingTheme({ children, breathingIntensity = 0.015 }: LivingThemeProps) {
-  const { visualEffects, themeMode, manualSeason, manualTime } = useSettingsStore()
-  const expressive = visualEffects === 'expressive'
+  const { themeMode, manualSeason, manualTime } = useSettingsStore()
+  // Visual effects are always expressive (baked into living theme)
+  const expressive = true
 
   // Check for new theme modes
   const isManualMode = themeMode === 'living-manual' || themeMode === 'manual' // backward compat

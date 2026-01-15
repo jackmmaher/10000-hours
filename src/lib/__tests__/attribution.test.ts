@@ -20,7 +20,6 @@ vi.mock('../db', () => ({
     hideTimeDisplay: false,
     skipInsightCapture: false,
     themeMode: 'auto',
-    visualEffects: 'calm',
     audioFeedbackEnabled: false,
     notificationPreferences: {
       milestoneEnabled: true,
@@ -45,7 +44,6 @@ describe('generateAttributionNotification', () => {
       hideTimeDisplay: false,
       skipInsightCapture: false,
       themeMode: 'auto',
-      visualEffects: 'calm',
       audioFeedbackEnabled: false,
       notificationPreferences: {
         milestoneEnabled: true,
@@ -74,7 +72,6 @@ describe('generateAttributionNotification', () => {
       hideTimeDisplay: false,
       skipInsightCapture: false,
       themeMode: 'auto',
-      visualEffects: 'calm',
       audioFeedbackEnabled: false,
       notificationPreferences: {
         milestoneEnabled: true,

@@ -57,7 +57,6 @@ export type ThemeMode =
   | 'auto'
   | 'manual'
 
-export type VisualEffects = 'calm' | 'expressive'
 export type Season = 'spring' | 'summer' | 'autumn' | 'winter' // For living theme (no neutral)
 export type SeasonOverride = Season | 'neutral' // Includes neutral for backward compat
 export type TimeOverride = 'morning' | 'daytime' | 'evening' | 'night'
@@ -67,7 +66,6 @@ export interface UserSettings {
   hideTimeDisplay: boolean
   skipInsightCapture: boolean // Skip post-session insight recording prompt
   themeMode: ThemeMode
-  visualEffects: VisualEffects
   audioFeedbackEnabled: boolean // Play subtle sounds on complete/milestone
   notificationPreferences: NotificationPreferences // In-app notification settings
   // Manual theme overrides (only used when themeMode === 'manual')

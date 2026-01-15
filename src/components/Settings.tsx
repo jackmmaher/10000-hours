@@ -58,8 +58,6 @@ export function Settings({ onBack }: SettingsProps) {
     hideTimeDisplay,
     setHideTimeDisplay,
     themeMode,
-    visualEffects,
-    setVisualEffects,
     audioFeedbackEnabled,
     setAudioFeedbackEnabled,
     notificationPreferences,
@@ -233,43 +231,6 @@ export function Settings({ onBack }: SettingsProps) {
                   absolute top-1 w-5 h-5 rounded-full shadow-sm
                   transition-transform duration-300
                   ${hideTimeDisplay ? 'translate-x-6' : 'translate-x-1'}
-                `}
-                style={{ background: 'var(--toggle-thumb)' }}
-              />
-            </div>
-          </button>
-
-          {/* Visual Effects - Calm vs Expressive */}
-          <button
-            onClick={() => {
-              haptic.light()
-              setVisualEffects(visualEffects === 'calm' ? 'expressive' : 'calm')
-            }}
-            className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform touch-manipulation"
-          >
-            <div className="text-left">
-              <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
-                Visual effects
-              </p>
-              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                {visualEffects === 'calm'
-                  ? 'Calm — subtle, minimal atmosphere'
-                  : 'Expressive — aurora, shooting stars, shimmer'}
-              </p>
-            </div>
-            {/* Custom organic toggle - theme aware */}
-            <div
-              className="relative w-12 h-7 rounded-full transition-colors duration-300"
-              style={{
-                background:
-                  visualEffects === 'expressive' ? 'var(--toggle-on)' : 'var(--toggle-off)',
-              }}
-            >
-              <div
-                className={`
-                  absolute top-1 w-5 h-5 rounded-full shadow-sm
-                  transition-transform duration-300
-                  ${visualEffects === 'expressive' ? 'translate-x-6' : 'translate-x-1'}
                 `}
                 style={{ background: 'var(--toggle-thumb)' }}
               />

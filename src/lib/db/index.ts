@@ -12,7 +12,6 @@ export type {
   Achievement,
   UserProfile,
   ThemeMode,
-  VisualEffects,
   Season,
   SeasonOverride,
   TimeOverride,

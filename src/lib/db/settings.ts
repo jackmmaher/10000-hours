@@ -17,7 +17,6 @@ export async function getSettings(): Promise<UserSettings> {
       hideTimeDisplay: false,
       skipInsightCapture: false,
       themeMode: 'neutral-auto',
-      visualEffects: 'calm',
       audioFeedbackEnabled: false,
       notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES,
     }
@@ -35,11 +34,6 @@ export async function getSettings(): Promise<UserSettings> {
   } else if (!settings.themeMode) {
     // Backfill missing themeMode for very old users
     settings.themeMode = 'neutral-auto'
-    await db.settings.put(settings)
-  }
-  // Backfill visualEffects for existing users
-  if (!settings.visualEffects) {
-    settings.visualEffects = 'calm'
     await db.settings.put(settings)
   }
   // Backfill skipInsightCapture for existing users

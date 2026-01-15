@@ -4,19 +4,11 @@
  * Currently tracks:
  * - hideTimeDisplay: Premium feature to hide numbers during meditation
  * - themeMode: Neutral (light/dark) or Living (seasonal) with auto/manual variants
- * - visualEffects: Calm (minimal) or Expressive (aurora, shooting stars, etc.)
  * - manualSeason/manualTime: User's chosen theme when in living-manual mode
  */
 
 import { create } from 'zustand'
-import {
-  getSettings,
-  updateSettings,
-  ThemeMode,
-  VisualEffects,
-  SeasonOverride,
-  TimeOverride,
-} from '../lib/db'
+import { getSettings, updateSettings, ThemeMode, SeasonOverride, TimeOverride } from '../lib/db'
 import { NotificationPreferences, DEFAULT_NOTIFICATION_PREFERENCES } from '../lib/notifications'
 
 // Helper types for theme mode categories
@@ -27,7 +19,6 @@ interface SettingsState {
   // State
   hideTimeDisplay: boolean
   themeMode: ThemeMode
-  visualEffects: VisualEffects
   audioFeedbackEnabled: boolean
   notificationPreferences: NotificationPreferences
   manualSeason: SeasonOverride
@@ -38,7 +29,6 @@ interface SettingsState {
   hydrate: () => Promise<void>
   setHideTimeDisplay: (value: boolean) => Promise<void>
   setThemeMode: (value: ThemeMode) => Promise<void>
-  setVisualEffects: (value: VisualEffects) => Promise<void>
   setAudioFeedbackEnabled: (value: boolean) => Promise<void>
   setNotificationPreferences: (prefs: Partial<NotificationPreferences>) => Promise<void>
   setManualTheme: (season: SeasonOverride, time: TimeOverride) => Promise<void>
@@ -54,7 +44,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   // Initial state - neutral-auto is the new default
   hideTimeDisplay: false,
   themeMode: 'neutral-auto',
-  visualEffects: 'calm',
   audioFeedbackEnabled: false,
   notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES,
   manualSeason: 'winter',
@@ -66,7 +55,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     set({
       hideTimeDisplay: settings.hideTimeDisplay,
       themeMode: settings.themeMode,
-      visualEffects: settings.visualEffects,
       audioFeedbackEnabled: settings.audioFeedbackEnabled,
       notificationPreferences: settings.notificationPreferences ?? DEFAULT_NOTIFICATION_PREFERENCES,
       manualSeason: settings.manualSeason ?? 'winter',
@@ -83,11 +71,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   setThemeMode: async (value) => {
     await updateSettings({ themeMode: value })
     set({ themeMode: value })
-  },
-
-  setVisualEffects: async (value) => {
-    await updateSettings({ visualEffects: value })
-    set({ visualEffects: value })
   },
 
   setAudioFeedbackEnabled: async (value) => {
