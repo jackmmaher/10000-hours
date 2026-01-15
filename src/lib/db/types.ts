@@ -46,31 +46,31 @@ export interface UserProfile {
   achievements?: Achievement[] // Recorded milestone achievements
 }
 
-// Theme modes - neutral is default, living is optional override
-export type ThemeMode =
-  | 'neutral-auto' // Follow system light/dark preference (NEW DEFAULT)
-  | 'neutral-light' // Always light
-  | 'neutral-dark' // Always dark
-  | 'living-auto' // Solar-based seasonal (was 'auto')
-  | 'living-manual' // Fixed season + time (was 'manual')
-  // Legacy values for migration (will be converted on load)
-  | 'auto'
-  | 'manual'
+// Theme modes - simple light/dark/auto
+export type ThemeMode = 'auto' | 'light' | 'dark'
 
-export type Season = 'spring' | 'summer' | 'autumn' | 'winter' // For living theme (no neutral)
-export type SeasonOverride = Season | 'neutral' // Includes neutral for backward compat
+// Legacy types kept for migration - will be removed after all users migrate
+type LegacyThemeMode =
+  | 'neutral-auto'
+  | 'neutral-light'
+  | 'neutral-dark'
+  | 'living-auto'
+  | 'living-manual'
+  | 'manual'
+export type ThemeModeWithLegacy = ThemeMode | LegacyThemeMode
+
+// These types will be removed in Phase 4 cleanup
+export type Season = 'spring' | 'summer' | 'autumn' | 'winter'
+export type SeasonOverride = Season | 'neutral'
 export type TimeOverride = 'morning' | 'daytime' | 'evening' | 'night'
 
 export interface UserSettings {
   id: 1
   hideTimeDisplay: boolean
   skipInsightCapture: boolean // Skip post-session insight recording prompt
-  themeMode: ThemeMode
+  themeMode: ThemeModeWithLegacy // Uses legacy type for migration compatibility
   audioFeedbackEnabled: boolean // Play subtle sounds on complete/milestone
   notificationPreferences: NotificationPreferences // In-app notification settings
-  // Manual theme overrides (only used when themeMode === 'manual')
-  manualSeason?: SeasonOverride
-  manualTime?: TimeOverride
   // Breath pacing settings (opt-in)
   breathPacingEnabled?: boolean
   breathPatternId?: string | null

@@ -4,7 +4,7 @@
  * Functions for converting theme tokens to CSS custom properties.
  */
 
-import type { ThemeTokens, TimeOfDay, Season } from './types'
+import type { ThemeTokens } from './types'
 
 /**
  * Convert theme tokens to CSS custom properties
@@ -117,23 +117,4 @@ export function themeToCSSProperties(tokens: ThemeTokens): Record<string, string
 
     '--seasonal-accent': tokens.seasonalAccent,
   }
-}
-
-/**
- * Get human-readable theme name
- */
-export function getThemeName(timeOfDay: TimeOfDay, season: Season): string {
-  const timeNames: Record<TimeOfDay, string> = {
-    morning: 'Morning',
-    daytime: 'Daytime',
-    evening: 'Evening',
-    night: 'Night',
-  }
-  const seasonNames: Record<Season, string> = {
-    spring: 'Spring',
-    summer: 'Summer',
-    autumn: 'Autumn',
-    winter: 'Winter',
-  }
-  return `${seasonNames[season]} ${timeNames[timeOfDay]}`
 }

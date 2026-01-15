@@ -26,7 +26,7 @@ import { InsightModal } from './components/InsightModal'
 import { useAuthStore } from './stores/useAuthStore'
 import { Onboarding, hasSeenOnboarding, markOnboardingSeen } from './components/Onboarding'
 import { ErrorBoundary } from './components/ErrorBoundary'
-import { LivingTheme } from './components/LivingTheme'
+import { NeutralThemeProvider } from './components/NeutralThemeProvider'
 import { ZenMessage } from './components/ZenMessage'
 import { PWAInstallPrompt } from './components/PWAInstallPrompt'
 import { ToastContainer } from './components/Toast'
@@ -214,14 +214,14 @@ function AppContent() {
   // Welcome cutscene - shows on every app launch
   if (showWelcomeCutscene) {
     return (
-      <LivingTheme breathingIntensity={0.02}>
+      <NeutralThemeProvider>
         <ZenMessage
           isEnlightened={false}
           goalCompleted={goalCompleted}
           onComplete={dismissWelcomeCutscene}
           variant="welcome"
         />
-      </LivingTheme>
+      </NeutralThemeProvider>
     )
   }
 
@@ -231,7 +231,7 @@ function AppContent() {
   }
 
   return (
-    <LivingTheme breathingIntensity={0.02}>
+    <NeutralThemeProvider>
       <div className="h-full">
         {view === 'timer' && <Timer />}
         {view === 'journey' && <Journey />}
@@ -277,7 +277,7 @@ function AppContent() {
         {/* PWA install prompt for iOS Safari */}
         <PWAInstallPrompt />
       </div>
-    </LivingTheme>
+    </NeutralThemeProvider>
   )
 }
 

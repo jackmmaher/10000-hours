@@ -129,7 +129,7 @@ describe('Timer Chime Sound Synchronization', () => {
     useSettingsStore.setState({
       audioFeedbackEnabled: false,
       hideTimeDisplay: false,
-      themeMode: 'neutral-auto',
+      themeMode: 'auto',
       isLoading: false,
     })
   })

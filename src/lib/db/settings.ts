@@ -11,29 +11,37 @@ import type { UserSettings } from './types'
 export async function getSettings(): Promise<UserSettings> {
   let settings = await db.settings.get(1)
   if (!settings) {
-    // NEW users get neutral-auto as default
+    // NEW users get 'auto' as default (follows system preference)
     settings = {
       id: 1,
       hideTimeDisplay: false,
       skipInsightCapture: false,
-      themeMode: 'neutral-auto',
+      themeMode: 'auto',
       audioFeedbackEnabled: false,
       notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES,
     }
     await db.settings.put(settings)
   }
-  // Migrate legacy theme modes for EXISTING users
-  // 'auto' -> 'living-auto' (preserve their living theme experience)
-  // 'manual' -> 'living-manual' (preserve their manual selection)
-  if (settings.themeMode === 'auto') {
-    settings.themeMode = 'living-auto'
+  // Migrate all legacy theme modes to simple auto/light/dark
+  const mode = settings.themeMode
+  if (
+    mode === 'neutral-auto' ||
+    mode === 'living-auto' ||
+    mode === 'auto' ||
+    mode === 'manual' ||
+    mode === 'living-manual'
+  ) {
+    settings.themeMode = 'auto'
     await db.settings.put(settings)
-  } else if (settings.themeMode === 'manual') {
-    settings.themeMode = 'living-manual'
+  } else if (mode === 'neutral-light') {
+    settings.themeMode = 'light'
+    await db.settings.put(settings)
+  } else if (mode === 'neutral-dark') {
+    settings.themeMode = 'dark'
     await db.settings.put(settings)
   } else if (!settings.themeMode) {
     // Backfill missing themeMode for very old users
-    settings.themeMode = 'neutral-auto'
+    settings.themeMode = 'auto'
     await db.settings.put(settings)
   }
   // Backfill skipInsightCapture for existing users
