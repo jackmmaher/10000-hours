@@ -56,19 +56,19 @@ export function formatTimeFromTimestamp(timestamp: number): string {
 export function formatDurationMinutes(seconds: number): string {
   const minutes = Math.round(seconds / 60)
   if (minutes < 60) {
-    return `${minutes} min`
+    return `${minutes}m`
   }
   const hours = Math.floor(minutes / 60)
   const remainingMinutes = minutes % 60
   if (remainingMinutes === 0) {
-    return `${hours} hr`
+    return `${hours}h`
   }
-  return `${hours} hr ${remainingMinutes} min`
+  return `${hours}h ${remainingMinutes}m`
 }
 
 // Format duration for custom picker pills (concise)
 export function formatCustomDuration(mins: number): string {
-  if (mins < 60) return `${mins} min`
+  if (mins < 60) return `${mins}m`
   const hrs = Math.floor(mins / 60)
   const rem = mins % 60
   if (rem === 0) return `${hrs}h`

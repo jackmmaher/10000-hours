@@ -18,12 +18,9 @@ interface MilestoneSummaryProps {
   isNewlyAchieved?: boolean
 }
 
-// Format milestone label (e.g., "2 Hours", "10 Hours", "1,000 Hours")
+// Format milestone label (e.g., "2h", "100h", "1,000h")
 function formatMilestoneTitle(hours: number): string {
-  if (hours >= 1000) {
-    return `${hours.toLocaleString()} Hours`
-  }
-  return `${hours} Hours`
+  return `${hours.toLocaleString()}h`
 }
 
 // Format date nicely

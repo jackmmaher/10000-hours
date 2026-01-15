@@ -17,12 +17,9 @@ import { MilestoneSummary } from './MilestoneSummary'
 import { MilestoneProgress } from './MilestoneProgress'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 
-// Format milestone label (e.g., "2h", "5h", "1k")
+// Format milestone label (e.g., "2h", "100h", "1,000h")
 function formatMilestoneLabel(hours: number): string {
-  if (hours >= 1000) {
-    return `${hours / 1000}k`
-  }
-  return `${hours}h`
+  return `${hours.toLocaleString()}h`
 }
 
 export function AchievementGallery() {

@@ -232,7 +232,7 @@ export function MeditationPlanner({
                             : 'bg-deep/30 text-ink-soft hover:bg-deep/50'
                         }`}
                       >
-                        {d} min
+                        {d}m
                       </button>
                     ))}
                   </div>
@@ -541,7 +541,7 @@ export function MeditationPlanner({
                                   : 'bg-deep/30 text-ink-soft hover:bg-deep/50'
                               }`}
                             >
-                              {d} min
+                              {d}m
                             </button>
                           ))}
                         </div>

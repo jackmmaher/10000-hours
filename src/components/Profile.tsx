@@ -58,9 +58,9 @@ const DISCIPLINE_OPTIONS = [
 ]
 
 const DURATION_OPTIONS = [
-  { value: '5-10', label: '5-10 min' },
-  { value: '15-20', label: '15-20 min' },
-  { value: '30+', label: '30+ min' },
+  { value: '5-10', label: '5-10m' },
+  { value: '15-20', label: '15-20m' },
+  { value: '30+', label: '30+m' },
   { value: 'varies', label: 'Varies' },
 ]
 
@@ -547,8 +547,7 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
                         }`}
                         style={{ opacity: isDisabled ? 0.5 : 1 }}
                       >
-                        {goal >= 1000 ? `${goal / 1000}k` : goal}h
-                        {isAchieved && !isSelected && ' ✓'}
+                        {goal.toLocaleString()}h{isAchieved && !isSelected && ' ✓'}
                       </button>
                     )
                   })}
