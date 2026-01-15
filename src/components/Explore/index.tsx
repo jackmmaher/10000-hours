@@ -527,6 +527,16 @@ export function Explore() {
               </button>
             </section>
           )}
+
+          {/* End-of-scroll watermark - contemplative seal */}
+          <div className="flex justify-center items-center py-16 px-6">
+            <img
+              src="/logo-watermark.png"
+              alt=""
+              aria-hidden="true"
+              className="w-full max-w-xs opacity-15 select-none pointer-events-none"
+            />
+          </div>
         </>
       )}
 
