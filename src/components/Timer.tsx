@@ -262,10 +262,10 @@ export function Timer() {
       onClick={handleTap}
       {...swipeHandlers}
     >
-      {/* Layer 1: Theater background - dims the whole room (extends to cover iOS safe areas) */}
+      {/* Layer 1: Theater background - dims the whole room (fixed covers iOS safe areas) */}
       <motion.div
-        className="absolute pointer-events-none"
-        style={{ inset: '-100px', backgroundColor: 'var(--theater-center)' }}
+        className="fixed inset-0 pointer-events-none"
+        style={{ backgroundColor: 'var(--theater-center)' }}
         initial={{ opacity: 0 }}
         animate={{
           opacity: phase === 'pending' || phase === 'active' || phase === 'settling' ? 1 : 0,
@@ -278,9 +278,9 @@ export function Timer() {
 
       {/* Layer 2: Radial spotlight vignette - sfumato (blur smudges all edges) */}
       <motion.div
-        className="absolute pointer-events-none animate-spotlight-breathe"
+        className="fixed pointer-events-none animate-spotlight-breathe"
         style={{
-          inset: '-20%',
+          inset: '-50px',
           filter: 'blur(40px)',
           background: `radial-gradient(
             ellipse 45% 35% at center 42%,
@@ -307,9 +307,9 @@ export function Timer() {
 
       {/* Layer 3: Center glow - luminous spot behind timer */}
       <motion.div
-        className="absolute pointer-events-none"
+        className="fixed pointer-events-none"
         style={{
-          inset: '-10%',
+          inset: '-50px',
           filter: 'blur(60px)',
           background: `radial-gradient(
             ellipse 25% 20% at center 43%,
