@@ -105,7 +105,11 @@
       "Bash(sort:*)",
       "Bash(timeout 10 npm run dev:*)",
       "Bash(curl:*)",
-      "WebFetch(domain:www.mindbowser.com)"
+      "WebFetch(domain:www.mindbowser.com)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:vercel.com)",
+      "WebFetch(domain:10000-hours.vercel.app)",
+      "WebFetch(domain:10000-hours-three.vercel.app)"
     ]
   }
 }

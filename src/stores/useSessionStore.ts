@@ -92,6 +92,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   },
 
   hydrate: async () => {
+    // GUARD: Never hydrate while timer is active - prevents mid-session state contamination
+    const { timerPhase } = get()
+    if (timerPhase === 'preparing' || timerPhase === 'running') {
+      console.warn('[SessionStore] Hydrate blocked: timer active')
+      return
+    }
+
     const [sessions, appState, sessionInProgressTime] = await Promise.all([
       getAllSessions(),
       initAppState(),
@@ -108,27 +115,34 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       totalSeconds / 3600 >= userPrefs.practiceGoalHours
 
     // Check for session recovery (app was killed while timer was running)
+    // GUARD: Don't recover if Timer.tsx is already managing a session (prevents collision)
     if (sessionInProgressTime) {
-      const elapsedMs = Date.now() - sessionInProgressTime
-      // Only recover if the session is less than 24 hours old (sanity check)
-      if (elapsedMs > 0 && elapsedMs < 24 * 60 * 60 * 1000) {
-        // Recover the session by setting startedAt to maintain correct elapsed calculation
-        // startedAt = performance.now() - elapsedMs
-        // This ensures (performance.now() - startedAt) / 1000 = correct elapsed seconds
-        set({
-          sessions,
-          totalSeconds,
-          hasReachedEnlightenment: appState.hasReachedEnlightenment,
-          goalCompleted: goalCompleted || false,
-          isLoading: false,
-          timerPhase: 'running',
-          startedAt: performance.now() - elapsedMs,
-          sessionStartTime: sessionInProgressTime,
-        })
-        return
-      } else {
-        // Session too old, clear it
+      const currentPhase = get().timerPhase
+      if (currentPhase !== 'idle') {
+        // Timer component is active, don't hijack it with recovery
         await clearSessionInProgress()
+      } else {
+        const elapsedMs = Date.now() - sessionInProgressTime
+        // Only recover if the session is less than 24 hours old (sanity check)
+        if (elapsedMs > 0 && elapsedMs < 24 * 60 * 60 * 1000) {
+          // Recover the session by setting startedAt to maintain correct elapsed calculation
+          // startedAt = performance.now() - elapsedMs
+          // This ensures (performance.now() - startedAt) / 1000 = correct elapsed seconds
+          set({
+            sessions,
+            totalSeconds,
+            hasReachedEnlightenment: appState.hasReachedEnlightenment,
+            goalCompleted: goalCompleted || false,
+            isLoading: false,
+            timerPhase: 'running',
+            startedAt: performance.now() - elapsedMs,
+            sessionStartTime: sessionInProgressTime,
+          })
+          return
+        } else {
+          // Session too old, clear it
+          await clearSessionInProgress()
+        }
       }
     }
 

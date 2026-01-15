@@ -237,7 +237,7 @@ function HeroSessionCard({
         </div>
 
         {/* Content */}
-        <div className="flex-1 py-4 pr-4">
+        <div className="flex-1 py-4 pl-4 pr-4">
           {/* Header row */}
           <div className="flex items-start justify-between mb-3">
             <div>
