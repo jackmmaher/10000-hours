@@ -276,27 +276,22 @@ export function Timer() {
         }}
       />
 
-      {/* Layer 2: Radial spotlight vignette - seamless gradient, tight center focus */}
+      {/* Layer 2: Radial spotlight vignette - sfumato (blur smudges all edges) */}
       <motion.div
-        className="absolute inset-0 pointer-events-none animate-spotlight-breathe"
+        className="absolute pointer-events-none animate-spotlight-breathe"
         style={{
+          inset: '-20%',
+          filter: 'blur(40px)',
           background: `radial-gradient(
-            ellipse 55% 40% at center 45%,
+            ellipse 45% 35% at center 42%,
             transparent 0%,
-            transparent 5%,
-            color-mix(in oklab, var(--theater-edge) 2%, transparent) 8%,
-            color-mix(in oklab, var(--theater-edge) 5%, transparent) 12%,
-            color-mix(in oklab, var(--theater-edge) 9%, transparent) 16%,
-            color-mix(in oklab, var(--theater-edge) 14%, transparent) 21%,
-            color-mix(in oklab, var(--theater-edge) 20%, transparent) 27%,
-            color-mix(in oklab, var(--theater-edge) 27%, transparent) 33%,
-            color-mix(in oklab, var(--theater-edge) 35%, transparent) 40%,
-            color-mix(in oklab, var(--theater-edge) 44%, transparent) 48%,
-            color-mix(in oklab, var(--theater-edge) 54%, transparent) 56%,
-            color-mix(in oklab, var(--theater-edge) 65%, transparent) 65%,
-            color-mix(in oklab, var(--theater-edge) 76%, transparent) 74%,
-            color-mix(in oklab, var(--theater-edge) 87%, transparent) 84%,
-            color-mix(in oklab, var(--theater-edge) 95%, transparent) 92%,
+            transparent 10%,
+            color-mix(in oklab, var(--theater-edge) 5%, transparent) 20%,
+            color-mix(in oklab, var(--theater-edge) 15%, transparent) 30%,
+            color-mix(in oklab, var(--theater-edge) 30%, transparent) 42%,
+            color-mix(in oklab, var(--theater-edge) 50%, transparent) 55%,
+            color-mix(in oklab, var(--theater-edge) 70%, transparent) 70%,
+            color-mix(in oklab, var(--theater-edge) 88%, transparent) 85%,
             var(--theater-edge) 100%
           )`,
         }}
@@ -306,7 +301,29 @@ export function Timer() {
         }}
         transition={{
           duration: phase === 'pending' ? 8 : 4,
-          ease: [0.25, 0.1, 0.25, 1],
+          ease: [0.16, 1, 0.3, 1],
+        }}
+      />
+
+      {/* Layer 3: Center glow - luminous spot behind timer */}
+      <motion.div
+        className="absolute pointer-events-none"
+        style={{
+          inset: '-10%',
+          filter: 'blur(60px)',
+          background: `radial-gradient(
+            ellipse 25% 20% at center 43%,
+            var(--theater-glow) 0%,
+            transparent 100%
+          )`,
+        }}
+        initial={{ opacity: 0 }}
+        animate={{
+          opacity: phase === 'pending' || phase === 'active' || phase === 'settling' ? 1 : 0,
+        }}
+        transition={{
+          duration: phase === 'pending' ? 8 : 4,
+          ease: [0.16, 1, 0.3, 1],
         }}
       />
 

@@ -118,6 +118,7 @@
   /* === TIMER THEATER MODE === */
   --theater-center: #D8D4CE;
   --theater-edge: #A8A49E;
+  --theater-glow: rgba(255, 255, 255, 0.9);
 
   /* === SEASONAL === */
   --seasonal-accent: #0EA5E9;

@@ -113,8 +113,9 @@ export const NEUTRAL_LIGHT: ThemeTokens = {
   voiceNewDot: '#D6D3D1',
 
   // Timer theater mode (cinematic focus)
-  theaterCenter: '#D8D4CE', // Dimmed cream (center glow)
+  theaterCenter: '#D8D4CE', // Dimmed cream (background)
   theaterEdge: '#A8A49E', // Warm shadow (edge vignette)
+  theaterGlow: 'rgba(255, 255, 255, 0.9)', // Luminous center spot (high opacity for light bg)
 
   // Meta
   isDark: false,
@@ -230,8 +231,9 @@ export const NEUTRAL_DARK: ThemeTokens = {
   voiceNewDot: '#57534E',
 
   // Timer theater mode (cinematic focus)
-  theaterCenter: '#0C0A09', // Deep charcoal (center glow)
+  theaterCenter: '#0C0A09', // Deep charcoal (background)
   theaterEdge: '#030201', // Near-black (edge vignette)
+  theaterGlow: 'rgba(255, 248, 240, 0.15)', // Warm luminous center spot
 
   // Meta
   isDark: true,

@@ -120,5 +120,6 @@ export function themeToCSSProperties(tokens: ThemeTokens): Record<string, string
     // Timer theater mode
     '--theater-center': tokens.theaterCenter,
     '--theater-edge': tokens.theaterEdge,
+    '--theater-glow': tokens.theaterGlow,
   }
 }
