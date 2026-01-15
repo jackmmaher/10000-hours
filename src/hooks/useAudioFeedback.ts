@@ -171,15 +171,21 @@ export function useAudioFeedback() {
   )
 
   const play = useCallback(
-    (cue: AudioCue) => {
+    async (cue: AudioCue) => {
       if (!audioFeedbackEnabled) return
 
       const ctx = getAudioContext()
       if (!ctx) return
 
       // Resume context if suspended (autoplay policy)
+      // MUST await on iOS - context won't play until resumed
       if (ctx.state === 'suspended') {
-        ctx.resume()
+        try {
+          await ctx.resume()
+        } catch {
+          // Resume failed - likely no user gesture or blocked
+          return
+        }
       }
 
       switch (cue) {
