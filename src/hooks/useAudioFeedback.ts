@@ -7,11 +7,25 @@
  * - Lower frequencies (calming, not alerting)
  * - Soft presence (felt more than heard)
  *
- * The completion chime follows a breath-aligned 4-second ceremony:
- * - Begins softly during "completing" phase (0-1500ms exhale)
- * - Crescendos during "resolving" phase (1500-4000ms inhale)
- * - Peaks as animation settles (~4000ms)
- * - Natural decay over 4 seconds after peak
+ * The completion chime follows an adaptive three-phase ceremony:
+ *
+ * Timeline:
+ * T=0          T=X            T=X+4         T=X+8
+ * |------------|--------------|-------------|
+ *   Holding     Crescendo       Decay
+ *   (barely     (awakening)    (return)
+ *   audible)
+ *
+ * Three phases:
+ * 1. Holding Phase (T=0 to T=X): Extremely soft ambient presence (~1.5% volume).
+ *    Acknowledges tap without jarring. Like a distant bell heard through walls.
+ *
+ * 2. Crescendo Phase (T=X to T=X+4): Gradual build synced with seconds dissolving.
+ *    Exponential ramp to peak. Matches the visual "letting go" of the timer.
+ *
+ * 3. Decay Phase (T=X+4 to T=X+8): Logarithmic fade to silence.
+ *    Peak occurs as "tap to meditate" returns. Decays alongside navigation fade-in.
+ *    Reaches 0 precisely when visual journey completes.
  *
  * Like the Disney castle intro or Pixar lamp - the transition itself
  * is part of the experience, not just a bridge between states.
@@ -25,11 +39,10 @@ import { useSettingsStore } from '../stores/useSettingsStore'
 
 type AudioCue = 'complete' | 'milestone' | 'tick'
 
-// Animation timing constants for breath-aligned ceremony
-// 4 second total transition synchronized with breathing cycle
-const COMPLETING_DURATION = 1.5 // 1500ms - ceremonial exhale
-const RESOLVING_DURATION = 2.5 // 2500ms - ceremonial inhale
-const CRESCENDO_DURATION = COMPLETING_DURATION + RESOLVING_DURATION // 4s breath cycle
+// Timing constants for breath-aligned ceremony
+const CRESCENDO_DURATION = 4.0 // Matches seconds dissolve (4s)
+const DECAY_DURATION = 4.0 // Matches nav/hint fade-in (4s)
+const HOLDING_VOLUME_RATIO = 0.015 // 1.5% of peak - barely audible presence
 
 export function useAudioFeedback() {
   const audioFeedbackEnabled = useSettingsStore((s) => s.audioFeedbackEnabled)
@@ -52,22 +65,24 @@ export function useAudioFeedback() {
   }, [])
 
   /**
-   * Create a synchronized singing bowl tone
+   * Create an adaptive synchronized singing bowl tone
    *
-   * The envelope is designed to match the visual animation:
-   * - Soft emergence during visual dissolve
-   * - Peak presence as new cumulative settles
-   * - Gentle decay as stillness takes hold
+   * Three-phase envelope designed to match variable visual animation:
+   * 1. Holding: Barely audible presence during breath alignment wait
+   * 2. Crescendo: Gradual awakening as seconds dissolve
+   * 3. Decay: Natural return to silence as UI settles
    */
   const playSynchronizedBowl = useCallback(
     (
       ctx: AudioContext,
       baseFreq: number,
+      holdingDuration: number, // Time until visual settling begins (in seconds)
       crescendoDuration: number,
       decayDuration: number,
       peakVolume: number
     ) => {
       const now = ctx.currentTime
+      const totalDuration = holdingDuration + crescendoDuration + decayDuration
 
       // Harmonics for warm, bell-like tone
       const harmonics = [
@@ -94,36 +109,41 @@ export function useAudioFeedback() {
           osc.detune.value = detune
 
           const peak = peakVolume * harmonicGain * 0.4
+          const holdingVolume = peak * HOLDING_VOLUME_RATIO
 
-          // Synchronized envelope:
-          // 1. Start barely audible
-          // 2. Slow crescendo matching visual transition (~1.1s)
-          // 3. Brief hold at peak
-          // 4. Long, peaceful decay
+          // Phase 1: Holding (barely audible presence)
+          // Like a distant bell heard through walls - acknowledges tap without jarring
           gainNode.gain.setValueAtTime(0.001, now)
+          gainNode.gain.linearRampToValueAtTime(holdingVolume, now + 0.5) // Gentle fade in
+          if (holdingDuration > 0.5) {
+            gainNode.gain.setValueAtTime(holdingVolume, now + holdingDuration) // Hold steady
+          }
 
-          // Crescendo: exponential rise feels more natural than linear
-          // Start very soft, build gradually
-          gainNode.gain.exponentialRampToValueAtTime(peak * 0.15, now + crescendoDuration * 0.4)
-          gainNode.gain.exponentialRampToValueAtTime(peak * 0.6, now + crescendoDuration * 0.8)
-          gainNode.gain.linearRampToValueAtTime(peak, now + crescendoDuration)
+          // Phase 2: Crescendo (awakening)
+          // Exponential rise feels more natural - matches visual "letting go"
+          const crescendoStart = now + holdingDuration
+          gainNode.gain.exponentialRampToValueAtTime(
+            peak * 0.15,
+            crescendoStart + crescendoDuration * 0.4
+          )
+          gainNode.gain.exponentialRampToValueAtTime(
+            peak * 0.6,
+            crescendoStart + crescendoDuration * 0.8
+          )
+          gainNode.gain.linearRampToValueAtTime(peak, crescendoStart + crescendoDuration)
 
           // Brief sustain at peak (the "arrival" moment)
-          gainNode.gain.setValueAtTime(peak, now + crescendoDuration + 0.1)
+          const decayStart = crescendoStart + crescendoDuration
+          gainNode.gain.setValueAtTime(peak, decayStart + 0.1)
 
-          // Gentle decay - exponential for natural bell-like fade
-          gainNode.gain.exponentialRampToValueAtTime(
-            peak * 0.4,
-            now + crescendoDuration + decayDuration * 0.3
-          )
-          gainNode.gain.exponentialRampToValueAtTime(
-            peak * 0.1,
-            now + crescendoDuration + decayDuration * 0.6
-          )
-          gainNode.gain.exponentialRampToValueAtTime(0.001, now + crescendoDuration + decayDuration)
+          // Phase 3: Decay (logarithmic return to silence)
+          // Exponential for natural bell-like fade - reaches 0 when visual journey completes
+          gainNode.gain.exponentialRampToValueAtTime(peak * 0.4, decayStart + decayDuration * 0.3)
+          gainNode.gain.exponentialRampToValueAtTime(peak * 0.1, decayStart + decayDuration * 0.6)
+          gainNode.gain.exponentialRampToValueAtTime(0.001, decayStart + decayDuration)
 
           osc.start(now)
-          osc.stop(now + crescendoDuration + decayDuration + 0.1)
+          osc.stop(now + totalDuration + 0.1)
         }
       })
     },
@@ -171,7 +191,7 @@ export function useAudioFeedback() {
   )
 
   const play = useCallback(
-    async (cue: AudioCue) => {
+    async (cue: AudioCue, holdingDurationMs?: number) => {
       if (!audioFeedbackEnabled) return
 
       const ctx = getAudioContext()
@@ -190,9 +210,17 @@ export function useAudioFeedback() {
 
       switch (cue) {
         case 'complete': {
-          // Synchronized singing bowl - G3 (196Hz) - warm, centered
-          // Crescendo matches animation (~1.1s), then 4s decay
-          playSynchronizedBowl(ctx, 196.0, CRESCENDO_DURATION, 4.0, 0.12)
+          // Adaptive synchronized singing bowl - G3 (196Hz) - warm, centered
+          // Holding duration from breath alignment, then crescendo + decay
+          const holdingDurationSec = (holdingDurationMs ?? 0) / 1000
+          playSynchronizedBowl(
+            ctx,
+            196.0,
+            holdingDurationSec,
+            CRESCENDO_DURATION,
+            DECAY_DURATION,
+            0.12
+          )
           break
         }
 
@@ -227,7 +255,8 @@ export function useAudioFeedback() {
   )
 
   return {
-    complete: () => play('complete'),
+    /** Play completion chime with optional holding duration (ms until visual settling begins) */
+    complete: (holdingDurationMs?: number) => play('complete', holdingDurationMs),
     milestone: () => play('milestone'),
     tick: () => play('tick'),
     play,

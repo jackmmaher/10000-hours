@@ -47,7 +47,7 @@ export function Timer() {
   // ============================================
   // BREATH SYNCHRONIZATION
   // ============================================
-  const { waitForPhase } = useBreathClock()
+  const { waitForPhase, getTimeUntilPhase } = useBreathClock()
 
   // ============================================
   // LOCAL STATE
@@ -145,9 +145,14 @@ export function Timer() {
   const handleEnd = useCallback(async () => {
     if (phase !== 'active') return
 
+    // Calculate time until exhale for audio sync
+    // This becomes the "holding phase" duration for the chime
+    const timeUntilExhale = getTimeUntilPhase('exhale')
+
     // Immediate haptic + audio acknowledgment
+    // Audio now adapts to breath alignment - holding phase until exhale, then crescendo + decay
     haptic.success()
-    audio.complete()
+    audio.complete(timeUntilExhale)
     setPhase('settling')
 
     // LOCK: Prevent navigation during settling window
@@ -170,7 +175,7 @@ export function Timer() {
       await stopTimer() // Persist session to DB
       setIsSettling(false) // UNLOCK: Allow navigation again
     }, 4000)
-  }, [phase, haptic, audio, waitForPhase, stopTimer, setIsSettling])
+  }, [phase, haptic, audio, waitForPhase, getTimeUntilPhase, stopTimer, setIsSettling])
 
   // ============================================
   // POST-SESSION FLOW

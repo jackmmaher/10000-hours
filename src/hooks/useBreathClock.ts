@@ -23,6 +23,8 @@ export interface BreathClock {
   getPhase: () => BreathPhase
   /** Wait for a specific phase to begin (returns Promise that resolves at phase start) */
   waitForPhase: (target: BreathPhase) => Promise<void>
+  /** Calculate milliseconds until next occurrence of target phase */
+  getTimeUntilPhase: (target: BreathPhase) => number
   /** Timestamp when the cycle started (for CSS sync) */
   cycleStart: number
 }
@@ -68,9 +70,47 @@ export function useBreathClock(): BreathClock {
     [cycleStart, getPhase]
   )
 
+  /**
+   * Calculate milliseconds until next occurrence of target phase
+   * Returns 0 if currently at the start of target phase (within 100ms tolerance)
+   */
+  const getTimeUntilPhase = useCallback(
+    (target: BreathPhase): number => {
+      const elapsed = (Date.now() - cycleStart) % CYCLE_DURATION
+
+      // Phase start times within the 16s cycle
+      const phaseStarts: Record<BreathPhase, number> = {
+        inhale: 0,
+        'hold-in': 4000,
+        exhale: 8000,
+        'hold-out': 12000,
+      }
+
+      const targetStart = phaseStarts[target]
+      const phaseProgress = elapsed % PHASE_DURATION
+      const currentPhase = getPhase()
+
+      // If currently at start of target phase (within 100ms), return 0
+      if (currentPhase === target && phaseProgress < 100) {
+        return 0
+      }
+
+      // Calculate ms until target phase starts
+      if (elapsed < targetStart) {
+        // Target is later in this cycle
+        return targetStart - elapsed
+      } else {
+        // Target is in the next cycle
+        return CYCLE_DURATION - elapsed + targetStart
+      }
+    },
+    [cycleStart, getPhase]
+  )
+
   return {
     getPhase,
     waitForPhase,
+    getTimeUntilPhase,
     cycleStart,
   }
 }
