@@ -1,129 +1,179 @@
 /**
- * ReviewPrompt - "How do you feel?" modal leading to App Store review
+ * ReviewPrompt - Star rating and review capture modal
  *
- * Shows at moments of pride (milestone achievements, cycle completion).
- * Frames rating as a feeling check-in, then prompts positive responders
- * to share their experience via App Store review.
+ * Shows at moments of peak satisfaction (goal completion, milestones).
+ * Two-step flow: star rating → text review with presets.
+ * Theme-aware design matching app aesthetic.
  */
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { requestNativeReview, isNativePlatform } from '../lib/nativeReview'
-import { Button } from './Button'
+import { requestNativeReview } from '../lib/nativeReview'
+import { useTapFeedback } from '../hooks/useTapFeedback'
 
 interface ReviewPromptProps {
   isOpen: boolean
   onClose: () => void
-  milestoneText?: string // e.g., "You just reached 10 hours"
+  milestoneText?: string // e.g., "You've just completed your practice goal"
 }
 
-type FeelingOption = 'peaceful' | 'focused' | 'grateful' | 'other'
-
-const FEELING_OPTIONS: { value: FeelingOption; label: string; emoji: string }[] = [
-  { value: 'peaceful', label: 'Peaceful', emoji: '🧘' },
-  { value: 'focused', label: 'Focused', emoji: '🎯' },
-  { value: 'grateful', label: 'Grateful', emoji: '🙏' },
-  { value: 'other', label: 'Something else', emoji: '💭' },
+const PRESET_REVIEWS = [
+  {
+    label: 'Finally found my practice',
+    text: 'Still Hours has helped me build a consistent meditation practice. The simple design keeps me focused on what matters - just showing up.',
+  },
+  {
+    label: 'This is what I needed',
+    text: "Still Hours is exactly what I've been looking for. No distractions, no subscriptions - just a beautiful space to track my journey to 10,000 hours.",
+  },
+  {
+    label: 'Life-changing habit',
+    text: 'Still Hours has transformed my daily routine. Watching my hours grow motivates me to keep practicing. This app gets meditation right.',
+  },
 ]
 
-const REVIEW_TEMPLATES = [
-  'Still Hours helps me build a consistent meditation practice. The simple design and hour tracking keep me motivated.',
-  'Finally, a meditation app that respects my time. No subscriptions, no distractions - just pure practice.',
-  'Beautiful, minimal design. I love tracking my progress toward 10,000 hours of meditation.',
-]
+// Star icon components
+function StarIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg
+      width="32"
+      height="32"
+      viewBox="0 0 24 24"
+      fill={filled ? 'currentColor' : 'none'}
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  )
+}
+
+function StarRating({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  return (
+    <div className="flex justify-center gap-3">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <motion.button
+          key={star}
+          onClick={() => onChange(star)}
+          whileTap={{ scale: 0.85 }}
+          className="transition-colors duration-150"
+          style={{
+            color: star <= value ? 'var(--accent)' : 'var(--text-muted)',
+          }}
+        >
+          <StarIcon filled={star <= value} />
+        </motion.button>
+      ))}
+    </div>
+  )
+}
 
 export function ReviewPrompt({ isOpen, onClose, milestoneText }: ReviewPromptProps) {
-  const [step, setStep] = useState<'feeling' | 'review'>('feeling')
-  const [selectedFeeling, setSelectedFeeling] = useState<FeelingOption | null>(null)
+  const [step, setStep] = useState<'rating' | 'review'>('rating')
+  const [rating, setRating] = useState(5)
+  const [reviewText, setReviewText] = useState('')
+  const haptic = useTapFeedback()
 
   // Reset state when closed
   const handleClose = () => {
-    setStep('feeling')
-    setSelectedFeeling(null)
+    haptic.light()
+    setStep('rating')
+    setRating(5)
+    setReviewText('')
     onClose()
   }
 
-  // Handle feeling selection
-  const handleFeelingSelect = async (feeling: FeelingOption) => {
-    setSelectedFeeling(feeling)
-
-    // For positive feelings, show review step
-    if (feeling !== 'other') {
-      setTimeout(() => setStep('review'), 300)
-    } else {
-      // For "other", just close
-      setTimeout(handleClose, 500)
-    }
+  // Handle continue from rating step
+  const handleContinue = () => {
+    haptic.medium()
+    setStep('review')
   }
 
-  // Handle review request
-  const handleReview = async () => {
+  // Handle preset selection - fills the text input
+  const handlePresetSelect = (text: string) => {
+    haptic.light()
+    setReviewText(text)
+  }
+
+  // Handle review submission
+  const handleSubmit = async () => {
+    haptic.success()
+    // Trigger native App Store review
     await requestNativeReview()
+    // Note: reviewText could be sent to a backend in the future
     handleClose()
+  }
+
+  // Block touch propagation to prevent swipe navigation
+  const handleTouchEvent = (e: React.TouchEvent) => {
+    e.stopPropagation()
   }
 
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={handleClose}
+          onTouchStart={handleTouchEvent}
+          onTouchMove={handleTouchEvent}
+          onTouchEnd={handleTouchEvent}
         >
           <motion.div
-            className="bg-[var(--bg-base)] rounded-2xl w-full max-w-sm mx-6 shadow-xl overflow-hidden"
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="w-full max-w-lg max-h-[calc(90vh-env(safe-area-inset-top,0px))] flex flex-col shadow-xl rounded-t-3xl overflow-hidden"
+            style={{ background: 'var(--bg-elevated)' }}
+            initial={{ y: '100%', opacity: 0.8 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: '100%', opacity: 0.8 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Handle bar */}
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="w-10 h-1 rounded-full bg-ink/20" />
+            </div>
+
             <AnimatePresence mode="wait">
-              {step === 'feeling' && (
+              {step === 'rating' && (
                 <motion.div
-                  key="feeling"
+                  key="rating"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  className="p-6"
+                  className="p-6 pb-safe"
                 >
-                  {/* Milestone celebration */}
-                  {milestoneText && (
-                    <div className="text-center mb-4">
-                      <div className="w-12 h-12 mx-auto mb-2 bg-[var(--accent)]/10 rounded-full flex items-center justify-center">
-                        <span className="text-2xl">✨</span>
-                      </div>
-                      <p className="text-sm font-medium text-[var(--accent)]">{milestoneText}</p>
-                    </div>
-                  )}
-
-                  {/* Question */}
-                  <h2 className="font-serif text-xl text-[var(--text-primary)] text-center mb-6">
-                    How do you feel?
-                  </h2>
-
-                  {/* Feeling options */}
-                  <div className="grid grid-cols-2 gap-3">
-                    {FEELING_OPTIONS.map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => handleFeelingSelect(option.value)}
-                        className={`
-                          p-4 rounded-xl text-center transition-all duration-150
-                          ${
-                            selectedFeeling === option.value
-                              ? 'bg-[var(--accent)] text-white scale-95'
-                              : 'bg-[var(--bg-deep)] hover:bg-[var(--bg-deep)] active:scale-95'
-                          }
-                        `}
-                      >
-                        <span className="text-2xl block mb-1">{option.emoji}</span>
-                        <span className="text-sm font-medium">{option.label}</span>
-                      </button>
-                    ))}
+                  {/* Header */}
+                  <div className="text-center mb-6">
+                    <h2
+                      className="font-serif text-xl mb-2"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
+                      How do you feel right now?
+                    </h2>
+                    {milestoneText && (
+                      <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                        {milestoneText}
+                      </p>
+                    )}
                   </div>
+
+                  {/* Star rating */}
+                  <div className="mb-8">
+                    <StarRating value={rating} onChange={setRating} />
+                  </div>
+
+                  {/* Continue button */}
+                  <button
+                    onClick={handleContinue}
+                    className="w-full py-3 px-6 rounded-xl font-medium bg-ink text-cream hover:bg-ink/90 active:scale-[0.98] transition-all duration-150"
+                  >
+                    Continue
+                  </button>
                 </motion.div>
               )}
 
@@ -133,40 +183,74 @@ export function ReviewPrompt({ isOpen, onClose, milestoneText }: ReviewPromptPro
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="p-6"
+                  className="p-6 pb-safe"
                 >
-                  {/* Gratitude message */}
-                  <div className="text-center mb-6">
-                    <div className="w-12 h-12 mx-auto mb-3 bg-[var(--accent)]/10 rounded-full flex items-center justify-center">
-                      <span className="text-2xl">🙏</span>
-                    </div>
-                    <h2 className="font-serif text-xl text-[var(--text-primary)] mb-2">
-                      That's wonderful
-                    </h2>
-                    <p className="text-sm text-[var(--text-secondary)]">
-                      Would you share your experience with others? A review helps fellow
-                      practitioners find their path.
-                    </p>
-                  </div>
+                  {/* Text input */}
+                  <textarea
+                    value={reviewText}
+                    onChange={(e) => setReviewText(e.target.value)}
+                    placeholder="Still Hours has helped me..."
+                    className="w-full min-h-[100px] p-4 rounded-xl resize-none transition-colors duration-150 focus:outline-none"
+                    style={{
+                      background: 'var(--bg-deep)',
+                      border: '1px solid var(--border)',
+                      color: 'var(--text-primary)',
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = 'var(--accent)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'var(--border)'
+                    }}
+                  />
 
-                  {/* Review template preview (on native only) */}
-                  {isNativePlatform() && (
-                    <div className="mb-6 p-3 bg-[var(--bg-deep)] rounded-lg">
-                      <p className="text-xs text-[var(--text-tertiary)] mb-2">Something like:</p>
-                      <p className="text-sm text-[var(--text-secondary)] italic">
-                        "{REVIEW_TEMPLATES[Math.floor(Math.random() * REVIEW_TEMPLATES.length)]}"
-                      </p>
-                    </div>
-                  )}
+                  {/* Preset buttons */}
+                  <div className="flex flex-wrap gap-2 mt-4 mb-6">
+                    {PRESET_REVIEWS.map((preset) => (
+                      <button
+                        key={preset.label}
+                        onClick={() => handlePresetSelect(preset.text)}
+                        className="px-4 py-2 text-sm rounded-full transition-all duration-150 active:scale-[0.97]"
+                        style={{
+                          background: 'var(--bg-deep)',
+                          color: 'var(--text-muted)',
+                          border: '1px solid var(--border)',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = 'var(--accent)'
+                          e.currentTarget.style.color = 'var(--accent)'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = 'var(--border)'
+                          e.currentTarget.style.color = 'var(--text-muted)'
+                        }}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
 
                   {/* Action buttons */}
                   <div className="space-y-3">
-                    <Button variant="primary" size="lg" fullWidth onClick={handleReview}>
-                      Share My Experience
-                    </Button>
-                    <Button variant="ghost" fullWidth onClick={handleClose}>
-                      Maybe later
-                    </Button>
+                    <button
+                      onClick={handleSubmit}
+                      className="w-full py-3 px-6 rounded-xl font-medium bg-ink text-cream hover:bg-ink/90 active:scale-[0.98] transition-all duration-150"
+                    >
+                      Share this feeling
+                    </button>
+                    <button
+                      onClick={handleClose}
+                      className="w-full py-3 px-6 rounded-xl font-medium transition-colors duration-150"
+                      style={{ color: 'var(--text-muted)' }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = 'var(--text-primary)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = 'var(--text-muted)'
+                      }}
+                    >
+                      Not right now
+                    </button>
                   </div>
                 </motion.div>
               )}

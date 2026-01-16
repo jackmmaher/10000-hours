@@ -39,7 +39,10 @@ const MIN_HOURS_BEFORE_PROMPT = 1
 const MIN_DAYS_BETWEEN_PROMPTS = 30
 
 // Prompt on specific milestones (hours)
-const PROMPT_MILESTONES = [2, 10, 25, 50, 100]
+const PROMPT_MILESTONES = [10, 100]
+
+// Maximum lifetime prompts (cap to avoid pestering users)
+const MAX_LIFETIME_PROMPTS = 3
 
 /**
  * Check if we're on a native platform
@@ -102,6 +105,9 @@ export async function shouldPromptForReview(
   // Never prompt if user has already rated
   if (tracking.hasRated) return false
 
+  // Cap at 3 lifetime prompts
+  if (tracking.promptCount >= MAX_LIFETIME_PROMPTS) return false
+
   // Check time since last prompt
   if (tracking.lastPromptedAt) {
     const daysSinceLastPrompt = (Date.now() - tracking.lastPromptedAt) / (1000 * 60 * 60 * 24)
@@ -119,7 +125,7 @@ export async function shouldPromptForReview(
     return true
   }
 
-  // Prompt on specific milestones
+  // Prompt on specific milestones (10h, 100h)
   if (justReachedMilestoneHours && PROMPT_MILESTONES.includes(justReachedMilestoneHours)) {
     return true
   }

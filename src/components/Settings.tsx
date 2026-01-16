@@ -15,6 +15,7 @@ import { useState } from 'react'
 import { useSettingsStore } from '../stores/useSettingsStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useHourBankStore } from '../stores/useHourBankStore'
+import { useNavigationStore } from '../stores/useNavigationStore'
 import { formatAvailableHours } from '../lib/hourBank'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import { useTapFeedback } from '../hooks/useTapFeedback'
@@ -42,6 +43,7 @@ export function Settings({ onBack, onNavigateToStore }: SettingsProps) {
   } = useSettingsStore()
   const { user, isAuthenticated, signOut, isLoading: authLoading, refreshProfile } = useAuthStore()
   const { available, isLifetime } = useHourBankStore()
+  const { showReviewPromptModal } = useNavigationStore()
   const haptic = useTapFeedback()
   const audio = useAudioFeedback()
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -489,6 +491,18 @@ export function Settings({ onBack, onNavigateToStore }: SettingsProps) {
             <p className="text-xs text-ink/40 mt-1">
               Help us pick the next app to build. Your ideas matter.
             </p>
+          </button>
+
+          {/* Rate Still Hours */}
+          <button
+            onClick={() => {
+              haptic.light()
+              showReviewPromptModal('Share your experience')
+            }}
+            className="w-full p-4 bg-cream-warm rounded-xl text-left hover:bg-cream-deep transition-colors active:scale-[0.99] touch-manipulation mt-3"
+          >
+            <p className="text-sm text-ink font-medium">Rate Still Hours</p>
+            <p className="text-xs text-ink/40 mt-1">Share your experience on the App Store</p>
           </button>
         </div>
 
