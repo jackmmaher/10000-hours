@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
+import { getIntentionGradient } from '../lib/animations'
 import {
   saveTemplate as saveTemplateLocal,
   unsaveTemplate as unsaveTemplateLocal,
@@ -109,6 +110,9 @@ export function SessionDetailModal({
 
   // Report modal state
   const [showReportModal, setShowReportModal] = useState(false)
+
+  // Get gradient based on intention
+  const gradient = getIntentionGradient(session.intention)
 
   // Sync state from props and fetch live stats
   useEffect(() => {
@@ -308,46 +312,49 @@ export function SessionDetailModal({
       onClick={onClose}
     >
       <div
-        className="bg-cream rounded-t-3xl w-full max-w-lg max-h-[calc(90vh-env(safe-area-inset-top,0px))] flex flex-col shadow-xl animate-slide-up"
+        className="bg-cream w-full max-w-lg max-h-[calc(90vh-env(safe-area-inset-top,0px))] flex flex-col shadow-xl animate-slide-up overflow-hidden rounded-t-3xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Handle bar */}
-        <div className="flex justify-center pt-3 pb-2">
-          <div className="w-10 h-1 rounded-full bg-ink/20" />
-        </div>
-
-        {/* Header - non-scrolling */}
-        <div className={`px-6 pb-4 border-b border-ink/5`}>
-          {/* Header row with report button */}
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <span className="text-xs bg-cream-deep text-ink/60 px-2 py-1 rounded-full">
-                {session.discipline}
-              </span>
-              <span className="text-xs text-ink/40">{session.durationGuidance}</span>
-            </div>
-            {/* Report button - only for other users' content */}
-            {!isOwnContent && (
-              <button
-                onClick={() => setShowReportModal(true)}
-                className="p-1.5 rounded-full text-ink/30 hover:text-ink/50 hover:bg-ink/5 transition-colors"
-                aria-label="Report issue"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
-                  />
-                </svg>
-              </button>
-            )}
+        {/* Gradient header with handle bar */}
+        <div className={`bg-gradient-to-br ${gradient}`}>
+          {/* Handle bar */}
+          <div className="flex justify-center pt-3 pb-2">
+            <div className="w-10 h-1 rounded-full bg-white/30" />
           </div>
 
-          {/* Title and tagline */}
-          <p className="font-serif text-xl text-ink">{session.title}</p>
-          <p className="text-ink/60 text-sm mt-1 italic">"{session.tagline}"</p>
+          {/* Header content */}
+          <div className="px-6 pb-5">
+            {/* Header row with report button */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs bg-white/20 text-white px-2 py-1 rounded-full">
+                  {session.discipline}
+                </span>
+                <span className="text-xs text-white/70">{session.durationGuidance}</span>
+              </div>
+              {/* Report button - only for other users' content */}
+              {!isOwnContent && (
+                <button
+                  onClick={() => setShowReportModal(true)}
+                  className="p-1.5 rounded-full text-white/50 hover:text-white/70 hover:bg-white/10 transition-colors"
+                  aria-label="Report issue"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
+
+            {/* Title and tagline */}
+            <p className="font-serif text-xl text-white drop-shadow-sm">{session.title}</p>
+            <p className="text-white/80 text-sm mt-1 italic">"{session.tagline}"</p>
+          </div>
         </div>
 
         {/* Scrollable content */}
