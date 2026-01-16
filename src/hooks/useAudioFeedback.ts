@@ -137,13 +137,16 @@ export function useAudioFeedback() {
           gainNode.gain.setValueAtTime(peak, decayStart + 0.1)
 
           // Phase 3: Decay (logarithmic return to silence)
-          // Exponential for natural bell-like fade - reaches 0 when visual journey completes
+          // Exponential for natural bell-like fade, then linear to true zero
           gainNode.gain.exponentialRampToValueAtTime(peak * 0.4, decayStart + decayDuration * 0.3)
           gainNode.gain.exponentialRampToValueAtTime(peak * 0.1, decayStart + decayDuration * 0.6)
-          gainNode.gain.exponentialRampToValueAtTime(0.001, decayStart + decayDuration)
+          gainNode.gain.exponentialRampToValueAtTime(0.001, decayStart + decayDuration * 0.95)
+          // Final ramp to TRUE zero - exponential can't reach 0, linear can
+          // This eliminates the click/snap when oscillator stops
+          gainNode.gain.linearRampToValueAtTime(0, decayStart + decayDuration)
 
           osc.start(now)
-          osc.stop(now + totalDuration + 0.1)
+          osc.stop(now + totalDuration + 0.5)
         }
       })
     },
