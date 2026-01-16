@@ -219,10 +219,13 @@ html, body, #root {
   color: var(--text-primary);
 }
 
-/* Theater mode - applied to html element during timer animation
-   iOS paints html background into safe area regions at OS level */
-html.theater-mode {
-  background-color: var(--theater-center) !important;
+/* Theater mode - applied to html/body during timer animation
+   iOS paints html background into safe area regions at OS level.
+   Use --theater-edge (not center) because safe areas are at screen edges
+   where the vignette gradient reaches its darkest point. */
+html.theater-mode,
+html.theater-mode body {
+  background-color: var(--theater-edge) !important;
 }
 
 body {
