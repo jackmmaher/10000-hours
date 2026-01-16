@@ -96,15 +96,42 @@ export function Timer() {
   // iOS SAFE AREA THEATER MODE
   // ============================================
   // iOS paints <html> background into safe area regions at OS level.
-  // Toggle theater-mode class to match safe areas with theater effect.
+  // Two-class system: theater-transitioning (controls timing), theater-mode (controls color)
+  // This allows fast transitions for theme changes, slow transitions for theater enter/exit.
   useEffect(() => {
     const html = document.documentElement
-    if (phase === 'pending' || phase === 'active' || phase === 'settling') {
+    const isTheaterActive = phase === 'pending' || phase === 'active' || phase === 'settling'
+    const wasTheaterActive = html.classList.contains('theater-mode')
+
+    if (isTheaterActive && !wasTheaterActive) {
+      // Entering theater mode - enable slow transition, then add color class
+      html.classList.add('theater-transitioning')
       html.classList.add('theater-mode')
-    } else {
+
+      // Remove transitioning class after animation completes (4s)
+      const timeout = setTimeout(() => {
+        html.classList.remove('theater-transitioning')
+      }, 4000)
+
+      return () => clearTimeout(timeout)
+    } else if (!isTheaterActive && wasTheaterActive) {
+      // Exiting theater mode - enable slow transition, then remove color class
+      html.classList.add('theater-transitioning')
       html.classList.remove('theater-mode')
+
+      // Remove transitioning class after animation completes (4s)
+      const timeout = setTimeout(() => {
+        html.classList.remove('theater-transitioning')
+      }, 4000)
+
+      return () => clearTimeout(timeout)
     }
-    return () => html.classList.remove('theater-mode')
+
+    // Cleanup on unmount
+    return () => {
+      html.classList.remove('theater-mode')
+      html.classList.remove('theater-transitioning')
+    }
   }, [phase])
 
   // ============================================

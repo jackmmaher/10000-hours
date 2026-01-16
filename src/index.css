@@ -219,15 +219,20 @@ html, body, #root {
   color: var(--text-primary);
 }
 
-/* Smooth background transition for theater mode - synced with footer fade (4s) */
+/* Default: fast transition for theme changes */
 html, body {
-  transition: background-color 4s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: background-color 0.3s ease;
 }
 
-/* Theater mode - applied to html/body during timer animation
-   iOS paints html background into safe area regions at OS level.
-   Use --theater-edge (not center) because safe areas are at screen edges
-   where the vignette gradient reaches its darkest point. */
+/* Theater enter/exit: slow transition synced with footer fade (4s)
+   Applied temporarily via JavaScript during theater mode transitions */
+html.theater-transitioning,
+html.theater-transitioning body {
+  transition: background-color 4s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+}
+
+/* Theater mode color - iOS paints html/body into safe areas at OS level.
+   Use --theater-edge to match vignette edge color at screen boundary. */
 html.theater-mode,
 html.theater-mode body {
   background-color: var(--theater-edge) !important;
