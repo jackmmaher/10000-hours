@@ -121,5 +121,12 @@ export function themeToCSSProperties(tokens: ThemeTokens): Record<string, string
     '--theater-center': tokens.theaterCenter,
     '--theater-edge': tokens.theaterEdge,
     '--theater-glow': tokens.theaterGlow,
+
+    // Semantic states
+    '--error-bg': tokens.errorBg,
+    '--error-text': tokens.errorText,
+    '--success-bg': tokens.successBg,
+    '--success-text': tokens.successText,
+    '--success-icon': tokens.successIcon,
   }
 }

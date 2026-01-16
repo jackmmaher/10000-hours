@@ -5,10 +5,11 @@
  * and a scrollable list of sessions that contributed to it.
  */
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Achievement } from '../lib/db'
 import { Session } from '../lib/db'
 import { formatDuration } from '../lib/format'
+import { shareMilestone, canShare } from '../lib/share'
 
 interface MilestoneSummaryProps {
   achievement: Achievement
@@ -68,6 +69,18 @@ export function MilestoneSummary({
   onClose,
   isNewlyAchieved = false,
 }: MilestoneSummaryProps) {
+  const [shareStatus, setShareStatus] = useState<'idle' | 'shared' | 'copied'>('idle')
+
+  // Handle share button click
+  const handleShare = async () => {
+    const milestoneName = `${achievement.hours.toLocaleString()} hours`
+    const success = await shareMilestone(achievement.hours, milestoneName)
+    if (success) {
+      setShareStatus(canShare() ? 'shared' : 'copied')
+      setTimeout(() => setShareStatus('idle'), 2000)
+    }
+  }
+
   // Calculate sessions that contributed to this milestone
   const milestoneData = useMemo(() => {
     // Get the starting point (previous milestone's hours, or 0)
@@ -118,41 +131,54 @@ export function MilestoneSummary({
   }, [achievement, previousAchievement, sessions])
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 backdrop-blur-sm">
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center backdrop-blur-sm"
+      style={{ backgroundColor: 'var(--bg-overlay)' }}
+    >
       <div
-        className="bg-cream rounded-t-3xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-xl animate-slide-up"
+        className="rounded-t-3xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-xl animate-slide-up"
+        style={{ backgroundColor: 'var(--bg-base)' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Handle bar */}
         <div className="flex justify-center pt-3 pb-2">
-          <div className="w-10 h-1 rounded-full bg-ink/20" />
+          <div
+            className="w-10 h-1 rounded-full"
+            style={{ backgroundColor: 'var(--text-muted)', opacity: 0.3 }}
+          />
         </div>
 
         {/* Header */}
-        <div className="px-6 pb-4 border-b border-ink/5">
+        <div className="px-6 pb-4" style={{ borderBottom: '1px solid var(--divider)' }}>
           {/* Zen message for newly achieved milestones */}
           {isNewlyAchieved && (
-            <div className="mb-4 py-3 px-4 bg-moss/10 rounded-xl">
-              <p className="text-sm text-moss italic text-center">The path continues.</p>
+            <div
+              className="mb-4 py-3 px-4 rounded-xl"
+              style={{ backgroundColor: 'var(--accent-muted)' }}
+            >
+              <p className="text-sm italic text-center" style={{ color: 'var(--accent)' }}>
+                The path continues.
+              </p>
             </div>
           )}
           <div className="flex items-start justify-between">
             <div>
-              <p className="font-serif text-2xl text-indigo-deep">
+              <p className="font-serif text-2xl" style={{ color: 'var(--text-primary)' }}>
                 {formatMilestoneTitle(achievement.hours)}
               </p>
-              <p className="text-sm text-ink/50 mt-1">
+              <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
                 {isNewlyAchieved ? 'Just achieved' : formatAchievementDate(achievement.achievedAt)}
               </p>
               {!isNewlyAchieved && (
-                <p className="text-xs text-ink/30">
+                <p className="text-xs" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>
                   at {formatAchievementTime(achievement.achievedAt)}
                 </p>
               )}
             </div>
             <button
               onClick={onClose}
-              className="p-2 -mr-2 text-ink/40 hover:text-ink/60 transition-colors"
+              className="p-2 -mr-2 transition-colors"
+              style={{ color: 'var(--text-muted)' }}
               aria-label="Close modal"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -168,59 +194,94 @@ export function MilestoneSummary({
         </div>
 
         {/* Stats summary */}
-        <div className="px-6 py-4 bg-cream-dark/30">
+        <div className="px-6 py-4" style={{ backgroundColor: 'var(--bg-deep)' }}>
           <div className="flex justify-between gap-4">
             <div className="text-center flex-1">
-              <p className="text-lg font-serif text-ink tabular-nums">
+              <p
+                className="text-lg font-serif tabular-nums"
+                style={{ color: 'var(--text-primary)' }}
+              >
                 {milestoneData.totalSessions}
               </p>
-              <p className="text-xs text-ink/40">sessions</p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                sessions
+              </p>
             </div>
             <div className="text-center flex-1">
-              <p className="text-lg font-serif text-ink tabular-nums">
+              <p
+                className="text-lg font-serif tabular-nums"
+                style={{ color: 'var(--text-primary)' }}
+              >
                 {formatDuration(milestoneData.avgSessionSeconds)}
               </p>
-              <p className="text-xs text-ink/40">avg session</p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                avg session
+              </p>
             </div>
             <div className="text-center flex-1">
-              <p className="text-lg font-serif text-ink tabular-nums">
+              <p
+                className="text-lg font-serif tabular-nums"
+                style={{ color: 'var(--text-primary)' }}
+              >
                 {milestoneData.daysToReach}
               </p>
-              <p className="text-xs text-ink/40">days</p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                days
+              </p>
             </div>
           </div>
         </div>
 
         {/* Sessions list */}
         <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
-          <p className="text-xs text-ink/40 mb-3">Sessions that earned this milestone</p>
+          <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>
+            Sessions that earned this milestone
+          </p>
 
           {milestoneData.sessions.length === 0 ? (
-            <p className="text-sm text-ink/30 italic py-4">Session data not available</p>
+            <p className="text-sm italic py-4" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>
+              Session data not available
+            </p>
           ) : (
             <div className="space-y-2">
               {milestoneData.sessions.map((session, i) => (
                 <div
                   key={session.id || i}
-                  className="flex items-center justify-between py-2 border-b border-ink/5 last:border-0"
+                  className="flex items-center justify-between py-2 last:border-0"
+                  style={{ borderBottom: '1px solid var(--divider)' }}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-full bg-indigo-deep/10 flex items-center justify-center">
-                      <span className="text-[10px] text-indigo-deep/60 tabular-nums">{i + 1}</span>
+                    <div
+                      className="w-6 h-6 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: 'var(--accent-muted)' }}
+                    >
+                      <span
+                        className="text-[10px] tabular-nums"
+                        style={{ color: 'var(--accent)', opacity: 0.7 }}
+                      >
+                        {i + 1}
+                      </span>
                     </div>
                     <div>
-                      <p className="text-sm text-ink">{formatSessionDate(session.startTime)}</p>
-                      <p className="text-xs text-ink/40">{formatSessionTime(session.startTime)}</p>
+                      <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                        {formatSessionDate(session.startTime)}
+                      </p>
+                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        {formatSessionTime(session.startTime)}
+                      </p>
                     </div>
                   </div>
-                  <p className="text-sm text-ink/70 tabular-nums">
+                  <p className="text-sm tabular-nums" style={{ color: 'var(--text-secondary)' }}>
                     {formatDuration(session.durationSeconds)}
                   </p>
                 </div>
               ))}
 
               {milestoneData.totalSessions > 20 && (
-                <p className="text-xs text-ink/30 text-center py-2">
+                <p
+                  className="text-xs text-center py-2"
+                  style={{ color: 'var(--text-muted)', opacity: 0.6 }}
+                >
                   Showing last 20 of {milestoneData.totalSessions} sessions
                 </p>
               )}
@@ -228,11 +289,38 @@ export function MilestoneSummary({
           )}
         </div>
 
-        {/* Close button */}
-        <div className="px-6 pb-8 pt-4 border-t border-ink/5">
+        {/* Footer buttons */}
+        <div
+          className="px-6 pb-8 pt-4 flex gap-3"
+          style={{ borderTop: '1px solid var(--divider)' }}
+        >
+          <button
+            onClick={handleShare}
+            className="flex-1 py-3 rounded-xl text-sm font-medium transition-colors active:scale-[0.98] flex items-center justify-center gap-2"
+            style={{ backgroundColor: 'var(--accent-muted)', color: 'var(--accent)' }}
+          >
+            {shareStatus === 'shared' ? (
+              'Shared!'
+            ) : shareStatus === 'copied' ? (
+              'Copied!'
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                  />
+                </svg>
+                Share
+              </>
+            )}
+          </button>
           <button
             onClick={onClose}
-            className="w-full py-3 rounded-xl text-sm font-medium bg-ink/5 text-ink/70 hover:bg-ink/10 transition-colors active:scale-[0.98]"
+            className="flex-1 py-3 rounded-xl text-sm font-medium transition-colors active:scale-[0.98]"
+            style={{ backgroundColor: 'var(--bg-deep)', color: 'var(--text-secondary)' }}
           >
             Close
           </button>

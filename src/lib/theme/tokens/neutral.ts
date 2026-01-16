@@ -117,6 +117,13 @@ export const NEUTRAL_LIGHT: ThemeTokens = {
   theaterEdge: '#A8A49E', // Warm shadow (edge vignette)
   theaterGlow: 'rgba(255, 255, 255, 0.9)', // Luminous center spot (high opacity for light bg)
 
+  // Semantic states - warm-tinted for harmony with cream palette
+  errorBg: 'rgba(220, 38, 38, 0.08)',
+  errorText: '#B91C1C',
+  successBg: 'rgba(5, 150, 105, 0.08)',
+  successText: '#047857',
+  successIcon: '#059669',
+
   // Meta
   isDark: false,
   seasonalAccent: '#EA6512',
@@ -234,6 +241,13 @@ export const NEUTRAL_DARK: ThemeTokens = {
   theaterCenter: '#0C0A09', // Deep charcoal (background)
   theaterEdge: '#030201', // Near-black (edge vignette)
   theaterGlow: 'rgba(255, 248, 240, 0.15)', // Warm luminous center spot
+
+  // Semantic states - visible on dark backgrounds
+  errorBg: 'rgba(239, 68, 68, 0.15)',
+  errorText: '#F87171',
+  successBg: 'rgba(16, 185, 129, 0.15)',
+  successText: '#34D399',
+  successIcon: '#10B981',
 
   // Meta
   isDark: true,

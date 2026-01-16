@@ -120,6 +120,13 @@
   --theater-edge: #A8A49E;
   --theater-glow: rgba(255, 255, 255, 0.9);
 
+  /* === SEMANTIC: Error/Success States === */
+  --error-bg: rgba(239, 68, 68, 0.08);
+  --error-text: #DC2626;
+  --success-bg: rgba(16, 185, 129, 0.12);
+  --success-text: #059669;
+  --success-icon: #10B981;
+
   /* === SEASONAL === */
   --seasonal-accent: #0EA5E9;
 

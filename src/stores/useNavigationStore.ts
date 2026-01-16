@@ -16,6 +16,7 @@ export type AppView =
   | 'progress' // Milestones, stats, insight-driven history
   | 'profile' // User identity, preferences, wellbeing tracking
   | 'settings' // Sub-page: Theme, display options, legal
+  | 'store' // In-app purchases: hour packs
   // Legacy views (still accessible via internal links)
   | 'calendar' // -> accessed from progress
   | 'insights' // -> accessed from journey
@@ -42,6 +43,12 @@ interface NavigationState {
   // Welcome cutscene state
   showWelcomeCutscene: boolean
   welcomeCutsceneShown: boolean // Tracks if shown this session (in-memory only)
+  // Review prompt state
+  showReviewPrompt: boolean
+  reviewPromptMilestone: string | null
+  pendingReviewAfterInsight: boolean // Queue review prompt to show after insight modal closes
+  // Saved content refresh trigger - increment to notify Journey tab of save/unsave
+  savedContentVersion: number
   // Actions
   setView: (view: AppView) => void
   setIsSettling: (settling: boolean) => void
@@ -67,6 +74,12 @@ interface NavigationState {
   // Welcome cutscene actions
   triggerWelcomeCutscene: () => void
   dismissWelcomeCutscene: () => void
+  // Review prompt actions
+  showReviewPromptModal: (milestoneText: string) => void
+  hideReviewPromptModal: () => void
+  queueReviewPromptAfterInsight: (milestoneText: string) => void
+  // Saved content refresh
+  incrementSavedContentVersion: () => void
 }
 
 export const useNavigationStore = create<NavigationState>((set) => ({
@@ -86,6 +99,12 @@ export const useNavigationStore = create<NavigationState>((set) => ({
   // Welcome cutscene state
   showWelcomeCutscene: false,
   welcomeCutsceneShown: false,
+  // Review prompt state
+  showReviewPrompt: false,
+  reviewPromptMilestone: null,
+  pendingReviewAfterInsight: false,
+  // Saved content refresh trigger
+  savedContentVersion: 0,
 
   setView: (view) =>
     set((state) => {
@@ -125,7 +144,18 @@ export const useNavigationStore = create<NavigationState>((set) => ({
   // Called after stats animation settles
   showInsightCaptureModal: () => set({ showInsightModal: true }),
 
-  hideInsightCaptureModal: () => set({ showInsightModal: false }),
+  hideInsightCaptureModal: () =>
+    set((state) => {
+      // If a review prompt was queued, show it now
+      if (state.pendingReviewAfterInsight) {
+        return {
+          showInsightModal: false,
+          pendingReviewAfterInsight: false,
+          showReviewPrompt: true,
+        }
+      }
+      return { showInsightModal: false }
+    }),
 
   clearPostSessionState: () =>
     set({
@@ -181,4 +211,29 @@ export const useNavigationStore = create<NavigationState>((set) => ({
       showWelcomeCutscene: false,
       welcomeCutsceneShown: true,
     }),
+
+  // Review prompt actions
+  showReviewPromptModal: (milestoneText) =>
+    set({
+      showReviewPrompt: true,
+      reviewPromptMilestone: milestoneText,
+    }),
+
+  hideReviewPromptModal: () =>
+    set({
+      showReviewPrompt: false,
+      reviewPromptMilestone: null,
+    }),
+
+  queueReviewPromptAfterInsight: (milestoneText) =>
+    set({
+      pendingReviewAfterInsight: true,
+      reviewPromptMilestone: milestoneText,
+    }),
+
+  // Increment to trigger refresh of saved content in Journey tab
+  incrementSavedContentVersion: () =>
+    set((state) => ({
+      savedContentVersion: state.savedContentVersion + 1,
+    })),
 }))

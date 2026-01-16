@@ -110,6 +110,13 @@ export interface ThemeTokens {
   theaterEdge: string // Dark vignette edges
   theaterGlow: string // Luminous center spot
 
+  // === SEMANTIC STATES ===
+  errorBg: string // Error background
+  errorText: string // Error text
+  successBg: string // Success background
+  successText: string // Success text
+  successIcon: string // Success checkmarks
+
   // === META ===
   isDark: boolean
   seasonalAccent: string // Accent color

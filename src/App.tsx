@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useSessionStore } from './stores/useSessionStore'
 import { useNavigationStore } from './stores/useNavigationStore'
 import { useSettingsStore } from './stores/useSettingsStore'
+import { useHourBankStore } from './stores/useHourBankStore'
 import { useVoice } from './hooks/useVoice'
 import {
   generateAttributionNotification,
@@ -31,7 +32,10 @@ import { NeutralThemeProvider } from './components/NeutralThemeProvider'
 import { ZenMessage } from './components/ZenMessage'
 import { PWAInstallPrompt } from './components/PWAInstallPrompt'
 import { ToastContainer } from './components/Toast'
+import { ReviewPrompt } from './components/ReviewPrompt'
+import { Store } from './components/Store'
 import type { Session } from './lib/db'
+import { shouldPromptForReview } from './lib/nativeReview'
 
 function AppContent() {
   const {
@@ -48,10 +52,16 @@ function AppContent() {
     showInsightModal,
     hideInsightCaptureModal,
     clearPostSessionState,
+    showReviewPrompt,
+    reviewPromptMilestone,
+    hideReviewPromptModal,
+    queueReviewPromptAfterInsight,
   } = useNavigationStore()
-  const { isLoading, hydrate, goalCompleted, createInsightReminder } = useSessionStore()
+  const { isLoading, hydrate, goalCompleted, justReachedEnlightenment, createInsightReminder } =
+    useSessionStore()
   const settingsStore = useSettingsStore()
   const authStore = useAuthStore()
+  const hourBankStore = useHourBankStore()
 
   // Initialize voice tracking - notifications handled centrally below
   const { voice } = useVoice()
@@ -71,6 +81,7 @@ function AppContent() {
       await hydrate()
       await settingsStore.hydrate()
       await authStore.initialize()
+      await hourBankStore.hydrate()
 
       // Decay affinities weekly (prevents runaway weights)
       await decayAffinities()
@@ -81,7 +92,7 @@ function AppContent() {
       }
     }
     init()
-  }, [hydrate, settingsStore, authStore])
+  }, [hydrate, settingsStore, authStore, hourBankStore])
 
   // Trigger welcome cutscene on first load (after hydration)
   useEffect(() => {
@@ -154,6 +165,20 @@ function AppContent() {
     }
   }, [])
 
+  // Check for review prompt after reaching practice goal
+  useEffect(() => {
+    if (justReachedEnlightenment) {
+      // User just reached their practice goal - check if we should prompt for review
+      shouldPromptForReview(undefined, true).then((shouldPrompt) => {
+        if (shouldPrompt) {
+          // Queue review to show after insight modal closes (if insight modal is or will be shown)
+          // The insight modal shows when user navigates away from timer
+          queueReviewPromptAfterInsight("You've reached your practice goal!")
+        }
+      })
+    }
+  }, [justReachedEnlightenment, queueReviewPromptAfterInsight])
+
   // Handlers
   const handleOnboardingComplete = useCallback(() => {
     markOnboardingSeen()
@@ -173,13 +198,16 @@ function AppContent() {
     setEditingSession(null)
     // Refresh sessions from DB
     await hydrate()
+    // Reconcile hour bank with actual session data (security fix)
+    await hourBankStore.reconcileBalance()
     setCalendarRefreshKey((k) => k + 1)
-  }, [hydrate])
+  }, [hydrate, hourBankStore])
 
   const handleSessionEditDelete = useCallback(async () => {
     setEditingSession(null)
     // Refresh sessions from DB
     await hydrate()
+    // No reconciliation on delete - hours stay consumed (security: no refunds)
     setCalendarRefreshKey((k) => k + 1)
   }, [hydrate])
 
@@ -249,7 +277,10 @@ function AppContent() {
         {view === 'explore' && <Explore />}
         {view === 'saved-pearls' && <SavedPearls />}
         {view === 'profile' && <Profile onNavigateToSettings={() => setView('settings')} />}
-        {view === 'settings' && <Settings onBack={() => setView('profile')} />}
+        {view === 'settings' && (
+          <Settings onBack={() => setView('profile')} onNavigateToStore={() => setView('store')} />
+        )}
+        {view === 'store' && <Store onBack={() => setView('settings')} />}
 
         {/* Session edit modal */}
         {editingSession && (
@@ -282,6 +313,13 @@ function AppContent() {
 
         {/* PWA install prompt for iOS Safari */}
         <PWAInstallPrompt />
+
+        {/* Review prompt modal - appears at moments of pride */}
+        <ReviewPrompt
+          isOpen={showReviewPrompt}
+          onClose={hideReviewPromptModal}
+          milestoneText={reviewPromptMilestone || undefined}
+        />
       </div>
     </NeutralThemeProvider>
   )

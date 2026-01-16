@@ -9,15 +9,28 @@ import { useState, useEffect, useCallback } from 'react'
 import { SessionTemplate } from './SessionDetailModal'
 import { Card, CardHeader, CardBody, AccentBar, CardEngagement } from './Card'
 import { VoiceBadgeWithHours } from './VoiceBadge'
-import { saveTemplate as saveTemplateLocal, unsaveTemplate as unsaveTemplateLocal, isTemplateSaved } from '../lib/db'
-import { saveTemplate as saveTemplateRemote, unsaveTemplate as unsaveTemplateRemote } from '../lib/templates'
+import {
+  saveTemplate as saveTemplateLocal,
+  unsaveTemplate as unsaveTemplateLocal,
+  isTemplateSaved,
+} from '../lib/db'
+import {
+  saveTemplate as saveTemplateRemote,
+  unsaveTemplate as unsaveTemplateRemote,
+} from '../lib/templates'
 import { useTapFeedback } from '../hooks/useTapFeedback'
+import { useNavigationStore } from '../stores/useNavigationStore'
 
 /**
  * Fallback Voice calculation for sessions without stored creatorVoiceScore
  * Uses hours, karma, saves, and completions as a content-specific estimate
  */
-function calculateFallbackVoice(hours: number, karma: number, saves: number, completions: number): number {
+function calculateFallbackVoice(
+  hours: number,
+  karma: number,
+  saves: number,
+  completions: number
+): number {
   // Hours: log10(hours + 1) * 10, cap at 40
   const hoursScore = Math.min(Math.log10(hours + 1) * 10, 40)
 
@@ -41,7 +54,7 @@ interface SessionCardProps {
   onVote?: (sessionId: string, shouldVote: boolean) => Promise<void>
   onRequireAuth?: () => void
   isAuthenticated?: boolean
-  currentUserId?: string  // For detecting own content
+  currentUserId?: string // For detecting own content
 }
 
 export function SessionCard({
@@ -51,7 +64,7 @@ export function SessionCard({
   onVote,
   onRequireAuth,
   isAuthenticated = true,
-  currentUserId
+  currentUserId,
 }: SessionCardProps) {
   const [isVoting, setIsVoting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -98,7 +111,7 @@ export function SessionCard({
 
     // Optimistic update
     setLocalVoted(newVoted)
-    setLocalUpvotes(prev => newVoted ? prev + 1 : prev - 1)
+    setLocalUpvotes((prev) => (newVoted ? prev + 1 : prev - 1))
 
     try {
       // Call Supabase if callback provided
@@ -108,12 +121,21 @@ export function SessionCard({
     } catch (err) {
       // Rollback on error
       setLocalVoted(!newVoted)
-      setLocalUpvotes(prev => newVoted ? prev - 1 : prev + 1)
+      setLocalUpvotes((prev) => (newVoted ? prev - 1 : prev + 1))
       console.error('Failed to vote:', err)
     } finally {
       setIsVoting(false)
     }
-  }, [isVoting, localVoted, haptic, onVote, session.id, isAuthenticated, onRequireAuth, isOwnContent])
+  }, [
+    isVoting,
+    localVoted,
+    haptic,
+    onVote,
+    session.id,
+    isAuthenticated,
+    onRequireAuth,
+    isOwnContent,
+  ])
 
   // Handle save (persists to local IndexedDB + Supabase for community count)
   const handleSave = useCallback(async () => {
@@ -125,7 +147,7 @@ export function SessionCard({
 
     // Optimistic update
     setLocalSaved(newSaved)
-    setLocalSaves(prev => newSaved ? prev + 1 : prev - 1)
+    setLocalSaves((prev) => (newSaved ? prev + 1 : prev - 1))
 
     try {
       if (newSaved) {
@@ -143,10 +165,12 @@ export function SessionCard({
           await unsaveTemplateRemote(session.id, currentUserId)
         }
       }
+      // Trigger refresh of saved content in Journey tab
+      useNavigationStore.getState().incrementSavedContentVersion()
     } catch (err) {
       // Rollback on error
       setLocalSaved(!newSaved)
-      setLocalSaves(prev => newSaved ? prev - 1 : prev + 1)
+      setLocalSaves((prev) => (newSaved ? prev - 1 : prev + 1))
       console.error('Failed to save/unsave template:', err)
     } finally {
       setIsSaving(false)
@@ -154,12 +178,9 @@ export function SessionCard({
   }, [isSaving, localSaved, session.id, haptic, isOwnContent, currentUserId])
 
   // Use creator's stored Voice score if available, otherwise fallback to content-based calculation
-  const voiceScore = session.creatorVoiceScore || calculateFallbackVoice(
-    session.creatorHours,
-    localUpvotes,
-    session.saves,
-    session.completions
-  )
+  const voiceScore =
+    session.creatorVoiceScore ||
+    calculateFallbackVoice(session.creatorHours, localUpvotes, session.saves, session.completions)
 
   return (
     <Card variant="default" onClick={onClick} className="group">
@@ -179,12 +200,8 @@ export function SessionCard({
 
           {/* Body */}
           <CardBody compact>
-            <p className="font-serif text-ink text-lg leading-snug pr-6 mb-1">
-              {session.title}
-            </p>
-            <p className="text-sm text-ink-soft italic line-clamp-1">
-              "{session.tagline}"
-            </p>
+            <p className="font-serif text-ink text-lg leading-snug pr-6 mb-1">{session.title}</p>
+            <p className="text-sm text-ink-soft italic line-clamp-1">"{session.tagline}"</p>
           </CardBody>
 
           {/* Stats - disable interactions for own content */}
@@ -203,13 +220,16 @@ export function SessionCard({
         {/* Right column: Voice badge at top, arrow at center */}
         <div className="flex flex-col items-center justify-between py-3 pr-4">
           {/* Voice badge - aligned with header */}
-          {voiceScore > 0 && (
-            <VoiceBadgeWithHours score={voiceScore} />
-          )}
+          {voiceScore > 0 && <VoiceBadgeWithHours score={voiceScore} />}
           {/* Subtle arrow indicator */}
           <div className="flex-1 flex items-center text-ink/15 group-hover:text-ink/30 transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </div>
         </div>

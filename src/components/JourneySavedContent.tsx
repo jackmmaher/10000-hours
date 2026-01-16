@@ -54,6 +54,7 @@ interface SavedContentProps {
 
 export function JourneySavedContent({ onCreateNew, onPlanTemplate }: SavedContentProps) {
   const { user } = useAuthStore()
+  const { savedContentVersion } = useNavigationStore()
   const haptic = useTapFeedback()
   const [createdMeditations, setCreatedMeditations] = useState<SessionTemplate[]>([])
   const [savedMeditations, setSavedMeditations] = useState<SessionTemplate[]>([])
@@ -83,63 +84,133 @@ export function JourneySavedContent({ onCreateNew, onPlanTemplate }: SavedConten
         }
         setCreatedMeditations(userCreated)
 
-        // Load saved templates (from local IndexedDB)
-        const { getSavedTemplates } = await import('../lib/db')
-        const savedTemplates = await getSavedTemplates()
+        // Load saved templates - prefer Supabase for authenticated users (includes community templates)
+        // Fall back to IndexedDB + static JSON for offline/unauthenticated
+        if (user) {
+          // Fetch saved templates with full data from Supabase
+          const { getSavedTemplatesWithData } = await import('../lib/templates')
+          const supabaseSaved = await getSavedTemplatesWithData(user.id)
 
-        if (savedTemplates.length === 0) {
-          setSavedMeditations([])
-          setIsLoading(false)
-          return
+          // Also check local IndexedDB for any locally-saved templates not yet synced
+          const { getSavedTemplates } = await import('../lib/db')
+          const localSaved = await getSavedTemplates()
+          const supabaseIds = new Set(supabaseSaved.map((t) => t.id))
+
+          // Find local saves that aren't in Supabase (may need static JSON fallback)
+          const missingLocalIds = localSaved
+            .map((t) => t.templateId)
+            .filter((id) => !supabaseIds.has(id))
+
+          if (missingLocalIds.length > 0) {
+            // Load static sessions for any missing local saves
+            const sessionsModule = await import('../data/sessions.json')
+            const allSessions = sessionsModule.default as Array<{
+              id: string
+              title: string
+              tagline: string
+              hero_gradient: string
+              duration_guidance: string
+              discipline: string
+              posture: string
+              best_time: string
+              environment?: string
+              guidance_notes: string
+              intention: string
+              recommended_after_hours: number
+              tags?: string[]
+              intent_tags?: string[]
+              karma: number
+              saves: number
+              completions: number
+              creator_hours: number
+            }>
+
+            const missingSet = new Set(missingLocalIds)
+            const matchedFromStatic = allSessions
+              .filter((s) => missingSet.has(s.id))
+              .map((s) => ({
+                id: s.id,
+                title: s.title,
+                tagline: s.tagline,
+                durationGuidance: s.duration_guidance,
+                discipline: s.discipline,
+                posture: s.posture,
+                bestTime: s.best_time,
+                environment: s.environment,
+                guidanceNotes: s.guidance_notes,
+                intention: s.intention,
+                recommendedAfterHours: s.recommended_after_hours,
+                intentTags: s.intent_tags,
+                karma: s.karma,
+                saves: s.saves,
+                completions: s.completions,
+                creatorHours: s.creator_hours,
+              }))
+
+            // Combine Supabase results with static fallbacks
+            setSavedMeditations([...supabaseSaved, ...matchedFromStatic])
+          } else {
+            setSavedMeditations(supabaseSaved)
+          }
+        } else {
+          // Unauthenticated: use IndexedDB + static JSON only
+          const { getSavedTemplates } = await import('../lib/db')
+          const savedTemplates = await getSavedTemplates()
+
+          if (savedTemplates.length === 0) {
+            setSavedMeditations([])
+            setIsLoading(false)
+            return
+          }
+
+          // Load session data to match saved template IDs
+          const sessionsModule = await import('../data/sessions.json')
+          const allSessions = sessionsModule.default as Array<{
+            id: string
+            title: string
+            tagline: string
+            hero_gradient: string
+            duration_guidance: string
+            discipline: string
+            posture: string
+            best_time: string
+            environment?: string
+            guidance_notes: string
+            intention: string
+            recommended_after_hours: number
+            tags?: string[]
+            intent_tags?: string[]
+            karma: number
+            saves: number
+            completions: number
+            creator_hours: number
+          }>
+
+          // Map saved template IDs to full session data
+          const savedIds = new Set(savedTemplates.map((t) => t.templateId))
+          const matched = allSessions
+            .filter((s) => savedIds.has(s.id))
+            .map((s) => ({
+              id: s.id,
+              title: s.title,
+              tagline: s.tagline,
+              durationGuidance: s.duration_guidance,
+              discipline: s.discipline,
+              posture: s.posture,
+              bestTime: s.best_time,
+              environment: s.environment,
+              guidanceNotes: s.guidance_notes,
+              intention: s.intention,
+              recommendedAfterHours: s.recommended_after_hours,
+              intentTags: s.intent_tags,
+              karma: s.karma,
+              saves: s.saves,
+              completions: s.completions,
+              creatorHours: s.creator_hours,
+            }))
+
+          setSavedMeditations(matched)
         }
-
-        // Load session data to match saved template IDs
-        const sessionsModule = await import('../data/sessions.json')
-        const allSessions = sessionsModule.default as Array<{
-          id: string
-          title: string
-          tagline: string
-          hero_gradient: string
-          duration_guidance: string
-          discipline: string
-          posture: string
-          best_time: string
-          environment?: string
-          guidance_notes: string
-          intention: string
-          recommended_after_hours: number
-          tags?: string[]
-          intent_tags?: string[]
-          karma: number
-          saves: number
-          completions: number
-          creator_hours: number
-        }>
-
-        // Map saved template IDs to full session data
-        const savedIds = new Set(savedTemplates.map((t) => t.templateId))
-        const matched = allSessions
-          .filter((s) => savedIds.has(s.id))
-          .map((s) => ({
-            id: s.id,
-            title: s.title,
-            tagline: s.tagline,
-            durationGuidance: s.duration_guidance,
-            discipline: s.discipline,
-            posture: s.posture,
-            bestTime: s.best_time,
-            environment: s.environment,
-            guidanceNotes: s.guidance_notes,
-            intention: s.intention,
-            recommendedAfterHours: s.recommended_after_hours,
-            intentTags: s.intent_tags,
-            karma: s.karma,
-            saves: s.saves,
-            completions: s.completions,
-            creatorHours: s.creator_hours,
-          }))
-
-        setSavedMeditations(matched)
       } catch (err) {
         console.error('Failed to load meditations:', err)
       } finally {
@@ -147,7 +218,7 @@ export function JourneySavedContent({ onCreateNew, onPlanTemplate }: SavedConten
       }
     }
     loadMeditations()
-  }, [user])
+  }, [user, savedContentVersion])
 
   // Handle delete meditation
   const handleDelete = useCallback(async () => {

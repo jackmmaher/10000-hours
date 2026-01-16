@@ -15,6 +15,7 @@ import {
   clearSessionInProgress,
   getSessionInProgress,
 } from '../lib/db'
+import { consumeHours } from '../lib/hourBank'
 import {
   generateMilestones,
   checkSessionMilestone,
@@ -74,6 +75,8 @@ interface SessionState {
   createInsightReminder: (sessionId: string) => Promise<void>
   completeSession: () => void
   resetGoalCompleted: () => void
+  // Dev-only: Override total seconds for testing milestone modals
+  devSetTotalSeconds: (seconds: number) => void
 }
 
 export const useSessionStore = create<SessionState>((set, get) => ({
@@ -205,6 +208,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
     await addSession(session)
 
+    // Consume hours from hour bank (for consumption-based pricing)
+    try {
+      await consumeHours(durationSeconds)
+    } catch (err) {
+      console.warn('Failed to consume hours:', err)
+    }
+
     // Silent session-plan linking: auto-link to a time-matched plan for this day
     const linkedPlan = await linkSessionToPlan(sessionUuid, sessionStartTime)
 
@@ -335,6 +345,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         totalSeconds: newTotalSeconds,
         hasReachedEnlightenment: true,
         justReachedEnlightenment: true,
+        goalCompleted: true, // Mark goal as completed immediately
         justAchievedMilestone: achievedMilestone,
       })
     } else {
@@ -397,5 +408,14 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
   resetGoalCompleted: () => {
     set({ goalCompleted: false })
+  },
+
+  // Dev-only: Override total seconds for testing milestone modals
+  devSetTotalSeconds: (seconds: number) => {
+    if (!import.meta.env.DEV) {
+      console.warn('devSetTotalSeconds is only available in development mode')
+      return
+    }
+    set({ totalSeconds: seconds })
   },
 }))

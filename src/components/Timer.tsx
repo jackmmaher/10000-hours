@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useNavigationStore } from '../stores/useNavigationStore'
 import { useSettingsStore } from '../stores/useSettingsStore'
+import { useHourBankStore } from '../stores/useHourBankStore'
+import { formatHours } from '../lib/hourBank'
 import { useBreathClock } from '../hooks/useBreathClock'
 import { useWakeLock } from '../hooks/useTimer'
 import { useSwipe } from '../hooks/useSwipe'
@@ -10,6 +12,8 @@ import { useTapFeedback } from '../hooks/useTapFeedback'
 import { useAudioFeedback } from '../hooks/useAudioFeedback'
 import { UnifiedTime } from './UnifiedTime'
 import { GooeyOrb } from './GooeyOrb'
+import { Paywall } from './Paywall'
+import { LowHoursWarning } from './LowHoursWarning'
 
 /**
  * Timer - The Unified Experience
@@ -44,6 +48,11 @@ export function Timer() {
 
   const { setView, triggerPostSessionFlow, setIsSettling } = useNavigationStore()
   const { hideTimeDisplay } = useSettingsStore()
+  const { canMeditate, refreshBalance, isLowHours, isCriticallyLow, available } = useHourBankStore()
+
+  // Modal states
+  const [showPaywall, setShowPaywall] = useState(false)
+  const [showLowHoursWarning, setShowLowHoursWarning] = useState(false)
 
   // ============================================
   // BREATH SYNCHRONIZATION
@@ -138,9 +147,8 @@ export function Timer() {
   // ============================================
   // START SESSION
   // ============================================
-  const handleStart = useCallback(async () => {
-    if (phase !== 'resting') return
-
+  // Core session start logic (separated to allow calling from warning modal)
+  const startSession = useCallback(async () => {
     // Immediate haptic acknowledgment
     haptic.medium()
 
@@ -165,7 +173,25 @@ export function Timer() {
     setSecondsOpacity(1)
     setPhase('active')
     startTimer() // Persist to DB for crash recovery
-  }, [phase, haptic, waitForPhase, startTimer, savedTotal])
+  }, [haptic, waitForPhase, startTimer, savedTotal])
+
+  const handleStart = useCallback(async () => {
+    if (phase !== 'resting') return
+
+    // Check if user can meditate (has available hours)
+    if (!canMeditate) {
+      setShowPaywall(true)
+      return
+    }
+
+    // Check if critically low (< 30 min) - show warning before proceeding
+    if (isCriticallyLow) {
+      setShowLowHoursWarning(true)
+      return
+    }
+
+    await startSession()
+  }, [phase, canMeditate, isCriticallyLow, startSession])
 
   // ============================================
   // END SESSION
@@ -201,9 +227,19 @@ export function Timer() {
       setSessionElapsed(0)
       setSnapshotTotal(null) // Clear snapshot isolation
       await stopTimer() // Persist session to DB
+      await refreshBalance() // Update hour bank balance
       setIsSettling(false) // UNLOCK: Allow navigation again
     }, 4000)
-  }, [phase, haptic, audio, waitForPhase, getTimeUntilPhase, stopTimer, setIsSettling])
+  }, [
+    phase,
+    haptic,
+    audio,
+    waitForPhase,
+    getTimeUntilPhase,
+    stopTimer,
+    setIsSettling,
+    refreshBalance,
+  ])
 
   // ============================================
   // POST-SESSION FLOW
@@ -407,7 +443,11 @@ export function Timer() {
             exit={{ opacity: 0 }}
             transition={{ duration: 4, ease: 'easeInOut' }}
           >
-            tap to meditate
+            {!canMeditate
+              ? 'tap to add hours'
+              : isLowHours && available > 0
+                ? `${formatHours(available)} remaining · tap to meditate`
+                : 'tap to meditate'}
           </motion.p>
         )}
         {phase === 'pending' && (
@@ -435,6 +475,24 @@ export function Timer() {
           </motion.p>
         )}
       </AnimatePresence>
+
+      {/* Paywall modal */}
+      <Paywall isOpen={showPaywall} onClose={() => setShowPaywall(false)} />
+
+      {/* Low hours warning modal */}
+      <LowHoursWarning
+        isOpen={showLowHoursWarning}
+        onClose={() => setShowLowHoursWarning(false)}
+        onContinue={() => {
+          setShowLowHoursWarning(false)
+          startSession()
+        }}
+        onTopUp={() => {
+          setShowLowHoursWarning(false)
+          setShowPaywall(true)
+        }}
+        availableHours={available}
+      />
     </div>
   )
 }

@@ -284,3 +284,22 @@ export interface UserAffinities {
   lastDecayAt: number // For weekly decay
   totalFeedbackEvents: number
 }
+
+// Purchase record for hour bank
+export interface PurchaseRecord {
+  productId: string
+  transactionId: string
+  hours: number
+  purchasedAt: number
+}
+
+// Hour bank for consumption-based pricing
+export interface HourBank {
+  id: 1 // Singleton
+  totalPurchasedHours: number // Total hours ever purchased
+  totalConsumedHours: number // Total hours consumed by sessions
+  availableHours: number // Hours remaining (purchased - consumed)
+  isLifetime: boolean // True if user has lifetime access
+  lastPurchaseAt: number | null // Timestamp of most recent purchase
+  purchases: PurchaseRecord[] // Purchase history
+}

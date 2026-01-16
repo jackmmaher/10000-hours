@@ -109,7 +109,11 @@
       "Bash(gh api:*)",
       "WebFetch(domain:vercel.com)",
       "WebFetch(domain:10000-hours.vercel.app)",
-      "WebFetch(domain:10000-hours-three.vercel.app)"
+      "WebFetch(domain:10000-hours-three.vercel.app)",
+      "Bash(git log:*)",
+      "Bash(npx cap add ios)",
+      "Bash(npx cap add android)",
+      "Bash(npx cap sync)"
     ]
   }
 }

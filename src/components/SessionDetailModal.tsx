@@ -23,6 +23,7 @@ import { createScheduledReminder } from '../lib/reminders'
 import { SessionTemplate } from '../lib/types'
 import { ReportModal } from './ReportModal'
 import { InAppNotification } from '../lib/notifications'
+import { useNavigationStore } from '../stores/useNavigationStore'
 
 // Re-export for backward compatibility with existing imports
 export type { SessionTemplate } from '../lib/types'
@@ -218,6 +219,8 @@ export function SessionDetailModal({
       }
       // Notify parent of save change
       onSaveChange?.(session.id, newSaved)
+      // Trigger refresh of saved content in Journey tab
+      useNavigationStore.getState().incrementSavedContentVersion()
     } catch (err) {
       // Rollback on error
       setIsSaved(!newSaved)

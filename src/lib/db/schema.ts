@@ -23,6 +23,7 @@ import type {
   WellbeingSettings,
   RepeatRule,
   UserAffinities,
+  HourBank,
 } from './types'
 
 export class MeditationDB extends Dexie {
@@ -43,6 +44,7 @@ export class MeditationDB extends Dexie {
   notifications!: Table<InAppNotification>
   repeatRules!: Table<RepeatRule>
   userAffinities!: Table<UserAffinities>
+  hourBank!: Table<HourBank>
 
   constructor() {
     super('10000hours')
@@ -260,6 +262,28 @@ export class MeditationDB extends Dexie {
       notifications: 'id, type, createdAt, readAt',
       repeatRules: '++id, createdAt',
       userAffinities: 'id', // Singleton table
+    })
+
+    // v14: Add hourBank table for consumption-based pricing
+    this.version(14).stores({
+      sessions: '++id, uuid, startTime, endTime',
+      appState: 'id',
+      profile: 'id',
+      settings: 'id',
+      insights: 'id, sessionId, createdAt, sharedPearlId',
+      plannedSessions: '++id, date, createdAt, linkedSessionUuid, courseId, repeatRuleId',
+      courseProgress: 'id, courseId, status',
+      savedTemplates: 'id, templateId, savedAt',
+      pearlDrafts: 'id, insightId, updatedAt',
+      templateDrafts: 'id, updatedAt',
+      userPreferences: 'id',
+      wellbeingDimensions: 'id, name, createdAt',
+      wellbeingCheckIns: 'id, dimensionId, createdAt',
+      wellbeingSettings: 'id',
+      notifications: 'id, type, createdAt, readAt',
+      repeatRules: '++id, createdAt',
+      userAffinities: 'id',
+      hourBank: 'id', // Singleton table for hour tracking
     })
   }
 }

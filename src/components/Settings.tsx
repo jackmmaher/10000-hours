@@ -14,18 +14,22 @@
 import { useState } from 'react'
 import { useSettingsStore } from '../stores/useSettingsStore'
 import { useAuthStore } from '../stores/useAuthStore'
+import { useHourBankStore } from '../stores/useHourBankStore'
+import { formatAvailableHours } from '../lib/hourBank'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 import { useAudioFeedback } from '../hooks/useAudioFeedback'
 import { trackHideTimeToggle } from '../lib/analytics'
 import { exportData } from '../lib/export'
 import { AuthModal } from './AuthModal'
+import { SuggestionForm } from './SuggestionForm'
 
 interface SettingsProps {
   onBack: () => void
+  onNavigateToStore: () => void
 }
 
-export function Settings({ onBack }: SettingsProps) {
+export function Settings({ onBack, onNavigateToStore }: SettingsProps) {
   const {
     hideTimeDisplay,
     setHideTimeDisplay,
@@ -37,9 +41,11 @@ export function Settings({ onBack }: SettingsProps) {
     setNotificationPreferences,
   } = useSettingsStore()
   const { user, isAuthenticated, signOut, isLoading: authLoading, refreshProfile } = useAuthStore()
+  const { available, isLifetime } = useHourBankStore()
   const haptic = useTapFeedback()
   const audio = useAudioFeedback()
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [showSuggestionForm, setShowSuggestionForm] = useState(false)
 
   // Pull-to-refresh
   const {
@@ -162,6 +168,35 @@ export function Settings({ onBack }: SettingsProps) {
               </div>
             </button>
           )}
+        </div>
+
+        {/* Hour Packs */}
+        <div className="mb-8">
+          <p className="font-serif text-sm text-ink/50 tracking-wide mb-4">Meditation Hours</p>
+          <button
+            onClick={() => {
+              haptic.light()
+              onNavigateToStore()
+            }}
+            className="w-full p-5 bg-elevated shadow-sm
+              rounded-xl text-left hover:shadow-md transition-all
+              active:scale-[0.99] touch-manipulation"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-ink font-medium">Hour Packs</p>
+                <p className="text-xs text-ink/40 mt-1">
+                  {isLifetime ? 'You have lifetime access' : 'Purchase meditation time'}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-lg font-medium text-ink">
+                  {isLifetime ? 'Lifetime' : formatAvailableHours(available)}
+                </p>
+                <p className="text-xs text-ink/40">available</p>
+              </div>
+            </div>
+          </button>
         </div>
 
         {/* Display Options */}
@@ -440,16 +475,37 @@ export function Settings({ onBack }: SettingsProps) {
           </button>
         </div>
 
+        {/* Feedback */}
+        <div className="mb-8">
+          <p className="font-serif text-sm text-ink/50 tracking-wide mb-4">Feedback</p>
+          <button
+            onClick={() => {
+              haptic.light()
+              setShowSuggestionForm(true)
+            }}
+            className="w-full p-4 bg-cream-warm rounded-xl text-left hover:bg-cream-deep transition-colors active:scale-[0.99] touch-manipulation"
+          >
+            <p className="text-sm text-ink font-medium">Suggest an App</p>
+            <p className="text-xs text-ink/40 mt-1">
+              Help us pick the next app to build. Your ideas matter.
+            </p>
+          </button>
+        </div>
+
         {/* Links */}
         <div className="space-y-1 mb-8">
           <a
-            href="#"
+            href="https://stillhours.app/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
             className="block py-3 text-sm text-ink/50 hover:text-ink/70 transition-colors touch-manipulation"
           >
             Privacy Policy
           </a>
           <a
-            href="#"
+            href="https://stillhours.app/terms"
+            target="_blank"
+            rel="noopener noreferrer"
             className="block py-3 text-sm text-ink/50 hover:text-ink/70 transition-colors touch-manipulation"
           >
             Terms of Service
@@ -469,6 +525,9 @@ export function Settings({ onBack }: SettingsProps) {
         title="Sign in to create"
         subtitle="Share pearls and guided meditations with the community"
       />
+
+      {/* Suggestion form modal */}
+      <SuggestionForm isOpen={showSuggestionForm} onClose={() => setShowSuggestionForm(false)} />
     </div>
   )
 }

@@ -517,6 +517,46 @@ export async function reportTemplate(
 }
 
 /**
+ * Get saved templates with full data for a user
+ * Fetches from Supabase session_template_saves joined with session_templates
+ * Returns full template data for displaying in Journey tab
+ */
+export async function getSavedTemplatesWithData(userId: string): Promise<SessionTemplate[]> {
+  if (!isSupabaseConfigured() || !supabase) {
+    return []
+  }
+
+  const { data, error } = await supabase
+    .from('session_template_saves')
+    .select(
+      `
+      template_id,
+      saved_at,
+      session_templates (
+        id, user_id, title, tagline, duration_guidance, discipline, posture,
+        best_time, environment, guidance_notes, intention, recommended_after_hours,
+        intent_tags, karma, saves, completions, creator_hours, creator_voice_score,
+        course_id, course_position
+      )
+    `
+    )
+    .eq('user_id', userId)
+    .order('saved_at', { ascending: false })
+
+  if (error) {
+    console.error('Get saved templates error:', error)
+    return []
+  }
+
+  // Filter out null templates (deleted or unavailable) and map to SessionTemplate
+  // Note: session_templates is a single object (not array) due to the join
+  return (data || [])
+    .map((d) => d.session_templates as unknown as Record<string, unknown> | null)
+    .filter((t): t is Record<string, unknown> => t !== null)
+    .map((row) => mapTemplateFromDb(row))
+}
+
+/**
  * Get templates with user's vote/save status using RPC
  * More efficient than separate queries
  */
