@@ -222,7 +222,7 @@ export function useAudioFeedback() {
             holdingDurationSec,
             CRESCENDO_DURATION,
             DECAY_DURATION,
-            0.12
+            0.06
           )
           break
         }
