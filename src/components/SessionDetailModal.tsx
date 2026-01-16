@@ -312,28 +312,41 @@ export function SessionDetailModal({
       onClick={onClose}
     >
       <div
-        className="bg-cream w-full max-w-lg max-h-[calc(90vh-env(safe-area-inset-top,0px))] flex flex-col shadow-xl animate-slide-up overflow-hidden rounded-t-3xl"
+        className="bg-cream w-full max-w-lg max-h-[90dvh] flex flex-col shadow-xl animate-slide-up overflow-hidden rounded-t-3xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Gradient header with handle bar */}
+        {/* Gradient header */}
         <div className={`bg-gradient-to-br ${gradient}`}>
-          {/* Handle bar */}
-          <div className="flex justify-center pt-3 pb-2">
-            <div className="w-10 h-1 rounded-full bg-white/30" />
-          </div>
-
           {/* Header content */}
-          <div className="px-6 pb-5">
-            {/* Header row with report button */}
+          <div className="px-6 pt-4 pb-5">
+            {/* Header row with close and report buttons */}
             <div className="flex items-center justify-between mb-2">
+              {/* Close button */}
+              <button
+                onClick={onClose}
+                className="p-1.5 -ml-1.5 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                aria-label="Close"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+
+              {/* Badges */}
               <div className="flex items-center gap-2">
                 <span className="text-xs bg-white/20 text-white px-2 py-1 rounded-full">
                   {session.discipline}
                 </span>
                 <span className="text-xs text-white/70">{session.durationGuidance}</span>
               </div>
+
               {/* Report button - only for other users' content */}
-              {!isOwnContent && (
+              {!isOwnContent ? (
                 <button
                   onClick={() => setShowReportModal(true)}
                   className="p-1.5 rounded-full text-white/50 hover:text-white/70 hover:bg-white/10 transition-colors"
@@ -348,6 +361,8 @@ export function SessionDetailModal({
                     />
                   </svg>
                 </button>
+              ) : (
+                <div className="w-7" /> /* Spacer for alignment */
               )}
             </div>
 
