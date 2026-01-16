@@ -219,6 +219,11 @@ html, body, #root {
   color: var(--text-primary);
 }
 
+/* Smooth background transition for theater mode - synced with footer fade (4s) */
+html, body {
+  transition: background-color 4s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
 /* Theater mode - applied to html/body during timer animation
    iOS paints html background into safe area regions at OS level.
    Use --theater-edge (not center) because safe areas are at screen edges
