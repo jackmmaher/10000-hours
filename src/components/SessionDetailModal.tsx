@@ -5,7 +5,6 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
-import { getIntentionGradient } from '../lib/animations'
 import {
   saveTemplate as saveTemplateLocal,
   unsaveTemplate as unsaveTemplateLocal,
@@ -110,9 +109,6 @@ export function SessionDetailModal({
 
   // Report modal state
   const [showReportModal, setShowReportModal] = useState(false)
-
-  // Get gradient based on intention or use fallback
-  const gradient = getIntentionGradient(session.intention)
 
   // Sync state from props and fetch live stats
   useEffect(() => {
@@ -305,21 +301,36 @@ export function SessionDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-ink/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 backdrop-blur-sm"
       onTouchStart={handleTouchEvent}
       onTouchEnd={handleTouchEvent}
       onTouchMove={handleTouchEvent}
+      onClick={onClose}
     >
-      <div className="h-full overflow-y-auto">
-        {/* Hero section - single unified header */}
-        <div className={`relative bg-gradient-to-br ${gradient} px-6 pt-14 pb-6`}>
-          {/* Header buttons */}
-          <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+      <div
+        className="bg-cream rounded-t-3xl w-full max-w-lg max-h-[calc(90vh-env(safe-area-inset-top,0px))] flex flex-col shadow-xl animate-slide-up"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Handle bar */}
+        <div className="flex justify-center pt-3 pb-2">
+          <div className="w-10 h-1 rounded-full bg-ink/20" />
+        </div>
+
+        {/* Header - non-scrolling */}
+        <div className={`px-6 pb-4 border-b border-ink/5`}>
+          {/* Header row with report button */}
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs bg-cream-deep text-ink/60 px-2 py-1 rounded-full">
+                {session.discipline}
+              </span>
+              <span className="text-xs text-ink/40">{session.durationGuidance}</span>
+            </div>
             {/* Report button - only for other users' content */}
             {!isOwnContent && (
               <button
                 onClick={() => setShowReportModal(true)}
-                className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+                className="p-1.5 rounded-full text-ink/30 hover:text-ink/50 hover:bg-ink/5 transition-colors"
                 aria-label="Report issue"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -332,30 +343,15 @@ export function SessionDetailModal({
                 </svg>
               </button>
             )}
-            {/* Close button */}
-            <button
-              onClick={onClose}
-              className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
-              aria-label="Close modal"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
           </div>
 
           {/* Title and tagline */}
-          <p className="font-serif text-2xl text-white drop-shadow-sm">{session.title}</p>
-          <p className="text-white/80 text-sm mt-2 italic">"{session.tagline}"</p>
+          <p className="font-serif text-xl text-ink">{session.title}</p>
+          <p className="text-ink/60 text-sm mt-1 italic">"{session.tagline}"</p>
         </div>
 
-        {/* Content */}
-        <div className="bg-cream min-h-screen px-6 py-6">
+        {/* Scrollable content */}
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6">
           {/* Quick details */}
           <div className="flex flex-wrap gap-2 mb-6">
             <span className="bg-cream-deep text-ink/60 text-sm px-3 py-1 rounded-full">
@@ -486,15 +482,16 @@ export function SessionDetailModal({
               <span className="tabular-nums">{displayStats.completions.toLocaleString()}</span>
             </span>
           </div>
+        </div>
 
-          {/* Actions */}
-          <div className="sticky bottom-0 bg-cream pt-4 pb-safe border-t border-ink/5 -mx-6 px-6 overflow-hidden">
-            {!showDatePicker ? (
-              <div className="flex gap-3">
-                <button
-                  onClick={isOwnContent ? undefined : handleSave}
-                  disabled={isOwnContent}
-                  className={`
+        {/* Footer with safe-area-bottom */}
+        <div className="px-6 pb-8 pt-4 border-t border-ink/5 safe-area-bottom">
+          {!showDatePicker ? (
+            <div className="flex gap-3">
+              <button
+                onClick={isOwnContent ? undefined : handleSave}
+                disabled={isOwnContent}
+                className={`
                     flex-none w-12 h-12 rounded-xl flex items-center justify-center transition-colors
                     ${
                       isOwnContent || isSaved
@@ -503,134 +500,133 @@ export function SessionDetailModal({
                     }
                     ${isOwnContent ? 'cursor-default' : ''}
                   `}
-                  aria-label={
-                    isOwnContent
-                      ? 'Your meditation'
-                      : isSaved
-                        ? 'Unsave meditation'
-                        : 'Save meditation'
-                  }
+                aria-label={
+                  isOwnContent
+                    ? 'Your meditation'
+                    : isSaved
+                      ? 'Unsave meditation'
+                      : 'Save meditation'
+                }
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill={isOwnContent || isSaved ? 'currentColor' : 'none'}
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill={isOwnContent || isSaved ? 'currentColor' : 'none'}
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-                    />
-                  </svg>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                  />
+                </svg>
+              </button>
+              <button
+                onClick={handleAdopt}
+                className="flex-1 py-3 bg-moss text-cream rounded-xl text-sm font-medium hover:bg-moss/90 transition-colors active:scale-[0.98]"
+              >
+                Plan this meditation
+              </button>
+            </div>
+          ) : (
+            <div className="overflow-hidden">
+              <p className="text-sm text-ink/60 mb-4">When would you like to practice this?</p>
+
+              {/* Date picker */}
+              <div className="mb-4">
+                <label className="text-xs text-ink/50 block mb-2">Date</label>
+                <input
+                  type="date"
+                  value={formatDateForInput(selectedDate)}
+                  min={formatDateForInput(new Date())}
+                  onChange={(e) => {
+                    const newDate = new Date(e.target.value + 'T00:00:00')
+                    setSelectedDate(newDate)
+                  }}
+                  className="w-full max-w-full px-4 py-3 rounded-xl bg-cream-deep text-ink focus:outline-none focus:ring-2 focus:ring-moss/30 box-border"
+                />
+              </div>
+
+              {/* Time picker */}
+              <div className="mb-4">
+                <label className="text-xs text-ink/50 block mb-2">
+                  Time
+                  {session.bestTime && (
+                    <span className="text-ink/30 ml-1">
+                      (suggested: {session.bestTime.toLowerCase()})
+                    </span>
+                  )}
+                </label>
+                <input
+                  type="time"
+                  value={plannedTime}
+                  onChange={(e) => setPlannedTime(e.target.value)}
+                  className="w-full max-w-full px-4 py-3 rounded-xl bg-cream-deep text-ink focus:outline-none focus:ring-2 focus:ring-moss/30 box-border"
+                />
+              </div>
+
+              {/* Quick date buttons */}
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => setSelectedDate(new Date())}
+                  className={`flex-1 py-2 rounded-lg text-xs transition-colors ${
+                    formatDateForInput(selectedDate) === formatDateForInput(new Date())
+                      ? 'bg-moss/20 text-moss font-medium'
+                      : 'bg-cream-deep text-ink/50 hover:bg-cream-deep/80'
+                  }`}
+                >
+                  Today
                 </button>
                 <button
-                  onClick={handleAdopt}
-                  className="flex-1 py-3 bg-moss text-cream rounded-xl text-sm font-medium hover:bg-moss/90 transition-colors active:scale-[0.98]"
+                  onClick={() => {
+                    const tomorrow = new Date()
+                    tomorrow.setDate(tomorrow.getDate() + 1)
+                    setSelectedDate(tomorrow)
+                  }}
+                  className={`flex-1 py-2 rounded-lg text-xs transition-colors ${
+                    formatDateForInput(selectedDate) ===
+                    formatDateForInput(new Date(Date.now() + 86400000))
+                      ? 'bg-moss/20 text-moss font-medium'
+                      : 'bg-cream-deep text-ink/50 hover:bg-cream-deep/80'
+                  }`}
                 >
-                  Plan this meditation
+                  Tomorrow
+                </button>
+                <button
+                  onClick={() => {
+                    const nextWeek = new Date()
+                    nextWeek.setDate(nextWeek.getDate() + 7)
+                    setSelectedDate(nextWeek)
+                  }}
+                  className={`flex-1 py-2 rounded-lg text-xs transition-colors ${
+                    formatDateForInput(selectedDate) ===
+                    formatDateForInput(new Date(Date.now() + 7 * 86400000))
+                      ? 'bg-moss/20 text-moss font-medium'
+                      : 'bg-cream-deep text-ink/50 hover:bg-cream-deep/80'
+                  }`}
+                >
+                  Next week
                 </button>
               </div>
-            ) : (
-              <div className="overflow-hidden">
-                <p className="text-sm text-ink/60 mb-4">When would you like to practice this?</p>
 
-                {/* Date picker */}
-                <div className="mb-4">
-                  <label className="text-xs text-ink/50 block mb-2">Date</label>
-                  <input
-                    type="date"
-                    value={formatDateForInput(selectedDate)}
-                    min={formatDateForInput(new Date())}
-                    onChange={(e) => {
-                      const newDate = new Date(e.target.value + 'T00:00:00')
-                      setSelectedDate(newDate)
-                    }}
-                    className="w-full max-w-full px-4 py-3 rounded-xl bg-cream-deep text-ink focus:outline-none focus:ring-2 focus:ring-moss/30 box-border"
-                  />
-                </div>
-
-                {/* Time picker */}
-                <div className="mb-4">
-                  <label className="text-xs text-ink/50 block mb-2">
-                    Time
-                    {session.bestTime && (
-                      <span className="text-ink/30 ml-1">
-                        (suggested: {session.bestTime.toLowerCase()})
-                      </span>
-                    )}
-                  </label>
-                  <input
-                    type="time"
-                    value={plannedTime}
-                    onChange={(e) => setPlannedTime(e.target.value)}
-                    className="w-full max-w-full px-4 py-3 rounded-xl bg-cream-deep text-ink focus:outline-none focus:ring-2 focus:ring-moss/30 box-border"
-                  />
-                </div>
-
-                {/* Quick date buttons */}
-                <div className="flex gap-2 mb-4">
-                  <button
-                    onClick={() => setSelectedDate(new Date())}
-                    className={`flex-1 py-2 rounded-lg text-xs transition-colors ${
-                      formatDateForInput(selectedDate) === formatDateForInput(new Date())
-                        ? 'bg-moss/20 text-moss font-medium'
-                        : 'bg-cream-deep text-ink/50 hover:bg-cream-deep/80'
-                    }`}
-                  >
-                    Today
-                  </button>
-                  <button
-                    onClick={() => {
-                      const tomorrow = new Date()
-                      tomorrow.setDate(tomorrow.getDate() + 1)
-                      setSelectedDate(tomorrow)
-                    }}
-                    className={`flex-1 py-2 rounded-lg text-xs transition-colors ${
-                      formatDateForInput(selectedDate) ===
-                      formatDateForInput(new Date(Date.now() + 86400000))
-                        ? 'bg-moss/20 text-moss font-medium'
-                        : 'bg-cream-deep text-ink/50 hover:bg-cream-deep/80'
-                    }`}
-                  >
-                    Tomorrow
-                  </button>
-                  <button
-                    onClick={() => {
-                      const nextWeek = new Date()
-                      nextWeek.setDate(nextWeek.getDate() + 7)
-                      setSelectedDate(nextWeek)
-                    }}
-                    className={`flex-1 py-2 rounded-lg text-xs transition-colors ${
-                      formatDateForInput(selectedDate) ===
-                      formatDateForInput(new Date(Date.now() + 7 * 86400000))
-                        ? 'bg-moss/20 text-moss font-medium'
-                        : 'bg-cream-deep text-ink/50 hover:bg-cream-deep/80'
-                    }`}
-                  >
-                    Next week
-                  </button>
-                </div>
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setShowDatePicker(false)}
-                    className="flex-1 py-3 bg-cream-deep text-ink/60 rounded-xl text-sm hover:bg-cream-deep/80 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleConfirmAdopt}
-                    disabled={isAdopting}
-                    className="flex-1 py-3 rounded-xl text-sm font-medium transition-colors active:scale-[0.98] bg-moss text-cream hover:bg-moss/90"
-                  >
-                    {isAdopting ? 'Planning...' : 'Confirm'}
-                  </button>
-                </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDatePicker(false)}
+                  className="flex-1 py-3 bg-cream-deep text-ink/60 rounded-xl text-sm hover:bg-cream-deep/80 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmAdopt}
+                  disabled={isAdopting}
+                  className="flex-1 py-3 rounded-xl text-sm font-medium transition-colors active:scale-[0.98] bg-moss text-cream hover:bg-moss/90"
+                >
+                  {isAdopting ? 'Planning...' : 'Confirm'}
+                </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 

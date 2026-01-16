@@ -29,7 +29,7 @@ function formatTimeForInput(timestamp: number): string {
   return date.toLocaleTimeString('en-US', {
     hour12: false,
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -37,9 +37,7 @@ export function SessionEditModal({ session, onClose, onSave, onDelete }: Session
   // Parse initial values
   const [date, setDate] = useState(formatDateForInput(session.startTime))
   const [startTime, setStartTime] = useState(formatTimeForInput(session.startTime))
-  const [durationMinutes, setDurationMinutes] = useState(
-    Math.round(session.durationSeconds / 60)
-  )
+  const [durationMinutes, setDurationMinutes] = useState(Math.round(session.durationSeconds / 60))
   const [pose, setPose] = useState(session.pose || '')
   const [discipline, setDiscipline] = useState(session.discipline || '')
   const [notes, setNotes] = useState(session.notes || '')
@@ -57,7 +55,7 @@ export function SessionEditModal({ session, onClose, onSave, onDelete }: Session
 
       const newStartTime = new Date(year, month - 1, day, hours, minutes).getTime()
       const durationSeconds = durationMinutes * 60
-      const newEndTime = newStartTime + (durationSeconds * 1000)
+      const newEndTime = newStartTime + durationSeconds * 1000
 
       await updateSessionFull(session.uuid, {
         startTime: newStartTime,
@@ -65,7 +63,7 @@ export function SessionEditModal({ session, onClose, onSave, onDelete }: Session
         durationSeconds,
         pose: pose || undefined,
         discipline: discipline || undefined,
-        notes: notes || undefined
+        notes: notes || undefined,
       })
 
       onSave()
@@ -89,41 +87,33 @@ export function SessionEditModal({ session, onClose, onSave, onDelete }: Session
   }, [session.uuid, onDelete])
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-overlay)] backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[var(--bg-overlay)] backdrop-blur-sm">
       <div
-        className="w-full max-w-md mx-4 rounded-2xl overflow-hidden shadow-xl"
-        style={{ backgroundColor: 'var(--bg-elevated)' }}
+        className="w-full max-w-lg rounded-t-3xl flex flex-col shadow-xl animate-slide-up"
+        style={{
+          backgroundColor: 'var(--bg-elevated)',
+          maxHeight: 'calc(90vh - env(safe-area-inset-top, 0px))',
+        }}
       >
-        {/* Header */}
-        <div
-          className="px-6 py-4 flex items-center justify-between"
-          style={{ borderBottom: '1px solid var(--border-subtle)' }}
-        >
-          <h2
-            className="text-lg font-medium"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            Edit Session
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-full transition-colors"
-            style={{ color: 'var(--text-muted)' }}
-            aria-label="Close modal"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+        {/* Handle bar */}
+        <div className="flex justify-center pt-3 pb-2">
+          <div className="w-10 h-1 rounded-full" style={{ backgroundColor: 'var(--border)' }} />
         </div>
 
-        {/* Form */}
-        <div className="px-6 py-4 space-y-4 max-h-[60vh] overflow-y-auto">
+        {/* Header */}
+        <div
+          className="px-6 pb-4 flex items-center justify-between"
+          style={{ borderBottom: '1px solid var(--border-subtle)' }}
+        >
+          <h2 className="text-lg font-medium" style={{ color: 'var(--text-primary)' }}>
+            Edit Session
+          </h2>
+        </div>
+
+        {/* Form - Scrollable */}
+        <div className="px-6 py-4 space-y-4 flex-1 min-h-0 overflow-y-auto">
           {/* Original duration display */}
-          <p
-            className="text-sm"
-            style={{ color: 'var(--text-muted)' }}
-          >
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
             Original: {formatDuration(session.durationSeconds)} on{' '}
             {new Date(session.startTime).toLocaleDateString()}
           </p>
@@ -144,7 +134,7 @@ export function SessionEditModal({ session, onClose, onSave, onDelete }: Session
               style={{
                 backgroundColor: 'var(--bg-deep)',
                 color: 'var(--text-primary)',
-                border: '1px solid var(--border)'
+                border: '1px solid var(--border)',
               }}
             />
           </div>
@@ -165,7 +155,7 @@ export function SessionEditModal({ session, onClose, onSave, onDelete }: Session
               style={{
                 backgroundColor: 'var(--bg-deep)',
                 color: 'var(--text-primary)',
-                border: '1px solid var(--border)'
+                border: '1px solid var(--border)',
               }}
             />
           </div>
@@ -188,7 +178,7 @@ export function SessionEditModal({ session, onClose, onSave, onDelete }: Session
               style={{
                 backgroundColor: 'var(--bg-deep)',
                 color: 'var(--text-primary)',
-                border: '1px solid var(--border)'
+                border: '1px solid var(--border)',
               }}
             />
           </div>
@@ -210,7 +200,7 @@ export function SessionEditModal({ session, onClose, onSave, onDelete }: Session
               style={{
                 backgroundColor: 'var(--bg-deep)',
                 color: 'var(--text-primary)',
-                border: '1px solid var(--border)'
+                border: '1px solid var(--border)',
               }}
             />
           </div>
@@ -232,7 +222,7 @@ export function SessionEditModal({ session, onClose, onSave, onDelete }: Session
               style={{
                 backgroundColor: 'var(--bg-deep)',
                 color: 'var(--text-primary)',
-                border: '1px solid var(--border)'
+                border: '1px solid var(--border)',
               }}
             />
           </div>
@@ -254,15 +244,15 @@ export function SessionEditModal({ session, onClose, onSave, onDelete }: Session
               style={{
                 backgroundColor: 'var(--bg-deep)',
                 color: 'var(--text-primary)',
-                border: '1px solid var(--border)'
+                border: '1px solid var(--border)',
               }}
             />
           </div>
         </div>
 
-        {/* Actions */}
+        {/* Actions - Footer with safe-area-bottom */}
         <div
-          className="px-6 py-4 flex gap-3"
+          className="px-6 pb-8 pt-4 flex gap-3 safe-area-bottom"
           style={{ borderTop: '1px solid var(--border-subtle)' }}
         >
           {/* Delete button */}
@@ -272,7 +262,7 @@ export function SessionEditModal({ session, onClose, onSave, onDelete }: Session
             className="px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
             style={{
               backgroundColor: 'rgba(239, 68, 68, 0.1)',
-              color: '#EF4444'
+              color: '#EF4444',
             }}
           >
             Delete
@@ -286,7 +276,7 @@ export function SessionEditModal({ session, onClose, onSave, onDelete }: Session
             className="px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
             style={{
               backgroundColor: 'var(--bg-deep)',
-              color: 'var(--text-secondary)'
+              color: 'var(--text-secondary)',
             }}
           >
             Cancel
@@ -299,7 +289,7 @@ export function SessionEditModal({ session, onClose, onSave, onDelete }: Session
             className="px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
             style={{
               backgroundColor: 'var(--accent)',
-              color: 'var(--text-on-accent)'
+              color: 'var(--text-on-accent)',
             }}
           >
             {isSaving ? 'Saving...' : 'Save'}
@@ -314,17 +304,12 @@ export function SessionEditModal({ session, onClose, onSave, onDelete }: Session
             className="mx-6 p-6 rounded-2xl max-w-sm w-full shadow-xl"
             style={{ backgroundColor: 'var(--bg-elevated)' }}
           >
-            <h3
-              className="text-lg font-medium mb-2"
-              style={{ color: 'var(--text-primary)' }}
-            >
+            <h3 className="text-lg font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
               Delete this session?
             </h3>
-            <p
-              className="text-sm mb-6"
-              style={{ color: 'var(--text-muted)' }}
-            >
-              This will remove {formatDuration(session.durationSeconds)} from your total meditation time. This cannot be undone.
+            <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
+              This will remove {formatDuration(session.durationSeconds)} from your total meditation
+              time. This cannot be undone.
             </p>
             <div className="flex gap-3">
               <button
@@ -332,7 +317,7 @@ export function SessionEditModal({ session, onClose, onSave, onDelete }: Session
                 className="flex-1 py-3 rounded-xl text-sm font-medium transition-colors"
                 style={{
                   backgroundColor: 'var(--bg-deep)',
-                  color: 'var(--text-secondary)'
+                  color: 'var(--text-secondary)',
                 }}
               >
                 Cancel
@@ -343,7 +328,7 @@ export function SessionEditModal({ session, onClose, onSave, onDelete }: Session
                 className="flex-1 py-3 rounded-xl text-sm font-medium transition-colors"
                 style={{
                   backgroundColor: '#EF4444',
-                  color: 'white'
+                  color: 'white',
                 }}
               >
                 {isDeleting ? 'Deleting...' : 'Delete'}

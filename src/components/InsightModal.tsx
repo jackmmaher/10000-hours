@@ -33,7 +33,7 @@ const BODY_AWARENESS_PROMPTS = [
   'Observe any sensations in your body.',
   'Notice where you hold tension.',
   'Feel the weight of your body.',
-  'Sense the space around you.'
+  'Sense the space around you.',
 ]
 
 // Stretch suggestions for long sessions (30+ minutes)
@@ -41,7 +41,7 @@ const STRETCH_SUGGESTIONS = [
   'Consider a gentle neck roll.',
   'Perhaps stretch your shoulders.',
   'Maybe stand and stretch your legs.',
-  'A slow, mindful stretch may feel good.'
+  'A slow, mindful stretch may feel good.',
 ]
 
 type ModalState = 'prompt' | 'capture' | 'saving'
@@ -57,7 +57,7 @@ function AudioWaveform({ level }: { level: number }) {
         const sensitivity = 1 - centerDistance * 0.5
         const minHeight = 12
         const maxHeight = 100
-        const height = minHeight + (level * sensitivity * (maxHeight - minHeight))
+        const height = minHeight + level * sensitivity * (maxHeight - minHeight)
 
         return (
           <div
@@ -65,7 +65,7 @@ function AudioWaveform({ level }: { level: number }) {
             className="w-1 rounded-full transition-all duration-75"
             style={{
               height: `${height}%`,
-              opacity: 0.6 + (level * sensitivity * 0.4),
+              opacity: 0.6 + level * sensitivity * 0.4,
               background: 'var(--accent)',
             }}
           />
@@ -81,7 +81,7 @@ export function InsightModal({
   milestoneMessage,
   onComplete,
   onSkip,
-  onRemindLater
+  onRemindLater,
 }: InsightModalProps) {
   const [modalState, setModalState] = useState<ModalState>('prompt')
   const [bodyAwarenessPrompt] = useState(() => {
@@ -102,7 +102,7 @@ export function InsightModal({
     mediaStream,
     startCapture,
     stopCapture,
-    cancelCapture
+    cancelCapture,
   } = useVoiceCapture()
 
   const { audioLevel, startAnalyzing, stopAnalyzing } = useAudioLevel()
@@ -139,11 +139,12 @@ export function InsightModal({
 
     try {
       const result = await stopCapture()
-      const textToSave = result?.transcript?.trim() || displayText?.trim() || '[Voice note captured]'
+      const textToSave =
+        result?.transcript?.trim() || displayText?.trim() || '[Voice note captured]'
 
       await addInsight({
         sessionId: sessionId,
-        rawText: textToSave
+        rawText: textToSave,
       })
 
       onComplete()
@@ -219,12 +220,8 @@ export function InsightModal({
           className="bg-cream rounded-t-3xl w-full max-w-lg p-6 pb-safe shadow-xl animate-slide-up"
           onClick={(e) => e.stopPropagation()}
         >
-          <p className="font-serif text-lg text-ink text-center mb-2">
-            Couldn't access microphone
-          </p>
-          <p className="text-sm text-ink/50 text-center mb-6">
-            {error}
-          </p>
+          <p className="font-serif text-lg text-ink text-center mb-2">Couldn't access microphone</p>
+          <p className="text-sm text-ink/50 text-center mb-6">{error}</p>
           <button
             onClick={handleSkip}
             className="w-full py-3 text-ink/60 hover:text-ink transition-colors"
@@ -245,7 +242,7 @@ export function InsightModal({
       onTouchEnd={handleTouchEvent}
     >
       <div
-        className="bg-cream rounded-t-3xl w-full max-w-lg shadow-xl animate-slide-up"
+        className="bg-cream rounded-t-3xl w-full max-w-lg max-h-[calc(90vh-env(safe-area-inset-top,0px))] flex flex-col shadow-xl animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Prompt state */}
@@ -255,17 +252,11 @@ export function InsightModal({
             <div className="text-center mb-6">
               {milestoneMessage ? (
                 <>
-                  <p className="font-serif text-lg text-ink mb-1">
-                    {milestoneMessage}
-                  </p>
-                  <p className="text-ink/50">
-                    {bodyAwarenessPrompt}
-                  </p>
+                  <p className="font-serif text-lg text-ink mb-1">{milestoneMessage}</p>
+                  <p className="text-ink/50">{bodyAwarenessPrompt}</p>
                 </>
               ) : (
-                <p className="font-serif text-lg text-ink/70">
-                  {bodyAwarenessPrompt}
-                </p>
+                <p className="font-serif text-lg text-ink/70">{bodyAwarenessPrompt}</p>
               )}
             </div>
 
@@ -328,9 +319,7 @@ export function InsightModal({
               {isRecording && (
                 <div className="w-full min-h-[80px] mb-4">
                   {displayText ? (
-                    <p className="text-ink/70 leading-relaxed text-center">
-                      {displayText}
-                    </p>
+                    <p className="text-ink/70 leading-relaxed text-center">{displayText}</p>
                   ) : (
                     <p className="text-ink/30 text-center text-sm">
                       Speak now — your voice is being captured

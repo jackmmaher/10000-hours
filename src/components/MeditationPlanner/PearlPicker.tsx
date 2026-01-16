@@ -44,7 +44,7 @@ export function PearlPicker({ isOpen, onClose, onSelect, selectedPearlId }: Pear
 
       {/* Modal */}
       <div
-        className="relative w-full max-w-lg bg-cream rounded-t-2xl max-h-[70vh] overflow-hidden flex flex-col"
+        className="relative w-full max-w-lg bg-cream rounded-t-2xl max-h-[calc(70vh-env(safe-area-inset-top,0px))] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

@@ -52,7 +52,7 @@ export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
       onClick={onClose}
     >
       <div
-        className="bg-cream rounded-t-3xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-xl animate-slide-up"
+        className="bg-cream rounded-t-3xl w-full max-w-lg max-h-[calc(90vh-env(safe-area-inset-top,0px))] flex flex-col shadow-xl animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Handle bar */}
