@@ -10,11 +10,10 @@
  * The completion chime follows an adaptive three-phase ceremony:
  *
  * Timeline:
- * T=0          T=X            T=X+4         T=X+8
- * |------------|--------------|-------------|
- *   Holding     Crescendo       Decay
- *   (barely     (awakening)    (return)
- *   audible)
+ * T=0          T=X            T=X+4                              T=X+19
+ * |------------|--------------|-----------------------------------|
+ *   Holding     Crescendo       Natural Decay (15s)
+ *   (synced)    (synced)        (independent - runs to completion)
  *
  * Three phases:
  * 1. Holding Phase (T=0 to T=X): Extremely soft ambient presence (~1.5% volume).
@@ -23,9 +22,10 @@
  * 2. Crescendo Phase (T=X to T=X+4): Gradual build synced with seconds dissolving.
  *    Exponential ramp to peak. Matches the visual "letting go" of the timer.
  *
- * 3. Decay Phase (T=X+4 to T=X+8): Logarithmic fade to silence.
- *    Peak occurs as "tap to meditate" returns. Decays alongside navigation fade-in.
- *    Reaches 0 precisely when visual journey completes.
+ * 3. Decay Phase (T=X+4 to T=X+19): Natural untruncated fade to silence.
+ *    Peak occurs as "tap to meditate" returns. The visual journey completes around
+ *    T=X+8, but the bell's resonance continues fading naturally - this is intentional.
+ *    Like real singing bowls (40-60s) and meditation app audio (14-45s).
  *
  * Like the Disney castle intro or Pixar lamp - the transition itself
  * is part of the experience, not just a bridge between states.
@@ -41,7 +41,7 @@ type AudioCue = 'complete' | 'milestone' | 'tick'
 
 // Timing constants for breath-aligned ceremony
 const CRESCENDO_DURATION = 4.0 // Matches seconds dissolve (4s)
-const DECAY_DURATION = 4.0 // Matches nav/hint fade-in (4s)
+const DECAY_DURATION = 15.0 // Natural untruncated decay (within 14-45s app audio range)
 const HOLDING_VOLUME_RATIO = 0.015 // 1.5% of peak - barely audible presence
 
 export function useAudioFeedback() {
