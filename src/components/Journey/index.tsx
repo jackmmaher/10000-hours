@@ -54,6 +54,7 @@ export function Journey() {
     openPlanningModal: navOpenPlanning,
     scrollToSubTabs: navScrollToSubTabs,
     clearNavigationIntent,
+    incrementSavedContentVersion,
   } = useNavigationStore()
   const { user } = useAuthStore()
 
@@ -96,6 +97,8 @@ export function Journey() {
       await relinkOrphanedPlans(sessions)
       refreshAllPlanData()
       setInsightStreamKey((k) => k + 1)
+      // Refresh saved content (meditations and pearls tabs)
+      incrementSavedContentVersion()
       await new Promise((resolve) => setTimeout(resolve, 500))
     },
   })
@@ -390,7 +393,10 @@ export function Journey() {
       {showTemplateEditor && (
         <TemplateEditorWrapper
           onClose={() => setShowTemplateEditor(false)}
-          onPublished={() => setShowTemplateEditor(false)}
+          onPublished={() => {
+            setShowTemplateEditor(false)
+            incrementSavedContentVersion()
+          }}
           creatorHours={totalHours}
         />
       )}

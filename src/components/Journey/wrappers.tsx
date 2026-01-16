@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from 'react'
 import type { Session } from '../../lib/db'
+import { useNavigationStore } from '../../stores/useNavigationStore'
 
 // Loading spinner placeholder
 function LoadingOverlay() {
@@ -155,6 +156,7 @@ export function SharePearlWrapper({
         } catch (err) {
           console.error('Failed to mark insight as shared:', err)
         }
+        useNavigationStore.getState().incrementSavedContentVersion()
         onComplete()
       }}
       onDelete={async () => {

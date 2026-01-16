@@ -16,7 +16,7 @@ import {
   savePearl,
   unsavePearl,
   Pearl,
-  PearlFilter
+  PearlFilter,
 } from '../lib/pearls'
 import { AuthModal } from './AuthModal'
 
@@ -61,14 +61,14 @@ function PearlCard({ pearl, onVote, onSave, onRequireAuth, isAuthenticated }: Pe
     setIsVoting(true)
     const newVoted = !localVoted
     setLocalVoted(newVoted)
-    setLocalUpvotes(prev => newVoted ? prev + 1 : prev - 1)
+    setLocalUpvotes((prev) => (newVoted ? prev + 1 : prev - 1))
 
     try {
       await onVote(pearl.id, newVoted)
     } catch {
       // Revert on error
       setLocalVoted(!newVoted)
-      setLocalUpvotes(prev => newVoted ? prev - 1 : prev + 1)
+      setLocalUpvotes((prev) => (newVoted ? prev - 1 : prev + 1))
     } finally {
       setIsVoting(false)
     }
@@ -97,9 +97,7 @@ function PearlCard({ pearl, onVote, onSave, onRequireAuth, isAuthenticated }: Pe
   return (
     <div className="bg-cream-dark/30 rounded-xl p-5">
       {/* Pearl text */}
-      <p className="font-serif text-ink leading-relaxed mb-4">
-        "{pearl.text}"
-      </p>
+      <p className="font-serif text-ink leading-relaxed mb-4">"{pearl.text}"</p>
 
       {/* Actions row */}
       <div className="flex items-center justify-between">
@@ -156,9 +154,7 @@ function PearlCard({ pearl, onVote, onSave, onRequireAuth, isAuthenticated }: Pe
         </div>
 
         {/* Timestamp */}
-        <span className="text-xs text-ink/30">
-          {formatTimeAgo(pearl.createdAt)}
-        </span>
+        <span className="text-xs text-ink/30">{formatTimeAgo(pearl.createdAt)}</span>
       </div>
     </div>
   )
@@ -213,19 +209,17 @@ export function PearlsFeed() {
     }
     // Refresh profile to update save stats
     refreshProfile()
+    useNavigationStore.getState().incrementSavedContentVersion()
   }
 
   // Swipe navigation
   const swipeHandlers = useSwipe({
     onSwipeDown: () => setView('timer'),
-    onSwipeRight: () => setView('insights')
+    onSwipeRight: () => setView('insights'),
   })
 
   return (
-    <div
-      className="h-full bg-cream overflow-y-auto"
-      {...swipeHandlers}
-    >
+    <div className="h-full bg-cream overflow-y-auto" {...swipeHandlers}>
       <div className="px-6 py-8 max-w-lg mx-auto">
         {/* Back to timer */}
         <button
@@ -233,19 +227,20 @@ export function PearlsFeed() {
           className="flex items-center text-sm text-ink/40 mb-8 hover:text-ink/60 transition-colors active:scale-[0.98]"
         >
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M19 9l-7 7-7-7"
+            />
           </svg>
           Timer
         </button>
 
         {/* Header */}
         <header className="mb-6">
-          <h1 className="font-serif text-2xl text-indigo-deep">
-            Pearls of Wisdom
-          </h1>
-          <p className="text-sm text-ink/40 mt-1">
-            Insights shared by meditators
-          </p>
+          <h1 className="font-serif text-2xl text-indigo-deep">Pearls of Wisdom</h1>
+          <p className="text-sm text-ink/40 mt-1">Insights shared by meditators</p>
         </header>
 
         {/* Filter tabs */}
@@ -256,10 +251,7 @@ export function PearlsFeed() {
               onClick={() => setFilter(f)}
               className={`
                 flex-1 py-2 px-3 text-sm rounded-md transition-all capitalize
-                ${filter === f
-                  ? 'bg-cream text-ink shadow-sm'
-                  : 'text-ink/50 hover:text-ink/70'
-                }
+                ${filter === f ? 'bg-cream text-ink shadow-sm' : 'text-ink/50 hover:text-ink/70'}
               `}
             >
               {f}
@@ -277,12 +269,8 @@ export function PearlsFeed() {
         {/* Empty state */}
         {!isLoading && pearls.length === 0 && (
           <div className="text-center py-16">
-            <p className="font-serif text-lg text-ink/50 mb-2">
-              No pearls yet
-            </p>
-            <p className="text-sm text-ink/30">
-              Be the first to share wisdom
-            </p>
+            <p className="font-serif text-lg text-ink/50 mb-2">No pearls yet</p>
+            <p className="text-sm text-ink/30">Be the first to share wisdom</p>
           </div>
         )}
 
@@ -309,7 +297,12 @@ export function PearlsFeed() {
             className="py-3 text-sm text-ink/40 hover:text-ink/60 transition-colors flex items-center active:scale-[0.98]"
           >
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
             My Insights
           </button>

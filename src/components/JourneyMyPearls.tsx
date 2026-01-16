@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useAuthStore } from '../stores/useAuthStore'
+import { useNavigationStore } from '../stores/useNavigationStore'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 import { Card, CardBody, PearlOrb } from './Card'
 import { PlanSelector } from './PlanSelector'
@@ -16,6 +17,7 @@ import type { Pearl } from '../lib/pearls'
 
 export function JourneyMyPearls() {
   const { user } = useAuthStore()
+  const { savedContentVersion } = useNavigationStore()
   const haptic = useTapFeedback()
   const [createdPearls, setCreatedPearls] = useState<Pearl[]>([])
   const [savedPearls, setSavedPearls] = useState<Pearl[]>([])
@@ -46,9 +48,10 @@ export function JourneyMyPearls() {
     }
   }, [user])
 
+  // Re-load pearls when savedContentVersion changes (triggered after save/unsave in Explore)
   useEffect(() => {
     loadPearls()
-  }, [loadPearls])
+  }, [loadPearls, savedContentVersion])
 
   const handleUnsave = async (pearlId: string) => {
     if (!user) return
@@ -56,6 +59,7 @@ export function JourneyMyPearls() {
       const { unsavePearl } = await import('../lib/pearls')
       await unsavePearl(pearlId, user.id)
       setSavedPearls((prev) => prev.filter((p) => p.id !== pearlId))
+      useNavigationStore.getState().incrementSavedContentVersion()
     } catch (err) {
       console.error('Failed to unsave pearl:', err)
     }

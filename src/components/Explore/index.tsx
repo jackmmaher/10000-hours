@@ -243,6 +243,7 @@ export function Explore() {
       await unsavePearl(pearlId, user.id)
     }
     refreshProfile()
+    useNavigationStore.getState().incrementSavedContentVersion()
   }
 
   const handleSessionVote = async (sessionId: string, shouldVote: boolean) => {
