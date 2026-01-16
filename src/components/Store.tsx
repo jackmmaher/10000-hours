@@ -11,6 +11,7 @@ import { motion } from 'framer-motion'
 import { useHourBankStore } from '../stores/useHourBankStore'
 import { PRODUCT_IDS, PRODUCT_HOURS } from '../lib/purchases'
 import { formatAvailableHours, formatHours } from '../lib/hourBank'
+import { useTapFeedback } from '../hooks/useTapFeedback'
 import { Button } from './Button'
 
 interface StoreProps {
@@ -73,9 +74,15 @@ export function Store({ onBack }: StoreProps) {
     clearError,
     available,
     totalConsumed,
+    totalPurchased,
     isLifetime,
     deficit,
   } = useHourBankStore()
+
+  // First-time user detection
+  const isFirstTime = totalPurchased === 0
+
+  const haptic = useTapFeedback()
 
   // Load products on mount
   useEffect(() => {
@@ -116,7 +123,10 @@ export function Store({ onBack }: StoreProps) {
       <div className="px-4 pt-4 pb-2 safe-area-top">
         <div className="flex items-center gap-3">
           <button
-            onClick={onBack}
+            onClick={() => {
+              haptic.light()
+              onBack()
+            }}
             className="p-2 -ml-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
           >
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -130,6 +140,11 @@ export function Store({ onBack }: StoreProps) {
           </button>
           <h1 className="font-serif text-2xl text-[var(--text-primary)]">Hour Packs</h1>
         </div>
+        {isFirstTime && (
+          <p className="text-sm text-[var(--text-secondary)] mt-1">
+            Purchase meditation time to begin
+          </p>
+        )}
       </div>
 
       {/* Current balance */}
@@ -166,7 +181,7 @@ export function Store({ onBack }: StoreProps) {
           transition={{ delay: 0.1 }}
         >
           <p className="text-sm text-[var(--text-secondary)]">
-            Previous session overage: {formatHours(deficit)}
+            From your last session: {formatHours(deficit)}
           </p>
           <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
             This will be deducted from your purchase.
@@ -298,7 +313,10 @@ export function Store({ onBack }: StoreProps) {
         {/* Restore purchases */}
         <div className="mt-4 text-center">
           <button
-            onClick={handleRestore}
+            onClick={() => {
+              haptic.light()
+              handleRestore()
+            }}
             disabled={isRestoring || isPurchasing}
             className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors disabled:opacity-50"
           >

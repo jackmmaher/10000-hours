@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useHourBankStore } from '../stores/useHourBankStore'
 import { PRODUCT_IDS, PRODUCT_HOURS } from '../lib/purchases'
 import { formatAvailableHours, formatHours } from '../lib/hourBank'
+import { useTapFeedback } from '../hooks/useTapFeedback'
 import { Button } from './Button'
 
 interface PaywallProps {
@@ -65,7 +66,33 @@ export function Paywall({ isOpen, onClose }: PaywallProps) {
     clearError,
     available,
     deficit,
+    totalPurchased,
   } = useHourBankStore()
+
+  // Determine user state for context-aware messaging
+  const isFirstTime = totalPurchased === 0
+  const hasHoursRemaining = available > 0
+
+  // Context-aware title
+  const title = isFirstTime
+    ? 'Start Your Journey'
+    : hasHoursRemaining
+      ? 'Top Up Your Hours'
+      : 'Continue Your Practice'
+
+  // Context-aware subtitle
+  const subtitle = isFirstTime
+    ? 'Still Hours uses meditation hours instead of subscriptions. Purchase time to begin your practice.'
+    : hasHoursRemaining
+      ? `You have ${formatAvailableHours(available)} remaining. Add more to keep practicing.`
+      : "You've used your meditation time. Add more to continue your practice."
+
+  const haptic = useTapFeedback()
+
+  // Block touch propagation to prevent swipe navigation
+  const handleTouchEvent = (e: React.TouchEvent) => {
+    e.stopPropagation()
+  }
 
   // Find product by ID
   const getProduct = (productId: string) => {
@@ -74,6 +101,7 @@ export function Paywall({ isOpen, onClose }: PaywallProps) {
 
   // Handle purchase
   const handlePurchase = async (productId: string) => {
+    haptic.medium()
     clearError()
     const success = await purchase(productId)
     if (success) {
@@ -96,6 +124,9 @@ export function Paywall({ isOpen, onClose }: PaywallProps) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
+          onTouchStart={handleTouchEvent}
+          onTouchMove={handleTouchEvent}
+          onTouchEnd={handleTouchEvent}
         >
           <motion.div
             className="bg-[var(--bg-base)] rounded-t-3xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-xl"
@@ -112,17 +143,12 @@ export function Paywall({ isOpen, onClose }: PaywallProps) {
 
             {/* Header */}
             <div className="px-6 pb-4">
-              <h2 className="font-serif text-2xl text-[var(--text-primary)]">
-                Continue Your Practice
-              </h2>
-              <p className="text-sm text-[var(--text-secondary)] mt-1">
-                {available <= 0
-                  ? 'Your meditation hours have been used. Add more to continue.'
-                  : `You have ${formatAvailableHours(available)} remaining.`}
-              </p>
+              <h2 className="font-serif text-2xl text-[var(--text-primary)]">{title}</h2>
+              <p className="text-sm text-[var(--text-secondary)] mt-1">{subtitle}</p>
               {deficit > 0 && (
                 <p className="text-sm text-[var(--text-muted)] mt-1">
-                  {formatHours(deficit)} will be applied to your next purchase.
+                  From your last session: {formatHours(deficit)} will be deducted from your
+                  purchase.
                 </p>
               )}
             </div>
