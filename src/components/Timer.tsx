@@ -36,6 +36,7 @@ export function Timer() {
     completeSession,
     lastSessionUuid,
     lastSessionDuration,
+    lastSourceTemplateId,
     justAchievedMilestone,
     justReachedEnlightenment,
     acknowledgeEnlightenment,
@@ -224,7 +225,12 @@ export function Timer() {
         if (justReachedEnlightenment) {
           acknowledgeEnlightenment()
         }
-        triggerPostSessionFlow(lastSessionUuid, lastSessionDuration, milestoneMessage)
+        triggerPostSessionFlow(
+          lastSessionUuid,
+          lastSessionDuration,
+          milestoneMessage,
+          lastSourceTemplateId || undefined
+        )
         completeSession()
       }, 800)
 
@@ -234,6 +240,7 @@ export function Timer() {
     storeTimerPhase,
     lastSessionUuid,
     lastSessionDuration,
+    lastSourceTemplateId,
     justAchievedMilestone,
     justReachedEnlightenment,
     acknowledgeEnlightenment,

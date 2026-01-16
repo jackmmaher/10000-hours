@@ -28,6 +28,7 @@ export type {
   WellbeingSettings,
   RepeatRule,
   RepeatFrequency,
+  UserAffinities,
 } from './types'
 
 // Schema and db instance
@@ -169,3 +170,6 @@ export {
   saveGeneratedSessions,
   createRepeatRuleWithSessions,
 } from './repeatRules'
+
+// User Affinities (Adaptive Recommendations)
+export { getUserAffinities, saveUserAffinities, resetUserAffinities } from './affinities'

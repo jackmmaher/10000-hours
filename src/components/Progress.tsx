@@ -48,6 +48,7 @@ import { GrowthBars } from './GrowthBars'
 import { SuggestedForYou } from './SuggestedForYou'
 import { SuggestedActions } from './SuggestedActions'
 import { VoiceDetailModal } from './VoiceDetailModal'
+import { StruggleAlert } from './StruggleAlert'
 
 export function Progress() {
   const { sessions, totalSeconds, justAchievedMilestone, clearMilestoneCelebration } =
@@ -273,6 +274,12 @@ export function Progress() {
             {/* SECTION 4: Practice Shape */}
             {/* ============================================ */}
             <PracticeShape shape={practiceShape} />
+
+            {/* ============================================ */}
+            {/* SECTION 4.5: Struggle Detection */}
+            {/* Shows when user might be having difficulty */}
+            {/* ============================================ */}
+            <StruggleAlert />
 
             {/* ============================================ */}
             {/* SECTION 5: Commitment */}

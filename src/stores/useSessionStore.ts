@@ -23,6 +23,8 @@ import {
   WeeklyFirstMilestone,
 } from '../lib/milestones'
 import { recordTemplateCompletion } from '../lib/templates'
+import { getLocalTemplateById } from '../lib/recommendations'
+import { deriveImplicitFeedback, updateAffinities } from '../lib/affinities'
 import { supabase } from '../lib/supabase'
 import { InAppNotification } from '../lib/notifications'
 
@@ -53,6 +55,9 @@ interface SessionState {
 
   // Last session ID for insight linking
   lastSessionUuid: string | null
+
+  // Source template ID (if session was from a recommendation)
+  lastSourceTemplateId: string | null
 
   // Plan refresh trigger (timestamp updated when plans change)
   lastPlanChange: number
@@ -85,6 +90,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   goalCompleted: false,
   justAchievedMilestone: null,
   lastSessionUuid: null,
+  lastSourceTemplateId: null,
   lastPlanChange: 0,
 
   triggerPlanChange: () => {
@@ -221,6 +227,33 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       }
     }
 
+    // Update adaptive recommendation affinities
+    // This learns from user behavior to improve future recommendations
+    try {
+      const completedSession: Session = {
+        uuid: sessionUuid,
+        startTime: sessionStartTime,
+        endTime,
+        durationSeconds,
+        discipline: linkedPlan?.discipline,
+      }
+
+      // Get template for intent tags
+      const template = linkedPlan?.sourceTemplateId
+        ? getLocalTemplateById(linkedPlan.sourceTemplateId)
+        : null
+
+      // Derive implicit feedback from session behavior
+      const feedbackScore = await deriveImplicitFeedback(completedSession, {
+        plannedDurationMinutes: linkedPlan?.duration,
+      })
+
+      // Update affinities based on feedback
+      await updateAffinities(completedSession, template, feedbackScore)
+    } catch (err) {
+      console.warn('Failed to update recommendation affinities:', err)
+    }
+
     const newTotalSeconds = totalSeconds + durationSeconds
     // Use a hash of UUID for local ID (ensures uniqueness)
     const localId = sessionUuid.split('-')[0]
@@ -297,6 +330,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         sessionStartTime: null,
         lastSessionDuration: durationSeconds,
         lastSessionUuid: sessionUuid,
+        lastSourceTemplateId: linkedPlan?.sourceTemplateId || null,
         sessions: newSessions,
         totalSeconds: newTotalSeconds,
         hasReachedEnlightenment: true,
@@ -310,6 +344,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         sessionStartTime: null,
         lastSessionDuration: durationSeconds,
         lastSessionUuid: sessionUuid,
+        lastSourceTemplateId: linkedPlan?.sourceTemplateId || null,
         sessions: newSessions,
         totalSeconds: newTotalSeconds,
         justAchievedMilestone: achievedMilestone,
@@ -355,6 +390,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       timerPhase: 'idle',
       lastSessionDuration: null,
       lastSessionUuid: null,
+      lastSourceTemplateId: null,
       // Note: justAchievedMilestone preserved for Progress tab indicator
     })
   },

@@ -219,3 +219,68 @@ export interface RepeatRule {
   sourceTemplateId?: string
   attachedPearlId?: string // Supabase pearl ID attached as intention/guidance
 }
+
+/**
+ * User affinities for adaptive recommendations
+ *
+ * Weights drift from 1.0 (neutral) based on implicit feedback.
+ * Range: 0.5 (strong negative) to 1.5 (strong positive)
+ * Used to modulate recommendation scores.
+ */
+export interface UserAffinities {
+  id: 1 // Singleton
+
+  // Tag affinities - all intent_tags from sessions.json
+  tags: {
+    focus?: number
+    sleep?: number
+    'body-awareness'?: number
+    'self-compassion'?: number
+    emotions?: number
+    'letting-go'?: number
+    morning?: number
+    beginners?: number
+    'racing-mind'?: number
+    stress?: number
+    'low-mood'?: number
+    grief?: number
+    evening?: number
+    anger?: number
+    pain?: number
+    clarity?: number
+    energy?: number
+    calm?: number
+    [key: string]: number | undefined // Allow additional tags
+  }
+
+  // Discipline affinities
+  disciplines: {
+    'Breath Awareness'?: number
+    'Open Awareness'?: number
+    'Body Scan'?: number
+    'Loving-Kindness'?: number
+    Vipassana?: number
+    'Walking Meditation'?: number
+    Zen?: number
+    [key: string]: number | undefined // Allow additional disciplines
+  }
+
+  // Time-of-day affinities
+  timeSlots: {
+    morning?: number
+    midday?: number
+    evening?: number
+    night?: number
+  }
+
+  // Duration bucket affinities
+  durationBuckets: {
+    short?: number // 5-10 min
+    medium?: number // 15-20 min
+    long?: number // 30+ min
+  }
+
+  // Tracking metadata
+  lastDecayAt: number // For weekly decay
+  totalFeedbackEvents: number
+}

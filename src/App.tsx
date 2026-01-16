@@ -10,6 +10,7 @@ import {
 } from './lib/attribution'
 import { checkAndCreateReminders } from './lib/reminders'
 import { checkVoiceGrowthNotification } from './lib/voice'
+import { decayAffinities } from './lib/affinities'
 import { Timer } from './components/Timer'
 import { Calendar } from './components/Calendar'
 import { Settings } from './components/Settings'
@@ -43,6 +44,7 @@ function AppContent() {
     pendingInsightSessionId,
     pendingInsightSessionDuration,
     pendingMilestone,
+    pendingSourceTemplateId,
     showInsightModal,
     hideInsightCaptureModal,
     clearPostSessionState,
@@ -69,6 +71,9 @@ function AppContent() {
       await hydrate()
       await settingsStore.hydrate()
       await authStore.initialize()
+
+      // Decay affinities weekly (prevents runaway weights)
+      await decayAffinities()
 
       // Check if should show onboarding
       if (!hasSeenOnboarding()) {
@@ -265,6 +270,7 @@ function AppContent() {
             sessionId={pendingInsightSessionId}
             sessionDuration={pendingInsightSessionDuration}
             milestoneMessage={pendingMilestone}
+            sourceTemplateId={pendingSourceTemplateId}
             onComplete={handleInsightComplete}
             onSkip={handleInsightSkip}
             onRemindLater={handleInsightRemindLater}

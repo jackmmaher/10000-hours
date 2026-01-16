@@ -16,8 +16,17 @@
  */
 
 import { getAllSessions, getSavedTemplates, Session } from './db'
+import type { UserAffinities } from './db/types'
+import { getUserAffinities } from './db/affinities'
 import type { SessionTemplate } from './types'
 import type { Pearl } from './pearls'
+import {
+  getDisciplineAffinity,
+  getTimeSlotAffinity,
+  getDurationBucketAffinity,
+  getAverageTagAffinity,
+  parseDurationBucket,
+} from './affinities'
 
 // Import session data for matching
 import extractedSessions from '../data/sessions.json'
@@ -67,6 +76,14 @@ function transformSession(raw: ExtractedSession): SessionTemplate {
 const ALL_SESSIONS: SessionTemplate[] = (extractedSessions as ExtractedSession[]).map(
   transformSession
 )
+
+/**
+ * Get a local template by ID
+ * Used to look up templates from sessions.json for affinity updates
+ */
+export function getLocalTemplateById(templateId: string): SessionTemplate | null {
+  return ALL_SESSIONS.find((s) => s.id === templateId) || null
+}
 
 export interface RecommendationInputs {
   // From local session history
@@ -185,11 +202,15 @@ function aggregateSavedIntentTags(savedIds: Set<string>): string[] {
 }
 
 /**
- * Score a session template based on user patterns
+ * Score a session template based on user patterns and affinities
+ *
+ * Uses adaptive weights that drift based on user behavior.
+ * Base scores are modulated by affinity multipliers (0.5-1.5).
  */
 function scoreSession(
   session: SessionTemplate,
-  inputs: RecommendationInputs
+  inputs: RecommendationInputs,
+  affinities: UserAffinities
 ): { score: number; reasons: string[] } {
   let score = 0
   const reasons: string[] = []
@@ -204,40 +225,56 @@ function scoreSession(
     return { score: -1, reasons: ['Already saved'] }
   }
 
-  // 3. Discipline match (0-30 points)
+  // 3. Discipline match × affinity (0-30 base, modulated by 0.5-1.5)
   if (session.discipline && inputs.disciplineFrequency.has(session.discipline)) {
     const frequency = inputs.disciplineFrequency.get(session.discipline)!
-    const disciplineScore = Math.min(frequency * 5, 30)
-    score += disciplineScore
-    if (disciplineScore > 15) {
+    const baseScore = Math.min(frequency * 5, 30)
+    const affinity = getDisciplineAffinity(affinities, session.discipline)
+    score += baseScore * affinity
+
+    if (baseScore > 15) {
       reasons.push(`Matches your ${session.discipline} practice`)
     }
   }
 
-  // 4. Intent tag overlap (0-25 points)
+  // 4. Intent tag overlap × average affinity (0-25 base)
   if (session.intentTags && inputs.savedIntentTags.length > 0) {
-    const overlap = session.intentTags.filter((t) => inputs.savedIntentTags.includes(t)).length
-    const intentScore = Math.min(overlap * 8, 25)
-    score += intentScore
+    const matchingTags = session.intentTags.filter((t) => inputs.savedIntentTags.includes(t))
+    const overlap = matchingTags.length
+    const baseScore = Math.min(overlap * 8, 25)
+
+    // Average affinity of matching tags
+    const avgAffinity =
+      matchingTags.length > 0 ? getAverageTagAffinity(affinities, matchingTags) : 1.0
+
+    score += baseScore * avgAffinity
     if (overlap > 0) {
       reasons.push(`Aligns with your interests`)
     }
   }
 
-  // 5. Time of day match (0-15 points)
+  // 5. Time of day match × affinity (0-15 base)
   const timeMatch = matchTimeOfDay(session.bestTime, inputs.timeOfDayPattern)
-  if (timeMatch) {
-    score += 15
+  if (timeMatch && inputs.timeOfDayPattern !== 'mixed') {
+    const affinity = getTimeSlotAffinity(affinities, inputs.timeOfDayPattern)
+    score += 15 * affinity
     reasons.push(`Great for ${inputs.timeOfDayPattern} practice`)
+  } else if (timeMatch) {
+    // For mixed pattern, use base score without affinity modulation
+    score += 15
   }
 
-  // 6. Community validation boost (0-20 points)
-  // Higher karma + saves = more validated content
+  // 6. Community validation boost (unchanged, global signal) (0-20 points)
   const validationScore = Math.min(Math.sqrt(session.karma) + Math.sqrt(session.saves), 20)
   score += validationScore
 
-  // 7. Slight randomness for variety (0-10 points)
-  score += Math.random() * 10
+  // 7. Duration fit × affinity (0-10 base)
+  const durationBucket = parseDurationBucket(session.durationGuidance)
+  const durationAffinity = getDurationBucketAffinity(affinities, durationBucket)
+  score += 10 * durationAffinity
+
+  // 8. Novelty factor (slight randomness for variety) (0-5 points)
+  score += Math.random() * 5
 
   return { score, reasons }
 }
@@ -259,13 +296,15 @@ function matchTimeOfDay(bestTime: string, pattern: string): boolean {
 
 /**
  * Get the top recommended meditation for a user
+ * Uses adaptive affinities to personalize scoring
  */
 export async function getRecommendedMeditation(): Promise<SessionRecommendation | null> {
   const inputs = await analyzeUserPatterns()
+  const affinities = await getUserAffinities()
 
-  // Score all sessions
+  // Score all sessions using adaptive weights
   const scored = ALL_SESSIONS.map((session) => {
-    const { score, reasons } = scoreSession(session, inputs)
+    const { score, reasons } = scoreSession(session, inputs, affinities)
     return { session, score, reasons }
   })
     .filter((s) => s.score >= 0) // Remove excluded sessions

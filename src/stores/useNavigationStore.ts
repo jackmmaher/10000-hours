@@ -33,6 +33,7 @@ interface NavigationState {
   showInsightModal: boolean // Whether to show insight modal
   pendingInsightSessionDuration: number | null // Duration for body awareness prompt
   pendingMilestone: string | null // Milestone message to show in modal header
+  pendingSourceTemplateId: string | null // If session was from a recommendation
   // CTA navigation intents - consumed and cleared by target views
   exploreFilter: 'all' | 'pearls' | 'meditations' | null
   journeySubTab: 'sessions' | 'saved' | 'pearls' | null
@@ -47,7 +48,12 @@ interface NavigationState {
   setViewWithVoiceModal: () => void
   clearVoiceModalIntent: () => void
   // Post-session actions
-  triggerPostSessionFlow: (sessionId: string, duration: number, milestone?: string) => void
+  triggerPostSessionFlow: (
+    sessionId: string,
+    duration: number,
+    milestone?: string,
+    sourceTemplateId?: string
+  ) => void
   showInsightCaptureModal: () => void
   hideInsightCaptureModal: () => void
   clearPostSessionState: () => void
@@ -71,6 +77,7 @@ export const useNavigationStore = create<NavigationState>((set) => ({
   showInsightModal: false,
   pendingInsightSessionDuration: null,
   pendingMilestone: null,
+  pendingSourceTemplateId: null,
   // CTA navigation intents
   exploreFilter: null,
   journeySubTab: null,
@@ -105,12 +112,13 @@ export const useNavigationStore = create<NavigationState>((set) => ({
   clearVoiceModalIntent: () => set({ openVoiceModal: false }),
 
   // Called after session ends - stay on timer tab with pending insight
-  triggerPostSessionFlow: (sessionId, duration, milestone) =>
+  triggerPostSessionFlow: (sessionId, duration, milestone, sourceTemplateId) =>
     set({
       // Don't change view - stay on timer tab
       pendingInsightSessionId: sessionId,
       pendingInsightSessionDuration: duration,
       pendingMilestone: milestone || null,
+      pendingSourceTemplateId: sourceTemplateId || null,
       showInsightModal: false, // Will be shown after merge animation
     }),
 
@@ -124,6 +132,7 @@ export const useNavigationStore = create<NavigationState>((set) => ({
       pendingInsightSessionId: null,
       pendingInsightSessionDuration: null,
       pendingMilestone: null,
+      pendingSourceTemplateId: null,
       showInsightModal: false,
     }),
 

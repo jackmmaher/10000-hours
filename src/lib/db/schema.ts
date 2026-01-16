@@ -22,6 +22,7 @@ import type {
   WellbeingCheckIn,
   WellbeingSettings,
   RepeatRule,
+  UserAffinities,
 } from './types'
 
 export class MeditationDB extends Dexie {
@@ -41,6 +42,7 @@ export class MeditationDB extends Dexie {
   wellbeingSettings!: Table<WellbeingSettings>
   notifications!: Table<InAppNotification>
   repeatRules!: Table<RepeatRule>
+  userAffinities!: Table<UserAffinities>
 
   constructor() {
     super('10000hours')
@@ -237,6 +239,27 @@ export class MeditationDB extends Dexie {
       wellbeingSettings: 'id',
       notifications: 'id, type, createdAt, readAt',
       repeatRules: '++id, createdAt',
+    })
+
+    // v13: Add userAffinities table for adaptive recommendations
+    this.version(13).stores({
+      sessions: '++id, uuid, startTime, endTime',
+      appState: 'id',
+      profile: 'id',
+      settings: 'id',
+      insights: 'id, sessionId, createdAt, sharedPearlId',
+      plannedSessions: '++id, date, createdAt, linkedSessionUuid, courseId, repeatRuleId',
+      courseProgress: 'id, courseId, status',
+      savedTemplates: 'id, templateId, savedAt',
+      pearlDrafts: 'id, insightId, updatedAt',
+      templateDrafts: 'id, updatedAt',
+      userPreferences: 'id',
+      wellbeingDimensions: 'id, name, createdAt',
+      wellbeingCheckIns: 'id, dimensionId, createdAt',
+      wellbeingSettings: 'id',
+      notifications: 'id, type, createdAt, readAt',
+      repeatRules: '++id, createdAt',
+      userAffinities: 'id', // Singleton table
     })
   }
 }

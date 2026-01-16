@@ -12,7 +12,12 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
-import { getRecommendedMeditation, SessionRecommendation, shouldRefreshRecommendation } from '../lib/recommendations'
+import {
+  getRecommendedMeditation,
+  SessionRecommendation,
+  shouldRefreshRecommendation,
+} from '../lib/recommendations'
+import { updateAffinitiesForDismissal, updateAffinitiesForFollow } from '../lib/affinities'
 import { getIntentionGradient } from '../lib/animations'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 import { Card, CardHeader, CardBody, CardTitle, CardDescription, AccentBar } from './Card'
@@ -62,11 +67,14 @@ export function SuggestedForYou() {
 
           if (rec) {
             // Store new recommendation
-            localStorage.setItem(RECOMMENDATION_KEY, JSON.stringify({
-              sessionId: rec.session.id,
-              recommendedAt: Date.now(),
-              dismissed: false
-            }))
+            localStorage.setItem(
+              RECOMMENDATION_KEY,
+              JSON.stringify({
+                sessionId: rec.session.id,
+                recommendedAt: Date.now(),
+                dismissed: false,
+              })
+            )
           }
         } else if (storedData && !storedData.dismissed) {
           // Load existing recommendation
@@ -77,11 +85,14 @@ export function SuggestedForYou() {
           } else if (rec) {
             // Algorithm changed, use new recommendation
             setRecommendation(rec)
-            localStorage.setItem(RECOMMENDATION_KEY, JSON.stringify({
-              sessionId: rec.session.id,
-              recommendedAt: storedData.recommendedAt,
-              dismissed: false
-            }))
+            localStorage.setItem(
+              RECOMMENDATION_KEY,
+              JSON.stringify({
+                sessionId: rec.session.id,
+                recommendedAt: storedData.recommendedAt,
+                dismissed: false,
+              })
+            )
           }
         }
       } catch (err) {
@@ -94,24 +105,34 @@ export function SuggestedForYou() {
     loadRecommendation()
   }, [])
 
-  const handleDismiss = useCallback(() => {
+  const handleDismiss = useCallback(async () => {
     haptic.light()
     setIsDismissed(true)
+
+    // Update affinities for dismissal (negative feedback)
+    if (recommendation) {
+      await updateAffinitiesForDismissal(recommendation.session)
+    }
 
     const stored = localStorage.getItem(RECOMMENDATION_KEY)
     if (stored) {
       const data = JSON.parse(stored)
-      localStorage.setItem(RECOMMENDATION_KEY, JSON.stringify({
-        ...data,
-        dismissed: true
-      }))
+      localStorage.setItem(
+        RECOMMENDATION_KEY,
+        JSON.stringify({
+          ...data,
+          dismissed: true,
+        })
+      )
     }
-  }, [haptic])
+  }, [haptic, recommendation])
 
-  const handleCardClick = useCallback(() => {
+  const handleCardClick = useCallback(async () => {
     if (recommendation) {
       haptic.light()
       setSelectedSession(recommendation.session)
+      // Update affinities for following recommendation (positive feedback)
+      await updateAffinitiesForFollow(recommendation.session)
     }
   }, [recommendation, haptic])
 
@@ -127,9 +148,7 @@ export function SuggestedForYou() {
       <div className="mb-6">
         {/* Section header with dismiss */}
         <div className="flex items-center justify-between mb-3">
-          <p className="font-serif text-sm text-ink/50">
-            Suggested for you
-          </p>
+          <p className="font-serif text-sm text-ink/50">Suggested for you</p>
           <button
             onClick={handleDismiss}
             className="text-xs text-ink/30 hover:text-ink/50 transition-colors"
@@ -150,9 +169,7 @@ export function SuggestedForYou() {
             <CardTitle>{recommendation.session.title}</CardTitle>
             <CardDescription>"{recommendation.session.tagline}"</CardDescription>
             {recommendation.reason && (
-              <p className="text-xs text-moss mt-2">
-                {recommendation.reason}
-              </p>
+              <p className="text-xs text-moss mt-2">{recommendation.reason}</p>
             )}
           </CardBody>
         </Card>
