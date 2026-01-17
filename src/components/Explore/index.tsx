@@ -27,7 +27,17 @@ import { AuthModal } from '../AuthModal'
 import { SessionCard } from '../SessionCard'
 import { SessionDetailModal, SessionTemplate } from '../SessionDetailModal'
 import { getIntentionGradient } from '../../lib/animations'
-import { getTemplatesForUser, voteTemplate, unvoteTemplate } from '../../lib/templates'
+import {
+  getTemplatesForUser,
+  voteTemplate,
+  unvoteTemplate,
+  saveTemplate as saveTemplateRemote,
+  unsaveTemplate as unsaveTemplateRemote,
+} from '../../lib/templates'
+import {
+  saveTemplate as saveTemplateLocal,
+  unsaveTemplate as unsaveTemplateLocal,
+} from '../../lib/db'
 import { Card, CardHeader, CardBody, CardEngagement, PearlOrb } from '../Card'
 import { useToast } from '../../stores/useErrorStore'
 
@@ -263,6 +273,39 @@ export function Explore() {
     refreshProfile()
   }
 
+  const handleSessionSave = async (sessionId: string, shouldSave: boolean) => {
+    try {
+      if (shouldSave) {
+        // Save locally (for Journey tab)
+        await saveTemplateLocal(sessionId)
+        // Save to Supabase (for community saves count)
+        if (user?.id) {
+          await saveTemplateRemote(sessionId, user.id)
+        }
+      } else {
+        // Unsave locally
+        await unsaveTemplateLocal(sessionId)
+        // Unsave from Supabase
+        if (user?.id) {
+          await unsaveTemplateRemote(sessionId, user.id)
+        }
+      }
+      // Update local state
+      setSessions((prev) =>
+        prev.map((s) =>
+          s.id === sessionId
+            ? { ...s, hasSaved: shouldSave, saves: s.saves + (shouldSave ? 1 : -1) }
+            : s
+        )
+      )
+      // Trigger refresh of saved content in Journey tab
+      useNavigationStore.getState().incrementSavedContentVersion()
+    } catch (err) {
+      console.error('Failed to save/unsave template:', err)
+      throw err // Re-throw so HeroSessionCard can handle rollback
+    }
+  }
+
   // ============================================================================
   // SCROLL & GESTURES
   // ============================================================================
@@ -431,7 +474,7 @@ export function Explore() {
                   }
                 }}
                 onVote={featured.type === 'pearl' ? handlePearlVote : handleSessionVote}
-                onSave={handlePearlSave}
+                onSave={featured.type === 'pearl' ? handlePearlSave : handleSessionSave}
                 isAuthenticated={isAuthenticated}
                 currentUserId={user?.id}
                 onRequireAuth={() => setShowAuthModal(true)}

@@ -21,6 +21,7 @@
   --text-primary: #1E293B;
   --text-secondary: #475569;
   --text-muted: #64748B; /* Changed from #94A3B8 for WCAG AA compliance (4.5:1 contrast) */
+  --text-tertiary: #94A3B8; /* Lighter than muted, for hints/metadata */
   --text-on-accent: #FFFFFF;
 
   /* === ACCENT === */

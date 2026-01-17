@@ -19,17 +19,16 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         <h1 className="font-serif text-2xl text-ink mb-3 leading-relaxed">
           There's no destination.
         </h1>
-        <p className="text-lg text-ink/60 mb-2">
-          Just practice, and showing up again.
-        </p>
-        <p className="text-base text-ink/50 mb-12">
-          This is a place to do that.
+        <p className="text-lg text-ink/60 mb-2">Just practice, and showing up again.</p>
+        <p className="text-base text-ink/50 mb-8">
+          Explore guided sessions and wisdom from practitioners.
         </p>
 
-        {/* Reassurance line */}
-        <p className="text-sm text-ink/40">
-          No account needed. Just start.
+        {/* Purchase model explanation */}
+        <p className="text-sm text-ink/40 mb-2">
+          Purchase hours when you're ready to record your sits.
         </p>
+        <p className="text-xs text-ink/30">No account needed to browse. Sign in only to share.</p>
       </div>
 
       {/* CTA */}

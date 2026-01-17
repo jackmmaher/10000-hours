@@ -17,6 +17,8 @@ export type AppView =
   | 'profile' // User identity, preferences, wellbeing tracking
   | 'settings' // Sub-page: Theme, display options, legal
   | 'store' // In-app purchases: hour packs
+  | 'privacy' // Privacy policy page
+  | 'terms' // Terms of service page
   // Legacy views (still accessible via internal links)
   | 'calendar' // -> accessed from progress
   | 'insights' // -> accessed from journey

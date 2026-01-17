@@ -53,7 +53,7 @@ export function LowHoursWarning({
               You have {formatHours(availableHours)} remaining.
             </p>
             <p className="mt-2 text-sm text-[var(--text-tertiary)] text-center">
-              Top up now to avoid losing meditation time to deficit.
+              Top up now to keep your practice uninterrupted.
             </p>
 
             {/* Actions */}

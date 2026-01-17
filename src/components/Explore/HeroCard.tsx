@@ -5,7 +5,7 @@
  * Handles both pearl and session content types.
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardHeader, CardBody, CardEngagement, PearlOrb, AccentBar } from '../Card'
 import { VoiceBadgeWithHours } from '../VoiceBadge'
 import { useTapFeedback } from '../../hooks/useTapFeedback'
@@ -57,6 +57,7 @@ export function HeroCard({
       session={item.data as SessionWithStatus}
       onTap={onTap}
       onVote={onVote}
+      onSave={onSave}
       isAuthenticated={isAuthenticated}
       currentUserId={currentUserId}
       onRequireAuth={onRequireAuth}
@@ -90,6 +91,18 @@ function HeroPearlCard({
   const [localSaves, setLocalSaves] = useState(pearl.saves || 0)
   const haptic = useTapFeedback()
   const toast = useToast()
+
+  // Sync local state when props change (e.g., on refresh)
+  useEffect(() => {
+    if (pearl.hasVoted !== undefined) {
+      setLocalVoted(pearl.hasVoted)
+    }
+    if (pearl.hasSaved !== undefined) {
+      setLocalSaved(pearl.hasSaved)
+    }
+    setLocalUpvotes(pearl.upvotes)
+    setLocalSaves(pearl.saves || 0)
+  }, [pearl.hasVoted, pearl.hasSaved, pearl.upvotes, pearl.saves])
 
   const isOwnContent = !!(currentUserId && pearl.userId === currentUserId)
   const voiceScore = pearl.creatorVoiceScore || calculateFallbackVoice(localUpvotes, localSaves)
@@ -177,24 +190,41 @@ interface HeroSessionCardProps extends ExploreInteractionProps {
   session: SessionWithStatus
   onTap: () => void
   onVote: (id: string, hasVoted: boolean) => Promise<void>
+  onSave: (id: string, hasSaved: boolean) => Promise<void>
 }
 
 function HeroSessionCard({
   session,
   onTap,
   onVote,
+  onSave,
   isAuthenticated,
   currentUserId,
   onRequireAuth,
 }: HeroSessionCardProps) {
   const [isVoting, setIsVoting] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [localVoted, setLocalVoted] = useState(session.hasVoted || false)
+  const [localSaved, setLocalSaved] = useState(session.hasSaved || false)
   const [localKarma, setLocalKarma] = useState(session.karma)
+  const [localSaves, setLocalSaves] = useState(session.saves)
   const haptic = useTapFeedback()
   const toast = useToast()
 
+  // Sync local state when props change (e.g., on refresh)
+  useEffect(() => {
+    if (session.hasVoted !== undefined) {
+      setLocalVoted(session.hasVoted)
+    }
+    if (session.hasSaved !== undefined) {
+      setLocalSaved(session.hasSaved)
+    }
+    setLocalKarma(session.karma)
+    setLocalSaves(session.saves)
+  }, [session.hasVoted, session.hasSaved, session.karma, session.saves])
+
   const isOwnContent = !!(currentUserId && session.userId === currentUserId)
-  const voiceScore = session.creatorVoiceScore || calculateFallbackVoice(localKarma, session.saves)
+  const voiceScore = session.creatorVoiceScore || calculateFallbackVoice(localKarma, localSaves)
   const gradient = getIntentionGradient(session.intention)
 
   const handleVote = async () => {
@@ -218,6 +248,30 @@ function HeroSessionCard({
       toast.fromCatch(err, 'VOTE_FAILED')
     } finally {
       setIsVoting(false)
+    }
+  }
+
+  const handleSave = async () => {
+    if (!isAuthenticated) {
+      onRequireAuth()
+      return
+    }
+    if (isOwnContent || isSaving) return
+
+    haptic.light()
+    setIsSaving(true)
+    const newSaved = !localSaved
+    setLocalSaved(newSaved)
+    setLocalSaves((prev) => (newSaved ? prev + 1 : prev - 1))
+
+    try {
+      await onSave(session.id, newSaved)
+    } catch (err) {
+      setLocalSaved(!newSaved)
+      setLocalSaves((prev) => (newSaved ? prev - 1 : prev + 1))
+      toast.fromCatch(err, 'SAVE_FAILED')
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -285,8 +339,23 @@ function HeroSessionCard({
               <span>{localKarma}</span>
             </button>
 
-            <span className="flex items-center gap-1.5 text-sm text-ink-soft">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                handleSave()
+              }}
+              className={`
+                flex items-center gap-1.5 text-sm transition-colors
+                ${localSaved ? 'text-accent font-medium' : 'text-ink-soft hover:text-accent'}
+              `}
+              disabled={isOwnContent}
+            >
+              <svg
+                className="w-4 h-4"
+                fill={localSaved ? 'currentColor' : 'none'}
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -294,8 +363,8 @@ function HeroSessionCard({
                   d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
                 />
               </svg>
-              <span>{session.saves}</span>
-            </span>
+              <span>{localSaves}</span>
+            </button>
 
             {session.completions > 0 && (
               <span className="flex items-center gap-1.5 text-sm text-ink-soft">

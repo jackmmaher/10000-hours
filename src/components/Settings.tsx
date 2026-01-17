@@ -28,9 +28,16 @@ import { SuggestionForm } from './SuggestionForm'
 interface SettingsProps {
   onBack: () => void
   onNavigateToStore: () => void
+  onNavigateToPrivacy: () => void
+  onNavigateToTerms: () => void
 }
 
-export function Settings({ onBack, onNavigateToStore }: SettingsProps) {
+export function Settings({
+  onBack,
+  onNavigateToStore,
+  onNavigateToPrivacy,
+  onNavigateToTerms,
+}: SettingsProps) {
   const {
     hideTimeDisplay,
     setHideTimeDisplay,
@@ -506,30 +513,33 @@ export function Settings({ onBack, onNavigateToStore }: SettingsProps) {
           </button>
         </div>
 
-        {/* Links */}
+        {/* Legal */}
         <div className="space-y-1 mb-8">
-          <a
-            href="https://stillhours.app/privacy"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block py-3 text-sm text-ink/50 hover:text-ink/70 transition-colors touch-manipulation"
+          <button
+            onClick={() => {
+              haptic.light()
+              onNavigateToPrivacy()
+            }}
+            className="block w-full text-left py-3 text-sm text-ink/50 hover:text-ink/70 transition-colors touch-manipulation"
           >
             Privacy Policy
-          </a>
-          <a
-            href="https://stillhours.app/terms"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block py-3 text-sm text-ink/50 hover:text-ink/70 transition-colors touch-manipulation"
+          </button>
+          <button
+            onClick={() => {
+              haptic.light()
+              onNavigateToTerms()
+            }}
+            className="block w-full text-left py-3 text-sm text-ink/50 hover:text-ink/70 transition-colors touch-manipulation"
           >
             Terms of Service
-          </a>
+          </button>
         </div>
       </div>
 
-      {/* Version */}
-      <footer className="pb-20 text-center">
+      {/* Version & Copyright */}
+      <footer className="pb-20 text-center space-y-1">
         <p className="font-serif text-xs text-ink/25 italic">Still Hours · v3.0.0</p>
+        <p className="text-xs text-ink/20">© 2026 Still Hours. All rights reserved.</p>
       </footer>
 
       {/* Auth modal */}

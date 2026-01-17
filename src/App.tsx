@@ -34,6 +34,8 @@ import { PWAInstallPrompt } from './components/PWAInstallPrompt'
 import { ToastContainer } from './components/Toast'
 import { ReviewPrompt } from './components/ReviewPrompt'
 import { Store } from './components/Store'
+import { PrivacyPolicy } from './components/PrivacyPolicy'
+import { TermsOfService } from './components/TermsOfService'
 import type { Session } from './lib/db'
 import { shouldPromptForReview } from './lib/nativeReview'
 
@@ -316,9 +318,16 @@ function AppContent() {
         {view === 'saved-pearls' && <SavedPearls />}
         {view === 'profile' && <Profile onNavigateToSettings={() => setView('settings')} />}
         {view === 'settings' && (
-          <Settings onBack={() => setView('profile')} onNavigateToStore={() => setView('store')} />
+          <Settings
+            onBack={() => setView('profile')}
+            onNavigateToStore={() => setView('store')}
+            onNavigateToPrivacy={() => setView('privacy')}
+            onNavigateToTerms={() => setView('terms')}
+          />
         )}
         {view === 'store' && <Store onBack={() => setView('settings')} />}
+        {view === 'privacy' && <PrivacyPolicy onBack={() => setView('settings')} />}
+        {view === 'terms' && <TermsOfService onBack={() => setView('settings')} />}
 
         {/* Session edit modal */}
         {editingSession && (

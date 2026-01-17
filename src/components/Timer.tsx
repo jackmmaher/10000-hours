@@ -437,7 +437,8 @@ export function Timer() {
         {phase === 'resting' && (
           <motion.p
             key="resting-hint"
-            className="absolute bottom-[38vh] z-10 text-sm tracking-wide text-indigo-deep"
+            className="absolute bottom-[38vh] z-10 text-sm tracking-wide"
+            style={{ color: 'var(--text-secondary)' }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.5 }}
             exit={{ opacity: 0 }}
@@ -453,7 +454,8 @@ export function Timer() {
         {phase === 'pending' && (
           <motion.p
             key="pending-hint"
-            className="absolute bottom-[38vh] z-10 text-sm tracking-wide text-indigo-deep"
+            className="absolute bottom-[38vh] z-10 text-sm tracking-wide"
+            style={{ color: 'var(--text-secondary)' }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.5 }}
             exit={{ opacity: 0 }}
@@ -465,7 +467,8 @@ export function Timer() {
         {phase === 'active' && (
           <motion.p
             key="active-hint"
-            className="absolute bottom-[38vh] z-10 text-sm tracking-wide text-indigo-deep"
+            className="absolute bottom-[38vh] z-10 text-sm tracking-wide"
+            style={{ color: 'var(--text-secondary)' }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.35 }}
             exit={{ opacity: 0 }}
