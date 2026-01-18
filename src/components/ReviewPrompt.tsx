@@ -10,6 +10,8 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { requestNativeReview } from '../lib/nativeReview'
 import { useTapFeedback } from '../hooks/useTapFeedback'
+import { useAuthStore } from '../stores/useAuthStore'
+import { saveReview } from '../lib/reviews'
 
 interface ReviewPromptProps {
   isOpen: boolean
@@ -70,11 +72,44 @@ function StarRating({ value, onChange }: { value: number; onChange: (v: number) 
   )
 }
 
+/**
+ * Extract display name from Supabase user for review attribution
+ * Returns "First L." format (e.g., "Sarah M.")
+ */
+function getDisplayName(
+  user: { user_metadata?: Record<string, unknown>; email?: string } | null
+): string {
+  if (!user) return 'Anonymous'
+
+  // Try to get name from OAuth metadata
+  const metadata = user.user_metadata || {}
+  const fullName = (metadata.full_name || metadata.name || '') as string
+
+  if (fullName) {
+    const parts = fullName.trim().split(' ')
+    if (parts.length >= 2) {
+      // "First L." format
+      return `${parts[0]} ${parts[parts.length - 1][0]}.`
+    }
+    return parts[0]
+  }
+
+  // Fallback to email prefix
+  if (user.email) {
+    const prefix = user.email.split('@')[0]
+    // Capitalize first letter
+    return prefix.charAt(0).toUpperCase() + prefix.slice(1, 8)
+  }
+
+  return 'Anonymous'
+}
+
 export function ReviewPrompt({ isOpen, onClose, milestoneText }: ReviewPromptProps) {
   const [step, setStep] = useState<'rating' | 'review'>('rating')
   const [rating, setRating] = useState(5)
   const [reviewText, setReviewText] = useState('')
   const haptic = useTapFeedback()
+  const { user } = useAuthStore()
 
   // Reset state when closed
   const handleClose = () => {
@@ -100,9 +135,17 @@ export function ReviewPrompt({ isOpen, onClose, milestoneText }: ReviewPromptPro
   // Handle review submission
   const handleSubmit = async () => {
     haptic.success()
+
+    // Save review to Supabase (fire-and-forget, don't block UX)
+    if (user && reviewText.trim().length >= 10) {
+      const authorName = getDisplayName(user)
+      saveReview(user.id, rating, reviewText.trim(), authorName).catch((err) =>
+        console.warn('Failed to save review (non-critical):', err)
+      )
+    }
+
     // Trigger native App Store review
     await requestNativeReview()
-    // Note: reviewText could be sent to a backend in the future
     handleClose()
   }
 
