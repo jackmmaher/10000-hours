@@ -107,7 +107,7 @@ export function CardHeader({
 
       {/* Right side: Voice badge or action */}
       <div className="flex items-center gap-2 flex-shrink-0">
-        {voiceScore !== undefined && voiceScore > 0 && <VoiceBadgeWithHours score={voiceScore} />}
+        {voiceScore !== undefined && <VoiceBadgeWithHours score={voiceScore} />}
         {action}
       </div>
     </div>

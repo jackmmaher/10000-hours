@@ -220,7 +220,7 @@ export function SessionCard({
         {/* Right column: Voice badge at top, arrow at center */}
         <div className="flex flex-col items-center justify-between py-3 pr-4">
           {/* Voice badge - aligned with header */}
-          {voiceScore > 0 && <VoiceBadgeWithHours score={voiceScore} />}
+          <VoiceBadgeWithHours score={voiceScore} />
           {/* Subtle arrow indicator */}
           <div className="flex-1 flex items-center text-ink/15 group-hover:text-ink/30 transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

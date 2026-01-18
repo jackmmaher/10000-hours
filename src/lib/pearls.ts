@@ -25,6 +25,34 @@ export interface Pearl {
 export type PearlFilter = 'new' | 'rising' | 'top'
 
 /**
+ * Detect intent tags from pearl text based on keyword matching
+ * Used to auto-tag new pearls for filtering
+ */
+function detectIntentTags(text: string): string[] {
+  const tags: string[] = []
+  const lower = text.toLowerCase()
+
+  const tagKeywords: Record<string, string[]> = {
+    anxiety: ['anxiety', 'anxious', 'worry', 'panic', 'fear', 'nervous'],
+    stress: ['stress', 'tension', 'pressure', 'overwhelm', 'burnout'],
+    sleep: ['sleep', 'rest', 'tired', 'night', 'calm', 'bedtime'],
+    focus: ['focus', 'concentrat', 'attention', 'distract', 'clarity'],
+    beginners: ['beginner', 'start', 'first', 'simple', 'basic'],
+    'body-awareness': ['body', 'breath', 'physical', 'sensation', 'somatic'],
+    'self-compassion': ['compassion', 'kind', 'accept', 'forgive', 'worthy'],
+    'letting-go': ['let go', 'letting go', 'release', 'surrender', 'attach'],
+  }
+
+  for (const [tag, keywords] of Object.entries(tagKeywords)) {
+    if (keywords.some((kw) => lower.includes(kw))) {
+      tags.push(tag)
+    }
+  }
+
+  return tags
+}
+
+/**
  * Create a new pearl from an insight
  * Automatically adds creator's vote and save (starts with karma=1, saves=1)
  */
@@ -38,11 +66,15 @@ export async function createPearl(text: string, userId: string): Promise<Pearl> 
     throw new Error('Pearl must be 280 characters or less')
   }
 
+  // Auto-detect intent tags from text content
+  const intentTags = detectIntentTags(text)
+
   const { data, error } = await supabase
     .from('pearls')
     .insert({
       user_id: userId,
       text: text.trim(),
+      intent_tags: intentTags.length > 0 ? intentTags : null,
     })
     .select()
     .single()
@@ -72,6 +104,7 @@ export async function createPearl(text: string, userId: string): Promise<Pearl> 
     upvotes: 1, // Creator's vote
     saves: 1, // Creator's save
     createdAt: data.created_at,
+    intentTags: intentTags,
     hasVoted: true, // Creator has voted
     hasSaved: true, // Creator has saved
   }
@@ -132,8 +165,11 @@ export async function getPearls(
     )
   }
 
-  // Anonymous user - just get pearls without vote/save status
-  let query = supabase.from('pearls').select('*')
+  // Anonymous user - get pearls with creator voice score via join
+  let query = supabase.from('pearls').select(`
+    *,
+    profiles:user_id (voice_score)
+  `)
 
   // Apply ordering based on filter
   if (filter === 'top') {
@@ -162,6 +198,7 @@ export async function getPearls(
     intentTags: p.intent_tags || [],
     hasVoted: false,
     hasSaved: false,
+    creatorVoiceScore: (p.profiles as { voice_score: number } | null)?.voice_score || 0,
   }))
 }
 
