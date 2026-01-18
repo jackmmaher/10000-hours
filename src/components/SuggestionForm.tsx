@@ -124,12 +124,22 @@ export function SuggestionForm({ isOpen, onClose }: SuggestionFormProps) {
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Handle bar */}
-            <div className="flex justify-center pt-3 pb-2">
-              <div
-                className="w-10 h-1 rounded-full"
-                style={{ backgroundColor: 'var(--text-muted)', opacity: 0.3 }}
-              />
+            {/* Close button */}
+            <div className="flex justify-end px-4 pt-3 pb-0">
+              <button
+                onClick={handleClose}
+                className="p-2 -mr-2 text-ink/40 hover:text-ink/60 transition-colors"
+                aria-label="Close modal"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
             </div>
 
             {submitted ? (
@@ -159,7 +169,7 @@ export function SuggestionForm({ isOpen, onClose }: SuggestionFormProps) {
               // Form state
               <div className="flex-1 min-h-0 overflow-y-auto">
                 {/* Poster header */}
-                <div className="px-6 pt-4 pb-6 text-center">
+                <div className="px-6 pt-2 pb-6 text-center">
                   <div
                     className="inline-block px-3 py-1 rounded-full text-xs font-medium tracking-wide uppercase mb-3"
                     style={{
