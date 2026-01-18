@@ -25,39 +25,33 @@ const PRODUCT_CONFIG = [
     id: PRODUCT_IDS.STARTER,
     name: 'Starter',
     tagline: '2 weeks of daily sessions',
-    description: '2 weeks of daily sessions',
   },
   {
     id: PRODUCT_IDS.FLOW,
     name: 'Flow',
     tagline: '1 month of daily practice',
-    description: '1 month of daily practice',
   },
   {
     id: PRODUCT_IDS.DEDICATED,
     name: 'Dedicated',
     tagline: '4 months of daily practice',
-    description: '4 months of daily practice',
     popular: true,
   },
   {
     id: PRODUCT_IDS.COMMITTED,
     name: 'Committed',
     tagline: '6 months of commitment',
-    description: '6 months of daily practice',
   },
   {
     id: PRODUCT_IDS.SERIOUS,
     name: 'Serious',
     tagline: '1 year of daily practice',
-    description: '1 year of daily practice',
     bestValue: true,
   },
   {
     id: PRODUCT_IDS.LIFETIME,
     name: 'Lifetime',
     tagline: 'Meditate freely, forever',
-    description: 'Unlimited - meditate freely forever',
     highlight: true,
   },
 ]
@@ -257,7 +251,6 @@ export function Store({ onBack }: StoreProps) {
                       </p>
                     </div>
                   </div>
-                  <p className="text-sm text-[var(--text-secondary)] mb-3">{config.description}</p>
                   <div className="flex items-center justify-between">
                     <p className="text-xs text-[var(--text-tertiary)]">
                       {hours < 10000 && getPricePerHour(config.id)}
