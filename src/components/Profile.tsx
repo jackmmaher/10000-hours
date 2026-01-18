@@ -33,8 +33,6 @@ import {
 import { GOAL_PRESETS } from '../lib/milestones'
 import { VoiceBadge } from './VoiceBadge'
 import { WellbeingCard } from './WellbeingCard'
-import { NotificationBell } from './NotificationBell'
-import { NotificationCenter } from './NotificationCenter'
 import { ReciprocityCard } from './ReciprocityCard'
 import { getReciprocityData, ReciprocityData } from '../lib/reciprocity'
 
@@ -71,13 +69,9 @@ const TIME_OPTIONS = [
   { value: 'varies', label: 'Varies' },
 ]
 
-interface ProfileProps {
-  onNavigateToSettings: () => void
-}
-
-export function Profile({ onNavigateToSettings }: ProfileProps) {
+export function Profile() {
   const { sessions } = useSessionStore()
-  const { setView, setViewWithVoiceModal, navigateToInsightCapture } = useNavigationStore()
+  const { setView, setViewWithVoiceModal } = useNavigationStore()
   const { user, isAuthenticated } = useAuthStore()
   const { voice, isLoading: voiceLoading } = useVoice()
   const haptic = useTapFeedback()
@@ -92,8 +86,6 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [showPreferences, setShowPreferences] = useState(false)
   const [showGoalSettings, setShowGoalSettings] = useState(false)
-  const [showNotifications, setShowNotifications] = useState(false)
-  const [notificationRefreshKey, setNotificationRefreshKey] = useState(0)
 
   // Calculate current hours for goal setting UI
   const currentHours = sessions.reduce((sum, s) => sum + s.durationSeconds, 0) / 3600
@@ -220,7 +212,7 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
   return (
     <div
       ref={scrollRef}
-      className="h-full bg-cream overflow-y-auto pb-24"
+      className="h-full bg-cream overflow-y-auto pt-16 pb-24"
       {...navSwipeHandlers}
       onTouchStart={(e) => {
         pullHandlers.onTouchStart(e)
@@ -270,37 +262,6 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
       </div>
 
       <div className="px-6 py-8 max-w-lg mx-auto">
-        {/* Header actions: Notifications + Settings */}
-        <div className="flex items-center justify-end gap-1 mb-8">
-          <NotificationBell
-            onPress={() => setShowNotifications(true)}
-            refreshKey={notificationRefreshKey}
-          />
-          <button
-            onClick={() => {
-              haptic.light()
-              onNavigateToSettings()
-            }}
-            className="p-2 text-ink/40 hover:text-ink/60 transition-colors active:scale-[0.95] touch-manipulation"
-            aria-label="Settings"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-            </svg>
-          </button>
-        </div>
-
         {/* Profile Header */}
         <div className="flex items-center gap-4 mb-8">
           {/* Avatar */}
@@ -578,18 +539,6 @@ export function Profile({ onNavigateToSettings }: ProfileProps) {
           </div>
         )}
       </div>
-
-      {/* Notification Center Modal */}
-      <NotificationCenter
-        isOpen={showNotifications}
-        onClose={() => {
-          setShowNotifications(false)
-          setNotificationRefreshKey((k) => k + 1)
-        }}
-        onInsightReminderClick={(sessionId) => {
-          navigateToInsightCapture(sessionId)
-        }}
-      />
     </div>
   )
 }

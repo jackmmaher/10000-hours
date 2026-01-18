@@ -162,7 +162,7 @@ export function Progress() {
   return (
     <div
       ref={scrollRef}
-      className="h-full bg-cream overflow-y-auto pb-24"
+      className="h-full bg-cream overflow-y-auto pt-16 pb-24"
       {...navSwipeHandlers}
       onTouchStart={(e) => {
         pullHandlers.onTouchStart(e)

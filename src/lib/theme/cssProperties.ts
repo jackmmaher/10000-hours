@@ -23,6 +23,7 @@ export function themeToCSSProperties(tokens: ThemeTokens): Record<string, string
     '--text-primary': tokens.textPrimary,
     '--text-secondary': tokens.textSecondary,
     '--text-muted': tokens.textMuted,
+    '--text-tertiary': tokens.textTertiary,
     '--text-on-accent': tokens.textOnAccent,
 
     // Accent

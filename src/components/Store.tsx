@@ -13,50 +13,51 @@ import { PRODUCT_IDS, PRODUCT_HOURS } from '../lib/purchases'
 import { formatAvailableHours, formatHours } from '../lib/hourBank'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 import { Button } from './Button'
+import { ReviewCarousel } from './ReviewCarousel'
 
 interface StoreProps {
   onBack: () => void
 }
 
-// Product display configuration
+// Product display configuration with time-context
 const PRODUCT_CONFIG = [
   {
     id: PRODUCT_IDS.STARTER,
     name: 'Starter',
-    tagline: 'Begin your journey',
-    description: 'Perfect for trying out the app',
+    tagline: '2 weeks of daily sessions',
+    description: '2 weeks of daily sessions',
   },
   {
     id: PRODUCT_IDS.FLOW,
     name: 'Flow',
-    tagline: 'Find your rhythm',
-    description: 'A month of daily practice',
+    tagline: '1 month of daily practice',
+    description: '1 month of daily practice',
   },
   {
     id: PRODUCT_IDS.DEDICATED,
     name: 'Dedicated',
-    tagline: 'Deepen your practice',
-    description: 'For committed practitioners',
+    tagline: '4 months of daily practice',
+    description: '4 months of daily practice',
     popular: true,
   },
   {
     id: PRODUCT_IDS.COMMITTED,
     name: 'Committed',
-    tagline: 'Embrace the path',
-    description: 'Serious about meditation',
+    tagline: '6 months of commitment',
+    description: '6 months of daily practice',
   },
   {
     id: PRODUCT_IDS.SERIOUS,
     name: 'Serious',
-    tagline: 'Transform your life',
-    description: 'A year of daily practice',
+    tagline: '1 year of daily practice',
+    description: '1 year of daily practice',
     bestValue: true,
   },
   {
     id: PRODUCT_IDS.LIFETIME,
     name: 'Lifetime',
-    tagline: 'The complete journey',
-    description: 'Unlimited meditation forever',
+    tagline: 'Meditate freely, forever',
+    description: 'Unlimited - meditate freely forever',
     highlight: true,
   },
 ]
@@ -120,7 +121,7 @@ export function Store({ onBack }: StoreProps) {
   return (
     <div className="h-full bg-[var(--bg-base)] flex flex-col">
       {/* Header */}
-      <div className="px-4 pt-4 pb-2 safe-area-top">
+      <div className="px-6 pt-4 pb-2 safe-area-top">
         <div className="flex items-center gap-3">
           <button
             onClick={() => {
@@ -149,7 +150,7 @@ export function Store({ onBack }: StoreProps) {
 
       {/* Current balance */}
       <motion.div
-        className="mx-4 mb-4 p-4 bg-[var(--bg-deep)] rounded-xl"
+        className="mx-6 mb-4 p-4 bg-[var(--bg-deep)] rounded-xl"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
       >
@@ -175,7 +176,7 @@ export function Store({ onBack }: StoreProps) {
       {/* Deficit info */}
       {deficit > 0 && !isLifetime && (
         <motion.div
-          className="mx-4 mb-4 p-3 bg-[var(--accent)]/10 rounded-xl border border-[var(--accent)]/20"
+          className="mx-6 mb-4 p-3 bg-[var(--accent)]/10 rounded-xl border border-[var(--accent)]/20"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -191,7 +192,7 @@ export function Store({ onBack }: StoreProps) {
 
       {/* Error message */}
       {purchaseError && (
-        <div className="mx-4 mb-4 p-3 rounded-lg" style={{ backgroundColor: 'var(--error-bg)' }}>
+        <div className="mx-6 mb-4 p-3 rounded-lg" style={{ backgroundColor: 'var(--error-bg)' }}>
           <p className="text-sm" style={{ color: 'var(--error-text)' }}>
             {purchaseError}
           </p>
@@ -199,7 +200,7 @@ export function Store({ onBack }: StoreProps) {
       )}
 
       {/* Products list */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-4">
+      <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-4">
         {isLoadingProducts ? (
           <div className="flex items-center justify-center py-8">
             <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
@@ -230,22 +231,22 @@ export function Store({ onBack }: StoreProps) {
                       <div className="flex items-center gap-2">
                         <h3 className="font-medium text-[var(--text-primary)]">{config.name}</h3>
                         {config.popular && (
-                          <span className="text-xs px-2 py-0.5 bg-[var(--accent)] text-white rounded-full">
+                          <span className="text-xs px-2 py-0.5 bg-[var(--accent)] text-[#1C1917] rounded-full">
                             Popular
                           </span>
                         )}
                         {config.bestValue && (
-                          <span className="text-xs px-2 py-0.5 bg-[var(--accent)] text-white rounded-full">
+                          <span className="text-xs px-2 py-0.5 bg-[var(--accent)] text-[#1C1917] rounded-full">
                             Best Value
                           </span>
                         )}
                         {config.highlight && (
-                          <span className="text-xs px-2 py-0.5 bg-[var(--accent)] text-white rounded-full">
-                            Unlimited
+                          <span className="text-xs px-2 py-0.5 bg-[var(--accent)] text-[#1C1917] rounded-full">
+                            Best Value
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-[var(--text-tertiary)]">{config.tagline}</p>
+                      <p className="text-xs text-[var(--text-tertiary)]">{config.tagline}</p>
                     </div>
                     <div className="text-right">
                       <p className="font-medium text-[var(--text-primary)]">
@@ -263,7 +264,7 @@ export function Store({ onBack }: StoreProps) {
                     </p>
                     <Button
                       variant={config.highlight ? 'primary' : 'secondary'}
-                      size="sm"
+                      size="md"
                       onClick={() => handlePurchase(config.id)}
                       loading={isPurchasing}
                       disabled={isPurchasing || isRestoring || isLifetime}
@@ -287,13 +288,19 @@ export function Store({ onBack }: StoreProps) {
               <span style={{ color: 'var(--success-icon)' }} className="mt-0.5">
                 ✓
               </span>
-              <span>Only pay for time you actually meditate</span>
+              <span>Your data stays private - no tracking, no ads</span>
             </li>
             <li className="flex items-start gap-2">
               <span style={{ color: 'var(--success-icon)' }} className="mt-0.5">
                 ✓
               </span>
-              <span>No monthly fees or auto-renewals</span>
+              <span>Pay only for time you actually meditate</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span style={{ color: 'var(--success-icon)' }} className="mt-0.5">
+                ✓
+              </span>
+              <span>No subscriptions - your hours never expire</span>
             </li>
             <li className="flex items-start gap-2">
               <span style={{ color: 'var(--success-icon)' }} className="mt-0.5">
@@ -301,14 +308,16 @@ export function Store({ onBack }: StoreProps) {
               </span>
               <span>6x cheaper than typical meditation subscriptions</span>
             </li>
-            <li className="flex items-start gap-2">
-              <span style={{ color: 'var(--success-icon)' }} className="mt-0.5">
-                ✓
-              </span>
-              <span>Your practice data is always yours, even offline</span>
-            </li>
           </ul>
         </div>
+
+        {/* Social proof carousel */}
+        <ReviewCarousel />
+
+        {/* Risk reversal */}
+        <p className="text-xs text-[var(--text-muted)] text-center mt-4">
+          Questions? Hours never expire and work offline.
+        </p>
 
         {/* Restore purchases */}
         <div className="mt-4 text-center">

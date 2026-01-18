@@ -375,7 +375,7 @@ export function Explore() {
   return (
     <div
       ref={scrollRef}
-      className="h-full bg-cream overflow-y-auto pb-24"
+      className="h-full bg-cream overflow-y-auto pt-16 pb-24"
       {...swipeHandlers}
       onTouchStart={(e) => {
         pullHandlers.onTouchStart(e)

@@ -24,6 +24,7 @@ export const NEUTRAL_LIGHT: ThemeTokens = {
   textPrimary: '#171717',
   textSecondary: '#525252',
   textMuted: '#737373',
+  textTertiary: '#A8A29E', // Lighter than muted for hints/metadata
   textOnAccent: '#FFFFFF',
 
   // Accent - Hermès Orange (Figma exact: #EA6512)
@@ -150,6 +151,7 @@ export const NEUTRAL_DARK: ThemeTokens = {
   textPrimary: '#FAFAF9',
   textSecondary: '#A8A29E',
   textMuted: '#78716C',
+  textTertiary: '#57534E', // Subtle stone tone for dark mode
   textOnAccent: '#FFFFFF',
 
   // Accent - Boosted Hermès Orange for dark visibility
@@ -200,9 +202,9 @@ export const NEUTRAL_DARK: ThemeTokens = {
   toggleOff: '#3D3836',
   toggleThumb: '#FFFFFF',
 
-  // Borders - Effectively invisible
-  border: 'transparent',
-  borderSubtle: 'transparent',
+  // Borders - Subtle visibility for card edges
+  border: 'rgba(255, 255, 255, 0.06)',
+  borderSubtle: 'rgba(255, 255, 255, 0.04)',
   divider: 'rgba(255, 255, 255, 0.04)',
 
   // Shadows - Deep black for depth

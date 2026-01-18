@@ -14,9 +14,10 @@ import { useTapFeedback } from '../hooks/useTapFeedback'
 interface NotificationBellProps {
   onPress: () => void
   refreshKey?: number // Increment to trigger refresh
+  disabled?: boolean // Disable during settling window
 }
 
-export function NotificationBell({ onPress, refreshKey }: NotificationBellProps) {
+export function NotificationBell({ onPress, refreshKey, disabled }: NotificationBellProps) {
   const [unreadCount, setUnreadCount] = useState(0)
   const tapFeedback = useTapFeedback()
 
@@ -35,10 +36,12 @@ export function NotificationBell({ onPress, refreshKey }: NotificationBellProps)
   return (
     <button
       onClick={() => {
+        if (disabled) return
         tapFeedback.light()
         onPress()
       }}
-      className="relative p-2 text-ink/40 hover:text-ink/60 transition-colors active:scale-[0.95] touch-manipulation"
+      disabled={disabled}
+      className={`relative p-2 text-ink/40 hover:text-ink/60 transition-colors touch-manipulation ${disabled ? 'cursor-not-allowed' : 'active:scale-[0.95]'}`}
       aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
     >
       {/* Bell SVG icon */}

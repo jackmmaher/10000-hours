@@ -12,44 +12,45 @@ import { PRODUCT_IDS, PRODUCT_HOURS } from '../lib/purchases'
 import { formatAvailableHours, formatHours } from '../lib/hourBank'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 import { Button } from './Button'
+import { ReviewCarousel } from './ReviewCarousel'
 
 interface PaywallProps {
   isOpen: boolean
   onClose: () => void
 }
 
-// Product display configuration
+// Product display configuration with time-context taglines
 const PRODUCT_CONFIG = [
   {
     id: PRODUCT_IDS.STARTER,
     name: 'Starter',
-    tagline: 'Begin your journey',
+    tagline: '2 weeks of daily sessions',
   },
   {
     id: PRODUCT_IDS.FLOW,
     name: 'Flow',
-    tagline: 'Find your rhythm',
+    tagline: '1 month of daily practice',
   },
   {
     id: PRODUCT_IDS.DEDICATED,
     name: 'Dedicated',
-    tagline: 'Deepen your practice',
+    tagline: '4 months of daily practice',
     popular: true,
   },
   {
     id: PRODUCT_IDS.COMMITTED,
     name: 'Committed',
-    tagline: 'Embrace the path',
+    tagline: '6 months of commitment',
   },
   {
     id: PRODUCT_IDS.SERIOUS,
     name: 'Serious',
-    tagline: 'Transform your life',
+    tagline: '1 year of daily practice',
   },
   {
     id: PRODUCT_IDS.LIFETIME,
     name: 'Lifetime',
-    tagline: 'The complete journey',
+    tagline: 'Meditate freely, forever',
     highlight: true,
   },
 ]
@@ -82,10 +83,10 @@ export function Paywall({ isOpen, onClose }: PaywallProps) {
 
   // Context-aware subtitle
   const subtitle = isFirstTime
-    ? 'Still Hours uses meditation hours instead of subscriptions. Purchase time to begin your practice.'
+    ? 'Flexible meditation, no subscriptions. Pay only for sessions you complete.'
     : hasHoursRemaining
-      ? `You have ${formatAvailableHours(available)} remaining. Add more to keep practicing.`
-      : "You've used your meditation time. Add more to continue your practice."
+      ? `You have ${formatAvailableHours(available)} remaining. Top up anytime - your hours never expire.`
+      : `Great progress! You've completed ${formatHours(totalPurchased)} hours. Choose a pack to continue.`
 
   const haptic = useTapFeedback()
 
@@ -145,6 +146,12 @@ export function Paywall({ isOpen, onClose }: PaywallProps) {
             <div className="px-6 pb-4">
               <h2 className="font-serif text-2xl text-[var(--text-primary)]">{title}</h2>
               <p className="text-sm text-[var(--text-secondary)] mt-1">{subtitle}</p>
+              {/* Urgency messaging for low hours */}
+              {available > 0 && available < 1 && (
+                <p className="text-xs text-[var(--accent)] mt-1">
+                  Less than 1 hour remaining - add more to avoid interruption
+                </p>
+              )}
               {deficit > 0 && (
                 <p className="text-sm text-[var(--text-muted)] mt-1">
                   From your last session: {formatHours(deficit)} will be deducted from your
@@ -204,12 +211,12 @@ export function Paywall({ isOpen, onClose }: PaywallProps) {
                                 {config.name}
                               </span>
                               {config.popular && (
-                                <span className="text-xs px-2 py-0.5 bg-[var(--accent)] text-white rounded-full">
+                                <span className="text-xs px-2 py-0.5 bg-[var(--accent)] text-[#1C1917] rounded-full">
                                   Popular
                                 </span>
                               )}
                               {config.highlight && (
-                                <span className="text-xs px-2 py-0.5 bg-[var(--accent)] text-white rounded-full">
+                                <span className="text-xs px-2 py-0.5 bg-[var(--accent)] text-[#1C1917] rounded-full">
                                   Best Value
                                 </span>
                               )}
@@ -235,12 +242,44 @@ export function Paywall({ isOpen, onClose }: PaywallProps) {
 
               {/* Value comparison */}
               <div className="mt-6 p-4 bg-[var(--bg-deep)] rounded-xl">
-                <p className="text-xs text-[var(--text-secondary)]">
-                  <span className="font-medium">Why hours?</span> Unlike subscriptions that charge
-                  whether you practice or not, you only pay for the time you actually meditate. Our
-                  100-hour pack costs less than 2 months of typical meditation app subscriptions.
-                </p>
+                <h3 className="font-medium text-[var(--text-primary)] mb-2">
+                  Why hours instead of subscriptions?
+                </h3>
+                <ul className="space-y-2 text-sm text-[var(--text-secondary)]">
+                  <li className="flex items-start gap-2">
+                    <span style={{ color: 'var(--success-icon)' }} className="mt-0.5">
+                      ✓
+                    </span>
+                    <span>Your data stays private - no tracking, no ads</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span style={{ color: 'var(--success-icon)' }} className="mt-0.5">
+                      ✓
+                    </span>
+                    <span>Pay only for time you actually meditate</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span style={{ color: 'var(--success-icon)' }} className="mt-0.5">
+                      ✓
+                    </span>
+                    <span>No subscriptions - your hours never expire</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span style={{ color: 'var(--success-icon)' }} className="mt-0.5">
+                      ✓
+                    </span>
+                    <span>6x cheaper than typical meditation subscriptions</span>
+                  </li>
+                </ul>
               </div>
+
+              {/* Social proof carousel */}
+              <ReviewCarousel />
+
+              {/* Risk reversal */}
+              <p className="text-xs text-[var(--text-muted)] text-center mt-4">
+                Questions? Hours never expire and work offline.
+              </p>
             </div>
 
             {/* Footer */}

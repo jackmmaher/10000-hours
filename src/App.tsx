@@ -20,6 +20,7 @@ import { Insights } from './components/Insights'
 import { PearlsFeed } from './components/PearlsFeed'
 import { SavedPearls } from './components/SavedPearls'
 import { Navigation } from './components/Navigation'
+import { Header } from './components/Header'
 import { Journey } from './components/Journey'
 import { Explore } from './components/Explore'
 import { Progress } from './components/Progress'
@@ -306,6 +307,9 @@ function AppContent() {
   return (
     <NeutralThemeProvider>
       <div className="h-full">
+        {/* Top header - fades out during meditation */}
+        <Header onNavigateToSettings={() => setView('settings')} />
+
         {view === 'timer' && <Timer />}
         {view === 'journey' && <Journey />}
         {view === 'progress' && <Progress />}
@@ -316,7 +320,7 @@ function AppContent() {
         {view === 'pearls' && <PearlsFeed />}
         {view === 'explore' && <Explore />}
         {view === 'saved-pearls' && <SavedPearls />}
-        {view === 'profile' && <Profile onNavigateToSettings={() => setView('settings')} />}
+        {view === 'profile' && <Profile />}
         {view === 'settings' && (
           <Settings
             onBack={() => setView('profile')}

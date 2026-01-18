@@ -20,8 +20,8 @@
   /* === TEXT === */
   --text-primary: #1E293B;
   --text-secondary: #475569;
-  --text-muted: #64748B; /* Changed from #94A3B8 for WCAG AA compliance (4.5:1 contrast) */
-  --text-tertiary: #94A3B8; /* Lighter than muted, for hints/metadata */
+  --text-muted: #737373; /* Warm stone neutral for WCAG AA compliance (4.5:1 contrast) */
+  --text-tertiary: #A8A29E; /* Warm stone - lighter than muted, for hints/metadata */
   --text-on-accent: #FFFFFF;
 
   /* === ACCENT === */
@@ -693,9 +693,13 @@ body {
   box-shadow: var(--shadow-elevation-1);
 }
 
-/* Safe area utilities for bottom navigation */
+/* Safe area utilities for navigation */
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 /* ========================================

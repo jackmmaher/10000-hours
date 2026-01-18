@@ -18,6 +18,7 @@ export interface ThemeTokens {
   textPrimary: string // Main content
   textSecondary: string // Supporting text
   textMuted: string // Hints, timestamps
+  textTertiary: string // Subtle metadata, lighter than muted
   textOnAccent: string // Text on accent-colored backgrounds
 
   // === ACCENT COLORS ===
