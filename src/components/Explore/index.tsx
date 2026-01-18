@@ -256,41 +256,44 @@ export function Explore() {
     useNavigationStore.getState().incrementSavedContentVersion()
   }
 
-  const handleSessionVote = async (sessionId: string, shouldVote: boolean) => {
-    if (!user) return
-    if (shouldVote) {
-      await voteTemplate(sessionId, user.id)
-    } else {
-      await unvoteTemplate(sessionId, user.id)
-    }
-    setSessions((prev) =>
-      prev.map((s) =>
-        s.id === sessionId
-          ? { ...s, hasVoted: shouldVote, karma: s.karma + (shouldVote ? 1 : -1) }
-          : s
-      )
-    )
-    refreshProfile()
-  }
+  const handleSessionVote = useCallback(
+    async (sessionId: string, shouldVote: boolean) => {
+      if (!user) return
 
-  const handleSessionSave = async (sessionId: string, shouldSave: boolean) => {
-    try {
-      if (shouldSave) {
-        // Save locally (for Journey tab)
-        await saveTemplateLocal(sessionId)
-        // Save to Supabase (for community saves count)
-        if (user?.id) {
-          await saveTemplateRemote(sessionId, user.id)
+      // Optimistic update
+      setSessions((prev) =>
+        prev.map((s) =>
+          s.id === sessionId
+            ? { ...s, hasVoted: shouldVote, karma: s.karma + (shouldVote ? 1 : -1) }
+            : s
+        )
+      )
+
+      try {
+        if (shouldVote) {
+          await voteTemplate(sessionId, user.id)
+        } else {
+          await unvoteTemplate(sessionId, user.id)
         }
-      } else {
-        // Unsave locally
-        await unsaveTemplateLocal(sessionId)
-        // Unsave from Supabase
-        if (user?.id) {
-          await unsaveTemplateRemote(sessionId, user.id)
-        }
+        refreshProfile()
+      } catch (err) {
+        // Rollback on failure
+        setSessions((prev) =>
+          prev.map((s) =>
+            s.id === sessionId
+              ? { ...s, hasVoted: !shouldVote, karma: s.karma + (shouldVote ? -1 : 1) }
+              : s
+          )
+        )
+        console.error('Vote failed:', err)
       }
-      // Update local state
+    },
+    [user, refreshProfile]
+  )
+
+  const handleSessionSave = useCallback(
+    async (sessionId: string, shouldSave: boolean) => {
+      // Optimistic update
       setSessions((prev) =>
         prev.map((s) =>
           s.id === sessionId
@@ -298,13 +301,41 @@ export function Explore() {
             : s
         )
       )
-      // Trigger refresh of saved content in Journey tab
-      useNavigationStore.getState().incrementSavedContentVersion()
-    } catch (err) {
-      console.error('Failed to save/unsave template:', err)
-      throw err // Re-throw so HeroSessionCard can handle rollback
-    }
-  }
+
+      try {
+        if (shouldSave) {
+          // Save locally (for Journey tab)
+          await saveTemplateLocal(sessionId)
+          // Save to Supabase (for community saves count)
+          if (user?.id) {
+            await saveTemplateRemote(sessionId, user.id)
+          }
+        } else {
+          // Unsave locally
+          await unsaveTemplateLocal(sessionId)
+          // Unsave from Supabase
+          if (user?.id) {
+            await unsaveTemplateRemote(sessionId, user.id)
+          }
+        }
+        // Trigger refresh of saved content in Journey tab
+        useNavigationStore.getState().incrementSavedContentVersion()
+        refreshProfile()
+      } catch (err) {
+        // Rollback on failure
+        setSessions((prev) =>
+          prev.map((s) =>
+            s.id === sessionId
+              ? { ...s, hasSaved: !shouldSave, saves: s.saves + (shouldSave ? -1 : 1) }
+              : s
+          )
+        )
+        console.error('Failed to save/unsave template:', err)
+        throw err // Re-throw so HeroSessionCard can handle rollback
+      }
+    },
+    [user, refreshProfile]
+  )
 
   // ============================================================================
   // SCROLL & GESTURES
