@@ -86,22 +86,25 @@ export function VoiceBadge({
   const gap = compact ? 'gap-0.5' : 'gap-1'
   const padding = compact ? 'px-1.5 py-0.5' : 'px-2 py-1'
 
-  // Background classes - elevated background for visibility
-  const bgClass =
+  // Background style - use color-mix for opacity (Tailwind opacity modifiers don't work with CSS vars)
+  const bgStyle =
     visual.level === 'high'
-      ? 'bg-elevated shadow-sm'
+      ? { backgroundColor: 'var(--bg-elevated)' }
       : visual.level === 'established'
-        ? 'bg-elevated/90'
-        : 'bg-elevated/80'
+        ? { backgroundColor: 'color-mix(in srgb, var(--bg-elevated) 90%, transparent)' }
+        : { backgroundColor: 'color-mix(in srgb, var(--bg-elevated) 80%, transparent)' }
+
+  // Shadow class only for high voice
+  const shadowClass = visual.level === 'high' ? 'shadow-sm' : ''
 
   return (
     <div
       className={`
         inline-flex items-center ${gap} ${padding} rounded-full
-        ${bgClass}
+        ${shadowClass}
         transition-all duration-500
       `}
-      style={glowStyle}
+      style={{ ...glowStyle, ...bgStyle }}
     >
       {/* Dot pattern */}
       <div className={`flex items-center ${gap}`}>
@@ -161,22 +164,25 @@ export function VoiceBadgeWithHours({ score }: VoiceBadgeWithScoreProps) {
         }
       : {}
 
-  // Background classes - elevated background for visibility
-  const bgClass =
+  // Background style - use color-mix for opacity (Tailwind opacity modifiers don't work with CSS vars)
+  const bgStyle =
     visual.level === 'high'
-      ? 'bg-elevated shadow-sm'
+      ? { backgroundColor: 'var(--bg-elevated)' }
       : visual.level === 'established'
-        ? 'bg-elevated/90'
-        : 'bg-elevated/80'
+        ? { backgroundColor: 'color-mix(in srgb, var(--bg-elevated) 90%, transparent)' }
+        : { backgroundColor: 'color-mix(in srgb, var(--bg-elevated) 80%, transparent)' }
+
+  // Shadow class only for high voice
+  const shadowClass = visual.level === 'high' ? 'shadow-sm' : ''
 
   return (
     <div
       className={`
         inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
-        ${bgClass}
+        ${shadowClass}
         transition-all duration-500
       `}
-      style={glowStyle}
+      style={{ ...glowStyle, ...bgStyle }}
     >
       {/* Dot pattern */}
       <div className="flex items-center gap-0.5">
