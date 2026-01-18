@@ -262,7 +262,7 @@ export function Settings({
                 Audio feedback
               </p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                Subtle sounds on session complete and milestones
+                Subtle sound when session completes
               </p>
             </div>
             {/* Custom organic toggle - theme aware */}

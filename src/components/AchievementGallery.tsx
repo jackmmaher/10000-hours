@@ -6,9 +6,8 @@
  * Tap a milestone to see detailed stats and sessions that earned it.
  */
 
-import { useMemo, useEffect, useState, useRef } from 'react'
+import { useMemo, useEffect, useState } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
-import { useAudioFeedback } from '../hooks/useAudioFeedback'
 import { getAchievements, Achievement, getUserPreferences } from '../lib/db'
 import { generateMilestones } from '../lib/milestones'
 import { getAdaptiveMilestone } from '../lib/calculations'
@@ -31,8 +30,6 @@ export function AchievementGallery() {
   const [showCurrentProgress, setShowCurrentProgress] = useState(false)
   const [userGoalHours, setUserGoalHours] = useState<number | undefined>()
   const haptic = useTapFeedback()
-  const audio = useAudioFeedback()
-  const hasPlayedMilestoneSound = useRef(false)
 
   // Check if there's a newly achieved hour milestone to highlight
   const newlyAchievedHours = useMemo(() => {
@@ -42,26 +39,6 @@ export function AchievementGallery() {
       return justAchievedMilestone.hours
     }
     return null
-  }, [justAchievedMilestone])
-
-  // Play milestone sound and auto-open modal when user navigates to Progress tab with new milestone
-  useEffect(() => {
-    if (newlyAchievedHours && !isLoading && !hasPlayedMilestoneSound.current) {
-      hasPlayedMilestoneSound.current = true
-      audio.milestone()
-      // Auto-select the newly achieved milestone to show the modal
-      const newAchievement = achievements.find((a) => a.hours === newlyAchievedHours)
-      if (newAchievement) {
-        setSelectedAchievement(newAchievement)
-      }
-    }
-  }, [newlyAchievedHours, isLoading, achievements, audio])
-
-  // Reset the sound flag when milestone is cleared
-  useEffect(() => {
-    if (!justAchievedMilestone) {
-      hasPlayedMilestoneSound.current = false
-    }
   }, [justAchievedMilestone])
 
   // Load achievements and user goal from database

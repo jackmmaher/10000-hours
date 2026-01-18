@@ -12,19 +12,15 @@
 
 import { useEffect, useState } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
-import { useAudioFeedback } from '../hooks/useAudioFeedback'
 
 export function MilestoneCelebration() {
   const { justAchievedMilestone, clearMilestoneCelebration } = useSessionStore()
   const [isVisible, setIsVisible] = useState(false)
-  const audio = useAudioFeedback()
 
   useEffect(() => {
     if (justAchievedMilestone) {
       // Show the celebration
       setIsVisible(true)
-      // Play milestone sound (respects setting internally)
-      audio.milestone()
 
       // Auto-dismiss after 2.5 seconds
       const timer = setTimeout(() => {
@@ -35,7 +31,7 @@ export function MilestoneCelebration() {
 
       return () => clearTimeout(timer)
     }
-  }, [justAchievedMilestone, clearMilestoneCelebration, audio])
+  }, [justAchievedMilestone, clearMilestoneCelebration])
 
   if (!justAchievedMilestone) return null
 
@@ -46,7 +42,7 @@ export function MilestoneCelebration() {
       const milestone = justAchievedMilestone as { type: string; label: string; zenMessage: string }
       return {
         name: milestone.label,
-        zenMessage: milestone.zenMessage
+        zenMessage: milestone.zenMessage,
       }
     }
 
@@ -54,7 +50,7 @@ export function MilestoneCelebration() {
     const hours = justAchievedMilestone.hours
     return {
       name: hours >= 1000 ? `${hours / 1000}k hours` : `${hours} hours`,
-      zenMessage: 'The path continues.'
+      zenMessage: 'The path continues.',
     }
   }
 
@@ -76,14 +72,10 @@ export function MilestoneCelebration() {
       <div className="w-2 h-2 rounded-full bg-indigo-deep/30 mb-6" />
 
       {/* Milestone name */}
-      <p className="font-serif text-3xl text-indigo-deep mb-4 text-center px-8">
-        {name}
-      </p>
+      <p className="font-serif text-3xl text-indigo-deep mb-4 text-center px-8">{name}</p>
 
       {/* Zen message */}
-      <p className="text-sm text-indigo-deep/50 italic">
-        {zenMessage}
-      </p>
+      <p className="text-sm text-indigo-deep/50 italic">{zenMessage}</p>
     </div>
   )
 }
