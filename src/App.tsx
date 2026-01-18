@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useSessionStore } from './stores/useSessionStore'
 import { useNavigationStore } from './stores/useNavigationStore'
 import { useSettingsStore } from './stores/useSettingsStore'
@@ -60,14 +60,8 @@ function AppContent() {
     hideReviewPromptModal,
     queueReviewPromptAfterInsight,
   } = useNavigationStore()
-  const {
-    isLoading,
-    hydrate,
-    goalCompleted,
-    justReachedEnlightenment,
-    createInsightReminder,
-    totalSeconds,
-  } = useSessionStore()
+  const { isLoading, hydrate, goalCompleted, justReachedEnlightenment, createInsightReminder } =
+    useSessionStore()
   const settingsStore = useSettingsStore()
   const authStore = useAuthStore()
   const hourBankStore = useHourBankStore()
@@ -75,10 +69,6 @@ function AppContent() {
   // Initialize voice tracking - notifications handled centrally below
   const { voice } = useVoice()
   const previousVoiceScore = useRef<number | null>(null)
-
-  // Track total hours for milestone detection (10h, 100h)
-  const totalHours = useMemo(() => Math.floor(totalSeconds / 3600), [totalSeconds])
-  const lastCheckedHours = useRef<number | null>(null)
 
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [editingSession, setEditingSession] = useState<Session | null>(null)
@@ -182,7 +172,7 @@ function AppContent() {
   useEffect(() => {
     if (justReachedEnlightenment) {
       // User just reached their practice goal - check if we should prompt for review
-      shouldPromptForReview(undefined, true).then((shouldPrompt) => {
+      shouldPromptForReview(true).then((shouldPrompt) => {
         if (shouldPrompt) {
           // Queue review to show after insight modal closes (if insight modal is or will be shown)
           // The insight modal shows when user navigates away from timer
@@ -191,34 +181,6 @@ function AppContent() {
       })
     }
   }, [justReachedEnlightenment, queueReviewPromptAfterInsight])
-
-  // Check for review prompt at hour milestones (10h, 100h)
-  useEffect(() => {
-    // Skip on first load - just record baseline
-    if (lastCheckedHours.current === null) {
-      lastCheckedHours.current = totalHours
-      return
-    }
-
-    const previousHours = lastCheckedHours.current
-
-    // Check if we just crossed 10 or 100 hour threshold
-    if (totalHours >= 10 && previousHours < 10) {
-      shouldPromptForReview(10).then((shouldPrompt) => {
-        if (shouldPrompt) {
-          queueReviewPromptAfterInsight("You've practiced for 10 hours!")
-        }
-      })
-    } else if (totalHours >= 100 && previousHours < 100) {
-      shouldPromptForReview(100).then((shouldPrompt) => {
-        if (shouldPrompt) {
-          queueReviewPromptAfterInsight("You've practiced for 100 hours!")
-        }
-      })
-    }
-
-    lastCheckedHours.current = totalHours
-  }, [totalHours, queueReviewPromptAfterInsight])
 
   // Handlers
   const handleOnboardingComplete = useCallback(() => {

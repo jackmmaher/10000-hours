@@ -38,9 +38,6 @@ const MIN_HOURS_BEFORE_PROMPT = 1
 // Minimum days between prompts
 const MIN_DAYS_BETWEEN_PROMPTS = 30
 
-// Prompt on specific milestones (hours)
-const PROMPT_MILESTONES = [10, 100]
-
 // Maximum lifetime prompts (cap to avoid pestering users)
 const MAX_LIFETIME_PROMPTS = 3
 
@@ -94,12 +91,13 @@ async function getTotalHours(): Promise<number> {
 }
 
 /**
- * Check if we should prompt for review based on conditions
+ * Check if we should prompt for review based on conditions.
+ * Only prompts when user reaches their practice goal (moment of pride).
  */
-export async function shouldPromptForReview(
-  justReachedMilestoneHours?: number,
-  reachedPracticeGoal?: boolean
-): Promise<boolean> {
+export async function shouldPromptForReview(reachedPracticeGoal?: boolean): Promise<boolean> {
+  // Only prompt when user reaches their practice goal
+  if (!reachedPracticeGoal) return false
+
   const tracking = await getReviewTracking()
 
   // Never prompt if user has already rated
@@ -120,18 +118,7 @@ export async function shouldPromptForReview(
   // Must have minimum hours
   if (totalHours < MIN_HOURS_BEFORE_PROMPT) return false
 
-  // Always prompt when user reaches their practice goal (moment of pride)
-  if (reachedPracticeGoal) {
-    return true
-  }
-
-  // Prompt on specific milestones (10h, 100h)
-  if (justReachedMilestoneHours && PROMPT_MILESTONES.includes(justReachedMilestoneHours)) {
-    return true
-  }
-
-  // Otherwise, don't interrupt
-  return false
+  return true
 }
 
 /**
