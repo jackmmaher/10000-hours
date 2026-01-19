@@ -24,7 +24,7 @@ const PRODUCT_CONFIG = [
   {
     id: PRODUCT_IDS.STARTER,
     name: 'Starter',
-    tagline: '2 weeks of daily sessions',
+    tagline: '2 weeks of daily practice',
   },
   {
     id: PRODUCT_IDS.FLOW,
@@ -40,7 +40,7 @@ const PRODUCT_CONFIG = [
   {
     id: PRODUCT_IDS.COMMITTED,
     name: 'Committed',
-    tagline: '6 months of commitment',
+    tagline: '6 months of daily practice',
   },
   {
     id: PRODUCT_IDS.SERIOUS,
@@ -204,8 +204,9 @@ export function Paywall({ isOpen, onClose }: PaywallProps) {
                           disabled:opacity-50 disabled:cursor-not-allowed
                         `}
                       >
-                        <div className="flex items-center justify-between">
-                          <div>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            {/* Name + badges row */}
                             <div className="flex items-center gap-2">
                               <span className="font-medium text-[var(--text-primary)]">
                                 {config.name}
@@ -221,16 +222,19 @@ export function Paywall({ isOpen, onClose }: PaywallProps) {
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
+                            {/* Hours - PROMOTED */}
+                            <p className="text-sm font-medium text-[var(--text-secondary)] mt-1">
+                              {hours === 10000 ? 'Unlimited hours' : `${hours} hours`}
+                            </p>
+                            {/* Tagline - improved visibility */}
+                            <p className="text-xs text-[var(--text-secondary)] mt-0.5">
                               {config.tagline}
                             </p>
                           </div>
                           <div className="text-right">
+                            {/* Price only - hours moved to left */}
                             <div className="font-medium text-[var(--text-primary)]">
                               {product?.priceString || '...'}
-                            </div>
-                            <div className="text-xs text-[var(--text-tertiary)]">
-                              {hours === 10000 ? 'Unlimited' : `${hours} hours`}
                             </div>
                           </div>
                         </div>

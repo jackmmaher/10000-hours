@@ -24,7 +24,7 @@ const PRODUCT_CONFIG = [
   {
     id: PRODUCT_IDS.STARTER,
     name: 'Starter',
-    tagline: '2 weeks of daily sessions',
+    tagline: '2 weeks of daily practice',
   },
   {
     id: PRODUCT_IDS.FLOW,
@@ -40,13 +40,12 @@ const PRODUCT_CONFIG = [
   {
     id: PRODUCT_IDS.COMMITTED,
     name: 'Committed',
-    tagline: '6 months of commitment',
+    tagline: '6 months of daily practice',
   },
   {
     id: PRODUCT_IDS.SERIOUS,
     name: 'Serious',
     tagline: '1 year of daily practice',
-    bestValue: true,
   },
   {
     id: PRODUCT_IDS.LIFETIME,
@@ -221,7 +220,8 @@ export function Store({ onBack }: StoreProps) {
                   `}
                 >
                   <div className="flex items-start justify-between mb-2">
-                    <div>
+                    <div className="flex-1">
+                      {/* Name + badges row */}
                       <div className="flex items-center gap-2">
                         <h3 className="font-medium text-[var(--text-primary)]">{config.name}</h3>
                         {config.popular && (
@@ -240,14 +240,19 @@ export function Store({ onBack }: StoreProps) {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-[var(--text-tertiary)]">{config.tagline}</p>
+                      {/* Hours - PROMOTED */}
+                      <p className="text-sm font-medium text-[var(--text-secondary)] mt-1">
+                        {hours === 10000 ? 'Unlimited hours' : `${hours} hours`}
+                      </p>
+                      {/* Tagline - improved visibility */}
+                      <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                        {config.tagline}
+                      </p>
                     </div>
                     <div className="text-right">
+                      {/* Price only - hours moved to left */}
                       <p className="font-medium text-[var(--text-primary)]">
                         {product?.priceString || '...'}
-                      </p>
-                      <p className="text-xs text-[var(--text-tertiary)]">
-                        {hours === 10000 ? '10,000 hours' : `${hours} hours`}
                       </p>
                     </div>
                   </div>
