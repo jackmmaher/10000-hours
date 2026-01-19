@@ -261,6 +261,27 @@ export function MeditationPlanner({
                     </div>
                   </div>
                 )}
+
+                {/* Enforce Goal toggle - only show when duration is set */}
+                {state.duration && (
+                  <button
+                    onClick={() => state.setEnforceGoal(!state.enforceGoal)}
+                    className="flex items-center gap-3 mt-3 py-2 animate-fade-in"
+                  >
+                    <div
+                      className={`w-10 h-6 rounded-full transition-colors flex items-center ${
+                        state.enforceGoal ? 'bg-accent' : 'bg-deep/50'
+                      }`}
+                    >
+                      <div
+                        className={`w-4 h-4 rounded-full bg-cream shadow-sm transition-transform ${
+                          state.enforceGoal ? 'translate-x-5' : 'translate-x-1'
+                        }`}
+                      />
+                    </div>
+                    <span className="text-sm text-ink-soft">Stop at {state.duration} min</span>
+                  </button>
+                )}
               </div>
 
               {/* Position - horizontal scroll with groups */}
@@ -569,6 +590,29 @@ export function MeditationPlanner({
                             ))}
                           </div>
                         </div>
+                      )}
+
+                      {/* Enforce Goal toggle - only show when duration is set */}
+                      {state.duration && (
+                        <button
+                          onClick={() => state.setEnforceGoal(!state.enforceGoal)}
+                          className="flex items-center gap-3 mt-3 py-2 animate-fade-in"
+                        >
+                          <div
+                            className={`w-10 h-6 rounded-full transition-colors flex items-center ${
+                              state.enforceGoal ? 'bg-accent' : 'bg-deep/50'
+                            }`}
+                          >
+                            <div
+                              className={`w-4 h-4 rounded-full bg-cream shadow-sm transition-transform ${
+                                state.enforceGoal ? 'translate-x-5' : 'translate-x-1'
+                              }`}
+                            />
+                          </div>
+                          <span className="text-sm text-ink-soft">
+                            Stop at {state.duration} min
+                          </span>
+                        </button>
                       )}
                     </div>
                   </>

@@ -116,7 +116,16 @@ export function NextSessionSpotlight({ plannedSession, onPlanClick }: NextSessio
 
             {/* Details row */}
             <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-ink/50 mb-4">
-              {durationDisplay && <span>{durationDisplay}</span>}
+              {durationDisplay && (
+                <span>
+                  {durationDisplay}
+                  {plannedSession.enforceGoal && (
+                    <span className="text-xs ml-1" style={{ color: 'var(--accent)' }}>
+                      (timed)
+                    </span>
+                  )}
+                </span>
+              )}
               {plannedSession.pose && <span>{plannedSession.pose}</span>}
             </div>
 

@@ -10,6 +10,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useNavigationStore } from '../stores/useNavigationStore'
+import { useTrialStore } from '../stores/useTrialStore'
 import { useVoice } from '../hooks/useVoice'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 import { VoiceBadgeWithHours } from './VoiceBadge'
@@ -22,6 +23,7 @@ interface HeaderProps {
 
 export function Header({ onNavigateToSettings }: HeaderProps) {
   const { timerPhase } = useSessionStore()
+  const { trialPhase } = useTrialStore()
   const { setView, setViewWithVoiceModal, navigateToInsightCapture, isSettling } =
     useNavigationStore()
   const { voice, isLoading: isVoiceLoading } = useVoice()
@@ -31,7 +33,12 @@ export function Header({ onNavigateToSettings }: HeaderProps) {
   const [notificationRefreshKey, setNotificationRefreshKey] = useState(0)
 
   // Hide during active meditation phases (with smooth fade)
-  const isTimerActive = timerPhase === 'preparing' || timerPhase === 'running'
+  // Check both regular timer and trial timer phases
+  const isTimerActive =
+    timerPhase === 'preparing' ||
+    timerPhase === 'running' ||
+    trialPhase === 'pending' ||
+    trialPhase === 'active'
 
   // BUG FIX 1: Close notification modal when timer becomes active
   // Prevents modal from staying open during meditation

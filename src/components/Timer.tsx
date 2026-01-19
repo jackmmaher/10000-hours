@@ -4,16 +4,20 @@ import { useSessionStore } from '../stores/useSessionStore'
 import { useNavigationStore } from '../stores/useNavigationStore'
 import { useSettingsStore } from '../stores/useSettingsStore'
 import { useHourBankStore } from '../stores/useHourBankStore'
+import { useTrialStore } from '../stores/useTrialStore'
 import { formatHours } from '../lib/hourBank'
 import { useBreathClock } from '../hooks/useBreathClock'
 import { useWakeLock } from '../hooks/useTimer'
 import { useSwipe } from '../hooks/useSwipe'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 import { useAudioFeedback } from '../hooks/useAudioFeedback'
+import { useTodaysPlan } from '../hooks/useTodaysPlan'
 import { UnifiedTime } from './UnifiedTime'
 import { GooeyOrb } from './GooeyOrb'
 import { Paywall } from './Paywall'
 import { LowHoursWarning } from './LowHoursWarning'
+import { DurationPicker } from './DurationPicker'
+import { TrialCompleteModal } from './TrialCompleteModal'
 
 /**
  * Timer - The Unified Experience
@@ -49,10 +53,24 @@ export function Timer() {
   const { setView, triggerPostSessionFlow, setIsSettling } = useNavigationStore()
   const { hideTimeDisplay } = useSettingsStore()
   const { canMeditate, refreshBalance, isLowHours, isCriticallyLow, available } = useHourBankStore()
+  const {
+    isTrialActive,
+    trialPhase,
+    trialGoalSeconds,
+    startTrial,
+    setTrialPhase,
+    completeTrial,
+    cancelTrial,
+  } = useTrialStore()
+  const { goalSeconds, enforceGoal } = useTodaysPlan()
+
+  // Modal for trial completion
+  const [showTrialComplete, setShowTrialComplete] = useState(false)
 
   // Modal states
   const [showPaywall, setShowPaywall] = useState(false)
   const [showLowHoursWarning, setShowLowHoursWarning] = useState(false)
+  const [showDurationPicker, setShowDurationPicker] = useState(false)
 
   // ============================================
   // BREATH SYNCHRONIZATION
@@ -74,6 +92,8 @@ export function Timer() {
 
   // Ref to prevent double-interval creation (React.StrictMode fix)
   const intervalRef = useRef<number | null>(null)
+  // Ref to prevent double-triggering auto-end
+  const hasAutoEndedRef = useRef(false)
 
   // ============================================
   // HAPTICS & AUDIO
@@ -87,8 +107,10 @@ export function Timer() {
 
   // Live total: use snapshot during active session to prevent mid-session contamination
   // If someone edits a past session elsewhere, our display stays stable
-  const liveTotal =
-    phase === 'active' || phase === 'settling'
+  // Trial mode: display from 0 (just sessionElapsed)
+  const liveTotal = isTrialActive
+    ? sessionElapsed
+    : phase === 'active' || phase === 'settling'
       ? (snapshotTotal ?? savedTotal) + sessionElapsed
       : savedTotal
 
@@ -155,7 +177,8 @@ export function Timer() {
     // CRITICAL: Capture snapshot of totalSeconds BEFORE any async operations
     // This isolates the session from any edits to past sessions elsewhere in the app
     // Round down to nearest minute so seconds display always starts at :00
-    setSnapshotTotal(Math.floor(savedTotal / 60) * 60)
+    // For trial mode, we start from 0 so snapshot is 0
+    setSnapshotTotal(isTrialActive ? 0 : Math.floor(savedTotal / 60) * 60)
 
     // CRITICAL: Reset ALL session state IMMEDIATELY on tap
     // This ensures no stale values from previous sessions
@@ -163,6 +186,12 @@ export function Timer() {
     setSessionStart(null)
     setSecondsOpacity(0)
     setPhase('pending')
+    hasAutoEndedRef.current = false // Reset auto-end flag for new session
+
+    // For trial mode, also set trial phase to pending
+    if (isTrialActive) {
+      setTrialPhase('pending')
+    }
 
     // Wait for breath alignment (next inhale)
     await waitForPhase('inhale')
@@ -172,13 +201,26 @@ export function Timer() {
     setSessionStart(startTime)
     setSecondsOpacity(1)
     setPhase('active')
-    startTimer() // Persist to DB for crash recovery
-  }, [haptic, waitForPhase, startTimer, savedTotal])
+
+    // For trial mode, set trial phase to active; otherwise persist to DB
+    if (isTrialActive) {
+      setTrialPhase('active')
+    } else {
+      startTimer() // Persist to DB for crash recovery
+    }
+  }, [haptic, waitForPhase, startTimer, savedTotal, isTrialActive, setTrialPhase])
 
   const handleStart = useCallback(async () => {
     if (phase !== 'resting') return
 
-    // Check if user can meditate (has available hours)
+    // Trial mode: skip all checks, just start
+    if (isTrialActive && trialPhase === 'pending') {
+      // Trial was already set up by duration picker, now start
+      await startSession()
+      return
+    }
+
+    // Normal mode: check hours
     if (!canMeditate) {
       setShowPaywall(true)
       return
@@ -191,7 +233,7 @@ export function Timer() {
     }
 
     await startSession()
-  }, [phase, canMeditate, isCriticallyLow, startSession])
+  }, [phase, canMeditate, isCriticallyLow, startSession, isTrialActive, trialPhase])
 
   // ============================================
   // END SESSION
@@ -208,6 +250,11 @@ export function Timer() {
     haptic.success()
     audio.complete(timeUntilExhale)
     setPhase('settling')
+
+    // For trial mode, also set trial phase to settling
+    if (isTrialActive) {
+      setTrialPhase('settling')
+    }
 
     // LOCK: Prevent navigation during settling window
     setIsSettling(true)
@@ -226,8 +273,17 @@ export function Timer() {
       setSessionStart(null)
       setSessionElapsed(0)
       setSnapshotTotal(null) // Clear snapshot isolation
-      await stopTimer() // Persist session to DB
-      await refreshBalance() // Update hour bank balance
+
+      if (isTrialActive) {
+        // Trial mode: show completion modal, don't persist
+        completeTrial()
+        setShowTrialComplete(true)
+      } else {
+        // Normal mode: persist session to DB
+        await stopTimer()
+        await refreshBalance()
+      }
+
       setIsSettling(false) // UNLOCK: Allow navigation again
     }, 4000)
   }, [
@@ -239,6 +295,9 @@ export function Timer() {
     stopTimer,
     setIsSettling,
     refreshBalance,
+    isTrialActive,
+    setTrialPhase,
+    completeTrial,
   ])
 
   // ============================================
@@ -317,6 +376,27 @@ export function Timer() {
   }, [phase, sessionStart])
 
   // ============================================
+  // GOAL ENFORCEMENT (AUTO-END)
+  // ============================================
+  // Handles both trial mode (trialGoalSeconds) and normal mode (enforceGoal + goalSeconds)
+  useEffect(() => {
+    if (phase !== 'active' || hasAutoEndedRef.current) return
+
+    // Trial mode: auto-end at trial goal
+    if (isTrialActive && trialGoalSeconds && sessionElapsed >= trialGoalSeconds) {
+      hasAutoEndedRef.current = true
+      handleEnd()
+      return
+    }
+
+    // Normal mode: auto-end at enforced goal
+    if (!isTrialActive && enforceGoal && goalSeconds && sessionElapsed >= goalSeconds) {
+      hasAutoEndedRef.current = true
+      handleEnd()
+    }
+  }, [phase, isTrialActive, trialGoalSeconds, enforceGoal, goalSeconds, sessionElapsed, handleEnd])
+
+  // ============================================
   // TAP HANDLER
   // ============================================
   const handleTap = useCallback(() => {
@@ -338,6 +418,37 @@ export function Timer() {
       }
     },
   })
+
+  // ============================================
+  // FREE TRIAL HANDLERS
+  // ============================================
+  const handleTryFree = useCallback(() => {
+    setShowPaywall(false)
+    setShowDurationPicker(true)
+  }, [])
+
+  const handleTrialDurationSelect = useCallback(
+    (minutes: number) => {
+      setShowDurationPicker(false)
+      startTrial(minutes)
+      // Trial will start when user taps (handleStart checks for trial pending state)
+    },
+    [startTrial]
+  )
+
+  const handleTrialCompleteClose = useCallback(() => {
+    setShowTrialComplete(false)
+    cancelTrial()
+  }, [cancelTrial])
+
+  // Auto-start trial session when user picks duration
+  // This triggers the tap flow automatically
+  useEffect(() => {
+    if (isTrialActive && trialPhase === 'pending' && phase === 'resting') {
+      // Start the trial session automatically
+      startSession()
+    }
+  }, [isTrialActive, trialPhase, phase, startSession])
 
   // ============================================
   // RENDER
@@ -480,7 +591,19 @@ export function Timer() {
       </AnimatePresence>
 
       {/* Paywall modal */}
-      <Paywall isOpen={showPaywall} onClose={() => setShowPaywall(false)} />
+      <Paywall
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        onTryFree={handleTryFree}
+      />
+
+      {/* Duration picker for free trial */}
+      <DurationPicker
+        isOpen={showDurationPicker}
+        mode="trial"
+        onSelect={handleTrialDurationSelect}
+        onClose={() => setShowDurationPicker(false)}
+      />
 
       {/* Low hours warning modal */}
       <LowHoursWarning
@@ -495,6 +618,13 @@ export function Timer() {
           setShowPaywall(true)
         }}
         availableHours={available}
+      />
+
+      {/* Trial complete modal */}
+      <TrialCompleteModal
+        isOpen={showTrialComplete}
+        onClose={handleTrialCompleteClose}
+        durationMinutes={trialGoalSeconds ? Math.round(trialGoalSeconds / 60) : undefined}
       />
     </div>
   )

@@ -4,6 +4,7 @@ import App from './App'
 import './index.css'
 import { db } from './lib/db'
 import { logger } from './lib/logger'
+import { useHourBankStore } from './stores/useHourBankStore'
 
 // Dev helpers - expose testing functions in development
 if (import.meta.env.DEV) {
@@ -106,6 +107,14 @@ if (import.meta.env.DEV) {
     },
 
     db, // Expose raw db for advanced debugging
+
+    // Set hour bank for testing paywall/trial
+    async setHours(purchased: number, consumed: number = 0) {
+      await useHourBankStore.getState().devSetHourBank(purchased, consumed)
+      logger.log(
+        `Hour bank set: ${purchased} purchased, ${consumed} consumed, ${purchased - consumed} available`
+      )
+    },
   }
 
   // @ts-expect-error - dev helpers
@@ -117,6 +126,7 @@ if (import.meta.env.DEV) {
   dev.showProfile()     - View current profile data
   dev.showSessions()    - View all sessions
   dev.showInsights()    - View all insights
+  dev.setHours(p, c)    - Set hour bank (purchased, consumed)
   `)
 }
 

@@ -9,6 +9,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useNavigationStore } from '../stores/useNavigationStore'
+import { useTrialStore } from '../stores/useTrialStore'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 
 type NavItem = {
@@ -95,10 +96,16 @@ const navItems: NavItem[] = [
 export function Navigation() {
   const { view, setView } = useNavigationStore()
   const { timerPhase } = useSessionStore()
+  const { trialPhase } = useTrialStore()
   const haptic = useTapFeedback()
 
   // Hide during active meditation phases (with smooth fade)
-  const isTimerActive = timerPhase === 'preparing' || timerPhase === 'running'
+  // Check both regular timer and trial timer phases
+  const isTimerActive =
+    timerPhase === 'preparing' ||
+    timerPhase === 'running' ||
+    trialPhase === 'pending' ||
+    trialPhase === 'active'
 
   return (
     <AnimatePresence>

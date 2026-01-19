@@ -17,6 +17,7 @@ import { ReviewCarousel } from './ReviewCarousel'
 interface PaywallProps {
   isOpen: boolean
   onClose: () => void
+  onTryFree?: () => void // Optional: show "try free session" link for first-time users
 }
 
 // Product display configuration with time-context taglines
@@ -55,7 +56,7 @@ const PRODUCT_CONFIG = [
   },
 ]
 
-export function Paywall({ isOpen, onClose }: PaywallProps) {
+export function Paywall({ isOpen, onClose, onTryFree }: PaywallProps) {
   const {
     products,
     isLoadingProducts,
@@ -288,6 +289,20 @@ export function Paywall({ isOpen, onClose }: PaywallProps) {
 
             {/* Footer */}
             <div className="px-6 pb-8 pt-4 safe-area-bottom border-t border-[var(--border)]">
+              {/* Try free session link - only for first-time users */}
+              {isFirstTime && onTryFree && (
+                <div className="mb-4 text-center">
+                  <p className="text-xs text-[var(--text-muted)] mb-2">
+                    Or try a free session first
+                  </p>
+                  <button
+                    onClick={onTryFree}
+                    className="text-sm text-[var(--accent)] hover:underline transition-colors"
+                  >
+                    Start a free trial session
+                  </button>
+                </div>
+              )}
               <div className="flex gap-3">
                 <Button
                   variant="ghost"

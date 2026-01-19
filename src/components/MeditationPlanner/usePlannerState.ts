@@ -90,6 +90,9 @@ export function usePlannerState({
   // Attached pearl state
   const [attachedPearl, setAttachedPearl] = useState<{ id: string; text: string } | null>(null)
 
+  // Enforce goal state - auto-complete timer at planned duration
+  const [enforceGoal, setEnforceGoal] = useState(false)
+
   // Local refresh key for pendingPlans (incremented after saving a new plan)
   const [plansLocalRefreshKey, setPlansLocalRefreshKey] = useState(0)
 
@@ -265,6 +268,8 @@ export function usePlannerState({
             })
           })
         }
+        // Load enforceGoal state
+        setEnforceGoal(existing.enforceGoal ?? false)
       }
 
       setIsLoading(false)
@@ -327,6 +332,8 @@ export function usePlannerState({
       } else {
         setAttachedPearl(null)
       }
+      // Load enforceGoal state
+      setEnforceGoal(plan.enforceGoal ?? false)
       // Exit "adding new plan" mode when viewing an existing plan
       setIsAddingNewPlan(false)
     }
@@ -428,6 +435,7 @@ export function usePlannerState({
             notes: planNotes || undefined,
             sourceTemplateId: planSourceTemplateId,
             attachedPearlId: attachedPearl?.id,
+            enforceGoal: duration ? enforceGoal : undefined,
           })
 
           // Create new scheduled reminder if time is set
@@ -450,6 +458,7 @@ export function usePlannerState({
             notes: planNotes || undefined,
             sourceTemplateId: planSourceTemplateId,
             attachedPearlId: attachedPearl?.id,
+            enforceGoal: duration ? enforceGoal : undefined,
           })
 
           // Create scheduled reminder if time is set
@@ -491,6 +500,7 @@ export function usePlannerState({
     repeatFrequency,
     repeatCustomDays,
     attachedPearl,
+    enforceGoal,
   ])
 
   const handleDelete = useCallback(async () => {
@@ -519,6 +529,7 @@ export function usePlannerState({
     setRepeatFrequency(null)
     setRepeatCustomDays([])
     setAttachedPearl(null)
+    setEnforceGoal(false)
   }, [])
 
   const handleDurationCategoryChange = useCallback(
@@ -581,6 +592,7 @@ export function usePlannerState({
     setRepeatFrequency(null)
     setRepeatCustomDays([])
     setAttachedPearl(null)
+    setEnforceGoal(false)
 
     // Navigate past all existing items (conceptually to a "new" slot)
     // We'll show the planning form in this state
@@ -647,5 +659,9 @@ export function usePlannerState({
     // Attached pearl
     attachedPearl,
     handlePearlSelect,
+
+    // Goal enforcement
+    enforceGoal,
+    setEnforceGoal,
   }
 }

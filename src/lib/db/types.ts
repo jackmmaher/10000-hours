@@ -105,6 +105,8 @@ export interface PlannedSession {
   coursePosition?: number // Position in course (1 of 5)
   repeatRuleId?: number // Link to repeat rule that generated this session
   attachedPearlId?: string // Supabase pearl ID attached as intention/guidance
+  // v7 additions for goal timer
+  enforceGoal?: boolean // Auto-complete timer at duration
 }
 
 export interface UserCourseProgress {
