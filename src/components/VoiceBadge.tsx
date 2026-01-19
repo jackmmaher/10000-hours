@@ -101,10 +101,15 @@ export function VoiceBadge({
     <div
       className={`
         inline-flex items-center ${gap} ${padding} rounded-full
+        border
         ${shadowClass}
         transition-all duration-500
       `}
-      style={{ ...glowStyle, ...bgStyle }}
+      style={{
+        ...glowStyle,
+        ...bgStyle,
+        borderColor: 'var(--border-subtle, rgba(0,0,0,0.08))',
+      }}
     >
       {/* Dot pattern */}
       <div className={`flex items-center ${gap}`}>
@@ -179,10 +184,15 @@ export function VoiceBadgeWithHours({ score }: VoiceBadgeWithScoreProps) {
     <div
       className={`
         inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+        border
         ${shadowClass}
         transition-all duration-500
       `}
-      style={{ ...glowStyle, ...bgStyle }}
+      style={{
+        ...glowStyle,
+        ...bgStyle,
+        borderColor: 'var(--border-subtle, rgba(0,0,0,0.08))',
+      }}
     >
       {/* Dot pattern */}
       <div className="flex items-center gap-0.5">
