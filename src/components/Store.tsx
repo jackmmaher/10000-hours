@@ -229,11 +229,6 @@ export function Store({ onBack }: StoreProps) {
                             Popular
                           </span>
                         )}
-                        {config.bestValue && (
-                          <span className="text-xs px-2 py-0.5 bg-[var(--accent)] text-[#1C1917] rounded-full">
-                            Best Value
-                          </span>
-                        )}
                         {config.highlight && (
                           <span className="text-xs px-2 py-0.5 bg-[var(--accent)] text-[#1C1917] rounded-full">
                             Best Value
