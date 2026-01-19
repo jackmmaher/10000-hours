@@ -14,6 +14,7 @@ import { useTapFeedback } from '../hooks/useTapFeedback'
 type NavItem = {
   view: 'timer' | 'journey' | 'explore' | 'progress' | 'profile'
   label: string
+  description: string // Accessibility context for screen readers
   icon: JSX.Element
 }
 
@@ -21,6 +22,7 @@ const navItems: NavItem[] = [
   {
     view: 'timer',
     label: 'Timer',
+    description: 'where you practice',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="10" strokeWidth={1.5} />
@@ -31,6 +33,7 @@ const navItems: NavItem[] = [
   {
     view: 'journey',
     label: 'Journey',
+    description: 'where you plan',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -45,6 +48,7 @@ const navItems: NavItem[] = [
   {
     view: 'explore',
     label: 'Explore',
+    description: 'where you discover',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -59,6 +63,7 @@ const navItems: NavItem[] = [
   {
     view: 'progress',
     label: 'Progress',
+    description: 'where you reflect',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -73,6 +78,7 @@ const navItems: NavItem[] = [
   {
     view: 'profile',
     label: 'Profile',
+    description: 'where you personalize',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -125,7 +131,7 @@ export function Navigation() {
                     haptic.light()
                     setView(item.view)
                   }}
-                  aria-label={`Navigate to ${item.label}`}
+                  aria-label={`Navigate to ${item.label} — ${item.description}`}
                   aria-current={isActive ? 'page' : undefined}
                   className="flex flex-col items-center justify-center flex-1 py-2 transition-colors active:scale-95"
                   style={{

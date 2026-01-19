@@ -33,6 +33,15 @@ function getVoiceDotStyle(level: VoiceLevel): string {
   }
 }
 
+/**
+ * Get tier-aware header text that evolves with voice score
+ */
+function getVoiceHeader(score: number): string {
+  if (score >= 70) return 'Your voice carries'
+  if (score >= 30) return 'Your voice is growing'
+  return 'Finding your voice'
+}
+
 export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
   const visual = getVoiceVisual(voice.total)
   const tier = getVoiceTier(voice.total)
@@ -64,7 +73,7 @@ export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
         <div className="px-6 pb-4 border-b border-ink/5">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-ink/40 mb-1">Your meditation credibility</p>
+              <p className="text-sm text-ink/40 mb-1">{getVoiceHeader(voice.total)}</p>
               <div className="flex items-center gap-3">
                 <p
                   className="font-serif text-3xl tabular-nums"

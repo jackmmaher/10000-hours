@@ -182,9 +182,9 @@ export function NextSessionSpotlight({ plannedSession, onPlanClick }: NextSessio
             Your next meditation
           </p>
 
-          <h2 className="font-serif text-2xl text-ink mb-2">No session planned</h2>
+          <h2 className="font-serif text-2xl text-ink mb-2">An open moment awaits</h2>
 
-          <p className="text-sm text-ink/50 mb-8">Set an intention for your practice</p>
+          <p className="text-sm text-ink/50 mb-8">Shape it, or simply begin</p>
 
           {/* Actions */}
           <div className="flex flex-col items-center gap-4">
