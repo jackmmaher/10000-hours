@@ -269,17 +269,21 @@ export function MeditationPlanner({
                     className="flex items-center gap-3 mt-3 py-2 animate-fade-in"
                   >
                     <div
-                      className={`w-10 h-6 rounded-full transition-colors flex items-center ${
-                        state.enforceGoal ? 'bg-accent' : 'bg-deep/50'
-                      }`}
+                      className="relative w-12 h-7 rounded-full transition-colors duration-300"
+                      style={{
+                        background: state.enforceGoal ? 'var(--toggle-on)' : 'var(--toggle-off)',
+                      }}
                     >
                       <div
-                        className={`w-4 h-4 rounded-full bg-cream shadow-sm transition-transform ${
-                          state.enforceGoal ? 'translate-x-5' : 'translate-x-1'
+                        className={`absolute top-1 w-5 h-5 rounded-full shadow-sm transition-transform duration-300 ${
+                          state.enforceGoal ? 'translate-x-6' : 'translate-x-1'
                         }`}
+                        style={{ background: 'var(--toggle-thumb)' }}
                       />
                     </div>
-                    <span className="text-sm text-ink-soft">Stop at {state.duration} min</span>
+                    <span className="text-sm text-ink-soft">
+                      Preset timer to stop at {state.duration} min
+                    </span>
                   </button>
                 )}
               </div>
@@ -599,18 +603,22 @@ export function MeditationPlanner({
                           className="flex items-center gap-3 mt-3 py-2 animate-fade-in"
                         >
                           <div
-                            className={`w-10 h-6 rounded-full transition-colors flex items-center ${
-                              state.enforceGoal ? 'bg-accent' : 'bg-deep/50'
-                            }`}
+                            className="relative w-12 h-7 rounded-full transition-colors duration-300"
+                            style={{
+                              background: state.enforceGoal
+                                ? 'var(--toggle-on)'
+                                : 'var(--toggle-off)',
+                            }}
                           >
                             <div
-                              className={`w-4 h-4 rounded-full bg-cream shadow-sm transition-transform ${
-                                state.enforceGoal ? 'translate-x-5' : 'translate-x-1'
+                              className={`absolute top-1 w-5 h-5 rounded-full shadow-sm transition-transform duration-300 ${
+                                state.enforceGoal ? 'translate-x-6' : 'translate-x-1'
                               }`}
+                              style={{ background: 'var(--toggle-thumb)' }}
                             />
                           </div>
                           <span className="text-sm text-ink-soft">
-                            Stop at {state.duration} min
+                            Preset timer to stop at {state.duration} min
                           </span>
                         </button>
                       )}
