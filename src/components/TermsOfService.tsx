@@ -88,7 +88,16 @@ export function TermsOfService({ onBack }: TermsOfServiceProps) {
               </li>
               <li>
                 <span className="font-medium">Lifetime option:</span> The Lifetime hour pack grants
-                unlimited meditation hours that do not deplete.
+                unlimited meditation hours that do not deplete. "Lifetime" refers to the operational
+                lifetime of the Still Hours app and service, not the duration of your natural life.
+              </li>
+              <li>
+                <span className="font-medium">Lifetime definition:</span> Lifetime access continues
+                for as long as Still Hours remains operational and available. It is tied to your
+                account and is non-transferable. It does not obligate us to maintain the App
+                indefinitely, does not guarantee compatibility with future operating systems or
+                devices, and may terminate if the App is discontinued. We make no representation
+                that the App will be available forever.
               </li>
             </ul>
           </section>
@@ -137,9 +146,20 @@ export function TermsOfService({ onBack }: TermsOfServiceProps) {
               <li>You are responsible for all activity that occurs under your account</li>
               <li>Content you share (pearls, guided meditations) becomes visible to other users</li>
               <li>
-                You retain ownership of your content but grant us a worldwide, non-exclusive,
-                royalty-free licence to display, distribute, and make available your shared content
-                within the App
+                You retain ownership of your content but grant Still Hours a worldwide, perpetual,
+                irrevocable, non-exclusive, royalty-free, transferable, and sublicensable license to
+                use, reproduce, modify, adapt, translate, publish, publicly perform, publicly
+                display, distribute, and create derivative works from your shared content. This
+                license applies across any medium or platform (whether now known or later
+                developed), and in any industry or domain, whether or not related to meditation or
+                wellness. We may use your shared content for commercial, promotional, marketing, or
+                advertising purposes. This license survives any termination of your account.
+              </li>
+              <li>
+                <span className="font-medium">Content warranty:</span> By sharing content, you
+                represent and warrant that you have all rights necessary to grant this license and
+                that your shared content does not infringe any third party's intellectual property
+                rights.
               </li>
               <li>You can delete your shared content or account at any time</li>
             </ul>
@@ -176,6 +196,33 @@ export function TermsOfService({ onBack }: TermsOfServiceProps) {
               <li>Create derivative works based on the App</li>
               <li>Remove or alter any copyright, trademark, or other proprietary notices</li>
             </ul>
+          </section>
+
+          <section>
+            <h2 className="font-serif text-lg text-ink mb-3">Copyright Complaints</h2>
+            <p className="mb-3">
+              If you believe content on Still Hours infringes your copyright, please send a notice
+              to{' '}
+              <a
+                href="mailto:legal@stillhours.app"
+                className="text-ink underline hover:text-ink/80"
+              >
+                legal@stillhours.app
+              </a>{' '}
+              containing:
+            </p>
+            <ul className="list-disc list-inside space-y-2 ml-2">
+              <li>Your physical or electronic signature</li>
+              <li>Identification of the copyrighted work claimed to be infringed</li>
+              <li>Identification of the allegedly infringing material and its location</li>
+              <li>Your contact information</li>
+              <li>A statement that you have a good faith belief the use is unauthorised</li>
+              <li>A statement under penalty of perjury that your notice is accurate</li>
+            </ul>
+            <p className="mt-3">
+              We will respond to valid notices in accordance with applicable law and may remove or
+              disable access to allegedly infringing content.
+            </p>
           </section>
 
           <section>
@@ -245,6 +292,12 @@ export function TermsOfService({ onBack }: TermsOfServiceProps) {
               You acknowledge that the App may cease to function if operating system updates or
               platform changes occur, and we shall have no liability for any resulting inability to
               use the App or access purchased content.
+            </p>
+            <p className="mt-3">
+              If we discontinue the App, holders of Lifetime access will not be entitled to any
+              refund, as you will have received the benefit of unlimited access for the period the
+              App was operational. By purchasing Lifetime access, you accept this inherent
+              uncertainty in the longevity of any digital service.
             </p>
           </section>
 
