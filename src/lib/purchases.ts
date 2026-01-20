@@ -188,14 +188,15 @@ export async function logOutUser(): Promise<void> {
 }
 
 // Mock products for development (prices grossed up for Apple's 30% commission)
+// Pricing follows proper discount curve: bigger bundles = better $/hr
 function getMockProducts(): PurchasesStoreProduct[] {
   return [
     {
       identifier: PRODUCT_IDS.STARTER,
       title: '10 Hours',
       description: 'Start your journey with 10 hours of meditation',
-      price: 1.49,
-      priceString: '$1.49',
+      price: 1.99,
+      priceString: '$1.99',
       currencyCode: 'USD',
     },
     {
@@ -210,32 +211,32 @@ function getMockProducts(): PurchasesStoreProduct[] {
       identifier: PRODUCT_IDS.DEDICATED,
       title: '50 Hours',
       description: 'Dedicated practice with 50 hours of meditation',
-      price: 7.49,
-      priceString: '$7.49',
+      price: 7.99,
+      priceString: '$7.99',
       currencyCode: 'USD',
     },
     {
       identifier: PRODUCT_IDS.COMMITTED,
       title: '75 Hours',
       description: 'Committed practice with 75 hours of meditation',
-      price: 9.49,
-      priceString: '$9.49',
+      price: 10.99,
+      priceString: '$10.99',
       currencyCode: 'USD',
     },
     {
       identifier: PRODUCT_IDS.SERIOUS,
       title: '100 Hours',
       description: 'Serious practice with 100 hours of meditation',
-      price: 11.49,
-      priceString: '$11.49',
+      price: 13.99,
+      priceString: '$13.99',
       currencyCode: 'USD',
     },
     {
       identifier: PRODUCT_IDS.LIFETIME,
       title: 'Lifetime Access',
       description: 'Unlimited meditation for life - 10,000 hours',
-      price: 149.99,
-      priceString: '$149.99',
+      price: 199.99,
+      priceString: '$199.99',
       currencyCode: 'USD',
     },
   ] as PurchasesStoreProduct[]

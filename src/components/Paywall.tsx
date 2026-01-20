@@ -2,10 +2,11 @@
  * Paywall - Purchase modal for hour packs
  *
  * Shows when user's available hours are depleted.
- * Displays hour pack options with pricing and value comparison.
+ * Displays 3 recommended options based on user state with expandable full list.
  * Follows the app's minimal, non-pushy aesthetic.
  */
 
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useHourBankStore } from '../stores/useHourBankStore'
 import { PRODUCT_IDS, PRODUCT_HOURS } from '../lib/purchases'
@@ -18,6 +19,45 @@ interface PaywallProps {
   isOpen: boolean
   onClose: () => void
   onTryFree?: () => void // Optional: show "try free session" link for first-time users
+}
+
+// Product selection based on user state
+interface ProductSelection {
+  recommended: string
+  smaller: string
+  larger: string
+  showLifetime: boolean
+}
+
+function getDisplayedProducts(totalConsumed: number): ProductSelection {
+  const isFirstTime = totalConsumed === 0
+  const isPowerUser = totalConsumed >= 100
+
+  if (isFirstTime) {
+    return {
+      recommended: PRODUCT_IDS.DEDICATED, // 50hrs - enough to establish habit
+      smaller: PRODUCT_IDS.FLOW, // 25hrs
+      larger: PRODUCT_IDS.COMMITTED, // 75hrs
+      showLifetime: false,
+    }
+  }
+
+  if (isPowerUser) {
+    return {
+      recommended: PRODUCT_IDS.SERIOUS, // 100hrs
+      smaller: PRODUCT_IDS.COMMITTED, // 75hrs
+      larger: PRODUCT_IDS.LIFETIME, // Show lifetime as upsell
+      showLifetime: true,
+    }
+  }
+
+  // Returning user - recommend middle tiers
+  return {
+    recommended: PRODUCT_IDS.COMMITTED, // 75hrs
+    smaller: PRODUCT_IDS.DEDICATED, // 50hrs
+    larger: PRODUCT_IDS.SERIOUS, // 100hrs
+    showLifetime: false,
+  }
 }
 
 // Product display configuration with time-context taglines
@@ -36,7 +76,6 @@ const PRODUCT_CONFIG = [
     id: PRODUCT_IDS.DEDICATED,
     name: 'Dedicated',
     tagline: '4 months of daily practice',
-    popular: true,
   },
   {
     id: PRODUCT_IDS.COMMITTED,
@@ -52,7 +91,7 @@ const PRODUCT_CONFIG = [
     id: PRODUCT_IDS.LIFETIME,
     name: 'Lifetime',
     tagline: 'Meditate freely, forever',
-    highlight: true,
+    isLifetime: true,
   },
 ]
 
@@ -68,26 +107,36 @@ export function Paywall({ isOpen, onClose, onTryFree }: PaywallProps) {
     clearError,
     available,
     deficit,
-    totalPurchased,
+    totalConsumed,
   } = useHourBankStore()
 
+  const [showAllOptions, setShowAllOptions] = useState(false)
+
   // Determine user state for context-aware messaging
-  const isFirstTime = totalPurchased === 0
+  const isFirstTime = totalConsumed === 0
+  const isPowerUser = totalConsumed >= 100
   const hasHoursRemaining = available > 0
 
+  // Get recommended products based on user state
+  const selection = getDisplayedProducts(totalConsumed)
+
   // Context-aware title
-  const title = isFirstTime
-    ? 'Start Your Journey'
-    : hasHoursRemaining
-      ? 'Top Up Your Hours'
-      : 'Continue Your Practice'
+  const title = isPowerUser
+    ? 'Deepen Your Practice'
+    : isFirstTime
+      ? 'Start Your Journey'
+      : hasHoursRemaining
+        ? 'Top Up Your Hours'
+        : 'Continue Your Practice'
 
   // Context-aware subtitle
   const subtitle = isFirstTime
     ? 'Flexible meditation, no subscriptions. Pay only for sessions you complete.'
-    : hasHoursRemaining
-      ? `You have ${formatAvailableHours(available)} remaining. Top up anytime - your hours never expire.`
-      : `Great progress! You've completed ${formatHours(totalPurchased)} hours. Choose a pack to continue.`
+    : isPowerUser
+      ? `You've meditated ${formatHours(totalConsumed)} hours. Choose a pack to continue your journey.`
+      : hasHoursRemaining
+        ? `You have ${formatAvailableHours(available)} remaining. Top up anytime - your hours never expire.`
+        : `Great progress! You've completed ${formatHours(totalConsumed)} hours. Choose a pack to continue.`
 
   const haptic = useTapFeedback()
 
@@ -179,70 +228,132 @@ export function Paywall({ isOpen, onClose, onTryFree }: PaywallProps) {
                 </div>
               )}
 
-              {/* Product grid */}
+              {/* Product grid - 3 recommended options */}
               {!isLoadingProducts && (
-                <div className="space-y-3">
-                  {PRODUCT_CONFIG.map((config) => {
-                    const product = getProduct(config.id)
-                    const hours = PRODUCT_HOURS[config.id]
+                <>
+                  {/* Primary 3 options */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {[selection.smaller, selection.recommended, selection.larger].map(
+                      (productId, index) => {
+                        const config = PRODUCT_CONFIG.find((c) => c.id === productId)
+                        if (!config) return null
+                        const product = getProduct(config.id)
+                        const hours = PRODUCT_HOURS[config.id]
+                        const isRecommended = productId === selection.recommended
+                        const isLifetimeCard = config.isLifetime
 
-                    return (
-                      <button
-                        key={config.id}
-                        onClick={() => handlePurchase(config.id)}
-                        disabled={isPurchasing || isRestoring}
-                        className={`
-                          w-full p-4 rounded-xl text-left
-                          transition-all duration-150
-                          ${
-                            config.highlight
-                              ? 'bg-[var(--accent)]/10 border-2 border-[var(--accent)]'
-                              : config.popular
-                                ? 'bg-[var(--bg-deep)] border-2 border-[var(--text-primary)]/20'
-                                : 'bg-[var(--bg-deep)] border border-[var(--border)]'
-                          }
-                          hover:scale-[1.02] active:scale-[0.98]
-                          disabled:opacity-50 disabled:cursor-not-allowed
-                        `}
+                        return (
+                          <button
+                            key={config.id}
+                            onClick={() => handlePurchase(config.id)}
+                            disabled={isPurchasing || isRestoring}
+                            className={`
+                              p-4 rounded-xl text-left
+                              transition-all duration-150
+                              ${
+                                isRecommended
+                                  ? 'bg-[var(--accent)]/10 border-2 border-[var(--accent)] sm:scale-[1.02]'
+                                  : isLifetimeCard
+                                    ? 'bg-gradient-to-br from-[var(--accent)]/5 to-[var(--bg-elevated)] border border-[var(--accent)]/30'
+                                    : 'bg-[var(--bg-deep)] border border-[var(--border)]'
+                              }
+                              hover:brightness-110 active:scale-[0.98]
+                              disabled:opacity-50 disabled:cursor-not-allowed
+                              ${index === 1 ? 'sm:order-2' : index === 0 ? 'sm:order-1' : 'sm:order-3'}
+                            `}
+                          >
+                            <div className="flex flex-col">
+                              {/* Name + badge row */}
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-medium text-[var(--text-primary)]">
+                                  {config.name}
+                                </span>
+                                {isRecommended && (
+                                  <span className="text-xs px-2 py-0.5 bg-[var(--accent)] text-[#1C1917] rounded-full">
+                                    Popular
+                                  </span>
+                                )}
+                                {isLifetimeCard && !isRecommended && (
+                                  <span className="text-xs px-2 py-0.5 bg-[var(--accent)] text-[#1C1917] rounded-full">
+                                    Best Value
+                                  </span>
+                                )}
+                              </div>
+                              {/* Hours */}
+                              <p className="text-sm font-medium text-[var(--text-secondary)]">
+                                {hours === 10000 ? 'Unlimited hours' : `${hours} hours`}
+                              </p>
+                              {/* Price */}
+                              <div className="font-medium text-[var(--text-primary)] mt-2">
+                                {product?.priceString || '...'}
+                              </div>
+                            </div>
+                          </button>
+                        )
+                      }
+                    )}
+                  </div>
+
+                  {/* See all options toggle */}
+                  <div className="mt-4 text-center">
+                    <button
+                      onClick={() => setShowAllOptions(!showAllOptions)}
+                      className="text-sm text-[var(--accent)] hover:underline transition-colors"
+                    >
+                      {showAllOptions ? 'Show less' : 'See all options'}
+                    </button>
+                  </div>
+
+                  {/* Expanded options */}
+                  <AnimatePresence>
+                    {showAllOptions && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
                       >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            {/* Name + badges row */}
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-[var(--text-primary)]">
-                                {config.name}
-                              </span>
-                              {config.popular && (
-                                <span className="text-xs px-2 py-0.5 bg-[var(--accent)] text-[#1C1917] rounded-full">
-                                  Popular
-                                </span>
-                              )}
-                              {config.highlight && (
-                                <span className="text-xs px-2 py-0.5 bg-[var(--accent)] text-[#1C1917] rounded-full">
-                                  Best Value
-                                </span>
-                              )}
-                            </div>
-                            {/* Hours - PROMOTED */}
-                            <p className="text-sm font-medium text-[var(--text-secondary)] mt-1">
-                              {hours === 10000 ? 'Unlimited hours' : `${hours} hours`}
-                            </p>
-                            {/* Tagline - improved visibility */}
-                            <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-                              {config.tagline}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            {/* Price only - hours moved to left */}
-                            <div className="font-medium text-[var(--text-primary)]">
-                              {product?.priceString || '...'}
-                            </div>
-                          </div>
+                        <div className="space-y-2 mt-4 pt-4 border-t border-[var(--border)]">
+                          <p className="text-xs text-[var(--text-muted)] mb-2">All hour packs</p>
+                          {PRODUCT_CONFIG.map((config) => {
+                            const product = getProduct(config.id)
+                            const hours = PRODUCT_HOURS[config.id]
+
+                            return (
+                              <button
+                                key={config.id}
+                                onClick={() => handlePurchase(config.id)}
+                                disabled={isPurchasing || isRestoring}
+                                className="
+                                  w-full p-3 rounded-lg text-left
+                                  bg-[var(--bg-deep)] border border-[var(--border)]
+                                  transition-all duration-150
+                                  hover:brightness-110 active:scale-[0.98]
+                                  disabled:opacity-50 disabled:cursor-not-allowed
+                                "
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <span className="font-medium text-sm text-[var(--text-primary)]">
+                                      {config.name}
+                                    </span>
+                                    <span className="text-sm text-[var(--text-secondary)]">
+                                      {hours === 10000 ? 'Unlimited' : `${hours} hrs`}
+                                    </span>
+                                  </div>
+                                  <div className="font-medium text-sm text-[var(--text-primary)]">
+                                    {product?.priceString || '...'}
+                                  </div>
+                                </div>
+                              </button>
+                            )
+                          })}
                         </div>
-                      </button>
-                    )
-                  })}
-                </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </>
               )}
 
               {/* Value comparison */}
