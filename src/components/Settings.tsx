@@ -20,16 +20,48 @@ import { formatAvailableHours } from '../lib/hourBank'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 import { useAudioFeedback } from '../hooks/useAudioFeedback'
+import { useMeditationLock } from '../hooks/useMeditationLock'
 import { trackHideTimeToggle } from '../lib/analytics'
 import { exportData } from '../lib/export'
 import { AuthModal } from './AuthModal'
 import { SuggestionForm } from './SuggestionForm'
+import { LockSetupFlow } from './LockSetupFlow'
+import { LockComingSoonModal } from './LockComingSoonModal'
 
 interface SettingsProps {
   onBack: () => void
   onNavigateToStore: () => void
   onNavigateToPrivacy: () => void
   onNavigateToTerms: () => void
+}
+
+// Format lock active status display
+// Example: "Active · 7:00 AM - 9:00 AM · M T W T F"
+function formatLockActiveStatus(settings: {
+  scheduleWindows: { startHour: number; startMinute: number; endHour: number; endMinute: number }[]
+  activeDays: boolean[]
+}): string {
+  const formatTime = (hour: number, minute: number) => {
+    const period = hour >= 12 ? 'PM' : 'AM'
+    const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour
+    return `${displayHour}:${minute.toString().padStart(2, '0')} ${period}`
+  }
+
+  const DAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+
+  // Format time range
+  const window = settings.scheduleWindows[0]
+  const timeRange = window
+    ? `${formatTime(window.startHour, window.startMinute)} - ${formatTime(window.endHour, window.endMinute)}`
+    : ''
+
+  // Format active days
+  const activeDayLetters = settings.activeDays
+    .map((active, i) => (active ? DAY_LETTERS[i] : null))
+    .filter(Boolean)
+    .join(' ')
+
+  return `Active · ${timeRange} · ${activeDayLetters}`
 }
 
 export function Settings({
@@ -53,8 +85,11 @@ export function Settings({
   const { showReviewPromptModal } = useNavigationStore()
   const haptic = useTapFeedback()
   const audio = useAudioFeedback()
+  const meditationLock = useMeditationLock()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showSuggestionForm, setShowSuggestionForm] = useState(false)
+  const [showLockSetupFlow, setShowLockSetupFlow] = useState(false)
+  const [showLockComingSoon, setShowLockComingSoon] = useState(false)
 
   // Pull-to-refresh
   const {
@@ -435,6 +470,127 @@ export function Settings({
           )}
         </div>
 
+        {/* Focus Mode - Meditation Lock (iOS only, shown in dev for preview) */}
+        {(meditationLock.isAvailable || import.meta.env.DEV) && (
+          <div className="mb-8">
+            <p className="font-serif text-sm text-ink/50 tracking-wide mb-4">Focus Mode</p>
+            <div className="p-5 bg-elevated shadow-sm rounded-xl space-y-4">
+              <div>
+                <p className="text-sm text-ink font-medium">Meditation Lock</p>
+                <p className="text-xs text-ink/40 mt-1">
+                  {meditationLock.settings?.enabled &&
+                  meditationLock.settings.scheduleWindows.length > 0
+                    ? formatLockActiveStatus(meditationLock.settings)
+                    : 'Block distracting apps until you meditate'}
+                </p>
+              </div>
+
+              {/* Setup Button - launches the guided setup flow */}
+              {/* Shows "Coming Soon" modal if Screen Time isn't ready yet */}
+              <button
+                onClick={() => {
+                  haptic.light()
+                  // If Screen Time is authorized, go directly to setup
+                  // Otherwise show the "Coming Soon" modal first
+                  if (meditationLock.authorizationStatus === 'authorized') {
+                    setShowLockSetupFlow(true)
+                  } else {
+                    setShowLockComingSoon(true)
+                  }
+                }}
+                className="w-full py-2.5 px-4 bg-moss text-cream text-sm rounded-lg text-center
+                  hover:bg-moss/90 transition-colors active:scale-[0.98] touch-manipulation"
+              >
+                {meditationLock.settings?.enabled ? 'Edit Focus Mode' : 'Set Up Focus Mode'}
+              </button>
+
+              {/* Authorization Status */}
+              <div className="flex items-center justify-between py-2 border-t border-ink/5">
+                <p className="text-xs text-ink/50">Screen Time</p>
+                <p
+                  className={`text-xs font-medium ${
+                    meditationLock.authorizationStatus === 'authorized'
+                      ? 'text-moss'
+                      : meditationLock.authorizationStatus === 'denied'
+                        ? 'text-red-500'
+                        : 'text-ink/40'
+                  }`}
+                >
+                  {meditationLock.authorizationStatus === 'authorized'
+                    ? 'Authorized'
+                    : meditationLock.authorizationStatus === 'denied'
+                      ? 'Denied'
+                      : 'Not Set Up'}
+                </p>
+              </div>
+
+              {/* Quick authorize if not set up - only show on native iOS where it actually works */}
+              {meditationLock.isAvailable &&
+                meditationLock.authorizationStatus !== 'authorized' && (
+                  <button
+                    onClick={async () => {
+                      haptic.light()
+                      await meditationLock.requestAuth()
+                    }}
+                    disabled={meditationLock.isLoading}
+                    className="w-full py-2.5 px-4 bg-cream-warm text-ink text-sm rounded-lg text-center
+                    hover:bg-cream-deep transition-colors active:scale-[0.98] touch-manipulation
+                    disabled:opacity-50"
+                  >
+                    {meditationLock.isLoading ? 'Requesting...' : 'Authorize Screen Time'}
+                  </button>
+                )}
+
+              {/* Blocked Apps Status (only when authorized and apps blocked) */}
+              {meditationLock.authorizationStatus === 'authorized' &&
+                meditationLock.blockedAppTokens.length > 0 && (
+                  <div className="flex items-center justify-between py-2 border-t border-ink/5">
+                    <p className="text-xs text-ink/50">
+                      {meditationLock.blockedAppTokens.length} app
+                      {meditationLock.blockedAppTokens.length === 1 ? '' : 's'} blocked
+                    </p>
+                    <button
+                      onClick={async () => {
+                        haptic.light()
+                        await meditationLock.unblock()
+                      }}
+                      disabled={meditationLock.isLoading}
+                      className="text-xs text-red-500 hover:text-red-600 transition-colors touch-manipulation"
+                    >
+                      Unblock All
+                    </button>
+                  </div>
+                )}
+
+              {/* Error display */}
+              {meditationLock.error && (
+                <p className="text-xs text-red-500 py-2">{meditationLock.error}</p>
+              )}
+
+              {/* Deactivate option - only show when lock is enabled */}
+              {meditationLock.settings?.enabled && (
+                <div className="pt-3 border-t border-ink/5">
+                  <button
+                    onClick={async () => {
+                      haptic.light()
+                      if (
+                        window.confirm(
+                          'Deactivate Focus Lock? You can re-enable it anytime from this screen.'
+                        )
+                      ) {
+                        await meditationLock.disable?.()
+                      }
+                    }}
+                    className="text-xs text-ink/40 hover:text-red-500 transition-colors touch-manipulation"
+                  >
+                    Deactivate Focus Lock
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Theme */}
         <div className="mb-8">
           <p className="font-serif text-sm text-ink/50 tracking-wide mb-4">Theme</p>
@@ -552,6 +708,25 @@ export function Settings({
 
       {/* Suggestion form modal */}
       <SuggestionForm isOpen={showSuggestionForm} onClose={() => setShowSuggestionForm(false)} />
+
+      {/* Lock Coming Soon modal - shows before setup when Screen Time isn't ready */}
+      <LockComingSoonModal
+        isOpen={showLockComingSoon}
+        onClose={() => setShowLockComingSoon(false)}
+        onContinueSetup={() => setShowLockSetupFlow(true)}
+      />
+
+      {/* Lock Setup Flow modal */}
+      {showLockSetupFlow && (
+        <LockSetupFlow
+          onComplete={() => {
+            setShowLockSetupFlow(false)
+            // Refresh the meditation lock status
+            meditationLock.refreshStatus?.()
+          }}
+          onClose={() => setShowLockSetupFlow(false)}
+        />
+      )}
     </div>
   )
 }

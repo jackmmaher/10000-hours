@@ -4,6 +4,7 @@ import { useNavigationStore } from './stores/useNavigationStore'
 import { useSettingsStore } from './stores/useSettingsStore'
 import { useHourBankStore } from './stores/useHourBankStore'
 import { useVoice } from './hooks/useVoice'
+import { useLockDeepLink } from './hooks/useLockDeepLink'
 import {
   generateAttributionNotification,
   shouldCheckAttribution,
@@ -69,6 +70,9 @@ function AppContent() {
   // Initialize voice tracking - notifications handled centrally below
   const { voice } = useVoice()
   const previousVoiceScore = useRef<number | null>(null)
+
+  // Listen for deep links from MeditationLock shield
+  useLockDeepLink()
 
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [editingSession, setEditingSession] = useState<Session | null>(null)

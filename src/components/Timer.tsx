@@ -18,6 +18,9 @@ import { Paywall } from './Paywall'
 import { LowHoursWarning } from './LowHoursWarning'
 import { DurationPicker } from './DurationPicker'
 import { TrialCompleteModal } from './TrialCompleteModal'
+import { LockCelebrationModal } from './LockCelebrationModal'
+import { useMeditationLock } from '../hooks/useMeditationLock'
+import { sendAccountabilityMessage } from '../lib/accountability'
 
 /**
  * Timer - The Unified Experience
@@ -62,10 +65,24 @@ export function Timer() {
     completeTrial,
     cancelTrial,
   } = useTrialStore()
-  const { goalSeconds, enforceGoal } = useTodaysPlan()
+  const { plan: todaysPlan, goalSeconds, enforceGoal, markComplete } = useTodaysPlan()
 
   // Modal for trial completion
   const [showTrialComplete, setShowTrialComplete] = useState(false)
+
+  // Meditation Lock integration
+  const {
+    lockState,
+    settings: lockSettings,
+    nextUnlockWindow,
+    completeSession: completeLockSession,
+  } = useMeditationLock()
+  const [showLockCelebration, setShowLockCelebration] = useState(false)
+  const [lockSessionResult, setLockSessionResult] = useState<{
+    streakDays: number
+    durationSeconds: number
+    isFallback: boolean
+  } | null>(null)
 
   // Modal states
   const [showPaywall, setShowPaywall] = useState(false)
@@ -266,6 +283,9 @@ export function Timer() {
     setSecondsOpacity(0)
 
     // Complete after fade finishes
+    // Capture session duration before resetting state
+    const finalDuration = sessionElapsed
+
     setTimeout(async () => {
       // Reset local state BEFORE store update to prevent race condition
       // (zustand update could trigger re-render with stale sessionElapsed)
@@ -282,6 +302,54 @@ export function Timer() {
         // Normal mode: persist session to DB
         await stopTimer()
         await refreshBalance()
+
+        // Check if this was an actual Focus Lock session
+        // Only triggers when the native lock is actively enforcing (iOS with Screen Time)
+        // NOT for regular preset timer sessions - those are a different feature
+        const isLockSession = lockState?.isLockActive
+
+        if (isLockSession && lockSettings) {
+          // Determine if this is a fallback session (hard day mode)
+          // Fallback = session shorter than required but at least minimum
+          const requiredSeconds = (lockSettings.unlockDurationMinutes || 10) * 60
+          const minimumSeconds = (lockSettings.minimumFallbackMinutes || 2) * 60
+          const isFallback = finalDuration < requiredSeconds && finalDuration >= minimumSeconds
+
+          // Complete the lock session (native call - may be no-op in dev mode)
+          const result = await completeLockSession(finalDuration, isFallback)
+
+          // Store result for celebration modal
+          // In dev mode result.success may be false, but we still want to celebrate
+          setLockSessionResult({
+            streakDays: result.streakDays ?? lockSettings.streakDays + 1,
+            durationSeconds: finalDuration,
+            isFallback,
+          })
+
+          // Send accountability message if enabled
+          if (
+            lockSettings.accountabilityEnabled &&
+            lockSettings.notifyOnCompletion &&
+            lockSettings.accountabilityPhone
+          ) {
+            await sendAccountabilityMessage({
+              type: 'completion',
+              phone: lockSettings.accountabilityPhone,
+              method: lockSettings.accountabilityMethod || 'sms',
+              durationMinutes: Math.round(finalDuration / 60),
+              userName: 'User', // Default name for accountability messages
+            })
+          }
+
+          // Clear the lock session banner immediately
+          await markComplete()
+
+          // Delay celebration modal until "tap to meditate" has fully settled (4s fade in)
+          // This syncs with the audio chime decay phase for a cohesive ceremony
+          setTimeout(() => {
+            setShowLockCelebration(true)
+          }, 4500)
+        }
       }
 
       setIsSettling(false) // UNLOCK: Allow navigation again
@@ -298,6 +366,11 @@ export function Timer() {
     isTrialActive,
     setTrialPhase,
     completeTrial,
+    sessionElapsed,
+    lockState,
+    lockSettings,
+    completeLockSession,
+    markComplete,
   ])
 
   // ============================================
@@ -528,6 +601,48 @@ export function Timer() {
         }}
       />
 
+      {/* Lock Session Banner - shows when there's an enforced goal session */}
+      <AnimatePresence>
+        {phase === 'resting' && todaysPlan && enforceGoal && (
+          <motion.div
+            key="lock-session-banner"
+            className="absolute top-[18vh] z-10 text-center px-6"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
+              style={{
+                background: 'color-mix(in oklab, var(--accent) 15%, transparent)',
+                border: '1px solid color-mix(in oklab, var(--accent) 30%, transparent)',
+              }}
+            >
+              <span className="text-sm" style={{ color: 'var(--accent)' }}>
+                {todaysPlan.title || `${todaysPlan.duration} min session`}
+              </span>
+              {todaysPlan.duration && (
+                <span
+                  className="text-xs px-2 py-0.5 rounded-full"
+                  style={{
+                    background: 'var(--accent)',
+                    color: 'var(--on-accent)',
+                  }}
+                >
+                  auto-stop
+                </span>
+              )}
+            </div>
+            {todaysPlan.notes && (
+              <p className="text-xs mt-2 opacity-60" style={{ color: 'var(--text-secondary)' }}>
+                {todaysPlan.notes}
+              </p>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Timer Display - z-10 to stay above theater layers */}
       <div className="relative z-10">
         {hideTimeDisplay ? (
@@ -625,6 +740,20 @@ export function Timer() {
         isOpen={showTrialComplete}
         onClose={handleTrialCompleteClose}
         durationMinutes={trialGoalSeconds ? Math.round(trialGoalSeconds / 60) : undefined}
+      />
+
+      {/* Lock celebration modal */}
+      <LockCelebrationModal
+        isOpen={showLockCelebration}
+        onClose={() => {
+          setShowLockCelebration(false)
+          setLockSessionResult(null)
+        }}
+        streakDays={lockSessionResult?.streakDays ?? lockSettings?.streakDays ?? 1}
+        sessionDuration={lockSessionResult?.durationSeconds ?? 0}
+        celebrationRitual={lockSettings?.celebrationRitual ?? null}
+        nextUnlockWindow={nextUnlockWindow}
+        isFallback={lockSessionResult?.isFallback ?? false}
       />
     </div>
   )

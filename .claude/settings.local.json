@@ -113,7 +113,14 @@
       "Bash(git log:*)",
       "Bash(npx cap add ios)",
       "Bash(npx cap add android)",
-      "Bash(npx cap sync)"
+      "Bash(npx cap sync)",
+      "WebFetch(domain:substack.com)",
+      "WebFetch(domain:holmesweinberg.com)",
+      "WebFetch(domain:www.calm.com)",
+      "WebFetch(domain:www.headspace.com)",
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:one-sec.app)",
+      "Skill(superpowers:verification-before-completion)"
     ]
   }
 }

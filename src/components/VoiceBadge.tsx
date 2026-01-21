@@ -108,7 +108,7 @@ export function VoiceBadge({
       style={{
         ...glowStyle,
         ...bgStyle,
-        borderColor: 'var(--border-subtle, rgba(0,0,0,0.08))',
+        borderColor: 'var(--pill-border, rgba(0,0,0,0.06))',
       }}
     >
       {/* Dot pattern */}
@@ -191,7 +191,7 @@ export function VoiceBadgeWithHours({ score }: VoiceBadgeWithScoreProps) {
       style={{
         ...glowStyle,
         ...bgStyle,
-        borderColor: 'var(--border-subtle, rgba(0,0,0,0.08))',
+        borderColor: 'var(--pill-border, rgba(0,0,0,0.06))',
       }}
     >
       {/* Dot pattern */}

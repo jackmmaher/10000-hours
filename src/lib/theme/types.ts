@@ -73,6 +73,7 @@ export interface ThemeTokens {
   border: string
   borderSubtle: string
   divider: string
+  pillBorder: string // Border for pill/badge elements on elevated backgrounds
 
   // === SHADOWS ===
   shadowColor: string // Base shadow color

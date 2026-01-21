@@ -305,3 +305,88 @@ export interface HourBank {
   lastPurchaseAt: number | null // Timestamp of most recent purchase
   purchases: PurchaseRecord[] // Purchase history
 }
+
+// Authorization status from FamilyControls
+export type MeditationLockAuthorizationStatus = 'authorized' | 'denied' | 'notDetermined'
+
+// Accountability method options
+export type AccountabilityMethod = 'sms' | 'whatsapp' | 'choose'
+
+// Reminder style options
+export type ReminderStyle = 'motivational' | 'simple' | 'custom'
+
+// Obstacle with coping response
+export interface MeditationLockObstacle {
+  obstacle: string
+  copingResponse: string
+}
+
+// Schedule window for blocking
+export interface MeditationLockScheduleWindow {
+  startHour: number
+  startMinute: number
+  endHour: number
+  endMinute: number
+}
+
+// Meditation Lock settings (singleton table)
+export interface MeditationLockSettings {
+  id: 1 // Singleton
+  enabled: boolean
+  authorizationStatus: MeditationLockAuthorizationStatus
+  activationDate: number // Fresh start timestamp
+
+  // Identity Framing
+  identityStatement: string
+  whyItMatters: string | null
+
+  // Implementation Intentions (Anchor)
+  anchorRoutine: string
+  anchorLocation: string
+  anchorTimeHour: number
+  anchorTimeMinute: number
+  backupAnchor: string | null
+  backupAnchorTimeHour: number | null
+  backupAnchorTimeMinute: number | null
+
+  // Commitment & Tiny Habits
+  unlockDurationMinutes: number // 5, 10, 12, 15, 20, 30, 45, 60
+  minimumFallbackMinutes: number // 2, 3, 5
+  celebrationRitual: string | null
+
+  // Obstacle Anticipation
+  obstacles: MeditationLockObstacle[]
+
+  // Accountability
+  accountabilityEnabled: boolean
+  accountabilityPhone: string | null
+  accountabilityMethod: AccountabilityMethod
+  notifyOnCompletion: boolean
+  notifyOnSkip: boolean
+
+  // Apps & Schedule
+  blockedAppTokens: string[]
+  scheduleWindows: MeditationLockScheduleWindow[]
+  activeDays: boolean[] // [Sun...Sat]
+
+  // Forgiveness & Safety
+  streakFreezesPerMonth: number
+  streakFreezesRemaining: number
+  gracePeriodMinutes: number | null
+  safetyAutoUnlockHours: number | null
+  lastFreezeResetAt: number | null // Timestamp of last monthly freeze reset
+
+  // Reminders
+  reminderEnabled: boolean
+  reminderMinutesBefore: number
+  reminderStyle: ReminderStyle
+  customReminderMessage: string | null
+
+  // Analytics
+  totalUnlocks: number
+  totalSkipsUsed: number
+  totalHardDayFallbacks: number
+  lastUnlockAt: number | null
+  streakDays: number
+  completionsByDayOfWeek: number[] // [Sun...Sat] — which days are hardest
+}

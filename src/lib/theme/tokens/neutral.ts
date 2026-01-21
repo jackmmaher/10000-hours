@@ -80,6 +80,7 @@ export const NEUTRAL_LIGHT: ThemeTokens = {
   border: 'transparent',
   borderSubtle: 'transparent',
   divider: 'rgba(0, 0, 0, 0.04)', // Very subtle divider only where needed
+  pillBorder: 'rgba(23, 23, 23, 0.06)', // Warm-tinted subtle border (matches textPrimary #171717)
 
   // Shadows - For depth and haptic feedback
   shadowColor: 'rgba(0, 0, 0, 0.04)',
@@ -206,6 +207,7 @@ export const NEUTRAL_DARK: ThemeTokens = {
   border: 'rgba(255, 255, 255, 0.06)',
   borderSubtle: 'rgba(255, 255, 255, 0.04)',
   divider: 'rgba(255, 255, 255, 0.04)',
+  pillBorder: 'rgba(250, 250, 249, 0.06)', // Warm stone-white border (matches textPrimary #FAFAF9)
 
   // Shadows - Deep black for depth
   shadowColor: 'rgba(0, 0, 0, 0.3)',

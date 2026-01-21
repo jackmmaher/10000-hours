@@ -25,6 +25,7 @@ export function themeToCSSProperties(tokens: ThemeTokens): Record<string, string
     '--text-muted': tokens.textMuted,
     '--text-tertiary': tokens.textTertiary,
     '--text-on-accent': tokens.textOnAccent,
+    '--on-accent': tokens.textOnAccent, // Alias for backward compatibility
 
     // Accent
     '--accent': tokens.accent,
@@ -83,6 +84,7 @@ export function themeToCSSProperties(tokens: ThemeTokens): Record<string, string
     '--border': tokens.border,
     '--border-subtle': tokens.borderSubtle,
     '--divider': tokens.divider,
+    '--pill-border': tokens.pillBorder,
 
     // Shadows
     '--shadow-color': tokens.shadowColor,
