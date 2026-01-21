@@ -15,6 +15,7 @@ import {
   grantLifetimeAccess,
   initializeHourBank,
   reconcileConsumedHours,
+  getPurchaseHistory,
   INITIAL_FREE_HOURS,
 } from '../lib/hourBank'
 import {
@@ -36,6 +37,7 @@ interface HourBankState {
   deficit: number // Hours owed (0 if none)
   isLowHours: boolean // true if available < 1h
   isCriticallyLow: boolean // true if available < 30m and > 0
+  purchaseCount: number // Number of purchases made
 
   // Purchase flow state
   products: PurchasesStoreProduct[]
@@ -70,6 +72,7 @@ export const useHourBankStore = create<HourBankState>((set, get) => ({
   deficit: 0,
   isLowHours: false,
   isCriticallyLow: false,
+  purchaseCount: 0,
 
   products: [],
   isLoadingProducts: false,
@@ -88,9 +91,10 @@ export const useHourBankStore = create<HourBankState>((set, get) => ({
       // Initialize RevenueCat
       await initializePurchases()
 
-      // Get current balance
+      // Get current balance and purchase history
       const balance = await getHourBalance()
       const canStart = await canStartSession()
+      const purchases = await getPurchaseHistory()
 
       // Calculate low hours flags (1 hour = 1.0, 30 min = 0.5)
       const isLowHours = balance.available > 0 && balance.available < 1
@@ -104,6 +108,7 @@ export const useHourBankStore = create<HourBankState>((set, get) => ({
         deficit: balance.deficit,
         isLowHours,
         isCriticallyLow,
+        purchaseCount: purchases.length,
         canMeditate: canStart,
       })
 
@@ -119,6 +124,7 @@ export const useHourBankStore = create<HourBankState>((set, get) => ({
     try {
       const balance = await getHourBalance()
       const canStart = await canStartSession()
+      const purchases = await getPurchaseHistory()
 
       // Calculate low hours flags (1 hour = 1.0, 30 min = 0.5)
       const isLowHours = balance.available > 0 && balance.available < 1
@@ -132,6 +138,7 @@ export const useHourBankStore = create<HourBankState>((set, get) => ({
         deficit: balance.deficit,
         isLowHours,
         isCriticallyLow,
+        purchaseCount: purchases.length,
         canMeditate: canStart,
       })
     } catch (error) {

@@ -3,57 +3,27 @@
  *
  * Full-page store view showing all available hour packs.
  * Accessible from Settings. Displays current balance, purchase options,
- * and value comparison.
+ * and smart 3-option Goldilocks display with "See all" expansion.
  */
 
-import { useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useHourBankStore } from '../stores/useHourBankStore'
-import { PRODUCT_IDS, PRODUCT_HOURS } from '../lib/purchases'
+import { PRODUCT_HOURS } from '../lib/purchases'
 import { formatAvailableHours, formatHours } from '../lib/hourBank'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 import { Button } from './Button'
 import { ReviewCarousel } from './ReviewCarousel'
+import {
+  getSmartSelection,
+  PRODUCT_CONFIG,
+  type SelectionContext,
+} from '../lib/smartProductSelection'
+import { getUserPreferences, getProfile } from '../lib/db'
 
 interface StoreProps {
   onBack: () => void
 }
-
-// Product display configuration with time-context
-const PRODUCT_CONFIG = [
-  {
-    id: PRODUCT_IDS.STARTER,
-    name: 'Starter',
-    tagline: '2 weeks of daily practice',
-  },
-  {
-    id: PRODUCT_IDS.FLOW,
-    name: 'Flow',
-    tagline: '1 month of daily practice',
-  },
-  {
-    id: PRODUCT_IDS.DEDICATED,
-    name: 'Dedicated',
-    tagline: '4 months of daily practice',
-    popular: true,
-  },
-  {
-    id: PRODUCT_IDS.COMMITTED,
-    name: 'Committed',
-    tagline: '6 months of daily practice',
-  },
-  {
-    id: PRODUCT_IDS.SERIOUS,
-    name: 'Serious',
-    tagline: '1 year of daily practice',
-  },
-  {
-    id: PRODUCT_IDS.LIFETIME,
-    name: 'Lifetime',
-    tagline: 'Meditate freely, forever',
-    highlight: true,
-  },
-]
 
 export function Store({ onBack }: StoreProps) {
   const {
@@ -69,21 +39,42 @@ export function Store({ onBack }: StoreProps) {
     available,
     totalConsumed,
     totalPurchased,
+    purchaseCount,
     isLifetime,
     deficit,
   } = useHourBankStore()
+
+  const [showAllOptions, setShowAllOptions] = useState(false)
+  const [selectionContext, setSelectionContext] = useState<SelectionContext | null>(null)
 
   // First-time user detection
   const isFirstTime = totalPurchased === 0
 
   const haptic = useTapFeedback()
 
-  // Load products on mount
+  // Load products and selection context on mount
   useEffect(() => {
     if (products.length === 0) {
       loadProducts()
     }
-  }, [products.length, loadProducts])
+
+    // Load selection context
+    async function loadContext() {
+      const [prefs, profile] = await Promise.all([getUserPreferences(), getProfile()])
+      setSelectionContext({
+        totalConsumed,
+        totalPurchased,
+        available,
+        purchaseCount,
+        practiceGoalHours: prefs.practiceGoalHours,
+        firstSessionDate: profile.firstSessionDate,
+      })
+    }
+    loadContext()
+  }, [products.length, loadProducts, totalConsumed, totalPurchased, available, purchaseCount])
+
+  // Get smart selection based on context
+  const selection = selectionContext ? getSmartSelection(selectionContext) : null
 
   // Find product by ID
   const getProduct = (productId: string) => {
@@ -194,81 +185,202 @@ export function Store({ onBack }: StoreProps) {
 
       {/* Products list */}
       <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-4">
-        {isLoadingProducts ? (
+        {isLoadingProducts || !selection ? (
           <div className="flex items-center justify-center py-8">
             <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
-          <div className="space-y-3">
-            {PRODUCT_CONFIG.map((config, index) => {
-              const product = getProduct(config.id)
-              const hours = PRODUCT_HOURS[config.id]
+          <>
+            {/* Smart 3-option Goldilocks display */}
+            {!showAllOptions && (
+              <div className="space-y-3">
+                {/* Context message if near milestone */}
+                {selection.message && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-sm text-[var(--accent)] text-center mb-2"
+                  >
+                    {selection.message}
+                  </motion.p>
+                )}
 
-              return (
-                <motion.div
-                  key={config.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className={`
-                    p-4 rounded-xl
-                    ${
-                      config.highlight
-                        ? 'bg-[var(--accent)]/10 border-2 border-[var(--accent)]'
-                        : 'bg-[var(--bg-deep)] border border-[var(--border)]'
+                {/* 3 recommended options */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {[selection.smaller, selection.recommended, selection.larger].map(
+                    (productId, index) => {
+                      const config = PRODUCT_CONFIG.find((c) => c.id === productId)
+                      if (!config) return null
+                      const product = getProduct(config.id)
+                      const hours = PRODUCT_HOURS[config.id]
+                      const isRecommended = productId === selection.recommended
+                      const isLifetimeCard = config.isLifetime
+
+                      return (
+                        <motion.button
+                          key={config.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          onClick={() => handlePurchase(config.id)}
+                          disabled={isPurchasing || isRestoring || isLifetime}
+                          className={`
+                            p-4 rounded-xl text-left
+                            transition-all duration-150
+                            ${
+                              isRecommended
+                                ? 'bg-[var(--accent)]/10 border-2 border-[var(--accent)] sm:scale-[1.02]'
+                                : isLifetimeCard
+                                  ? 'bg-gradient-to-br from-[var(--accent)]/5 to-[var(--bg-elevated)] border border-[var(--accent)]/30'
+                                  : 'bg-[var(--bg-deep)] border border-[var(--border)]'
+                            }
+                            hover:brightness-110 active:scale-[0.98]
+                            disabled:opacity-50 disabled:cursor-not-allowed
+                            ${index === 1 ? 'sm:order-2' : index === 0 ? 'sm:order-1' : 'sm:order-3'}
+                          `}
+                        >
+                          <div className="flex flex-col">
+                            {/* Name + badge row */}
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-medium text-[var(--text-primary)]">
+                                {config.name}
+                              </span>
+                              {isRecommended && (
+                                <span className="text-xs px-2 py-0.5 bg-[var(--accent)] text-[#1C1917] rounded-full">
+                                  Popular
+                                </span>
+                              )}
+                              {isLifetimeCard && !isRecommended && (
+                                <span className="text-xs px-2 py-0.5 bg-[var(--accent)] text-[#1C1917] rounded-full">
+                                  Best Value
+                                </span>
+                              )}
+                            </div>
+                            {/* Hours */}
+                            <p className="text-sm font-medium text-[var(--text-secondary)]">
+                              {hours === 10000 ? 'Unlimited hours' : `${hours} hours`}
+                            </p>
+                            {/* Price */}
+                            <div className="font-medium text-[var(--text-primary)] mt-2">
+                              {product?.priceString || '...'}
+                            </div>
+                          </div>
+                        </motion.button>
+                      )
                     }
-                  `}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      {/* Name + badges row */}
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-medium text-[var(--text-primary)]">{config.name}</h3>
-                        {config.popular && (
-                          <span className="text-xs px-2 py-0.5 bg-[var(--accent)] text-[#1C1917] rounded-full">
-                            Popular
-                          </span>
-                        )}
-                        {config.highlight && (
-                          <span className="text-xs px-2 py-0.5 bg-[var(--accent)] text-[#1C1917] rounded-full">
-                            Best Value
-                          </span>
-                        )}
-                      </div>
-                      {/* Hours - PROMOTED */}
-                      <p className="text-sm font-medium text-[var(--text-secondary)] mt-1">
-                        {hours === 10000 ? 'Unlimited hours' : `${hours} hours`}
-                      </p>
-                      {/* Tagline - improved visibility */}
-                      <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-                        {config.tagline}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      {/* Price only - hours moved to left */}
-                      <p className="font-medium text-[var(--text-primary)]">
-                        {product?.priceString || '...'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-[var(--text-tertiary)]">
-                      {hours < 10000 && getPricePerHour(config.id)}
-                    </p>
-                    <Button
-                      variant={config.highlight ? 'primary' : 'secondary'}
-                      size="md"
-                      onClick={() => handlePurchase(config.id)}
-                      loading={isPurchasing}
-                      disabled={isPurchasing || isRestoring || isLifetime}
+                  )}
+                </div>
+
+                {/* See all options toggle */}
+                <div className="mt-4 text-center">
+                  <button
+                    onClick={() => {
+                      haptic.light()
+                      setShowAllOptions(true)
+                    }}
+                    className="text-sm text-[var(--accent)] hover:underline transition-colors"
+                  >
+                    See all hour packs →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Expanded view - all products */}
+            <AnimatePresence>
+              {showAllOptions && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  {/* Show less toggle */}
+                  <div className="mb-4 text-center">
+                    <button
+                      onClick={() => {
+                        haptic.light()
+                        setShowAllOptions(false)
+                      }}
+                      className="text-sm text-[var(--accent)] hover:underline transition-colors"
                     >
-                      {isLifetime ? 'Owned' : 'Purchase'}
-                    </Button>
+                      ← Show less
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {PRODUCT_CONFIG.map((config, index) => {
+                      const product = getProduct(config.id)
+                      const hours = PRODUCT_HOURS[config.id]
+                      const isRecommended = config.id === selection.recommended
+
+                      return (
+                        <motion.div
+                          key={config.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          className={`
+                            p-4 rounded-xl
+                            ${
+                              isRecommended
+                                ? 'bg-[var(--accent)]/10 border-2 border-[var(--accent)]'
+                                : config.isLifetime
+                                  ? 'bg-gradient-to-br from-[var(--accent)]/5 to-[var(--bg-elevated)] border border-[var(--accent)]/30'
+                                  : 'bg-[var(--bg-deep)] border border-[var(--border)]'
+                            }
+                          `}
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex-1">
+                              {/* Name + badges row */}
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-medium text-[var(--text-primary)]">
+                                  {config.name}
+                                </h3>
+                                {isRecommended && (
+                                  <span className="text-xs px-2 py-0.5 bg-[var(--accent)] text-[#1C1917] rounded-full">
+                                    Popular
+                                  </span>
+                                )}
+                                {config.isLifetime && !isRecommended && (
+                                  <span className="text-xs px-2 py-0.5 bg-[var(--accent)] text-[#1C1917] rounded-full">
+                                    Best Value
+                                  </span>
+                                )}
+                              </div>
+                              {/* Hours */}
+                              <p className="text-sm font-medium text-[var(--text-secondary)] mt-1">
+                                {hours === 10000 ? 'Unlimited hours' : `${hours} hours`}
+                              </p>
+                              {/* Tagline */}
+                              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                                {config.tagline}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-medium text-[var(--text-primary)]">
+                                {product?.priceString || '...'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs text-[var(--text-tertiary)]">
+                              {hours < 10000 && getPricePerHour(config.id)}
+                            </p>
+                            <Button
+                              variant={isRecommended || config.isLifetime ? 'primary' : 'secondary'}
+                              size="md"
+                              onClick={() => handlePurchase(config.id)}
+                              loading={isPurchasing}
+                              disabled={isPurchasing || isRestoring || isLifetime}
+                            >
+                              {isLifetime ? 'Owned' : 'Purchase'}
+                            </Button>
+                          </div>
+                        </motion.div>
+                      )
+                    })}
                   </div>
                 </motion.div>
-              )
-            })}
-          </div>
+              )}
+            </AnimatePresence>
+          </>
         )}
 
         {/* Value comparison */}

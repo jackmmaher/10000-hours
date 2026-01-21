@@ -6,94 +6,26 @@
  * Follows the app's minimal, non-pushy aesthetic.
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useHourBankStore } from '../stores/useHourBankStore'
-import { PRODUCT_IDS, PRODUCT_HOURS } from '../lib/purchases'
+import { PRODUCT_HOURS } from '../lib/purchases'
 import { formatAvailableHours, formatHours } from '../lib/hourBank'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 import { Button } from './Button'
 import { ReviewCarousel } from './ReviewCarousel'
+import {
+  getSmartSelection,
+  PRODUCT_CONFIG,
+  type SelectionContext,
+} from '../lib/smartProductSelection'
+import { getUserPreferences, getProfile } from '../lib/db'
 
 interface PaywallProps {
   isOpen: boolean
   onClose: () => void
   onTryFree?: () => void // Optional: show "try free session" link for first-time users
 }
-
-// Product selection based on user state
-interface ProductSelection {
-  recommended: string
-  smaller: string
-  larger: string
-  showLifetime: boolean
-}
-
-function getDisplayedProducts(totalConsumed: number): ProductSelection {
-  const isFirstTime = totalConsumed === 0
-  const isPowerUser = totalConsumed >= 100
-
-  if (isFirstTime) {
-    return {
-      recommended: PRODUCT_IDS.DEDICATED, // 50hrs - enough to establish habit
-      smaller: PRODUCT_IDS.FLOW, // 25hrs
-      larger: PRODUCT_IDS.COMMITTED, // 75hrs
-      showLifetime: false,
-    }
-  }
-
-  if (isPowerUser) {
-    return {
-      recommended: PRODUCT_IDS.SERIOUS, // 100hrs
-      smaller: PRODUCT_IDS.COMMITTED, // 75hrs
-      larger: PRODUCT_IDS.LIFETIME, // Show lifetime as upsell
-      showLifetime: true,
-    }
-  }
-
-  // Returning user - recommend middle tiers
-  return {
-    recommended: PRODUCT_IDS.COMMITTED, // 75hrs
-    smaller: PRODUCT_IDS.DEDICATED, // 50hrs
-    larger: PRODUCT_IDS.SERIOUS, // 100hrs
-    showLifetime: false,
-  }
-}
-
-// Product display configuration with time-context taglines
-const PRODUCT_CONFIG = [
-  {
-    id: PRODUCT_IDS.STARTER,
-    name: 'Starter',
-    tagline: '2 weeks of daily practice',
-  },
-  {
-    id: PRODUCT_IDS.FLOW,
-    name: 'Flow',
-    tagline: '1 month of daily practice',
-  },
-  {
-    id: PRODUCT_IDS.DEDICATED,
-    name: 'Dedicated',
-    tagline: '4 months of daily practice',
-  },
-  {
-    id: PRODUCT_IDS.COMMITTED,
-    name: 'Committed',
-    tagline: '6 months of daily practice',
-  },
-  {
-    id: PRODUCT_IDS.SERIOUS,
-    name: 'Serious',
-    tagline: '1 year of daily practice',
-  },
-  {
-    id: PRODUCT_IDS.LIFETIME,
-    name: 'Lifetime',
-    tagline: 'Meditate freely, forever',
-    isLifetime: true,
-  },
-]
 
 export function Paywall({ isOpen, onClose, onTryFree }: PaywallProps) {
   const {
@@ -108,17 +40,38 @@ export function Paywall({ isOpen, onClose, onTryFree }: PaywallProps) {
     available,
     deficit,
     totalConsumed,
+    totalPurchased,
+    purchaseCount,
   } = useHourBankStore()
 
   const [showAllOptions, setShowAllOptions] = useState(false)
+  const [selectionContext, setSelectionContext] = useState<SelectionContext | null>(null)
 
   // Determine user state for context-aware messaging
   const isFirstTime = totalConsumed === 0
   const isPowerUser = totalConsumed >= 100
   const hasHoursRemaining = available > 0
 
-  // Get recommended products based on user state
-  const selection = getDisplayedProducts(totalConsumed)
+  // Load selection context when paywall opens
+  useEffect(() => {
+    if (!isOpen) return
+
+    async function loadContext() {
+      const [prefs, profile] = await Promise.all([getUserPreferences(), getProfile()])
+      setSelectionContext({
+        totalConsumed,
+        totalPurchased,
+        available,
+        purchaseCount,
+        practiceGoalHours: prefs.practiceGoalHours,
+        firstSessionDate: profile.firstSessionDate,
+      })
+    }
+    loadContext()
+  }, [isOpen, totalConsumed, totalPurchased, available, purchaseCount])
+
+  // Get recommended products based on full user context
+  const selection = selectionContext ? getSmartSelection(selectionContext) : null
 
   // Context-aware title
   const title = isPowerUser
@@ -222,15 +175,22 @@ export function Paywall({ isOpen, onClose, onTryFree }: PaywallProps) {
               )}
 
               {/* Loading state */}
-              {isLoadingProducts && (
+              {(isLoadingProducts || !selection) && (
                 <div className="flex items-center justify-center py-8">
                   <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
                 </div>
               )}
 
               {/* Product grid - 3 recommended options */}
-              {!isLoadingProducts && (
+              {!isLoadingProducts && selection && (
                 <>
+                  {/* Near milestone message */}
+                  {selection.message && (
+                    <p className="text-sm text-[var(--accent)] text-center mb-3">
+                      {selection.message}
+                    </p>
+                  )}
+
                   {/* Primary 3 options */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {[selection.smaller, selection.recommended, selection.larger].map(
@@ -319,25 +279,35 @@ export function Paywall({ isOpen, onClose, onTryFree }: PaywallProps) {
                           {PRODUCT_CONFIG.map((config) => {
                             const product = getProduct(config.id)
                             const hours = PRODUCT_HOURS[config.id]
+                            const isRecommended = config.id === selection.recommended
 
                             return (
                               <button
                                 key={config.id}
                                 onClick={() => handlePurchase(config.id)}
                                 disabled={isPurchasing || isRestoring}
-                                className="
+                                className={`
                                   w-full p-3 rounded-lg text-left
-                                  bg-[var(--bg-deep)] border border-[var(--border)]
                                   transition-all duration-150
                                   hover:brightness-110 active:scale-[0.98]
                                   disabled:opacity-50 disabled:cursor-not-allowed
-                                "
+                                  ${
+                                    isRecommended
+                                      ? 'bg-[var(--accent)]/10 border-2 border-[var(--accent)]'
+                                      : 'bg-[var(--bg-deep)] border border-[var(--border)]'
+                                  }
+                                `}
                               >
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-3">
                                     <span className="font-medium text-sm text-[var(--text-primary)]">
                                       {config.name}
                                     </span>
+                                    {isRecommended && (
+                                      <span className="text-xs px-2 py-0.5 bg-[var(--accent)] text-[#1C1917] rounded-full">
+                                        Popular
+                                      </span>
+                                    )}
                                     <span className="text-sm text-[var(--text-secondary)]">
                                       {hours === 10000 ? 'Unlimited' : `${hours} hrs`}
                                     </span>
