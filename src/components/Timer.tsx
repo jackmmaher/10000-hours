@@ -77,6 +77,7 @@ export function Timer() {
     nextUnlockWindow,
     completeSession: completeLockSession,
   } = useMeditationLock()
+
   const [showLockCelebration, setShowLockCelebration] = useState(false)
   const [lockSessionResult, setLockSessionResult] = useState<{
     streakDays: number
@@ -303,25 +304,21 @@ export function Timer() {
         await stopTimer()
         await refreshBalance()
 
-        // Check if this was an actual Focus Lock session
-        // Only triggers when the native lock is actively enforcing (iOS with Screen Time)
-        // NOT for regular preset timer sessions - those are a different feature
-        const isLockSession = lockState?.isLockActive
-
-        if (isLockSession && lockSettings) {
+        // Check if this was a Focus Lock session
+        // Focus Lock: triggers when the native lock is actively enforcing (iOS with Screen Time)
+        if (lockState?.isLockActive && lockSettings) {
           // Determine if this is a fallback session (hard day mode)
           // Fallback = session shorter than required but at least minimum
           const requiredSeconds = (lockSettings.unlockDurationMinutes || 10) * 60
           const minimumSeconds = (lockSettings.minimumFallbackMinutes || 2) * 60
           const isFallback = finalDuration < requiredSeconds && finalDuration >= minimumSeconds
 
-          // Complete the lock session (native call - may be no-op in dev mode)
           const result = await completeLockSession(finalDuration, isFallback)
+          const streakDays = result.streakDays ?? lockSettings.streakDays + 1
 
           // Store result for celebration modal
-          // In dev mode result.success may be false, but we still want to celebrate
           setLockSessionResult({
-            streakDays: result.streakDays ?? lockSettings.streakDays + 1,
+            streakDays,
             durationSeconds: finalDuration,
             isFallback,
           })
@@ -341,7 +338,7 @@ export function Timer() {
             })
           }
 
-          // Clear the lock session banner immediately
+          // Clear the session banner immediately
           await markComplete()
 
           // Delay celebration modal until "tap to meditate" has fully settled (4s fade in)

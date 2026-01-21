@@ -13,7 +13,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Mock the native plugin
 vi.mock('../meditationLock', () => ({
-  useEmergencySkip: vi.fn(),
+  consumeEmergencySkip: vi.fn(),
   getLockState: vi.fn(),
   unblockApps: vi.fn(),
   isNativePlatform: vi.fn().mockReturnValue(true),
@@ -26,7 +26,7 @@ vi.mock('../db/meditationLockSettings', () => ({
   updateMeditationLockSettings: vi.fn(),
 }))
 
-import { useEmergencySkip as nativeUseEmergencySkip, getLockState } from '../meditationLock'
+import { consumeEmergencySkip as nativeConsumeEmergencySkip, getLockState } from '../meditationLock'
 import {
   getMeditationLockSettings,
   updateMeditationLockSettings,
@@ -76,7 +76,7 @@ describe('lockForgiveness', () => {
 
   describe('performEmergencySkip', () => {
     it('should decrement streakFreezesRemaining on successful skip', async () => {
-      vi.mocked(nativeUseEmergencySkip).mockResolvedValue({
+      vi.mocked(nativeConsumeEmergencySkip).mockResolvedValue({
         success: true,
         skipsRemaining: 1,
       })
@@ -103,11 +103,11 @@ describe('lockForgiveness', () => {
 
       expect(result.success).toBe(false)
       expect(result.reason).toContain('No skips remaining')
-      expect(nativeUseEmergencySkip).not.toHaveBeenCalled()
+      expect(nativeConsumeEmergencySkip).not.toHaveBeenCalled()
     })
 
     it('should increment totalSkipsUsed for analytics', async () => {
-      vi.mocked(nativeUseEmergencySkip).mockResolvedValue({
+      vi.mocked(nativeConsumeEmergencySkip).mockResolvedValue({
         success: true,
         skipsRemaining: 1,
       })
@@ -122,7 +122,7 @@ describe('lockForgiveness', () => {
     })
 
     it('should handle native skip failure gracefully', async () => {
-      vi.mocked(nativeUseEmergencySkip).mockResolvedValue({
+      vi.mocked(nativeConsumeEmergencySkip).mockResolvedValue({
         success: false,
         reason: 'Native error',
       })

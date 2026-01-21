@@ -1,10 +1,7 @@
 /**
  * Screen 8: App Selection
  *
- * Split from the original dense ScheduleScreen.
- * Focus: Just selecting which apps to block (1 decision)
- *
- * "What apps distract you most?"
+ * "What apps distract you?"
  */
 
 import { motion } from 'framer-motion'
@@ -37,6 +34,8 @@ export function AppSelectionScreen({ formState, updateForm, onNext, onBack }: Sc
 
   const isSelected = (appName: string) => formState.appsToBlock.includes(appName)
 
+  const canContinue = formState.appsToBlock.length > 0
+
   return (
     <div className="pt-8 pb-32">
       {/* Title */}
@@ -58,7 +57,7 @@ export function AppSelectionScreen({ formState, updateForm, onNext, onBack }: Sc
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
       >
-        Select the apps that will require meditation to unlock
+        Select the apps you want to block until you complete your morning meditation.
       </motion.p>
 
       {/* App grid */}
@@ -160,12 +159,7 @@ export function AppSelectionScreen({ formState, updateForm, onNext, onBack }: Sc
           <Button variant="ghost" onClick={onBack}>
             Back
           </Button>
-          <Button
-            variant="primary"
-            fullWidth
-            onClick={onNext}
-            disabled={formState.appsToBlock.length === 0}
-          >
+          <Button variant="primary" fullWidth onClick={onNext} disabled={!canContinue}>
             Continue
           </Button>
         </div>

@@ -28,7 +28,7 @@ vi.mock('@capacitor/core', () => ({
     getLockState: vi.fn(),
     sessionStarted: vi.fn(),
     sessionCompleted: vi.fn(),
-    useEmergencySkip: vi.fn(),
+    consumeEmergencySkip: vi.fn(),
   })),
 }))
 
@@ -49,7 +49,7 @@ import {
   getLockState,
   sessionStarted,
   sessionCompleted,
-  useEmergencySkip,
+  consumeEmergencySkip,
   LockState,
   MeditationLockSyncSettings,
 } from '../meditationLock'
@@ -287,10 +287,10 @@ describe('meditationLock', () => {
     })
   })
 
-  describe('useEmergencySkip', () => {
+  describe('consumeEmergencySkip', () => {
     it('should return failure result when not on native platform', async () => {
       vi.mocked(Capacitor.isNativePlatform).mockReturnValue(false)
-      const result = await useEmergencySkip()
+      const result = await consumeEmergencySkip()
       expect(result.success).toBe(false)
       expect(result.reason).toBeDefined()
     })
@@ -298,7 +298,7 @@ describe('meditationLock', () => {
     it('should return failure result when not on iOS', async () => {
       vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true)
       vi.mocked(Capacitor.getPlatform).mockReturnValue('android')
-      const result = await useEmergencySkip()
+      const result = await consumeEmergencySkip()
       expect(result.success).toBe(false)
     })
   })

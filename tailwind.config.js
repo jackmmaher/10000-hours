@@ -27,16 +27,27 @@ export default {
         'accent': 'var(--accent)',
         'accent-hover': 'var(--accent-hover)',
         'accent-muted': 'var(--accent-muted)',
+        'accent-glow': 'var(--accent-glow)',
         // Text on colored backgrounds
         'on-accent': 'var(--text-on-accent)',
+        // Semantic text colors
+        'primary': 'var(--text-primary)',
+        'secondary': 'var(--text-secondary)',
+        'muted': 'var(--text-muted)',
         // Semantic backgrounds
+        'base': 'var(--bg-base)',
         'elevated': 'var(--bg-elevated)',
         'deep': 'var(--bg-deep)',
+        'overlay': 'var(--bg-overlay)',
         // Borders
         'border-theme': 'var(--border)',
         'border-subtle': 'var(--border-subtle)',
         // Card backgrounds (glassmorphism-ready)
         'card': 'var(--card-bg)',
+        // Success colors
+        'success-bg': 'var(--success-bg)',
+        'success-text': 'var(--success-text)',
+        'success-icon': 'var(--success-icon)',
       },
       spacing: {
         // Design system spacing (prefer these)
