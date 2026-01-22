@@ -184,8 +184,9 @@ function classifyPhoneme(
     const midpoint = (calibration.ahRatio + calibration.ooRatio) / 2
     const separation = Math.abs(calibration.ahRatio - calibration.ooRatio)
 
-    // If calibration values are too close (< 0.3 apart), use default thresholds
-    if (separation < 0.3) {
+    // If calibration values are too close (< 0.2 apart), use default thresholds
+    // Lowered from 0.3 to be more tolerant of similar calibration values
+    if (separation < 0.2) {
       if (process.env.NODE_ENV === 'development') {
         console.warn(
           '[Formant] Calibration values too similar, using defaults. Separation:',
@@ -195,7 +196,8 @@ function classifyPhoneme(
       // Fall through to default logic below
     } else {
       // Use calibrated thresholds with dead zone
-      const deadZone = separation * 0.15 // 15% dead zone around midpoint
+      // Reduced from 15% to 10% for more responsive Ah detection
+      const deadZone = separation * 0.1
 
       if (upperLowerRatio > midpoint + deadZone) {
         // Clearly closer to the higher-ratio phoneme
@@ -226,12 +228,28 @@ function classifyPhoneme(
 
         return { phoneme: lowPhoneme, confidence }
       } else {
-        // In dead zone - return LOW confidence
-        if (upperLowerRatio >= midpoint) {
-          return { phoneme: highPhoneme, confidence: 0.25 }
+        // In dead zone - use MFCC to break tie if available
+        let phoneme: Phoneme
+        let confidence = 0.35 // Slightly higher than before to allow median filter to work
+
+        if (mfcc && calibration.ahMfcc && calibration.ooMfcc) {
+          // Use MFCC distance to decide
+          const ahMfccConf = mfccConfidence(mfcc, calibration.ahMfcc)
+          const ooMfccConf = mfccConfidence(mfcc, calibration.ooMfcc)
+
+          if (ahMfccConf > ooMfccConf) {
+            phoneme = 'A'
+            confidence = Math.max(0.35, ahMfccConf * 0.6)
+          } else {
+            phoneme = 'U'
+            confidence = Math.max(0.35, ooMfccConf * 0.6)
+          }
         } else {
-          return { phoneme: lowPhoneme, confidence: 0.25 }
+          // No MFCC, use ratio proximity
+          phoneme = upperLowerRatio >= midpoint ? highPhoneme : lowPhoneme
         }
+
+        return { phoneme, confidence }
       }
     }
   }

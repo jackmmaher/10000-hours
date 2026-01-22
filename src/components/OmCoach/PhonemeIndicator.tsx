@@ -16,11 +16,21 @@ import { motion } from 'framer-motion'
 import type { Phoneme } from '../../hooks/useFormantDetection'
 import type { CyclePhase } from '../../hooks/useGuidedOmCycle'
 
+// Grace period at start of each phoneme phase (ms)
+const GRACE_PERIOD_MS = 500
+
+// Upcoming indicator before phase ends (ms)
+const UPCOMING_INDICATOR_MS = 1000
+
 interface PhonemeIndicatorProps {
   detectedPhoneme: Phoneme
   expectedPhase: CyclePhase
   confidence: number
   isBreathing: boolean
+  /** Time elapsed in current phase (ms) - for grace period calculation */
+  phaseElapsedMs?: number
+  /** Time remaining in current phase (ms) - for upcoming indicator */
+  phaseRemainingMs?: number
 }
 
 /**
@@ -37,16 +47,6 @@ function phaseToPhoneme(phase: CyclePhase): Phoneme | null {
     default:
       return null
   }
-}
-
-/**
- * Check if two phonemes are adjacent (close match)
- */
-function areAdjacent(a: Phoneme, b: Phoneme): boolean {
-  const order: Phoneme[] = ['silence', 'A', 'U', 'M']
-  const indexA = order.indexOf(a)
-  const indexB = order.indexOf(b)
-  return Math.abs(indexA - indexB) === 1
 }
 
 /**
@@ -68,25 +68,62 @@ export const PhonemeIndicator = memo(function PhonemeIndicator({
   expectedPhase,
   confidence,
   isBreathing,
+  phaseElapsedMs = 0,
+  phaseRemainingMs = Infinity,
 }: PhonemeIndicatorProps) {
   const expectedPhoneme = phaseToPhoneme(expectedPhase)
   const isSilent = detectedPhoneme === 'silence'
 
-  // During breathing phase, show muted indicator
+  // Grace period: don't mark "wrong" during first 500ms of a phoneme phase
+  // Users need time to transition from breathe/previous sound
+  const isInGracePeriod = !isBreathing && phaseElapsedMs < GRACE_PERIOD_MS
+
+  // Upcoming: show indicator when next phase is approaching (last 1s)
+  const isUpcoming = phaseRemainingMs <= UPCOMING_INDICATOR_MS
+
+  // Get the next phase for upcoming indicator
+  const getNextPhase = (): 'A' | 'U' | 'M' | null => {
+    switch (expectedPhase) {
+      case 'breathe':
+        return 'A'
+      case 'ah':
+        return 'U'
+      case 'oo':
+        return 'M'
+      default:
+        return null
+    }
+  }
+  const nextPhoneme = getNextPhase()
+
+  // During breathing phase, show muted indicator (with upcoming hint for Ah)
   if (isBreathing) {
+    const ahIsUpcoming = isUpcoming // Ah is always next after breathe
     return (
-      <div className="flex gap-2 opacity-40">
-        {(['A', 'U', 'M'] as const).map((p) => (
-          <div
-            key={p}
-            className="flex-1 py-2 rounded-lg text-center transition-all duration-150"
-            style={{ backgroundColor: 'var(--elevated)' }}
-          >
-            <span className="text-sm font-medium" style={{ color: 'var(--text-tertiary)' }}>
-              {getLabel(p)}
-            </span>
-          </div>
-        ))}
+      <div className="flex gap-2">
+        {(['A', 'U', 'M'] as const).map((p) => {
+          const isAhAndUpcoming = p === 'A' && ahIsUpcoming
+          return (
+            <div
+              key={p}
+              className={`flex-1 py-2 rounded-lg text-center transition-all duration-150 ${isAhAndUpcoming ? 'animate-pulse' : ''}`}
+              style={{
+                backgroundColor: 'var(--elevated)',
+                boxShadow: isAhAndUpcoming ? '0 0 0 1px var(--text-muted)' : 'none',
+                opacity: isAhAndUpcoming ? 0.8 : 0.4,
+              }}
+            >
+              <span
+                className="text-sm font-medium"
+                style={{
+                  color: isAhAndUpcoming ? 'var(--text-secondary)' : 'var(--text-tertiary)',
+                }}
+              >
+                {getLabel(p)}
+              </span>
+            </div>
+          )
+        })}
       </div>
     )
   }
@@ -97,21 +134,22 @@ export const PhonemeIndicator = memo(function PhonemeIndicator({
         const isDetected = detectedPhoneme === p && !isSilent
         const isExpected = expectedPhoneme === p
         const isMatch = isDetected && isExpected
-        // Reserved for future "close match" styling
-        void (isDetected && expectedPhoneme !== null && areAdjacent(p, expectedPhoneme))
+        const isNextUp = nextPhoneme === p && isUpcoming
 
         // Determine styling
         let bgColor = 'var(--elevated)'
         let ringStyle = 'none'
         let textColor = 'var(--text-tertiary)'
+        let shouldPulse = false
 
         if (isMatch) {
           // Perfect match - green
           bgColor = 'color-mix(in srgb, var(--color-emerald-500, #10b981) 20%, transparent)'
           ringStyle = '0 0 0 2px var(--color-emerald-500, #10b981)'
           textColor = 'var(--color-emerald-600, #059669)'
-        } else if (isDetected && !isExpected) {
-          // Detected but wrong - amber
+        } else if (isDetected && !isExpected && !isInGracePeriod) {
+          // Detected but wrong - amber (but NOT during grace period)
+          // During grace period, we forgive wrong detection as user is transitioning
           bgColor = 'color-mix(in srgb, var(--color-amber-500, #f59e0b) 15%, transparent)'
           ringStyle = '0 0 0 1px var(--color-amber-500, #f59e0b)'
           textColor = 'var(--color-amber-600, #d97706)'
@@ -120,18 +158,24 @@ export const PhonemeIndicator = memo(function PhonemeIndicator({
           bgColor = 'var(--elevated)'
           ringStyle = '0 0 0 1px var(--text-muted)'
           textColor = 'var(--text-secondary)'
+        } else if (isNextUp) {
+          // Upcoming phase - subtle pulse to prepare user
+          bgColor = 'var(--elevated)'
+          ringStyle = '0 0 0 1px var(--text-muted)'
+          textColor = 'var(--text-secondary)'
+          shouldPulse = true
         }
 
         return (
           <motion.div
             key={p}
-            className="flex-1 py-2 rounded-lg text-center transition-colors duration-150"
+            className={`flex-1 py-2 rounded-lg text-center transition-colors duration-150 ${shouldPulse ? 'animate-pulse' : ''}`}
             style={{
               backgroundColor: bgColor,
               boxShadow: ringStyle,
             }}
             animate={{
-              scale: isDetected ? 1.02 : 1,
+              scale: isDetected && !isInGracePeriod ? 1.02 : 1,
             }}
             transition={{ duration: 0.1 }}
           >
@@ -141,8 +185,8 @@ export const PhonemeIndicator = memo(function PhonemeIndicator({
             >
               {getLabel(p)}
             </span>
-            {/* Confidence indicator for detected phoneme */}
-            {isDetected && confidence > 0 && (
+            {/* Confidence indicator for detected phoneme (hidden during grace period) */}
+            {isDetected && confidence > 0 && !isInGracePeriod && (
               <motion.div
                 className="mt-1 mx-auto rounded-full"
                 style={{

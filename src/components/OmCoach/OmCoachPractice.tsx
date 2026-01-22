@@ -140,6 +140,7 @@ export function OmCoachPractice({
   }
 
   const phaseTimeRemainingMs = Math.ceil(currentPhaseDuration * (1 - guidedState.phaseProgress))
+  const phaseElapsedMs = Math.floor(currentPhaseDuration * guidedState.phaseProgress)
 
   // Format elapsed time (Timer-tab style)
   const elapsed = formatElapsed(guidedState.elapsedMs)
@@ -215,6 +216,8 @@ export function OmCoachPractice({
             expectedPhase={guidedState.currentPhase}
             confidence={formant.confidence}
             isBreathing={guidedState.currentPhase === 'breathe'}
+            phaseElapsedMs={phaseElapsedMs}
+            phaseRemainingMs={phaseTimeRemainingMs}
           />
         </div>
 

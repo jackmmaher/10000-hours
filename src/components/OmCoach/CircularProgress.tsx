@@ -39,7 +39,7 @@ function getPhasePositions(mode: TimingMode): number[] {
 
 export function CircularProgress({
   currentPhase,
-  phaseProgress: _phaseProgress,
+  phaseProgress,
   cycleProgress,
   phaseTimeRemainingMs,
   timingMode,
@@ -49,6 +49,11 @@ export function CircularProgress({
   const strokeWidth = 6
   const radius = (size - strokeWidth) / 2 - 8
   const markerRadius = radius + 28 // Position markers well outside the ring
+
+  // During breathe phase, show full circle progress for just that phase
+  // This gives users a clear visual countdown for the breathe portion
+  const isBreathing = currentPhase === 'breathe'
+  const displayProgress = isBreathing ? phaseProgress : cycleProgress
 
   // Track previous phase for crossfade
   const [displayPhase, setDisplayPhase] = useState(currentPhase)
@@ -95,7 +100,7 @@ export function CircularProgress({
 
   // Calculate SVG arc path
   const circumference = 2 * Math.PI * radius
-  const cycleOffset = circumference * (1 - cycleProgress)
+  const cycleOffset = circumference * (1 - displayProgress)
 
   // Get phase boundary positions
   const phasePositions = getPhasePositions(timingMode)
@@ -106,9 +111,6 @@ export function CircularProgress({
 
   // Get phase display label
   const phaseLabel = getPhaseLabel(displayPhase)
-
-  // Determine if breathing phase
-  const isBreathing = currentPhase === 'breathe'
 
   // Calculate marker positions based on actual phase durations
   const markers = [
@@ -181,7 +183,7 @@ export function CircularProgress({
             cy={center}
             r={radius}
             fill="none"
-            stroke="var(--accent)"
+            stroke="var(--accent, #f97316)"
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeDasharray={circumference}
