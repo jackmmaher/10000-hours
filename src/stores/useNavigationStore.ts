@@ -20,6 +20,7 @@ export type AppView =
   | 'privacy' // Privacy policy page
   | 'terms' // Terms of service page
   | 'om-coach' // Practice tool: Aum chanting biofeedback
+  | 'racing-mind' // Practice tool: Visual meditation primer
   // Legacy views (still accessible via internal links)
   | 'calendar' // -> accessed from progress
   | 'insights' // -> accessed from journey

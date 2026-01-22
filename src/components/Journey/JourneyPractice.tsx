@@ -27,12 +27,14 @@ interface JourneyPracticeProps {
   /** Called when Screen Time is NOT authorized - shows LockComingSoonModal first */
   onOpenLockComingSoon: () => void
   onNavigateOmCoach: () => void
+  onNavigateRacingMind: () => void
 }
 
 export function JourneyPractice({
   onOpenLockModal,
   onOpenLockComingSoon,
   onNavigateOmCoach,
+  onNavigateRacingMind,
 }: JourneyPracticeProps) {
   const meditationLock = useMeditationLock()
 
@@ -52,6 +54,9 @@ export function JourneyPractice({
         break
       case 'navigate-om-coach':
         onNavigateOmCoach()
+        break
+      case 'navigate-racing-mind':
+        onNavigateRacingMind()
         break
     }
   }

@@ -10,7 +10,7 @@ import type { NotificationPreferences } from '../notifications'
 export type SessionType = 'meditation' | 'practice'
 
 // Practice tool identifiers
-export type PracticeToolId = 'om-coach' | 'neural-decelerator' | 'posture-training'
+export type PracticeToolId = 'om-coach' | 'racing-mind' | 'posture-training'
 
 // Aum Coach specific metrics
 export interface OmCoachMetrics {

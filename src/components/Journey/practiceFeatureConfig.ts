@@ -25,7 +25,7 @@ export interface PracticeFeatureConfig {
   description: string
   status: FeatureStatus
   /** For active features, defines what action to take on press */
-  action?: 'open-lock-modal' | 'navigate-om-coach'
+  action?: 'open-lock-modal' | 'navigate-om-coach' | 'navigate-racing-mind'
   /** Orb color configuration */
   orbColors: OrbColors
   /** CTA button text (for active features) */
@@ -100,9 +100,10 @@ export const PRACTICE_FEATURES: PracticeFeatureConfig[] = [
     id: 'racing-mind',
     title: 'Racing Mind',
     description: 'Not ready to sit still? Start here.',
-    status: 'coming-soon',
+    status: 'active',
+    action: 'navigate-racing-mind',
     orbColors: FEATURE_ORB_COLORS['racing-mind'],
-    ctaText: 'Coming Soon',
+    ctaText: 'Begin Practice',
     categoryLabel: 'PRACTICE TOOL',
     teaserFeatures: ['Hypnotic visual focus', 'Blue light calming', 'Pre-meditation primer'],
   },

@@ -1,0 +1,269 @@
+/**
+ * useRacingMindSession - Session management for Racing Mind practice
+ *
+ * Handles:
+ * - Session timing (start/stop)
+ * - Saving session to database with practice tool metadata
+ * - Hour bank consumption (deducted at session START with selected duration)
+ * - Session-in-progress recovery
+ *
+ * Follows the same pattern as useOmSession for consistency.
+ */
+
+import { useState, useCallback, useRef, useEffect } from 'react'
+import { v4 as uuidv4 } from 'uuid'
+import { addSession } from '../lib/db/sessions'
+import { db } from '../lib/db/schema'
+import { useHourBankStore } from '../stores/useHourBankStore'
+import { useSessionStore } from '../stores/useSessionStore'
+import type { Session } from '../lib/db/types'
+
+export interface RacingMindSessionState {
+  isActive: boolean
+  sessionUuid: string | null
+  startTime: number | null // performance.now() for accurate timing
+  wallClockStart: number | null // Date.now() for database storage
+  selectedDurationSeconds: number | null // Duration user selected
+}
+
+export interface RacingMindSessionResult {
+  uuid: string
+  durationSeconds: number
+}
+
+export interface UseRacingMindSessionResult {
+  // Session state
+  state: RacingMindSessionState
+  // Start a new Racing Mind session (deducts selectedDurationSeconds from hour bank at START)
+  startSession: (selectedDurationSeconds: number) => Promise<void>
+  // End the session and save to database (saves ACTUAL time spent)
+  endSession: () => Promise<RacingMindSessionResult | null>
+  // Cancel without saving (NOTE: hours already deducted at start are not refunded)
+  cancelSession: () => void
+  // Get elapsed seconds
+  getElapsedSeconds: () => number
+  // Get progress (0-1) based on selected duration
+  getProgress: () => number
+}
+
+const APP_STATE_KEY = 'primary'
+
+export function useRacingMindSession(): UseRacingMindSessionResult {
+  const [state, setState] = useState<RacingMindSessionState>({
+    isActive: false,
+    sessionUuid: null,
+    startTime: null,
+    wallClockStart: null,
+    selectedDurationSeconds: null,
+  })
+
+  // Refs for timing accuracy
+  const startTimeRef = useRef<number | null>(null)
+  const wallClockStartRef = useRef<number | null>(null)
+  const sessionUuidRef = useRef<string | null>(null)
+  const selectedDurationRef = useRef<number | null>(null)
+
+  // Store access for hour consumption and session hydration
+  const consumeSessionHours = useHourBankStore((s) => s.consumeSessionHours)
+  const hydrateSessions = useSessionStore((s) => s.hydrate)
+
+  /**
+   * Check for and recover session-in-progress on mount
+   */
+  useEffect(() => {
+    const checkRecovery = async () => {
+      try {
+        const appState = await db.appState.get(APP_STATE_KEY)
+        if (appState?.sessionInProgress && appState.sessionStartTime) {
+          // For Racing Mind, we don't auto-recover mid-session since
+          // the visual experience can't be resumed. Just clear the flag.
+          await db.appState.update(APP_STATE_KEY, {
+            sessionInProgress: false,
+            sessionStartTime: undefined,
+          })
+        }
+      } catch (error) {
+        console.error('[RacingMindSession] Recovery check failed:', error)
+      }
+    }
+    checkRecovery()
+  }, [])
+
+  /**
+   * Start a new Racing Mind session
+   * Deducts selectedDurationSeconds from hour bank at START
+   */
+  const startSession = useCallback(
+    async (selectedDurationSeconds: number): Promise<void> => {
+      const uuid = uuidv4()
+      const now = performance.now()
+      const wallClock = Date.now()
+
+      // Store in refs for timing
+      sessionUuidRef.current = uuid
+      startTimeRef.current = now
+      wallClockStartRef.current = wallClock
+      selectedDurationRef.current = selectedDurationSeconds
+
+      // Deduct selected duration from hour bank at START
+      // This ensures user "pays" for the session upfront
+      try {
+        await consumeSessionHours(selectedDurationSeconds)
+      } catch (error) {
+        console.error('[RacingMindSession] Failed to consume hours at start:', error)
+        // Continue anyway - don't block session start
+      }
+
+      // Mark session in progress for crash recovery
+      try {
+        const appState = await db.appState.get(APP_STATE_KEY)
+        if (appState) {
+          await db.appState.update(APP_STATE_KEY, {
+            sessionInProgress: true,
+            sessionStartTime: wallClock,
+          })
+        }
+      } catch (error) {
+        console.error('[RacingMindSession] Failed to mark session in progress:', error)
+      }
+
+      setState({
+        isActive: true,
+        sessionUuid: uuid,
+        startTime: now,
+        wallClockStart: wallClock,
+        selectedDurationSeconds,
+      })
+    },
+    [consumeSessionHours]
+  )
+
+  /**
+   * End the session and save to database
+   */
+  const endSession = useCallback(async (): Promise<RacingMindSessionResult | null> => {
+    const uuid = sessionUuidRef.current
+    const startTime = startTimeRef.current
+    const wallClockStart = wallClockStartRef.current
+
+    if (!uuid || startTime === null || wallClockStart === null) {
+      console.warn('[RacingMindSession] Cannot end session: no active session')
+      return null
+    }
+
+    const now = performance.now()
+    const wallClockEnd = Date.now()
+    const durationMs = now - startTime
+    const durationSeconds = Math.round(durationMs / 1000)
+
+    // Build session record
+    const session: Omit<Session, 'id'> = {
+      uuid,
+      startTime: wallClockStart,
+      endTime: wallClockEnd,
+      durationSeconds,
+      sessionType: 'practice',
+      practiceToolId: 'racing-mind',
+    }
+
+    try {
+      // Save to database (actual time spent goes to practice total)
+      await addSession(session)
+
+      // NOTE: Hours were already deducted at session START with the selected duration
+      // The actual time spent is saved to the session for tracking
+
+      // Clear session-in-progress flag
+      const appState = await db.appState.get(APP_STATE_KEY)
+      if (appState) {
+        await db.appState.update(APP_STATE_KEY, {
+          sessionInProgress: false,
+          sessionStartTime: undefined,
+        })
+      }
+
+      // Refresh session store to include new session
+      await hydrateSessions()
+
+      // Clear local state
+      sessionUuidRef.current = null
+      startTimeRef.current = null
+      wallClockStartRef.current = null
+      selectedDurationRef.current = null
+
+      setState({
+        isActive: false,
+        sessionUuid: null,
+        startTime: null,
+        wallClockStart: null,
+        selectedDurationSeconds: null,
+      })
+
+      return {
+        uuid,
+        durationSeconds,
+      }
+    } catch (error) {
+      console.error('[RacingMindSession] Failed to save session:', error)
+      return null
+    }
+  }, [hydrateSessions])
+
+  /**
+   * Cancel session without saving
+   */
+  const cancelSession = useCallback((): void => {
+    // Clear session-in-progress flag
+    db.appState.get(APP_STATE_KEY).then((appState) => {
+      if (appState) {
+        db.appState.update(APP_STATE_KEY, {
+          sessionInProgress: false,
+          sessionStartTime: undefined,
+        })
+      }
+    })
+
+    sessionUuidRef.current = null
+    startTimeRef.current = null
+    wallClockStartRef.current = null
+    selectedDurationRef.current = null
+
+    setState({
+      isActive: false,
+      sessionUuid: null,
+      startTime: null,
+      wallClockStart: null,
+      selectedDurationSeconds: null,
+    })
+  }, [])
+
+  /**
+   * Get elapsed seconds (for UI display)
+   */
+  const getElapsedSeconds = useCallback((): number => {
+    const startTime = startTimeRef.current
+    if (startTime === null) return 0
+    return Math.floor((performance.now() - startTime) / 1000)
+  }, [])
+
+  /**
+   * Get progress (0-1) based on selected duration
+   * Used for animation deceleration curve
+   */
+  const getProgress = useCallback((): number => {
+    const startTime = startTimeRef.current
+    const selectedDuration = selectedDurationRef.current
+    if (startTime === null || selectedDuration === null) return 0
+    const elapsed = (performance.now() - startTime) / 1000
+    return Math.min(1, elapsed / selectedDuration)
+  }, [])
+
+  return {
+    state,
+    startSession,
+    endSession,
+    cancelSession,
+    getElapsedSeconds,
+    getProgress,
+  }
+}

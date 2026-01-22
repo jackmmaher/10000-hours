@@ -39,6 +39,7 @@ import { Store } from './components/Store'
 import { PrivacyPolicy } from './components/PrivacyPolicy'
 import { TermsOfService } from './components/TermsOfService'
 import { OmCoach } from './components/OmCoach'
+import { RacingMind } from './components/RacingMind'
 import type { Session } from './lib/db'
 import { shouldPromptForReview } from './lib/nativeReview'
 
@@ -301,6 +302,7 @@ function AppContent() {
         {view === 'privacy' && <PrivacyPolicy onBack={() => setView('settings')} />}
         {view === 'terms' && <TermsOfService onBack={() => setView('settings')} />}
         {view === 'om-coach' && <OmCoach onClose={() => setView('timer')} />}
+        {view === 'racing-mind' && <RacingMind onClose={() => setView('timer')} />}
 
         {/* Session edit modal */}
         {editingSession && (

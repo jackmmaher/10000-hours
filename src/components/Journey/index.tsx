@@ -357,6 +357,7 @@ export function Journey() {
           onOpenLockModal={() => setShowLockSetupFlow(true)}
           onOpenLockComingSoon={() => setShowLockComingSoon(true)}
           onNavigateOmCoach={() => setView('om-coach')}
+          onNavigateRacingMind={() => setView('racing-mind')}
         />
       </div>
 
