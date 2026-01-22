@@ -19,18 +19,8 @@ type NavItem = {
   icon: JSX.Element
 }
 
-const navItems: NavItem[] = [
-  {
-    view: 'timer',
-    label: 'Timer',
-    description: 'where you practice',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10" strokeWidth={1.5} />
-        <path strokeLinecap="round" strokeWidth={1.5} d="M12 6v6l4 2" />
-      </svg>
-    ),
-  },
+// Left side tabs (discovery/planning)
+const leftNavItems: NavItem[] = [
   {
     view: 'journey',
     label: 'Journey',
@@ -61,6 +51,23 @@ const navItems: NavItem[] = [
       </svg>
     ),
   },
+]
+
+// Center tab (the core action)
+const centerNavItem: NavItem = {
+  view: 'timer',
+  label: 'Timer',
+  description: 'where you practice',
+  icon: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" strokeWidth={1.5} />
+      <path strokeLinecap="round" strokeWidth={1.5} d="M12 6v6l4 2" />
+    </svg>
+  ),
+}
+
+// Right side tabs (reflection/personal)
+const rightNavItems: NavItem[] = [
   {
     view: 'progress',
     label: 'Progress',
@@ -107,6 +114,40 @@ export function Navigation() {
     trialPhase === 'pending' ||
     trialPhase === 'active'
 
+  // Helper to check if a nav item is active
+  const isItemActive = (item: NavItem) =>
+    view === item.view ||
+    // Legacy view mappings for backwards compatibility during transition
+    (item.view === 'progress' && view === 'calendar') ||
+    (item.view === 'explore' && (view === 'pearls' || view === 'saved-pearls')) ||
+    (item.view === 'journey' && view === 'insights') ||
+    (item.view === 'profile' && view === 'settings')
+
+  // Render a standard nav button
+  const renderNavButton = (item: NavItem) => {
+    const isActive = isItemActive(item)
+    return (
+      <button
+        key={item.view}
+        onClick={() => {
+          haptic.light()
+          setView(item.view)
+        }}
+        aria-label={`Navigate to ${item.label} — ${item.description}`}
+        aria-current={isActive ? 'page' : undefined}
+        className="flex flex-col items-center justify-center flex-1 py-2 transition-colors active:scale-95"
+        style={{
+          color: isActive ? 'var(--nav-active)' : 'var(--nav-inactive)',
+        }}
+      >
+        {item.icon}
+        <span className="text-caption mt-1 font-medium">{item.label}</span>
+      </button>
+    )
+  }
+
+  const isTimerTabActive = isItemActive(centerNavItem)
+
   return (
     <AnimatePresence>
       {!isTimerActive && (
@@ -115,41 +156,67 @@ export function Navigation() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
           transition={{ duration: 4, ease: [0.25, 0.1, 0.25, 1] }}
-          className="fixed bottom-0 left-0 right-0 z-40 backdrop-blur-sm safe-area-bottom"
+          className="fixed bottom-0 left-0 right-0 z-40 safe-area-bottom"
           style={{
             background: 'var(--nav-bg)',
-            borderTop: '1px solid var(--border-subtle)',
           }}
         >
-          <div className="flex justify-around items-center h-16 max-w-lg mx-auto px-2">
-            {navItems.map((item) => {
-              const isActive =
-                view === item.view ||
-                // Legacy view mappings for backwards compatibility during transition
-                (item.view === 'progress' && view === 'calendar') ||
-                (item.view === 'explore' && (view === 'pearls' || view === 'saved-pearls')) ||
-                (item.view === 'journey' && view === 'insights') ||
-                (item.view === 'profile' && view === 'settings')
+          {/* Main nav bar with arch cutout effect */}
+          <div className="relative h-16 max-w-lg mx-auto">
+            {/* Background layer - flat bar */}
+            <div
+              className="absolute inset-0 backdrop-blur-sm"
+              style={{
+                background: 'var(--nav-bg)',
+                borderTop: '1px solid var(--border-subtle)',
+              }}
+            />
 
-              return (
+            {/* Center arch - rises above the bar */}
+            <div
+              className="absolute left-1/2 -translate-x-1/2 -top-3 w-[76px] h-[52px] backdrop-blur-sm"
+              style={{
+                background: 'var(--nav-bg)',
+                borderRadius: '38px 38px 0 0',
+                boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.06)',
+              }}
+            >
+              {/* Subtle top border on arch */}
+              <div
+                className="absolute inset-x-0 top-0 h-[1px] rounded-t-full"
+                style={{
+                  background: 'var(--border-subtle)',
+                }}
+              />
+            </div>
+
+            {/* Nav content */}
+            <div className="relative flex items-center h-full px-2">
+              {/* Left group: Journey, Explore */}
+              <div className="flex flex-1">{leftNavItems.map(renderNavButton)}</div>
+
+              {/* Center: Timer (positioned in the arch) */}
+              <div className="relative flex items-center justify-center w-[76px]">
                 <button
-                  key={item.view}
                   onClick={() => {
                     haptic.light()
-                    setView(item.view)
+                    setView(centerNavItem.view)
                   }}
-                  aria-label={`Navigate to ${item.label} — ${item.description}`}
-                  aria-current={isActive ? 'page' : undefined}
-                  className="flex flex-col items-center justify-center flex-1 py-2 transition-colors active:scale-95"
+                  aria-label={`Navigate to ${centerNavItem.label} — ${centerNavItem.description}`}
+                  aria-current={isTimerTabActive ? 'page' : undefined}
+                  className="flex flex-col items-center justify-center pt-0 pb-2 -mt-3 transition-colors active:scale-95"
                   style={{
-                    color: isActive ? 'var(--nav-active)' : 'var(--nav-inactive)',
+                    color: isTimerTabActive ? 'var(--nav-active)' : 'var(--nav-inactive)',
                   }}
                 >
-                  {item.icon}
-                  <span className="text-caption mt-1 font-medium">{item.label}</span>
+                  {centerNavItem.icon}
+                  <span className="text-caption mt-1 font-medium">{centerNavItem.label}</span>
                 </button>
-              )
-            })}
+              </div>
+
+              {/* Right group: Progress, Profile */}
+              <div className="flex flex-1">{rightNavItems.map(renderNavButton)}</div>
+            </div>
           </div>
         </motion.nav>
       )}
