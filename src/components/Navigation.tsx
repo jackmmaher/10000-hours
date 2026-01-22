@@ -176,16 +176,18 @@ export function Navigation() {
             <div
               className="absolute left-1/2 -translate-x-1/2 -top-3 w-[76px] h-[52px] backdrop-blur-sm"
               style={{
-                background: 'var(--nav-bg)',
+                background: 'var(--bg-elevated)',
                 borderRadius: '38px 38px 0 0',
-                boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.06)',
+                boxShadow: 'var(--shadow-elevation-2)',
               }}
             >
-              {/* Subtle top border on arch */}
+              {/* Border around arch - visible in both light and dark modes */}
               <div
-                className="absolute inset-x-0 top-0 h-[1px] rounded-t-full"
+                className="absolute inset-0 rounded-t-full pointer-events-none"
                 style={{
-                  background: 'var(--border-subtle)',
+                  border: '1px solid var(--border)',
+                  borderBottom: 'none',
+                  borderRadius: '38px 38px 0 0',
                 }}
               />
             </div>
