@@ -187,6 +187,7 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
   const scoredStartRef = useRef<number | null>(null)
   const animationFrameRef = useRef<number | null>(null)
   const timingModeRef = useRef<TimingMode>('traditional')
+  const sessionStartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Track which cycle we're in (absolute, includes practice)
   const absoluteCycleRef = useRef(1)
@@ -333,9 +334,14 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
           // Show "Session begins now" message
           setState((prev) => ({ ...prev, showSessionStart: true }))
 
-          // Clear message after 2 seconds
-          setTimeout(() => {
+          // Clear any existing timeout before setting new one
+          if (sessionStartTimeoutRef.current) {
+            clearTimeout(sessionStartTimeoutRef.current)
+          }
+          // Clear message after 2 seconds (tracked for cleanup)
+          sessionStartTimeoutRef.current = setTimeout(() => {
             setState((prev) => ({ ...prev, showSessionStart: false }))
+            sessionStartTimeoutRef.current = null
           }, 2000)
 
           onScoredSessionStart?.()
@@ -427,12 +433,15 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
     // Calculate scored session elapsed time
     const scoredElapsed = scoredStartRef.current ? now - scoredStartRef.current : 0
 
+    // Track if session should complete (checked before setState to avoid side effect in updater)
+    let shouldCompleteSession = false
+
     setState((prev) => {
       if (!prev.isRunning) return prev
 
       // Check if scored session is complete (time-based)
       if (!stillInPractice && scoredElapsed >= prev.totalSessionMs) {
-        onSessionComplete?.()
+        shouldCompleteSession = true
         return {
           ...prev,
           isRunning: false,
@@ -451,6 +460,12 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
         elapsedMs: stillInPractice ? 0 : scoredElapsed,
       }
     })
+
+    // Call onSessionComplete outside setState to avoid side effect in updater
+    if (shouldCompleteSession) {
+      onSessionComplete?.()
+      return // Don't schedule next frame if session complete
+    }
 
     animationFrameRef.current = requestAnimationFrame(updateTimed)
   }, [
@@ -534,6 +549,11 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
       cancelAnimationFrame(animationFrameRef.current)
       animationFrameRef.current = null
     }
+    // Clear session start timeout if pending
+    if (sessionStartTimeoutRef.current) {
+      clearTimeout(sessionStartTimeoutRef.current)
+      sessionStartTimeoutRef.current = null
+    }
     practiceStartRef.current = null
     scoredStartRef.current = null
     sessionStartRef.current = null
@@ -609,6 +629,9 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current)
+      }
+      if (sessionStartTimeoutRef.current) {
+        clearTimeout(sessionStartTimeoutRef.current)
       }
     }
   }, [])

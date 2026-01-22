@@ -9,6 +9,7 @@
  * Shows progress bar and large phoneme label for each phase.
  */
 
+import { useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   type CalibrationState,
@@ -69,11 +70,22 @@ export function PhonemeCalibration({ state, onCancel, onComplete }: PhonemeCalib
   // Typical RMS: silence ~0.001, quiet voice ~0.005, normal voice ~0.02, loud ~0.05+
   const audioLevel = Math.min(1, currentRms * 20)
 
-  // Handle completion
-  if (phase === 'complete' && !isCalibrating) {
-    // Auto-dismiss after a moment
-    setTimeout(onComplete, 1500)
-  }
+  // Track timeout ref for cleanup
+  const completionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Handle completion - moved to useEffect to avoid side effect during render
+  useEffect(() => {
+    if (phase === 'complete' && !isCalibrating) {
+      // Auto-dismiss after a moment
+      completionTimeoutRef.current = setTimeout(onComplete, 1500)
+    }
+    return () => {
+      if (completionTimeoutRef.current) {
+        clearTimeout(completionTimeoutRef.current)
+        completionTimeoutRef.current = null
+      }
+    }
+  }, [phase, isCalibrating, onComplete])
 
   return (
     <div className="flex flex-col h-full bg-base">

@@ -72,44 +72,105 @@ const SILENCE_THRESHOLD = 0.005
 const BUFFER_SIZE = 2048
 
 // Debounce settings for stability
-const DEBOUNCE_MS = 80
-const CONFIDENCE_THRESHOLD = 0.4
+// REDUCED: Was 80ms, now 30ms for faster response when starting to vocalize
+const DEBOUNCE_MS = 30
+// REDUCED: Was 0.4, now 0.3 for faster pickup
+const CONFIDENCE_THRESHOLD = 0.3
 
 /**
  * Classify phoneme using frequency band energy ratios
+ *
+ * FIXED: Added minimum separation requirement and better M detection
  */
 function classifyPhoneme(
   lowEnergy: number,
   midEnergy: number,
   highEnergy: number,
   flatness: number,
-  calibration: CalibrationProfile | null
+  calibration: CalibrationProfile | null,
+  classifyDebugCounter: number
 ): { phoneme: Phoneme; confidence: number } {
+  // Calculate upper/lower ratio early for logging
+  const upperEnergy = midEnergy + highEnergy
+  const lowerEnergy = lowEnergy + 0.001 // Avoid division by zero
+  const upperLowerRatio = upperEnergy / lowerEnergy
+
   // Mm detection: high flatness (nasal resonance creates broader spectrum)
-  const mmFlatnessThreshold = calibration?.mmFlatness ?? DEFAULT_THRESHOLDS.mmFlatnessMin
+  // LOWERED threshold - Mm is harder to detect, be more generous
+  const mmFlatnessThreshold = calibration?.mmFlatness
+    ? calibration.mmFlatness * 0.8 // Use 80% of calibrated value for easier M detection
+    : DEFAULT_THRESHOLDS.mmFlatnessMin * 0.8
 
   if (flatness > mmFlatnessThreshold) {
     const confidence = Math.min(1, flatness / (mmFlatnessThreshold * 1.5))
     return { phoneme: 'M', confidence }
   }
 
-  // Calculate upper/lower ratio for A vs U distinction
-  const upperEnergy = midEnergy + highEnergy
-  const lowerEnergy = lowEnergy + 0.001 // Avoid division by zero
-  const upperLowerRatio = upperEnergy / lowerEnergy
-
   if (calibration) {
-    // Use calibrated thresholds
-    const ahDistance = Math.abs(upperLowerRatio - calibration.ahRatio)
-    const ooDistance = Math.abs(upperLowerRatio - calibration.ooRatio)
-    const totalDistance = ahDistance + ooDistance
+    // Determine which phoneme has the higher ratio (don't assume ahRatio > ooRatio)
+    const ahIsHigher = calibration.ahRatio > calibration.ooRatio
+    const highRatio = ahIsHigher ? calibration.ahRatio : calibration.ooRatio
+    const lowRatio = ahIsHigher ? calibration.ooRatio : calibration.ahRatio
+    const highPhoneme: Phoneme = ahIsHigher ? 'A' : 'U'
+    const lowPhoneme: Phoneme = ahIsHigher ? 'U' : 'A'
 
-    if (ahDistance < ooDistance) {
-      const confidence = totalDistance > 0 ? 1 - ahDistance / totalDistance : 0.5
-      return { phoneme: 'A', confidence: Math.min(1, confidence) }
+    // Log calibration values periodically (only in development)
+    if (process.env.NODE_ENV === 'development' && classifyDebugCounter % 60 === 0) {
+      console.log(
+        '[Formant Classify] Calibration:',
+        'ahRatio:',
+        calibration.ahRatio.toFixed(2),
+        'ooRatio:',
+        calibration.ooRatio.toFixed(2),
+        'mmFlatness:',
+        calibration.mmFlatness.toFixed(3),
+        '| Current ratio:',
+        upperLowerRatio.toFixed(2),
+        'flatness:',
+        flatness.toFixed(3),
+        '| Order:',
+        ahIsHigher ? 'Ah>Oo' : 'Oo>Ah'
+      )
+    }
+
+    // Calculate midpoint between calibrated A and U ratios
+    const midpoint = (calibration.ahRatio + calibration.ooRatio) / 2
+    const separation = Math.abs(calibration.ahRatio - calibration.ooRatio)
+
+    // If calibration values are too close (< 0.3 apart), use default thresholds
+    // This prevents wild oscillation when Ah and Oo have similar ratios
+    if (separation < 0.3) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(
+          '[Formant] Calibration values too similar, using defaults. Separation:',
+          separation.toFixed(2)
+        )
+      }
+      // Fall through to default logic below
     } else {
-      const confidence = totalDistance > 0 ? 1 - ooDistance / totalDistance : 0.5
-      return { phoneme: 'U', confidence: Math.min(1, confidence) }
+      // Use calibrated thresholds with dead zone
+      // Require ratio to be clearly on one side of the midpoint
+      const deadZone = separation * 0.15 // 15% dead zone around midpoint
+
+      if (upperLowerRatio > midpoint + deadZone) {
+        // Clearly closer to the higher-ratio phoneme
+        const distance = Math.abs(upperLowerRatio - highRatio)
+        const confidence = Math.min(1, 1 - distance / separation)
+        return { phoneme: highPhoneme, confidence: Math.max(0.5, confidence) }
+      } else if (upperLowerRatio < midpoint - deadZone) {
+        // Clearly closer to the lower-ratio phoneme
+        const distance = Math.abs(upperLowerRatio - lowRatio)
+        const confidence = Math.min(1, 1 - distance / separation)
+        return { phoneme: lowPhoneme, confidence: Math.max(0.5, confidence) }
+      } else {
+        // In dead zone - return LOW confidence (below CONFIDENCE_THRESHOLD of 0.3)
+        // This causes debounce logic to maintain lastConfirmedPhoneme instead of flickering
+        if (upperLowerRatio >= midpoint) {
+          return { phoneme: highPhoneme, confidence: 0.25 }
+        } else {
+          return { phoneme: lowPhoneme, confidence: 0.25 }
+        }
+      }
     }
   }
 
@@ -155,6 +216,9 @@ export function useFormantDetection(): UseFormantDetectionResult {
 
   // Debug counter for throttled logging
   const debugCounterRef = useRef(0)
+
+  // Debug counter for classify function (moved from global to avoid shared state)
+  const classifyDebugCounterRef = useRef(0)
 
   /**
    * Get current formant data
@@ -264,21 +328,33 @@ export function useFormantDetection(): UseFormantDetectionResult {
     // Calculate upper/lower ratio
     const upperLowerRatio = lowEnergy > 0.001 ? (midEnergy + highEnergy) / lowEnergy : 0
 
-    // Classify raw phoneme
+    // Classify raw phoneme (increment debug counter for throttled logging)
+    classifyDebugCounterRef.current++
     const { phoneme: rawPhoneme, confidence: rawConfidence } = classifyPhoneme(
       lowEnergy,
       midEnergy,
       highEnergy,
       flatness,
-      calibrationRef.current
+      calibrationRef.current,
+      classifyDebugCounterRef.current
     )
 
     // Apply debounce with hysteresis
+    // FAST PATH: Instant transition from silence to any phoneme (no debounce needed)
     const currentPhoneme = lastConfirmedPhonemeRef.current
     let finalPhoneme = currentPhoneme
     let finalConfidence = rawConfidence
 
-    if (rawPhoneme !== pendingPhonemeRef.current) {
+    if (
+      currentPhoneme === 'silence' &&
+      rawPhoneme !== 'silence' &&
+      rawConfidence >= CONFIDENCE_THRESHOLD
+    ) {
+      // Coming from silence - instant pickup, no debounce
+      finalPhoneme = rawPhoneme
+      lastConfirmedPhonemeRef.current = rawPhoneme
+      pendingPhonemeRef.current = rawPhoneme
+    } else if (rawPhoneme !== pendingPhonemeRef.current) {
       // New pending phoneme, start debounce timer
       pendingPhonemeRef.current = rawPhoneme
       lastTransitionTimeRef.current = now
@@ -295,28 +371,30 @@ export function useFormantDetection(): UseFormantDetectionResult {
 
     // If staying with current phoneme, use averaged confidence
     if (finalPhoneme === currentPhoneme && finalPhoneme !== rawPhoneme) {
-      finalConfidence = rawConfidence * 0.5 // Lower confidence when raw differs
+      finalConfidence = rawConfidence * 0.7 // Slightly lower confidence when raw differs
     }
 
-    // Debug logging (throttled)
-    debugCounterRef.current++
-    if (debugCounterRef.current % 30 === 0) {
-      console.log(
-        '[Formant] low:',
-        lowEnergy.toFixed(3),
-        'mid:',
-        midEnergy.toFixed(3),
-        'high:',
-        highEnergy.toFixed(3),
-        'ratio:',
-        upperLowerRatio.toFixed(2),
-        'flat:',
-        flatness.toFixed(3),
-        'detected:',
-        finalPhoneme,
-        'conf:',
-        finalConfidence.toFixed(2)
-      )
+    // Debug logging (throttled, development only)
+    if (process.env.NODE_ENV === 'development') {
+      debugCounterRef.current++
+      if (debugCounterRef.current % 30 === 0) {
+        console.log(
+          '[Formant] low:',
+          lowEnergy.toFixed(3),
+          'mid:',
+          midEnergy.toFixed(3),
+          'high:',
+          highEnergy.toFixed(3),
+          'ratio:',
+          upperLowerRatio.toFixed(2),
+          'flat:',
+          flatness.toFixed(3),
+          'detected:',
+          finalPhoneme,
+          'conf:',
+          finalConfidence.toFixed(2)
+        )
+      }
     }
 
     formantDataRef.current = {

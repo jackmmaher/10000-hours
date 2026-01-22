@@ -24,7 +24,7 @@ import {
   OPTIMAL_NO_FREQUENCY,
   DEFAULT_TOLERANCE_CENTS,
 } from '../../hooks/usePitchDetection'
-import { useFormantDetection, type FormantData } from '../../hooks/useFormantDetection'
+import { useFormantDetection } from '../../hooks/useFormantDetection'
 import { usePhonemeCalibration } from '../../hooks/usePhonemeCalibration'
 import { useAlignmentScoring } from '../../hooks/useAlignmentScoring'
 import { useOmSession, type OmSessionResult } from '../../hooks/useOmSession'
@@ -38,6 +38,7 @@ import {
 import { OmCoachSetup } from './OmCoachSetup'
 import { OmCoachPractice } from './OmCoachPractice'
 import { OmCoachResults } from './OmCoachResults'
+import { OmCoachErrorBoundary } from './OmCoachErrorBoundary'
 import { PhonemeCalibration } from './PhonemeCalibration'
 import { Paywall } from '../Paywall'
 import { LowHoursWarning } from '../LowHoursWarning'
@@ -67,8 +68,8 @@ export function OmCoach({ onClose }: OmCoachProps) {
   const [celebration, setCelebration] = useState<CelebrationState | null>(null)
   const [phonemeAlignment, setPhonemeAlignment] = useState<PhonemeAlignmentData | null>(null)
 
-  // Formant data for real-time phoneme indicator (reserved for future use)
-  const [_currentFormantData, _setCurrentFormantData] = useState<FormantData | null>(null)
+  // Note: Formant data is accessed via getFormantData() getter passed to OmCoachPractice
+  // No need for state here as the getter provides real-time data from refs
 
   // Paywall modal states
   const [showPaywall, setShowPaywall] = useState(false)
@@ -100,12 +101,21 @@ export function OmCoach({ onClose }: OmCoachProps) {
   const omSession = useOmSession()
 
   // Load calibration on mount and apply to formant detection
+  // Using refs to store stable function references to avoid unnecessary effect runs
+  const loadCalibrationRef = useRef(phonemeCalibration.loadCalibration)
+  const setCalibrationRef = useRef(formantDetection.setCalibration)
+
   useEffect(() => {
-    const profile = phonemeCalibration.loadCalibration()
+    loadCalibrationRef.current = phonemeCalibration.loadCalibration
+    setCalibrationRef.current = formantDetection.setCalibration
+  }, [phonemeCalibration.loadCalibration, formantDetection.setCalibration])
+
+  useEffect(() => {
+    const profile = loadCalibrationRef.current()
     if (profile) {
-      formantDetection.setCalibration(profile)
+      setCalibrationRef.current(profile)
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   // Guided cycle hook
   const handleCycleComplete = useCallback((quality: CycleQuality, cycleNumber: number) => {
@@ -115,9 +125,14 @@ export function OmCoach({ onClose }: OmCoachProps) {
     }
   }, [])
 
+  // Ref to hold handleEndSession for use in callbacks without stale closure
+  // Initialized to a no-op, updated after handleEndSession is defined
+  const handleEndSessionRef = useRef<() => void>(() => {})
+
   const handleSessionComplete = useCallback(() => {
     // Session ended naturally - trigger end session
-    handleEndSession()
+    // Uses ref to always get latest handleEndSession without dependency
+    handleEndSessionRef.current()
   }, [])
 
   const guidedCycle = useGuidedOmCycle({
@@ -128,6 +143,10 @@ export function OmCoach({ onClose }: OmCoachProps) {
   // Animation frame ref for audio processing loop
   const animationFrameRef = useRef<number | null>(null)
   const isProcessingRef = useRef(false)
+
+  // Throttle formant detection to every 3rd frame (~20fps) to reduce CPU load
+  // Pitch detection still runs at 60fps for smooth frequency bar
+  const frameCountRef = useRef(0)
 
   /**
    * Audio processing loop - runs at ~60fps
@@ -142,47 +161,49 @@ export function OmCoach({ onClose }: OmCoachProps) {
         return
       }
 
+      frameCountRef.current++
+      const shouldAnalyzeFormant = frameCountRef.current % 3 === 0 // ~20fps for formant
+
       const frequencyData = audioCapture.getFrequencyData()
       const timeDomainData = audioCapture.getTimeDomainData()
       const sampleRate = audioCapture.getSampleRate()
 
       if (frequencyData && timeDomainData && isAboveNoiseGate(timeDomainData)) {
-        // Analyze pitch
+        // Analyze pitch EVERY frame for smooth frequency bar
         const pitchData = pitchDetection.analyze(frequencyData, sampleRate)
 
-        // Analyze phoneme using formant detection (NEW)
-        const formantData = formantDetection.analyze(frequencyData, sampleRate)
+        // Analyze phoneme less frequently (every 3rd frame) - it's CPU heavy
+        if (shouldAnalyzeFormant) {
+          const formantData = formantDetection.analyze(frequencyData, sampleRate)
 
-        // Create compatible phoneme data for alignment scoring
-        const phonemeDataCompat = {
-          current: formantData.detectedPhoneme,
-          previousPhoneme: formantData.detectedPhoneme, // Simplified
-          spectralCentroid: 0,
-          spectralFlatness: formantData.spectralFlatness,
-          rms: formantData.rms,
-          completedCycles: 0,
-          timestamp: formantData.timestamp,
-        }
+          // Create compatible phoneme data for alignment scoring
+          const phonemeDataCompat = {
+            current: formantData.detectedPhoneme,
+            previousPhoneme: formantData.detectedPhoneme,
+            spectralCentroid: 0,
+            spectralFlatness: formantData.spectralFlatness,
+            rms: formantData.rms,
+            completedCycles: 0,
+            timestamp: formantData.timestamp,
+          }
 
-        // Update alignment scoring
-        alignmentScoring.recordSample(pitchData, phonemeDataCompat)
+          // Update alignment scoring
+          alignmentScoring.recordSample(pitchData, phonemeDataCompat)
 
-        // Record sample for guided cycle quality
-        guidedCycle.recordSample(formantData.detectedPhoneme, pitchData)
+          // Record sample for guided cycle quality
+          guidedCycle.recordSample(formantData.detectedPhoneme, pitchData)
 
-        // Update formant data state for UI (throttled to avoid excessive re-renders)
-        if (formantData.timestamp % 3 === 0) {
-          _setCurrentFormantData(formantData)
-        }
+          // Formant data available via getFormantData() getter - no state update needed
 
-        // Track alignment samples for session average
-        const alignment = alignmentScoring.getAlignmentData()
-        if (alignment.score > 0) {
-          alignmentSamplesRef.current.push(alignment.score)
+          // Track alignment samples for session average
+          const alignment = alignmentScoring.getAlignmentData()
+          if (alignment.score > 0) {
+            alignmentSamplesRef.current.push(alignment.score)
+          }
         }
       } else {
         // Still analyze with silence data for phoneme state machine
-        if (frequencyData) {
+        if (frequencyData && shouldAnalyzeFormant) {
           const pitchData = pitchDetection.analyze(frequencyData, sampleRate)
           const formantData = formantDetection.analyze(frequencyData, sampleRate)
 
@@ -198,9 +219,6 @@ export function OmCoach({ onClose }: OmCoachProps) {
 
           alignmentScoring.recordSample(pitchData, phonemeDataCompat)
           guidedCycle.recordSample(formantData.detectedPhoneme, pitchData)
-
-          // Update formant data even during silence
-          _setCurrentFormantData(formantData)
         }
       }
 
@@ -242,7 +260,6 @@ export function OmCoach({ onClose }: OmCoachProps) {
         pitchDetection.reset()
         formantDetection.reset()
         alignmentScoring.reset()
-        _setCurrentFormantData(null)
 
         // Start guided cycle session with timing mode
         guidedCycle.startSession(duration, mode)
@@ -361,6 +378,11 @@ export function OmCoach({ onClose }: OmCoachProps) {
     }
   }, [audioCapture, omSession, formantDetection, alignmentScoring, guidedCycle])
 
+  // Keep handleEndSession ref in sync for use in handleSessionComplete callback
+  useEffect(() => {
+    handleEndSessionRef.current = handleEndSession
+  }, [handleEndSession])
+
   /**
    * Cancel session without saving
    */
@@ -473,7 +495,11 @@ export function OmCoach({ onClose }: OmCoachProps) {
 
   // Store stopCapture in a ref so cleanup doesn't depend on audioCapture
   const stopCaptureRef = useRef(audioCapture.stopCapture)
-  stopCaptureRef.current = audioCapture.stopCapture
+
+  // Keep stopCapture ref in sync (moved to useEffect to avoid side effect during render)
+  useEffect(() => {
+    stopCaptureRef.current = audioCapture.stopCapture
+  }, [audioCapture.stopCapture])
 
   // Cleanup on unmount only (empty deps)
   useEffect(() => {
@@ -486,106 +512,146 @@ export function OmCoach({ onClose }: OmCoachProps) {
     }
   }, [])
 
+  // Handle tab visibility changes - pause audio processing when tab is hidden
+  // This prevents inaccurate session timing when RAF is throttled in background
+  useEffect(() => {
+    if (phase !== 'practice') return
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Tab went to background - pause audio processing loop
+        // (guided cycle timer continues but audio analysis stops)
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current)
+          animationFrameRef.current = null
+        }
+      } else {
+        // Tab came back - resume audio processing if still in practice
+        if (isProcessingRef.current && !animationFrameRef.current) {
+          animationFrameRef.current = requestAnimationFrame(processAudio)
+        }
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [phase, processAudio])
+
   // Fullscreen mode during practice - hides app header/navigation
   useEffect(() => {
     setFullscreen(phase === 'practice')
     return () => setFullscreen(false)
   }, [phase, setFullscreen])
 
+  // Error handler for error boundary - cleanup audio resources
+  const handleBoundaryError = useCallback(() => {
+    isProcessingRef.current = false
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current)
+      animationFrameRef.current = null
+    }
+    audioCapture.stopCapture()
+    setPhase('setup')
+  }, [audioCapture])
+
   return (
-    <div className="flex flex-col h-full bg-base pb-20">
-      {/* Header - hidden during calibration (calibration has its own header) */}
-      {phase !== 'calibration' && (
-        <div className="flex-none flex items-center justify-between px-4 py-3 border-b border-border-subtle">
-          <button
-            onClick={phase === 'practice' ? handleCancel : onClose}
-            className="text-sm text-ink/70 hover:text-ink"
-          >
-            {phase === 'practice' ? 'Cancel' : 'Close'}
-          </button>
-
-          <h2 className="text-sm font-medium text-ink">Aum Coach</h2>
-
-          {phase === 'practice' ? (
+    <OmCoachErrorBoundary onError={handleBoundaryError}>
+      <div className="flex flex-col h-full bg-base pb-20">
+        {/* Header - hidden during calibration (calibration has its own header) */}
+        {phase !== 'calibration' && (
+          <div className="flex-none flex items-center justify-between px-4 py-3 border-b border-border-subtle">
             <button
-              onClick={handleEndSession}
-              className="text-sm font-medium text-accent hover:text-accent-hover"
+              onClick={phase === 'practice' ? handleCancel : onClose}
+              className="text-sm text-ink/70 hover:text-ink"
             >
-              End
+              {phase === 'practice' ? 'Cancel' : 'Close'}
             </button>
-          ) : (
-            <div className="w-12" /> // Spacer for alignment
+
+            <h2 className="text-sm font-medium text-ink">Aum Coach</h2>
+
+            {phase === 'practice' ? (
+              <button
+                onClick={handleEndSession}
+                className="text-sm font-medium text-accent hover:text-accent-hover"
+              >
+                End
+              </button>
+            ) : (
+              <div className="w-12" /> // Spacer for alignment
+            )}
+          </div>
+        )}
+
+        {/* Content */}
+        <div className="flex-1 min-h-0 flex flex-col">
+          {phase === 'setup' && (
+            <OmCoachSetup
+              onBegin={handleBegin}
+              isLoading={isStarting}
+              error={error}
+              hasCalibration={phonemeCalibration.hasCalibration}
+              onRecalibrate={handleRecalibrate}
+              onStartCalibration={handleStartCalibration}
+            />
+          )}
+
+          {phase === 'calibration' && (
+            <PhonemeCalibration
+              state={phonemeCalibration.state}
+              onCancel={handleCancelCalibration}
+              onComplete={handleCalibrationComplete}
+            />
+          )}
+
+          {phase === 'practice' && (
+            <OmCoachPractice
+              guidedState={guidedCycle.state}
+              getPitchData={pitchDetection.getPitchData}
+              getFormantData={formantDetection.getFormantData}
+              isActive={isAudioActive}
+              celebration={celebration}
+              onCelebrationDismiss={handleCelebrationDismiss}
+            />
+          )}
+
+          {phase === 'results' && sessionResult && (
+            <OmCoachResults
+              durationSeconds={sessionResult.durationSeconds}
+              metrics={sessionResult.metrics}
+              lockedCycles={lockedCyclesRef.current}
+              totalCycles={totalCyclesRef.current}
+              phonemeAlignment={phonemeAlignment}
+              onClose={onClose}
+              onPracticeAgain={handlePracticeAgain}
+              onMeditateNow={handleMeditateNow}
+            />
           )}
         </div>
-      )}
 
-      {/* Content */}
-      <div className="flex-1 min-h-0 flex flex-col">
-        {phase === 'setup' && (
-          <OmCoachSetup
-            onBegin={handleBegin}
-            isLoading={isStarting}
-            error={error}
-            hasCalibration={phonemeCalibration.hasCalibration}
-            onRecalibrate={handleRecalibrate}
-            onStartCalibration={handleStartCalibration}
-          />
-        )}
+        {/* Paywall modal */}
+        <Paywall isOpen={showPaywall} onClose={() => setShowPaywall(false)} />
 
-        {phase === 'calibration' && (
-          <PhonemeCalibration
-            state={phonemeCalibration.state}
-            onCancel={handleCancelCalibration}
-            onComplete={handleCalibrationComplete}
-          />
-        )}
-
-        {phase === 'practice' && (
-          <OmCoachPractice
-            guidedState={guidedCycle.state}
-            getPitchData={pitchDetection.getPitchData}
-            getFormantData={formantDetection.getFormantData}
-            isActive={isAudioActive}
-            celebration={celebration}
-            onCelebrationDismiss={handleCelebrationDismiss}
-          />
-        )}
-
-        {phase === 'results' && sessionResult && (
-          <OmCoachResults
-            durationSeconds={sessionResult.durationSeconds}
-            metrics={sessionResult.metrics}
-            lockedCycles={lockedCyclesRef.current}
-            totalCycles={totalCyclesRef.current}
-            phonemeAlignment={phonemeAlignment}
-            onClose={onClose}
-            onPracticeAgain={handlePracticeAgain}
-            onMeditateNow={handleMeditateNow}
-          />
-        )}
-      </div>
-
-      {/* Paywall modal */}
-      <Paywall isOpen={showPaywall} onClose={() => setShowPaywall(false)} />
-
-      {/* Low hours warning modal */}
-      <LowHoursWarning
-        isOpen={showLowHoursWarning}
-        onClose={() => setShowLowHoursWarning(false)}
-        onContinue={() => {
-          setShowLowHoursWarning(false)
-          if (pendingSession) {
-            startSessionInternal(pendingSession.duration, pendingSession.mode)
+        {/* Low hours warning modal */}
+        <LowHoursWarning
+          isOpen={showLowHoursWarning}
+          onClose={() => setShowLowHoursWarning(false)}
+          onContinue={() => {
+            setShowLowHoursWarning(false)
+            if (pendingSession) {
+              startSessionInternal(pendingSession.duration, pendingSession.mode)
+              setPendingSession(null)
+            }
+          }}
+          onTopUp={() => {
+            setShowLowHoursWarning(false)
             setPendingSession(null)
-          }
-        }}
-        onTopUp={() => {
-          setShowLowHoursWarning(false)
-          setPendingSession(null)
-          setShowPaywall(true)
-        }}
-        availableHours={available}
-      />
-    </div>
+            setShowPaywall(true)
+          }}
+          availableHours={available}
+        />
+      </div>
+    </OmCoachErrorBoundary>
   )
 }

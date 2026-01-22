@@ -81,9 +81,27 @@ export function OmCoachPractice({
   const animationRef = useRef<number | null>(null)
 
   // Animation loop for smooth pitch and formant updates
+  // IMPORTANT: Spread to create new object reference so React detects changes
   const updateLoop = useCallback(() => {
-    setPitch(getPitchData())
-    setFormant(getFormantData())
+    const pitchData = getPitchData()
+    const formantData = getFormantData()
+
+    // Only update pitch state if frequency changed (main visual element)
+    setPitch((prev) => {
+      if (prev.frequency !== pitchData.frequency || prev.clarity !== pitchData.clarity) {
+        return { ...pitchData }
+      }
+      return prev
+    })
+
+    // Update formant less aggressively (phoneme indicator)
+    setFormant((prev) => {
+      if (prev.detectedPhoneme !== formantData.detectedPhoneme) {
+        return { ...formantData }
+      }
+      return prev
+    })
+
     if (isActive) {
       animationRef.current = requestAnimationFrame(updateLoop)
     }

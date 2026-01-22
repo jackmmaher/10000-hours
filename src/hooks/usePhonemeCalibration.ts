@@ -65,22 +65,46 @@ export interface UsePhonemeCalibrationResult {
 }
 
 /**
+ * Type guard to validate CalibrationProfile structure
+ */
+function isValidCalibrationProfile(obj: unknown): obj is CalibrationProfile {
+  if (!obj || typeof obj !== 'object') return false
+  const profile = obj as Record<string, unknown>
+
+  return (
+    typeof profile.ahRatio === 'number' &&
+    !Number.isNaN(profile.ahRatio) &&
+    Number.isFinite(profile.ahRatio) &&
+    profile.ahRatio > 0 &&
+    typeof profile.ooRatio === 'number' &&
+    !Number.isNaN(profile.ooRatio) &&
+    Number.isFinite(profile.ooRatio) &&
+    profile.ooRatio > 0 &&
+    typeof profile.mmFlatness === 'number' &&
+    !Number.isNaN(profile.mmFlatness) &&
+    Number.isFinite(profile.mmFlatness) &&
+    profile.mmFlatness >= 0
+  )
+}
+
+/**
  * Load calibration profile from localStorage
  */
 function loadFromStorage(): CalibrationProfile | null {
+  // SSR safety - check if localStorage is available
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+    return null
+  }
+
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (!stored) return null
 
-    const profile = JSON.parse(stored) as CalibrationProfile
+    const parsed: unknown = JSON.parse(stored)
 
-    // Validate the profile has required fields
-    if (
-      typeof profile.ahRatio === 'number' &&
-      typeof profile.ooRatio === 'number' &&
-      typeof profile.mmFlatness === 'number'
-    ) {
-      return profile
+    // Use type guard for proper validation instead of unsafe cast
+    if (isValidCalibrationProfile(parsed)) {
+      return parsed
     }
     return null
   } catch {
@@ -92,10 +116,17 @@ function loadFromStorage(): CalibrationProfile | null {
  * Save calibration profile to localStorage
  */
 function saveToStorage(profile: CalibrationProfile): void {
+  // SSR safety
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+    return
+  }
+
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(profile))
   } catch (err) {
-    console.error('[Calibration] Failed to save:', err)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[Calibration] Failed to save:', err)
+    }
   }
 }
 
@@ -103,10 +134,17 @@ function saveToStorage(profile: CalibrationProfile): void {
  * Clear calibration from localStorage
  */
 function clearFromStorage(): void {
+  // SSR safety
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+    return
+  }
+
   try {
     localStorage.removeItem(STORAGE_KEY)
   } catch (err) {
-    console.error('[Calibration] Failed to clear:', err)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[Calibration] Failed to clear:', err)
+    }
   }
 }
 
@@ -209,13 +247,17 @@ export function usePhonemeCalibration(): UsePhonemeCalibrationResult {
 
       const getFrequencyData = getFrequencyDataRef.current
       if (!getFrequencyData) {
-        console.warn('[Calibration] No getFrequencyData function')
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[Calibration] No getFrequencyData function')
+        }
         return result
       }
 
       const audioData = getFrequencyData()
       if (!audioData) {
-        console.warn('[Calibration] No audio data')
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[Calibration] No audio data')
+        }
         return result
       }
 
@@ -238,7 +280,9 @@ export function usePhonemeCalibration(): UsePhonemeCalibrationResult {
       const features = Meyda.extract(['spectralFlatness', 'rms', 'powerSpectrum'], signal)
 
       if (!features) {
-        console.warn('[Calibration] Meyda returned no features')
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[Calibration] Meyda returned no features')
+        }
         return result
       }
 
@@ -249,23 +293,25 @@ export function usePhonemeCalibration(): UsePhonemeCalibrationResult {
       result.rms = rms
       result.isVoiceDetected = rms > VOICE_THRESHOLD
 
-      // Debug logging (throttled)
-      debugCounterRef.current++
-      if (debugCounterRef.current % 30 === 0) {
-        console.log(
-          '[Calibration]',
-          phase,
-          'rms:',
-          rms.toFixed(4),
-          'voice:',
-          result.isVoiceDetected ? 'YES' : 'no',
-          'flatness:',
-          flatness.toFixed(3),
-          'powerSpectrum:',
-          powerSpectrum ? powerSpectrum.length : 'NONE',
-          'samples:',
-          samplesRef.current.ratios.length
-        )
+      // Debug logging (throttled, development only)
+      if (process.env.NODE_ENV === 'development') {
+        debugCounterRef.current++
+        if (debugCounterRef.current % 30 === 0) {
+          console.log(
+            '[Calibration]',
+            phase,
+            'rms:',
+            rms.toFixed(4),
+            'voice:',
+            result.isVoiceDetected ? 'YES' : 'no',
+            'flatness:',
+            flatness.toFixed(3),
+            'powerSpectrum:',
+            powerSpectrum ? powerSpectrum.length : 'NONE',
+            'samples:',
+            samplesRef.current.ratios.length
+          )
+        }
       }
 
       // For noise phase, always collect
@@ -293,7 +339,9 @@ export function usePhonemeCalibration(): UsePhonemeCalibrationResult {
         samplesRef.current.ratios.push(1.0)
         samplesRef.current.flatnesses.push(flatness)
         result.sampleCollected = true
-        console.log('[Calibration] Using fallback - no powerSpectrum')
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[Calibration] Using fallback - no powerSpectrum')
+        }
       }
 
       return result
@@ -318,34 +366,44 @@ export function usePhonemeCalibration(): UsePhonemeCalibrationResult {
     (currentPhase: CalibrationPhase) => {
       const samples = samplesRef.current
 
-      // Log samples collected for this phase
-      console.log(
-        `[Calibration] Phase ${currentPhase} complete:`,
-        'ratios:',
-        samples.ratios.length,
-        'flatnesses:',
-        samples.flatnesses.length,
-        'rmsValues:',
-        samples.rmsValues.length
-      )
+      // Log samples collected for this phase (development only)
+      if (process.env.NODE_ENV === 'development') {
+        console.log(
+          `[Calibration] Phase ${currentPhase} complete:`,
+          'ratios:',
+          samples.ratios.length,
+          'flatnesses:',
+          samples.flatnesses.length,
+          'rmsValues:',
+          samples.rmsValues.length
+        )
+      }
 
       // Store results from completed phase
       switch (currentPhase) {
         case 'noise':
           noiseFloorRef.current = median(samples.rmsValues)
-          console.log('[Calibration] Noise floor:', noiseFloorRef.current)
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[Calibration] Noise floor:', noiseFloorRef.current)
+          }
           break
         case 'ah':
           ahRatiosRef.current = [...samples.ratios]
-          console.log('[Calibration] Ah ratios collected:', ahRatiosRef.current.length)
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[Calibration] Ah ratios collected:', ahRatiosRef.current.length)
+          }
           break
         case 'oo':
           ooRatiosRef.current = [...samples.ratios]
-          console.log('[Calibration] Oo ratios collected:', ooRatiosRef.current.length)
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[Calibration] Oo ratios collected:', ooRatiosRef.current.length)
+          }
           break
         case 'mm':
           mmFlatnessesRef.current = [...samples.flatnesses]
-          console.log('[Calibration] Mm flatnesses collected:', mmFlatnessesRef.current.length)
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[Calibration] Mm flatnesses collected:', mmFlatnessesRef.current.length)
+          }
           break
       }
 
@@ -363,24 +421,28 @@ export function usePhonemeCalibration(): UsePhonemeCalibrationResult {
         const ooRatio = median(ooRatiosRef.current)
         const mmFlatness = median(mmFlatnessesRef.current)
 
-        console.log(
-          '[Calibration] Final counts - ah:',
-          ahRatiosRef.current.length,
-          'oo:',
-          ooRatiosRef.current.length,
-          'mm:',
-          mmFlatnessesRef.current.length
-        )
+        if (process.env.NODE_ENV === 'development') {
+          console.log(
+            '[Calibration] Final counts - ah:',
+            ahRatiosRef.current.length,
+            'oo:',
+            ooRatiosRef.current.length,
+            'mm:',
+            mmFlatnessesRef.current.length
+          )
+        }
 
         // Validate - need at least 5 samples (lowered from 10)
         if (ahRatiosRef.current.length < 5 || ooRatiosRef.current.length < 5) {
-          console.error(
-            '[Calibration] Not enough samples:',
-            'ah:',
-            ahRatiosRef.current.length,
-            'oo:',
-            ooRatiosRef.current.length
-          )
+          if (process.env.NODE_ENV === 'development') {
+            console.error(
+              '[Calibration] Not enough samples:',
+              'ah:',
+              ahRatiosRef.current.length,
+              'oo:',
+              ooRatiosRef.current.length
+            )
+          }
           setState({
             phase: 'idle',
             progress: 0,
@@ -402,7 +464,27 @@ export function usePhonemeCalibration(): UsePhonemeCalibrationResult {
           noiseFloor: noiseFloorRef.current,
         }
 
-        console.log('[Calibration] Complete:', newProfile)
+        // Log detailed calibration results (development only)
+        const separation = Math.abs(ahRatio - ooRatio)
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[Calibration] Complete:', {
+            ahRatio: ahRatio.toFixed(3),
+            ooRatio: ooRatio.toFixed(3),
+            mmFlatness: mmFlatness.toFixed(3),
+            noiseFloor: noiseFloorRef.current.toFixed(4),
+            separation: separation.toFixed(3),
+            isGoodSeparation: separation >= 0.3,
+          })
+
+          // Warn if calibration values are too similar
+          if (separation < 0.3) {
+            console.warn(
+              '[Calibration] WARNING: Ah and Oo ratios are very similar (' +
+                separation.toFixed(2) +
+                '). Detection may be unreliable. Try making vowel shapes more distinct during calibration.'
+            )
+          }
+        }
         saveToStorage(newProfile)
         setProfile(newProfile)
 

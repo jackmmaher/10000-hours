@@ -100,6 +100,11 @@ export function useOmAudioCapture(): OmAudioCaptureResult {
     try {
       setError(null)
 
+      // Check for getUserMedia API availability
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error('Microphone access not available. Please use a modern browser with HTTPS.')
+      }
+
       // Request microphone permission
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -121,6 +126,15 @@ export function useOmAudioCapture(): OmAudioCaptureResult {
       if (audioContext.state === 'suspended') {
         await audioContext.resume()
       }
+
+      // Handle iOS Safari re-suspension when tab goes to background and returns
+      audioContext.addEventListener('statechange', () => {
+        if (audioContext.state === 'suspended' && isCapturingRef.current) {
+          audioContext.resume().catch(() => {
+            // Ignore errors - user may need to interact again
+          })
+        }
+      })
 
       // Create and configure AnalyserNode
       const analyser = audioContext.createAnalyser()
