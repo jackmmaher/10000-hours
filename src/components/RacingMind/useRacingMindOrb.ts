@@ -63,13 +63,24 @@ export function useRacingMindOrb({
 
   /**
    * Initialize PixiJS application
+   * Uses a small delay to ensure container has correct dimensions after layout
    */
   const initApp = useCallback(async () => {
     const container = containerRef.current
     if (!container || appRef.current) return
 
-    const width = container.clientWidth
-    const height = container.clientHeight
+    // Wait for next frame to ensure layout is complete
+    await new Promise((resolve) => requestAnimationFrame(resolve))
+
+    // Get dimensions - use window dimensions as fallback for fullscreen mode
+    let width = container.clientWidth
+    let height = container.clientHeight
+
+    // If container dimensions seem wrong (too small), use window dimensions
+    if (height < 200) {
+      width = window.innerWidth
+      height = window.innerHeight
+    }
 
     // Create PixiJS Application with battery-efficient settings
     const app = new Application()
@@ -84,6 +95,10 @@ export function useRacingMindOrb({
 
     // Set target FPS
     app.ticker.maxFPS = ANIMATION_PARAMS.targetFps
+
+    // Make canvas fill container
+    app.canvas.style.width = '100%'
+    app.canvas.style.height = '100%'
 
     // Add canvas to container
     container.appendChild(app.canvas)

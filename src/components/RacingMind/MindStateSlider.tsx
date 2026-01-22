@@ -3,6 +3,8 @@
  *
  * Used for pre and post session assessment of mental state.
  * "Racing" (1) to "Calm" (10)
+ *
+ * Redesigned with a visible track and clear tappable dots.
  */
 
 interface MindStateSliderProps {
@@ -23,51 +25,84 @@ export function MindStateSlider({
 
   // Color classes based on variant
   const textColor = variant === 'dark' ? 'text-white' : 'text-ink'
-  const textMuted = variant === 'dark' ? 'text-white/50' : 'text-ink/50'
-  const dotInactive =
-    variant === 'dark' ? 'bg-white/20 hover:bg-white/30' : 'bg-ink/20 hover:bg-ink/30'
+  const textMuted = variant === 'dark' ? 'text-white/60' : 'text-ink/60'
+  const trackBg = variant === 'dark' ? 'bg-white/10' : 'bg-ink/10'
+  const dotBorder = variant === 'dark' ? 'border-white/40' : 'border-ink/40'
+  const dotBg = variant === 'dark' ? 'bg-white/20' : 'bg-base'
 
   return (
     <div className="w-full">
-      {label && <p className={`text-center ${textColor} mb-4`}>{label}</p>}
+      {label && <p className={`text-center ${textColor} mb-5`}>{label}</p>}
 
       {/* Scale labels */}
-      <div className={`flex justify-between text-xs ${textMuted} mb-3 px-1`}>
+      <div className={`flex justify-between text-xs ${textMuted} mb-2 px-2`}>
         <span>Racing</span>
         <span>Calm</span>
       </div>
 
-      {/* Dots */}
-      <div className="flex justify-between items-center gap-1 px-1">
+      {/* Slider track with dots */}
+      <div className="relative px-2">
+        {/* Track background */}
+        <div
+          className={`absolute top-1/2 left-2 right-2 h-1 -translate-y-1/2 rounded-full ${trackBg}`}
+        />
+
+        {/* Filled track up to selected value */}
+        {value !== null && (
+          <div
+            className="absolute top-1/2 left-2 h-1 -translate-y-1/2 rounded-full bg-accent"
+            style={{ width: `${((value - 1) / 9) * 100}%` }}
+          />
+        )}
+
+        {/* Dots */}
+        <div className="relative flex justify-between items-center">
+          {dots.map((dot) => {
+            const isSelected = value === dot
+            const isBefore = value !== null && dot < value
+
+            return (
+              <button
+                key={dot}
+                onClick={() => onChange(dot)}
+                className="relative flex items-center justify-center w-8 h-10 -mx-1"
+                aria-label={`Select ${dot}`}
+              >
+                <div
+                  className={`rounded-full transition-all flex items-center justify-center ${
+                    isSelected
+                      ? 'w-9 h-9 bg-accent shadow-lg shadow-accent/40'
+                      : isBefore
+                        ? 'w-4 h-4 bg-accent'
+                        : `w-4 h-4 ${dotBg} border-2 ${dotBorder}`
+                  }`}
+                >
+                  {isSelected && <span className="text-white text-sm font-bold">{dot}</span>}
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Number scale below */}
+      <div className="flex justify-between px-2 mt-1">
         {dots.map((dot) => (
-          <button
+          <div
             key={dot}
-            onClick={() => onChange(dot)}
-            className={`relative flex items-center justify-center transition-all ${
-              value === dot ? 'w-8 h-8 -my-1' : 'w-6 h-6'
+            className={`w-8 -mx-1 text-center text-[10px] ${
+              value === dot ? 'text-accent font-bold' : textMuted
             }`}
-            aria-label={`Select ${dot}`}
           >
-            <div
-              className={`rounded-full transition-all ${
-                value === dot
-                  ? 'w-8 h-8 bg-accent shadow-lg shadow-accent/30'
-                  : value !== null && dot < value && dot > (value || 0)
-                    ? 'w-3 h-3 bg-accent/30'
-                    : `w-3 h-3 ${dotInactive}`
-              }`}
-            />
-            {value === dot && (
-              <span className="absolute text-white text-xs font-semibold">{dot}</span>
-            )}
-          </button>
+            {dot}
+          </div>
         ))}
       </div>
 
       {/* Current value display */}
       {value !== null && (
         <div className="text-center mt-4">
-          <span className={`text-2xl font-serif ${textColor}`}>{value}</span>
+          <span className={`text-3xl font-serif ${textColor}`}>{value}</span>
           <span className={`${textMuted} text-sm`}>/10</span>
         </div>
       )}

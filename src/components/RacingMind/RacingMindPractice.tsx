@@ -146,17 +146,30 @@ export function RacingMindPractice({
 
   // Start eye tracking when session begins
   useEffect(() => {
-    if (isActive && eyeTrackingSupported) {
+    console.log(
+      '[RacingMind] Eye tracking effect - isActive:',
+      isActive,
+      'supported:',
+      eyeTrackingSupported
+    )
+
+    if (isActive && eyeTrackingSupported === true) {
+      console.log('[RacingMind] Starting eye tracking...')
       startEyeTracking().then((success) => {
         if (success) {
-          console.log('[RacingMind] Eye tracking started')
+          console.log('[RacingMind] Eye tracking started successfully')
           clearOrbHistory()
+        } else {
+          console.log('[RacingMind] Eye tracking failed to start')
         }
       })
+    } else if (isActive && eyeTrackingSupported === false) {
+      console.log('[RacingMind] Eye tracking not supported, proceeding without it')
     }
 
     return () => {
       if (isTracking) {
+        console.log('[RacingMind] Stopping eye tracking on cleanup')
         stopEyeTracking()
       }
     }

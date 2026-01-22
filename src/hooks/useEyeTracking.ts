@@ -47,9 +47,11 @@ export function useEyeTracking(maxHistorySize = 1800): UseEyeTrackingResult {
   useEffect(() => {
     EyeTracking.isSupported()
       .then(({ supported }) => {
+        console.log('[useEyeTracking] Device support check:', supported)
         setIsSupported(supported)
       })
-      .catch(() => {
+      .catch((err) => {
+        console.warn('[useEyeTracking] Support check failed:', err)
         setIsSupported(false)
       })
   }, [])
@@ -77,17 +79,22 @@ export function useEyeTracking(maxHistorySize = 1800): UseEyeTrackingResult {
 
   // Start tracking
   const startTracking = useCallback(async (): Promise<boolean> => {
+    console.log('[useEyeTracking] Attempting to start, isSupported:', isSupported)
+
     if (!isSupported) {
-      console.warn('[useEyeTracking] Eye tracking not supported')
+      console.warn('[useEyeTracking] Eye tracking not supported on this device')
       return false
     }
 
     try {
+      console.log('[useEyeTracking] Setting up listener...')
       // Set up listener first
       listenerRef.current = await EyeTracking.addListener('gazeUpdate', handleGazeUpdate)
 
-      // Start tracking
+      console.log('[useEyeTracking] Calling startTracking...')
+      // Start tracking - this triggers camera permission request on iOS
       const { success } = await EyeTracking.startTracking()
+      console.log('[useEyeTracking] startTracking result:', success)
 
       if (success) {
         setIsTracking(true)

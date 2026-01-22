@@ -133,8 +133,8 @@ export function RacingMindSetup({ onBegin, isLoading }: RacingMindSetupProps) {
                 min
               </div>
               <div
-                className={`absolute -bottom-2.5 left-1/2 -translate-x-1/2 text-[9px] px-2 py-0.5 rounded-full whitespace-nowrap ${
-                  selectedDuration === 10 ? 'bg-white/20 text-white' : 'bg-accent/10 text-accent'
+                className={`absolute -bottom-3 left-1/2 -translate-x-1/2 text-[10px] font-medium px-2.5 py-0.5 rounded-full whitespace-nowrap ${
+                  selectedDuration === 10 ? 'bg-white text-accent' : 'bg-accent text-white'
                 }`}
               >
                 Enhanced
