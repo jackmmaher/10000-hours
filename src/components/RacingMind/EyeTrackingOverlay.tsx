@@ -5,7 +5,7 @@
  * Only used in development mode for debugging.
  */
 
-import type { GazePoint } from '../../plugins/eyeTracking'
+import type { GazePoint } from '../../hooks/useEyeTracking'
 
 interface EyeTrackingOverlayProps {
   gazePoint: GazePoint | null

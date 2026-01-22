@@ -1,13 +1,20 @@
 /**
- * useEyeTracking - React hook for eye tracking integration
+ * useEyeTracking - React hook for web-based eye tracking
  *
- * Manages the eye tracking plugin lifecycle and provides
- * gaze position data for the Racing Mind practice.
+ * Uses WebGazer.js for camera-based gaze estimation.
+ * Works via standard web APIs (like microphone for Aum coach).
+ * No native code required.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { EyeTracking, type GazePoint } from '../plugins/eyeTracking'
-import type { PluginListenerHandle } from '@capacitor/core'
+import webgazer from 'webgazer'
+
+export interface GazePoint {
+  x: number
+  y: number
+  timestamp: number
+  quality: number
+}
 
 export interface UseEyeTrackingResult {
   /** Current gaze position (null if not tracking) */
@@ -40,85 +47,109 @@ export function useEyeTracking(maxHistorySize = 1800): UseEyeTrackingResult {
   const [trackingQuality, setTrackingQuality] = useState(0)
   const [gazeHistory, setGazeHistory] = useState<GazePoint[]>([])
 
-  const listenerRef = useRef<PluginListenerHandle | null>(null)
   const gazeHistoryRef = useRef<GazePoint[]>([])
+  const isInitializedRef = useRef(false)
+  const updateCountRef = useRef(0)
 
-  // Check support on mount
+  // Check support on mount - WebGazer needs getUserMedia
   useEffect(() => {
-    EyeTracking.isSupported()
-      .then(({ supported }) => {
-        console.log('[useEyeTracking] Device support check:', supported)
-        setIsSupported(supported)
-      })
-      .catch((err) => {
+    const checkSupport = async () => {
+      try {
+        // Check if getUserMedia is available (camera access)
+        const hasGetUserMedia = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)
+        console.debug('[useEyeTracking] getUserMedia supported:', hasGetUserMedia)
+        setIsSupported(hasGetUserMedia)
+      } catch (err) {
         console.warn('[useEyeTracking] Support check failed:', err)
         setIsSupported(false)
-      })
+      }
+    }
+    checkSupport()
   }, [])
-
-  // Handle gaze updates
-  const handleGazeUpdate = useCallback(
-    (data: GazePoint) => {
-      setGazePoint(data)
-      setTrackingQuality(data.quality)
-
-      // Add to history (use ref for performance)
-      gazeHistoryRef.current.push(data)
-      if (gazeHistoryRef.current.length > maxHistorySize) {
-        gazeHistoryRef.current.shift()
-      }
-
-      // Update state less frequently to avoid re-renders
-      // Only update every 30th point (once per second)
-      if (gazeHistoryRef.current.length % 30 === 0) {
-        setGazeHistory([...gazeHistoryRef.current])
-      }
-    },
-    [maxHistorySize]
-  )
 
   // Start tracking
   const startTracking = useCallback(async (): Promise<boolean> => {
-    console.log('[useEyeTracking] Attempting to start, isSupported:', isSupported)
+    console.debug('[useEyeTracking] Attempting to start, isSupported:', isSupported)
 
     if (!isSupported) {
       console.warn('[useEyeTracking] Eye tracking not supported on this device')
       return false
     }
 
+    if (isInitializedRef.current) {
+      console.debug('[useEyeTracking] Already initialized, resuming...')
+      webgazer.resume()
+      setIsTracking(true)
+      return true
+    }
+
     try {
-      console.log('[useEyeTracking] Setting up listener...')
-      // Set up listener first
-      listenerRef.current = await EyeTracking.addListener('gazeUpdate', handleGazeUpdate)
+      console.debug('[useEyeTracking] Initializing WebGazer...')
 
-      console.log('[useEyeTracking] Calling startTracking...')
-      // Start tracking - this triggers camera permission request on iOS
-      const { success } = await EyeTracking.startTracking()
-      console.log('[useEyeTracking] startTracking result:', success)
+      // Configure WebGazer - hide all visual elements
+      webgazer
+        .setRegression('ridge')
+        .showVideoPreview(false)
+        .showPredictionPoints(false)
+        .showFaceOverlay(false)
+        .showFaceFeedbackBox(false)
 
-      if (success) {
-        setIsTracking(true)
-        gazeHistoryRef.current = []
-        setGazeHistory([])
-        return true
-      }
+      // Set up gaze listener
+      webgazer.setGazeListener((data, elapsedTime) => {
+        if (data === null) {
+          // No face detected - quality is 0
+          setTrackingQuality(0)
+          return
+        }
 
-      // Clean up listener if start failed
-      await listenerRef.current?.remove()
-      listenerRef.current = null
-      return false
+        const point: GazePoint = {
+          x: data.x,
+          y: data.y,
+          timestamp: elapsedTime,
+          quality: 0.8, // WebGazer doesn't provide quality, assume good if face detected
+        }
+
+        setGazePoint(point)
+        setTrackingQuality(0.8)
+
+        // Add to history (use ref for performance)
+        gazeHistoryRef.current.push(point)
+        if (gazeHistoryRef.current.length > maxHistorySize) {
+          gazeHistoryRef.current.shift()
+        }
+
+        // Update state less frequently to avoid re-renders
+        // Only update every 30th point (roughly once per second at 30fps)
+        updateCountRef.current++
+        if (updateCountRef.current % 30 === 0) {
+          setGazeHistory([...gazeHistoryRef.current])
+        }
+      })
+
+      // Start WebGazer - this will request camera permission
+      console.debug('[useEyeTracking] Calling webgazer.begin()...')
+      await webgazer.begin()
+      console.debug('[useEyeTracking] WebGazer started successfully')
+
+      isInitializedRef.current = true
+      gazeHistoryRef.current = []
+      updateCountRef.current = 0
+      setGazeHistory([])
+      setIsTracking(true)
+
+      return true
     } catch (error) {
       console.error('[useEyeTracking] Failed to start:', error)
       return false
     }
-  }, [isSupported, handleGazeUpdate])
+  }, [isSupported, maxHistorySize])
 
   // Stop tracking
   const stopTracking = useCallback(async () => {
+    console.debug('[useEyeTracking] Stopping...')
     try {
-      await EyeTracking.stopTracking()
-      await listenerRef.current?.remove()
-      listenerRef.current = null
+      webgazer.pause()
+      webgazer.clearGazeListener()
       setIsTracking(false)
       setGazePoint(null)
 
@@ -132,15 +163,21 @@ export function useEyeTracking(maxHistorySize = 1800): UseEyeTrackingResult {
   // Clear history
   const clearHistory = useCallback(() => {
     gazeHistoryRef.current = []
+    updateCountRef.current = 0
     setGazeHistory([])
   }, [])
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (listenerRef.current) {
-        EyeTracking.stopTracking().catch(() => {})
-        listenerRef.current.remove().catch(() => {})
+      if (isInitializedRef.current) {
+        console.debug('[useEyeTracking] Cleanup - ending WebGazer')
+        try {
+          webgazer.end()
+          isInitializedRef.current = false
+        } catch {
+          // Ignore cleanup errors
+        }
       }
     }
   }, [])

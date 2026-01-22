@@ -9,7 +9,7 @@
  */
 
 import { useCallback, useRef } from 'react'
-import type { GazePoint } from '../../plugins/eyeTracking'
+import type { GazePoint } from '../../hooks/useEyeTracking'
 import type { TrackingMetrics } from './index'
 
 interface OrbPosition {
