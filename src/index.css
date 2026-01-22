@@ -247,6 +247,17 @@ html.theater-mode body {
   background-color: var(--theater-edge) !important;
 }
 
+/* Racing Mind practice mode - matches dark practice background */
+html.racing-mind-transitioning,
+html.racing-mind-transitioning body {
+  transition: background-color 4s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+}
+
+html.racing-mind-mode,
+html.racing-mind-mode body {
+  background-color: #0A0A12 !important;
+}
+
 body {
   font-family: 'Raleway', system-ui, sans-serif;
   font-weight: 400;

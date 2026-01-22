@@ -10,8 +10,9 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { motion } from 'framer-motion'
 import { RacingMindOrb } from './RacingMindOrb'
-import { formatElapsedTime, RACING_MIND_COLORS } from '../../lib/racingMindAnimation'
+import { RACING_MIND_COLORS } from '../../lib/racingMindAnimation'
 import { useEyeTracking } from '../../hooks/useEyeTracking'
 import { useTrackingScore } from './useTrackingScore'
 import type { TrackingMetrics } from './index'
@@ -33,8 +34,8 @@ export function RacingMindPractice({
   onEnd,
   onCancel,
 }: RacingMindPracticeProps) {
-  const [elapsedDisplay, setElapsedDisplay] = useState('0:00')
   const [isActive, setIsActive] = useState(true)
+  const [hasStarted, setHasStarted] = useState(false)
   const hasEndedRef = useRef(false)
 
   // Orientation switching state
@@ -57,13 +58,36 @@ export function RacingMindPractice({
   // Current tracking accuracy for visual feedback (0-100)
   const [trackingAccuracy, setTrackingAccuracy] = useState(50)
 
-  // Update elapsed time display every second and check for orientation transition
+  // Trigger fade-in after mount
+  useEffect(() => {
+    const timer = setTimeout(() => setHasStarted(true), 100)
+    return () => clearTimeout(timer)
+  }, [])
+
+  // Manage racing-mind-mode classes on html/body for iOS safe area colors
+  useEffect(() => {
+    const html = document.documentElement
+    html.classList.add('racing-mind-transitioning')
+    html.classList.add('racing-mind-mode')
+
+    const timeout = setTimeout(() => {
+      html.classList.remove('racing-mind-transitioning')
+    }, 4000)
+
+    return () => {
+      clearTimeout(timeout)
+      html.classList.add('racing-mind-transitioning')
+      html.classList.remove('racing-mind-mode')
+      setTimeout(() => html.classList.remove('racing-mind-transitioning'), 4000)
+    }
+  }, [])
+
+  // Check for session end and orientation transition every second
   useEffect(() => {
     if (!isActive) return
 
     const updateDisplay = () => {
       const elapsed = getElapsedSeconds()
-      setElapsedDisplay(formatElapsedTime(elapsed))
 
       // Check if session should auto-end
       if (elapsed >= durationSeconds && !hasEndedRef.current) {
@@ -213,10 +237,22 @@ export function RacingMindPractice({
     onCancel()
   }, [onCancel])
 
+  // Helper function for split time display
+  function formatElapsedParts(seconds: number): { minutes: string; seconds: string } {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return { minutes: String(mins), seconds: String(secs).padStart(2, '0') }
+  }
+
+  const timeParts = formatElapsedParts(getElapsedSeconds())
+
   return (
-    <div
+    <motion.div
       className="relative w-full h-full"
       style={{ backgroundColor: RACING_MIND_COLORS.background }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: hasStarted ? 1 : 0 }}
+      transition={{ duration: 4, ease: [0.25, 0.1, 0.25, 1] }}
     >
       {/* PixiJS Canvas */}
       <RacingMindOrb
@@ -227,25 +263,41 @@ export function RacingMindPractice({
         onPositionUpdate={isTracking ? recordOrbPosition : undefined}
       />
 
-      {/* Cancel button - top left */}
+      {/* Cancel button - ghost style for dark background */}
       <button
         onClick={handleCancel}
-        className="absolute top-4 left-4 text-sm text-white/40 hover:text-white/70 transition-colors z-10"
+        className="absolute top-4 left-4 px-3 py-1.5 text-caption font-medium text-white/50 hover:text-white/80 hover:bg-white/10 rounded-lg transition-all duration-150 ease-out z-10"
       >
         Cancel
       </button>
 
-      {/* End button - top right */}
+      {/* End button - secondary style for dark background */}
       <button
         onClick={handleEnd}
-        className="absolute top-4 right-4 text-sm font-medium text-white/70 hover:text-white transition-colors z-10"
+        className="absolute top-4 right-4 px-4 py-2 text-body font-medium text-white/90 hover:text-white bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-150 ease-out z-10"
       >
         End
       </button>
 
-      {/* Elapsed time - bottom center */}
+      {/* Elapsed time - styled to match OmCoach */}
       <div className="absolute bottom-8 left-0 right-0 flex justify-center z-10">
-        <span className="text-sm text-white/40 tabular-nums">{elapsedDisplay}</span>
+        <div
+          className="flex items-baseline justify-center gap-2 font-serif"
+          style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}
+        >
+          <span
+            className="font-semibold"
+            style={{ fontSize: '2rem', lineHeight: 1, color: 'rgba(255, 255, 255, 0.7)' }}
+          >
+            {timeParts.minutes}
+          </span>
+          <span
+            className="font-light"
+            style={{ fontSize: '1.5rem', lineHeight: 1, color: 'rgba(255, 255, 255, 0.4)' }}
+          >
+            {timeParts.seconds}
+          </span>
+        </div>
       </div>
 
       {/* Rotation prompt overlay - shown at 50% progress */}
@@ -287,6 +339,6 @@ export function RacingMindPractice({
 
       {/* Safe area padding for newer iPhones */}
       <div className="absolute bottom-0 left-0 right-0 h-safe-area-inset-bottom" />
-    </div>
+    </motion.div>
   )
 }

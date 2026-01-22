@@ -58,7 +58,7 @@ export const ANIMATION_PARAMS = {
   orbRadius: 40,
 
   // Target frame rate
-  targetFps: 30,
+  targetFps: 60,
 } as const
 
 // Bezier easing for smooth deceleration (ease-out-cubic-like)
@@ -130,6 +130,21 @@ export function getGlowStrength(timeMs: number): number {
 }
 
 /**
+ * Smoothed sine function to avoid velocity approaching zero at extremes
+ * Near peaks (|sine| > 0.95), blends to maintain some velocity
+ */
+function smoothSine(t: number): number {
+  const sine = Math.sin(t)
+  const absSine = Math.abs(sine)
+  // Near extremes (|sine| > 0.95), blend to avoid complete velocity stop
+  if (absSine > 0.95) {
+    const blend = (absSine - 0.95) / 0.05
+    return sine * (1 - blend * 0.15)
+  }
+  return sine
+}
+
+/**
  * Calculate complete orb position for a given time
  *
  * @param timeMs - Current time in milliseconds (from session start)
@@ -156,8 +171,8 @@ export function calculateOrbPosition(
   const frequency = getOscillationFrequency(speed)
   const amplitude = getOscillationAmplitude(viewportWidth, isLandscape)
 
-  // Primary horizontal oscillation
-  const oscillationX = Math.sin(timeMs * frequency) * amplitude
+  // Primary horizontal oscillation (using smoothSine for smoother direction changes)
+  const oscillationX = smoothSine(timeMs * frequency) * amplitude
 
   // Organic noise drift
   const { noiseScale, noiseAmplitudeX, noiseAmplitudeY, orbRadius } = ANIMATION_PARAMS

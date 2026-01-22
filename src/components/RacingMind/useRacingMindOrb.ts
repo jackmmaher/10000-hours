@@ -61,6 +61,10 @@ export function useRacingMindOrb({
   const animationIdRef = useRef<number | null>(null)
   const isReducedMotionRef = useRef(prefersReducedMotion())
 
+  // Position interpolation refs for smoother animation
+  const lastPositionRef = useRef<{ x: number; y: number } | null>(null)
+  const lastFrameTimeRef = useRef<number>(0)
+
   /**
    * Initialize PixiJS application
    * Uses a small delay to ensure container has correct dimensions after layout
@@ -82,14 +86,14 @@ export function useRacingMindOrb({
       height = window.innerHeight
     }
 
-    // Create PixiJS Application with battery-efficient settings
+    // Create PixiJS Application with smooth animation settings
     const app = new Application()
     await app.init({
       width,
       height,
       backgroundColor: RACING_MIND_COLORS.background,
       antialias: true,
-      powerPreference: 'low-power',
+      powerPreference: 'high-performance',
       resolution: Math.min(window.devicePixelRatio, 2), // Cap at 2x for performance
     })
 
@@ -137,7 +141,14 @@ export function useRacingMindOrb({
   onPositionUpdateRef.current = _onPositionUpdate
 
   /**
-   * Animation loop - runs at 30fps
+   * Linear interpolation helper for smooth position transitions
+   */
+  function lerp(current: number, target: number, factor: number): number {
+    return current + (target - current) * factor
+  }
+
+  /**
+   * Animation loop - runs at 60fps with position interpolation
    */
   const animate = useCallback(() => {
     if (!isActive || !orbRef.current || !glowFilterRef.current || !appRef.current) {
@@ -156,14 +167,14 @@ export function useRacingMindOrb({
     // Determine if we're in landscape mode
     const isLandscape = orientationPhase === 'landscape'
 
-    // Calculate orb position
-    let orbX: number
-    let orbY: number
+    // Calculate target orb position
+    let targetX: number
+    let targetY: number
 
     if (isReducedMotionRef.current) {
       // Reduced motion: static orb in center
-      orbX = width / 2
-      orbY = height / 2
+      targetX = width / 2
+      targetY = height / 2
     } else {
       const position = calculateOrbPosition(
         elapsedMs,
@@ -173,9 +184,25 @@ export function useRacingMindOrb({
         noiseRef.current,
         isLandscape
       )
-      orbX = position.x
-      orbY = position.y
+      targetX = position.x
+      targetY = position.y
     }
+
+    // Frame-rate independent lerp for smooth transitions
+    const deltaMs = lastFrameTimeRef.current ? now - lastFrameTimeRef.current : 16.67
+    lastFrameTimeRef.current = now
+    const lerpFactor = 1 - Math.pow(0.85, deltaMs / 16.67) // ~0.15 at 60fps
+
+    let orbX: number
+    let orbY: number
+    if (lastPositionRef.current === null) {
+      orbX = targetX
+      orbY = targetY
+    } else {
+      orbX = lerp(lastPositionRef.current.x, targetX, lerpFactor)
+      orbY = lerp(lastPositionRef.current.y, targetY, lerpFactor)
+    }
+    lastPositionRef.current = { x: orbX, y: orbY }
 
     orbRef.current.x = orbX
     orbRef.current.y = orbY
