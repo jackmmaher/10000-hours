@@ -22,8 +22,9 @@ export function ValidationDisplay({
   postScore,
   trackingMetrics,
 }: ValidationDisplayProps) {
+  // With scale 1=Calm, 10=Racing: a DECREASE in score means calmer
   const scoreDiff = postScore - preScore
-  const feltCalmer = scoreDiff >= 1
+  const feltCalmer = scoreDiff <= -1
   const trackingImproved = trackingMetrics && trackingMetrics.improvementPercent > 10
 
   // Determine the validation message based on subjective + objective data
@@ -106,7 +107,7 @@ export function ValidationDisplay({
             {scoreDiff !== 0 && (
               <span
                 className={`text-xs font-medium mt-1 ${
-                  scoreDiff > 0 ? 'text-green-500' : 'text-ink/50'
+                  scoreDiff < 0 ? 'text-green-500' : 'text-ink/50'
                 }`}
               >
                 {scoreDiff > 0 ? '+' : ''}

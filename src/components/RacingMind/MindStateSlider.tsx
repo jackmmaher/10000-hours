@@ -2,7 +2,7 @@
  * MindStateSlider - 1-10 scale for self-assessment
  *
  * Used for pre and post session assessment of mental state.
- * "Racing" (1) to "Calm" (10)
+ * "Calm" (1) to "Racing" (10)
  *
  * Redesigned with a visible track and clear tappable dots.
  */
@@ -36,8 +36,8 @@ export function MindStateSlider({
 
       {/* Scale labels */}
       <div className={`flex justify-between text-xs ${textMuted} mb-2 px-2`}>
-        <span>Racing</span>
         <span>Calm</span>
+        <span>Racing</span>
       </div>
 
       {/* Slider track with dots */}
