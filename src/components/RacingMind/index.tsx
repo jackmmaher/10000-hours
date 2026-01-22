@@ -183,16 +183,14 @@ export function RacingMind({ onClose }: RacingMindProps) {
     onClose()
   }, [setView, onClose])
 
-  // Fullscreen mode during practice - hides app header/navigation
+  // Fullscreen mode during practice and post-assessment - hides app header/navigation
   useEffect(() => {
-    setFullscreen(phase === 'practice')
+    setFullscreen(phase === 'practice' || phase === 'postAssessment')
     return () => setFullscreen(false)
   }, [phase, setFullscreen])
 
   return (
-    <div
-      className={`flex flex-col h-full bg-base ${phase !== 'practice' && phase !== 'postAssessment' ? 'pb-20' : ''}`}
-    >
+    <div className={`flex flex-col h-full bg-base ${phase === 'setup' ? 'pb-20' : ''}`}>
       {/* Header - hidden during practice and post-assessment (fullscreen-like) */}
       {phase !== 'practice' && phase !== 'postAssessment' && (
         <div className="flex-none flex items-center justify-between px-4 py-3 border-b border-border-subtle">

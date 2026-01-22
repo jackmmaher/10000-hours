@@ -114,7 +114,7 @@ export function RacingMindResults({
         <div className="flex-1" />
 
         {/* Actions */}
-        <div className="w-full max-w-sm space-y-3 mt-auto">
+        <div className="w-full max-w-sm space-y-3 mt-auto pb-8">
           {onMeditateNow && (
             <button
               onClick={onMeditateNow}
@@ -135,6 +135,8 @@ export function RacingMindResults({
           >
             Done
           </button>
+          {/* Safe area padding */}
+          <div className="h-safe-area-inset-bottom" />
         </div>
       </div>
     </div>

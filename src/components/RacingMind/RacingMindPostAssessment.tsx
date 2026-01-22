@@ -29,10 +29,10 @@ export function RacingMindPostAssessment({
 
   return (
     <div
-      className="h-full flex flex-col"
+      className="h-full flex flex-col overflow-y-auto"
       style={{ backgroundColor: RACING_MIND_COLORS.background }}
     >
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 min-h-0">
         {/* Completion indicator */}
         <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center mb-6">
           <svg
@@ -60,7 +60,7 @@ export function RacingMindPostAssessment({
       </div>
 
       {/* Continue button */}
-      <div className="px-6 pb-8">
+      <div className="flex-shrink-0 px-6 pb-8 pt-4">
         <button
           onClick={handleContinue}
           disabled={postScore === null}
@@ -72,10 +72,9 @@ export function RacingMindPostAssessment({
         >
           See Your Progress
         </button>
+        {/* Safe area padding */}
+        <div className="h-safe-area-inset-bottom" />
       </div>
-
-      {/* Safe area padding */}
-      <div className="h-safe-area-inset-bottom" />
     </div>
   )
 }

@@ -84,6 +84,26 @@ export function useEyeTracking(maxHistorySize = 1800): UseEyeTrackingResult {
     }
 
     try {
+      console.debug('[useEyeTracking] Requesting camera permission explicitly...')
+
+      // Explicitly request camera permission FIRST
+      // This ensures the permission prompt appears before WebGazer tries to access the camera
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'user',
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+          },
+        })
+        console.debug('[useEyeTracking] Camera permission granted')
+        // Stop the stream - WebGazer will create its own
+        stream.getTracks().forEach((track) => track.stop())
+      } catch (permError) {
+        console.error('[useEyeTracking] Camera permission denied:', permError)
+        return false
+      }
+
       console.debug('[useEyeTracking] Initializing WebGazer...')
 
       // Configure WebGazer - hide all visual elements
