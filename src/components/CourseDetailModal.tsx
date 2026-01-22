@@ -241,8 +241,8 @@ export function CourseDetailModal({
           </div>
         </div>
 
-        {/* Footer with safe-area-bottom */}
-        <div className="px-6 pb-8 pt-4 border-t border-ink/5 safe-area-bottom">
+        {/* Footer with safe-area-bottom - pb-4 since safe-area adds its own padding */}
+        <div className="px-6 pb-4 pt-4 border-t border-ink/5 safe-area-bottom">
           {!progress ? (
             <button
               onClick={handleStart}

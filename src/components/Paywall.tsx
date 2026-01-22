@@ -133,7 +133,7 @@ export function Paywall({ isOpen, onClose, onTryFree }: PaywallProps) {
           onTouchEnd={handleTouchEvent}
         >
           <motion.div
-            className="bg-[var(--bg-base)] rounded-t-3xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-xl"
+            className="bg-[var(--bg-base)] rounded-t-3xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-xl"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
@@ -368,8 +368,8 @@ export function Paywall({ isOpen, onClose, onTryFree }: PaywallProps) {
               </p>
             </div>
 
-            {/* Footer */}
-            <div className="px-6 pb-8 pt-4 safe-area-bottom border-t border-[var(--border)]">
+            {/* Footer - pb-4 since safe-area adds its own padding */}
+            <div className="px-6 pb-4 pt-4 safe-area-bottom border-t border-[var(--border)]">
               {/* Try free session link - only for first-time users */}
               {isFirstTime && onTryFree && (
                 <div className="mb-4 text-center">

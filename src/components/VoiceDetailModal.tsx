@@ -262,8 +262,8 @@ export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
           </div>
         </div>
 
-        {/* Close button */}
-        <div className="px-6 pb-8 pt-4 border-t border-ink/5">
+        {/* Close button - pb-4 since safe-area adds its own padding */}
+        <div className="px-6 pb-4 pt-4 border-t border-ink/5 safe-area-bottom">
           <button
             onClick={onClose}
             className="w-full py-3 rounded-xl text-sm font-medium bg-ink/5 text-ink/70 hover:bg-ink/10 transition-colors active:scale-[0.98]"

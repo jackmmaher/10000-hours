@@ -120,7 +120,9 @@
       "WebFetch(domain:www.headspace.com)",
       "WebFetch(domain:medium.com)",
       "WebFetch(domain:one-sec.app)",
-      "Skill(superpowers:verification-before-completion)"
+      "Skill(superpowers:verification-before-completion)",
+      "Skill(human-crafted-design)",
+      "Bash(npx eslint:*)"
     ]
   }
 }

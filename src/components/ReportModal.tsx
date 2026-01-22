@@ -100,8 +100,8 @@ export function ReportModal({ contentTitle, onClose, onSubmit }: ReportModalProp
           </p>
         </div>
 
-        {/* Footer with safe-area-bottom */}
-        <div className="px-6 pb-8 pt-4 border-t border-ink/5 flex gap-3 safe-area-bottom">
+        {/* Footer with safe-area-bottom - pb-4 since safe-area adds its own padding */}
+        <div className="px-6 pb-4 pt-4 border-t border-ink/5 flex gap-3 safe-area-bottom">
           <button
             onClick={onClose}
             className="flex-1 py-3 bg-cream-deep text-ink/60 rounded-xl text-sm hover:bg-cream-deep/80 transition-colors"

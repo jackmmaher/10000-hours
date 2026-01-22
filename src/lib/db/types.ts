@@ -6,6 +6,19 @@
 
 import type { NotificationPreferences } from '../notifications'
 
+// Session type distinguishes meditation from practice tools
+export type SessionType = 'meditation' | 'practice'
+
+// Practice tool identifiers
+export type PracticeToolId = 'om-coach' | 'neural-decelerator' | 'posture-training'
+
+// Om Coach specific metrics
+export interface OmCoachMetrics {
+  completedCycles: number
+  averageAlignmentScore: number
+  vocalizationSeconds: number
+}
+
 export interface Session {
   id?: number
   uuid: string
@@ -16,6 +29,12 @@ export interface Session {
   pose?: string // Seating position/pose
   discipline?: string // Meditation technique
   notes?: string // Intention or notes for this session
+  // Session type for practice vs meditation (added in v16)
+  sessionType?: SessionType
+  // Practice tool identifier (when sessionType === 'practice')
+  practiceToolId?: PracticeToolId
+  // Om Coach specific metrics (when practiceToolId === 'om-coach')
+  omCoachMetrics?: OmCoachMetrics
 }
 
 export interface AppState {

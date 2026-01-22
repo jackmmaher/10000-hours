@@ -776,8 +776,8 @@ export function MeditationPlanner({
           )}
         </div>
 
-        {/* Actions */}
-        <div className="px-6 pb-8 pt-4 border-t border-ink/5 space-y-3 safe-area-bottom">
+        {/* Actions - pb-4 since safe-area adds its own padding */}
+        <div className="px-6 pb-4 pt-4 border-t border-ink/5 space-y-3 safe-area-bottom">
           {/* Add another session button - only show when viewing existing items and not already adding */}
           {state.dayItems.length > 0 && !state.isAddingNewPlan && (
             <button

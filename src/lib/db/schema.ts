@@ -310,6 +310,30 @@ export class MeditationDB extends Dexie {
       hourBank: 'id',
       meditationLockSettings: 'id', // Singleton table for meditation lock
     })
+
+    // v16: Add sessionType, practiceToolId, omCoachMetrics to sessions for practice tools
+    // No index changes needed - fields are optional and stored directly on session
+    this.version(16).stores({
+      sessions: '++id, uuid, startTime, endTime',
+      appState: 'id',
+      profile: 'id',
+      settings: 'id',
+      insights: 'id, sessionId, createdAt, sharedPearlId',
+      plannedSessions: '++id, date, createdAt, linkedSessionUuid, courseId, repeatRuleId',
+      courseProgress: 'id, courseId, status',
+      savedTemplates: 'id, templateId, savedAt',
+      pearlDrafts: 'id, insightId, updatedAt',
+      templateDrafts: 'id, updatedAt',
+      userPreferences: 'id',
+      wellbeingDimensions: 'id, name, createdAt',
+      wellbeingCheckIns: 'id, dimensionId, createdAt',
+      wellbeingSettings: 'id',
+      notifications: 'id, type, createdAt, readAt',
+      repeatRules: '++id, createdAt',
+      userAffinities: 'id',
+      hourBank: 'id',
+      meditationLockSettings: 'id',
+    })
   }
 }
 

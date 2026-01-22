@@ -116,7 +116,7 @@ export function SuggestionForm({ isOpen, onClose }: SuggestionFormProps) {
           onClick={handleClose}
         >
           <motion.div
-            className="w-full max-w-lg max-h-[90vh] flex flex-col shadow-xl rounded-t-3xl overflow-hidden"
+            className="w-full max-w-lg max-h-[85vh] flex flex-col shadow-xl rounded-t-3xl overflow-hidden"
             style={{ backgroundColor: 'var(--bg-base)' }}
             initial={{ y: '100%' }}
             animate={{ y: 0 }}

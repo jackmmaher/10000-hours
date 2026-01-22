@@ -96,9 +96,9 @@ export function DurationPicker({ isOpen, mode, onSelect, onClose }: DurationPick
               </div>
             </div>
 
-            {/* Footer */}
+            {/* Footer - pb-4 since safe-area adds its own padding */}
             <div
-              className="px-6 pb-8 pt-4 safe-area-bottom"
+              className="px-6 pb-4 pt-4 safe-area-bottom"
               style={{ borderTop: '1px solid var(--border)' }}
             >
               <button

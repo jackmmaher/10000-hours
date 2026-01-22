@@ -255,7 +255,7 @@ export function SharePearl({
 
       {/* Fixed bottom action - only show if not already shared */}
       {!isAlreadyShared && (
-        <div className="flex-none px-6 pb-8 pt-4 bg-cream border-t border-ink/5 safe-area-bottom">
+        <div className="flex-none px-6 pb-4 pt-4 bg-cream border-t border-ink/5 safe-area-bottom">
           {/* Two-button layout: Save Draft + Post Pearl */}
           <div className="flex gap-3 mb-3">
             {/* Save Draft - always available */}

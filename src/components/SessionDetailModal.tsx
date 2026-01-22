@@ -315,7 +315,7 @@ export function SessionDetailModal({
       onClick={onClose}
     >
       <div
-        className="bg-cream w-full max-w-lg max-h-[90dvh] flex flex-col shadow-xl animate-slide-up overflow-hidden rounded-t-3xl"
+        className="bg-cream w-full max-w-lg max-h-[85dvh] flex flex-col shadow-xl animate-slide-up overflow-hidden rounded-t-3xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Gradient header */}
@@ -509,8 +509,8 @@ export function SessionDetailModal({
           </div>
         </div>
 
-        {/* Footer with safe-area-bottom */}
-        <div className="px-6 pb-8 pt-4 border-t border-ink/5 safe-area-bottom">
+        {/* Footer with safe-area-bottom - pb-4 since safe-area adds its own padding */}
+        <div className="px-6 pb-4 pt-4 border-t border-ink/5 safe-area-bottom">
           {!showDatePicker ? (
             <div className="flex gap-3">
               <button

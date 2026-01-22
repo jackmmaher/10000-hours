@@ -38,6 +38,7 @@ import { ReviewPrompt } from './components/ReviewPrompt'
 import { Store } from './components/Store'
 import { PrivacyPolicy } from './components/PrivacyPolicy'
 import { TermsOfService } from './components/TermsOfService'
+import { OmCoach } from './components/OmCoach'
 import type { Session } from './lib/db'
 import { shouldPromptForReview } from './lib/nativeReview'
 
@@ -60,6 +61,7 @@ function AppContent() {
     reviewPromptMilestone,
     hideReviewPromptModal,
     queueReviewPromptAfterInsight,
+    isFullscreen,
   } = useNavigationStore()
   const { isLoading, hydrate, goalCompleted, justReachedEnlightenment, createInsightReminder } =
     useSessionStore()
@@ -273,8 +275,8 @@ function AppContent() {
   return (
     <NeutralThemeProvider>
       <div className="h-full">
-        {/* Top header - fades out during meditation */}
-        <Header onNavigateToSettings={() => setView('settings')} />
+        {/* Top header - hidden during fullscreen experiences (Om Coach practice) */}
+        {!isFullscreen && <Header onNavigateToSettings={() => setView('settings')} />}
 
         {view === 'timer' && <Timer />}
         {view === 'journey' && <Journey />}
@@ -293,11 +295,13 @@ function AppContent() {
             onNavigateToStore={() => setView('store')}
             onNavigateToPrivacy={() => setView('privacy')}
             onNavigateToTerms={() => setView('terms')}
+            onNavigateToOmCoach={() => setView('om-coach')}
           />
         )}
         {view === 'store' && <Store onBack={() => setView('settings')} />}
         {view === 'privacy' && <PrivacyPolicy onBack={() => setView('settings')} />}
         {view === 'terms' && <TermsOfService onBack={() => setView('settings')} />}
+        {view === 'om-coach' && <OmCoach onClose={() => setView('timer')} />}
 
         {/* Session edit modal */}
         {editingSession && (
@@ -325,8 +329,8 @@ function AppContent() {
           />
         )}
 
-        {/* Bottom navigation */}
-        <Navigation />
+        {/* Bottom navigation - hidden during fullscreen experiences */}
+        {!isFullscreen && <Navigation />}
 
         {/* PWA install prompt for iOS Safari */}
         <PWAInstallPrompt />

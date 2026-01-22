@@ -19,6 +19,7 @@ export type AppView =
   | 'store' // In-app purchases: hour packs
   | 'privacy' // Privacy policy page
   | 'terms' // Terms of service page
+  | 'om-coach' // Practice tool: Om chanting biofeedback
   // Legacy views (still accessible via internal links)
   | 'calendar' // -> accessed from progress
   | 'insights' // -> accessed from journey
@@ -51,6 +52,8 @@ interface NavigationState {
   pendingReviewAfterInsight: boolean // Queue review prompt to show after insight modal closes
   // Saved content refresh trigger - increment to notify Journey tab of save/unsave
   savedContentVersion: number
+  // Fullscreen mode - hides app chrome (header/navigation) for immersive experiences
+  isFullscreen: boolean
   // Actions
   setView: (view: AppView) => void
   setIsSettling: (settling: boolean) => void
@@ -82,6 +85,8 @@ interface NavigationState {
   queueReviewPromptAfterInsight: (milestoneText: string) => void
   // Saved content refresh
   incrementSavedContentVersion: () => void
+  // Fullscreen mode
+  setFullscreen: (fullscreen: boolean) => void
 }
 
 export const useNavigationStore = create<NavigationState>((set) => ({
@@ -107,6 +112,8 @@ export const useNavigationStore = create<NavigationState>((set) => ({
   pendingReviewAfterInsight: false,
   // Saved content refresh trigger
   savedContentVersion: 0,
+  // Fullscreen mode
+  isFullscreen: false,
 
   setView: (view) =>
     set((state) => {
@@ -238,4 +245,7 @@ export const useNavigationStore = create<NavigationState>((set) => ({
     set((state) => ({
       savedContentVersion: state.savedContentVersion + 1,
     })),
+
+  // Fullscreen mode - hides app chrome for immersive experiences
+  setFullscreen: (fullscreen) => set({ isFullscreen: fullscreen }),
 }))

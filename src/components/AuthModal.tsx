@@ -36,7 +36,7 @@ export function AuthModal({
             <div className="w-10 h-1 rounded-full bg-ink/20" />
           </div>
           {/* Content */}
-          <div className="px-6 pb-8 safe-area-bottom">
+          <div className="px-6 pb-4 safe-area-bottom">
             <p className="font-serif text-xl text-ink mb-2">{title}</p>
             <p className="text-sm text-ink/50 mb-6">Sign-in is not available yet. Coming soon!</p>
             <Button variant="ghost" fullWidth onClick={onClose}>
@@ -139,8 +139,8 @@ export function AuthModal({
           </p>
         </div>
 
-        {/* Footer with safe-area-bottom */}
-        <div className="px-6 pb-8 pt-4 safe-area-bottom">
+        {/* Footer with safe-area-bottom - pb-4 since safe-area adds its own padding */}
+        <div className="px-6 pb-4 pt-4 safe-area-bottom">
           <Button variant="ghost" fullWidth onClick={onClose}>
             Maybe later
           </Button>

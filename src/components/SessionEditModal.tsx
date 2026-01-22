@@ -250,9 +250,9 @@ export function SessionEditModal({ session, onClose, onSave, onDelete }: Session
           </div>
         </div>
 
-        {/* Actions - Footer with safe-area-bottom */}
+        {/* Actions - Footer with safe-area-bottom - pb-4 since safe-area adds its own padding */}
         <div
-          className="px-6 pb-8 pt-4 flex gap-3 safe-area-bottom"
+          className="px-6 pb-4 pt-4 flex gap-3 safe-area-bottom"
           style={{ borderTop: '1px solid var(--border-subtle)' }}
         >
           {/* Delete button */}

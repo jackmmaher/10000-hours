@@ -277,8 +277,8 @@ export function InsightCapture({ sessionId, onComplete, onSkip }: InsightCapture
         </div>
       </div>
 
-      {/* Bottom action */}
-      <div className="flex-none pb-12 px-8 safe-area-bottom">
+      {/* Bottom action - pb-6 since safe-area adds its own padding */}
+      <div className="flex-none pb-6 px-8 safe-area-bottom">
         {isRecording && (
           <button
             onClick={handleStopAndSave}
