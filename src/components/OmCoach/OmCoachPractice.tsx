@@ -4,25 +4,34 @@
  * Layout (top to bottom):
  * - Circular progress with large phoneme + countdown in center
  * - Frequency scale with Hz and accuracy
- * - Cycle progress counter
- * - Session elapsed time (Timer-tab style)
+ * - Cycle progress counter (Practice or Scored)
+ * - Session elapsed time (Timer-tab style, only during scored)
+ *
+ * Flow:
+ * - Practice Cycles (1-3): User learns rhythm, not scored
+ * - "Session begins now" message appears briefly
+ * - Scored Cycles: Count toward session metrics
  */
 
 import { useRef, useEffect, useCallback, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { CircularProgress } from './CircularProgress'
 import { FrequencyScale } from './FrequencyScale'
+import { PhonemeIndicator } from './PhonemeIndicator'
 import { CycleCelebration } from './CycleCelebration'
 import {
   type GuidedCycleState,
   type CycleQuality,
   getPhaseDurations,
-  getReadyDuration,
+  FIRST_BREATHE_MULTIPLIER,
 } from '../../hooks/useGuidedOmCycle'
 import type { PitchData } from '../../hooks/usePitchDetection'
+import type { FormantData } from '../../hooks/useFormantDetection'
 
 interface OmCoachPracticeProps {
   guidedState: GuidedCycleState
   getPitchData: () => PitchData
+  getFormantData: () => FormantData
   isActive: boolean
   celebration: { show: boolean; quality: CycleQuality; cycleNumber: number } | null
   onCelebrationDismiss: () => void
@@ -44,6 +53,7 @@ function formatElapsed(ms: number): { minutes: string; seconds: string } {
 export function OmCoachPractice({
   guidedState,
   getPitchData,
+  getFormantData,
   isActive,
   celebration,
   onCelebrationDismiss,
@@ -56,15 +66,28 @@ export function OmCoachPractice({
     timestamp: 0,
   })
 
+  const [formant, setFormant] = useState<FormantData>({
+    lowBandEnergy: 0,
+    midBandEnergy: 0,
+    highBandEnergy: 0,
+    spectralFlatness: 0,
+    upperLowerRatio: 0,
+    detectedPhoneme: 'silence',
+    confidence: 0,
+    rms: 0,
+    timestamp: 0,
+  })
+
   const animationRef = useRef<number | null>(null)
 
-  // Animation loop for smooth pitch updates
+  // Animation loop for smooth pitch and formant updates
   const updateLoop = useCallback(() => {
     setPitch(getPitchData())
+    setFormant(getFormantData())
     if (isActive) {
       animationRef.current = requestAnimationFrame(updateLoop)
     }
-  }, [isActive, getPitchData])
+  }, [isActive, getPitchData, getFormantData])
 
   useEffect(() => {
     if (isActive) {
@@ -80,30 +103,70 @@ export function OmCoachPractice({
   const frequency = pitch.frequency
   const isWithinTolerance = pitch.isWithinTolerance
 
-  // Check if in getReady phase
-  const isGetReady = guidedState.isGetReady
+  // Practice vs Scored state
+  const isPractice = guidedState.isPractice
+  const showSessionStart = guidedState.showSessionStart
 
-  // Calculate time remaining in current phase (for timed modes)
-  let phaseTimeRemainingMs: number | null = null
-  if (guidedState.timingMode !== 'flexible') {
-    if (isGetReady) {
-      // Get Ready phase countdown
-      const readyDuration = getReadyDuration(guidedState.timingMode)
-      phaseTimeRemainingMs = Math.ceil(readyDuration * (1 - guidedState.getReadyProgress))
-    } else {
-      // Normal phase countdown
-      const phaseDurations = getPhaseDurations(guidedState.timingMode)
-      const currentPhaseDuration =
-        phaseDurations[guidedState.currentPhase as keyof typeof phaseDurations] ?? 0
-      phaseTimeRemainingMs = Math.ceil(currentPhaseDuration * (1 - guidedState.phaseProgress))
-    }
+  // Calculate time remaining in current phase
+  const phaseDurations = getPhaseDurations(guidedState.timingMode)
+  let currentPhaseDuration =
+    phaseDurations[guidedState.currentPhase as keyof typeof phaseDurations] ?? 0
+
+  // First cycle's breathe phase is longer
+  if (
+    guidedState.currentPhase === 'breathe' &&
+    isPractice &&
+    guidedState.practiceCycleNumber === 1
+  ) {
+    currentPhaseDuration = currentPhaseDuration * FIRST_BREATHE_MULTIPLIER
   }
+
+  const phaseTimeRemainingMs = Math.ceil(currentPhaseDuration * (1 - guidedState.phaseProgress))
 
   // Format elapsed time (Timer-tab style)
   const elapsed = formatElapsed(guidedState.elapsedMs)
 
+  // Calculate practice progress
+  const practiceProgress = isPractice
+    ? ((guidedState.practiceCycleNumber - 1 + guidedState.cycleProgress) /
+        guidedState.practiceTotalCycles) *
+      100
+    : 0
+
+  // Calculate scored progress
+  // Clamp to 100% to prevent overflow when cycles exceed totalCycles
+  const scoredProgress = !isPractice
+    ? Math.min(100, ((guidedState.currentCycle - 1) / guidedState.totalCycles) * 100)
+    : 0
+
   return (
-    <div className="flex-1 flex flex-col bg-base">
+    <div className="flex-1 flex flex-col bg-base relative">
+      {/* "Session begins now" overlay */}
+      <AnimatePresence>
+        {showSessionStart && (
+          <motion.div
+            className="absolute inset-0 z-40 flex items-center justify-center backdrop-blur-sm"
+            style={{ backgroundColor: 'var(--bg-overlay)' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <motion.div
+              className="text-center"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="font-serif text-2xl" style={{ color: 'var(--text-primary)' }}>
+                Session begins now
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Main content area - centered vertically */}
       <div className="flex-1 flex flex-col items-center justify-center px-4">
         {/* Circular progress with phoneme + countdown */}
@@ -120,61 +183,115 @@ export function OmCoachPractice({
         <div className="h-6" />
 
         {/* Frequency scale */}
-        <div
-          className="w-full max-w-sm transition-opacity duration-300"
-          style={{ opacity: isGetReady ? 0.4 : 1 }}
-        >
-          <FrequencyScale
-            frequency={isGetReady ? null : frequency}
-            isWithinTolerance={isGetReady ? false : isWithinTolerance}
+        <div className="w-full max-w-sm">
+          <FrequencyScale frequency={frequency} isWithinTolerance={isWithinTolerance} />
+        </div>
+
+        {/* Spacer */}
+        <div className="h-4" />
+
+        {/* Phoneme indicator - shows detected vs expected phoneme */}
+        <div className="w-full max-w-sm">
+          <PhonemeIndicator
+            detectedPhoneme={formant.detectedPhoneme}
+            expectedPhase={guidedState.currentPhase}
+            confidence={formant.confidence}
+            isBreathing={guidedState.currentPhase === 'breathe'}
           />
         </div>
 
         {/* Spacer */}
         <div className="h-6" />
 
-        {/* Cycle progress counter */}
-        <div
-          className="text-center transition-opacity duration-300"
-          style={{ opacity: isGetReady ? 0.4 : 1 }}
-        >
-          <div className="text-base font-medium text-ink">
-            Cycle {guidedState.currentCycle} of {guidedState.totalCycles}
-          </div>
-          {/* Progress bar */}
-          <div className="w-40 h-1.5 bg-ink/10 rounded-full mt-2 mx-auto overflow-hidden">
-            <div
-              className="h-full bg-accent transition-all duration-300 ease-out rounded-full"
-              style={{
-                width: `${Math.min(100, ((guidedState.currentCycle - 1) / guidedState.totalCycles) * 100)}%`,
-              }}
-            />
-          </div>
+        {/* Cycle progress counter - Practice or Scored */}
+        <div className="text-center">
+          {isPractice ? (
+            <>
+              {/* Practice cycle label */}
+              <div className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+                Practice Cycle {guidedState.practiceCycleNumber} of{' '}
+                {guidedState.practiceTotalCycles}
+              </div>
+              {/* Practice progress bar with shimmer */}
+              <div
+                className="w-40 h-1.5 rounded-full mt-2 mx-auto overflow-hidden relative"
+                style={{ backgroundColor: 'var(--progress-track)' }}
+              >
+                <div
+                  className="h-full transition-all duration-300 ease-out rounded-full relative overflow-hidden"
+                  style={{
+                    width: `${Math.min(100, practiceProgress)}%`,
+                    backgroundColor: 'var(--text-muted)',
+                  }}
+                >
+                  {/* Shimmer effect */}
+                  <div
+                    className="absolute inset-0 -translate-x-full animate-shimmer"
+                    style={{
+                      background:
+                        'linear-gradient(90deg, transparent, var(--shimmer-color, rgba(255,255,255,0.3)), transparent)',
+                    }}
+                  />
+                </div>
+              </div>
+              {/* Subtle helper text */}
+              <div className="text-xs mt-2" style={{ color: 'var(--text-tertiary)' }}>
+                Learning the rhythm...
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Scored cycle label - clamp to totalCycles to prevent overflow display */}
+              <div className="text-base font-medium" style={{ color: 'var(--text-primary)' }}>
+                Cycle {Math.min(guidedState.currentCycle, guidedState.totalCycles)} of{' '}
+                {guidedState.totalCycles}
+              </div>
+              {/* Scored progress bar */}
+              <div
+                className="w-40 h-1.5 rounded-full mt-2 mx-auto overflow-hidden"
+                style={{ backgroundColor: 'var(--progress-track)' }}
+              >
+                <div
+                  className="h-full transition-all duration-300 ease-out rounded-full"
+                  style={{
+                    width: `${Math.min(100, scoredProgress)}%`,
+                    backgroundColor: 'var(--accent)',
+                  }}
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Session elapsed time - Fixed at bottom, pb-4 since safe-area adds its own padding */}
+      {/* Session elapsed time - Fixed at bottom */}
       <div className="flex-none px-4 pb-4 safe-area-bottom">
         <div
           className="flex items-baseline justify-center gap-3 font-serif transition-opacity duration-300"
           style={{
             fontVariantNumeric: 'tabular-nums lining-nums',
-            opacity: isGetReady ? 0.4 : 1,
+            opacity: isPractice ? 0.4 : 1,
           }}
         >
           {/* Minutes */}
-          <span className="font-semibold text-ink" style={{ fontSize: '3.5rem', lineHeight: 1 }}>
+          <span
+            className="font-semibold"
+            style={{ fontSize: '3.5rem', lineHeight: 1, color: 'var(--text-primary)' }}
+          >
             {elapsed.minutes}
           </span>
           {/* Seconds */}
-          <span className="font-light text-ink/40" style={{ fontSize: '2.5rem', lineHeight: 1 }}>
+          <span
+            className="font-light"
+            style={{ fontSize: '2.5rem', lineHeight: 1, color: 'var(--text-tertiary)' }}
+          >
             {elapsed.seconds}
           </span>
         </div>
-        {/* Subtle label during getReady */}
-        {isGetReady && (
-          <div className="text-center text-ink/30 text-xs mt-2">starts after breath</div>
-        )}
+        {/* Placeholder to maintain layout height */}
+        <div className="text-center text-xs mt-2 opacity-0" style={{ color: 'var(--text-muted)' }}>
+          placeholder
+        </div>
       </div>
 
       {/* Celebration overlay */}

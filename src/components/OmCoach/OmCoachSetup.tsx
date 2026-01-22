@@ -3,7 +3,7 @@
  *
  * Features:
  * - Duration picker (5/10/15 min)
- * - Timing mode selector (Traditional/Extended/Flexible)
+ * - Timing mode selector (Traditional 18s / Extended 24s / Long Breath 36s)
  * - Dynamic cycle count based on mode
  * - Instructions for A-U-M practice
  */
@@ -21,6 +21,9 @@ interface OmCoachSetupProps {
   onBegin: (duration: SessionDuration, mode: TimingMode) => void
   isLoading?: boolean
   error?: string | null
+  hasCalibration?: boolean
+  onRecalibrate?: () => void
+  onStartCalibration?: () => void
 }
 
 const DURATIONS: SessionDuration[] = [5, 10, 15]
@@ -34,19 +37,26 @@ const TIMING_MODE_INFO: Record<
 > = {
   traditional: {
     label: 'Traditional',
-    description: 'Guided timing (3s-3s-6s)',
+    description: '18s cycle',
   },
   extended: {
     label: 'Extended',
-    description: 'Longer holds (4s-4s-8s)',
+    description: '24s cycle',
   },
-  flexible: {
-    label: 'Flexible',
-    description: 'Self-paced, app follows you',
+  longbreath: {
+    label: 'Long Breath',
+    description: '36s cycle',
   },
 }
 
-export function OmCoachSetup({ onBegin, isLoading, error }: OmCoachSetupProps) {
+export function OmCoachSetup({
+  onBegin,
+  isLoading,
+  error,
+  hasCalibration = false,
+  onRecalibrate,
+  onStartCalibration,
+}: OmCoachSetupProps) {
   const [showDetails, setShowDetails] = useState(false)
   const [selectedDuration, setSelectedDuration] = useState<SessionDuration>(5)
   const [selectedMode, setSelectedMode] = useState<TimingMode>('traditional')
@@ -56,9 +66,8 @@ export function OmCoachSetup({ onBegin, isLoading, error }: OmCoachSetupProps) {
   const cycleDurationSec = cycleDuration > 0 ? Math.round(cycleDuration / 1000) : null
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Centered container with max-width */}
-      <div className="flex-1 flex flex-col w-full max-w-md mx-auto px-6 py-8">
+    <div className="h-full overflow-y-auto">
+      <div className="flex flex-col min-h-full w-full max-w-md mx-auto px-6 py-6">
         {/* Title */}
         <div className="text-center mb-6">
           <h1 className="font-serif text-2xl text-ink mb-2">Aum Coach</h1>
@@ -110,8 +119,43 @@ export function OmCoachSetup({ onBegin, isLoading, error }: OmCoachSetupProps) {
           )}
         </div>
 
-        {/* Spacer */}
-        <div className="flex-1" />
+        {/* Voice Calibration Section */}
+        {!hasCalibration && onStartCalibration && (
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-6">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                <span className="text-amber-600 text-sm">!</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-ink mb-1">Voice Calibration Recommended</p>
+                <p className="text-xs text-ink/60 mb-3">
+                  Quick 15-second setup for better phoneme detection tailored to your voice.
+                </p>
+                <button
+                  onClick={onStartCalibration}
+                  className="text-sm font-medium text-amber-600 hover:text-amber-700"
+                >
+                  Calibrate Now
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {hasCalibration && onRecalibrate && (
+          <div className="flex items-center justify-between bg-elevated rounded-xl px-4 py-3 mb-6">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-sm text-ink/70">Voice calibrated</span>
+            </div>
+            <button onClick={onRecalibrate} className="text-xs text-ink/50 hover:text-ink/70">
+              Recalibrate
+            </button>
+          </div>
+        )}
+
+        {/* Spacer pushes controls to bottom on tall screens */}
+        <div className="flex-1 min-h-4" />
 
         {/* Error */}
         {error && (
@@ -153,7 +197,7 @@ export function OmCoachSetup({ onBegin, isLoading, error }: OmCoachSetupProps) {
         </div>
 
         {/* Duration picker */}
-        <div className="mb-4">
+        <div className="mb-6">
           <p className="text-xs text-ink/50 mb-2 text-center uppercase tracking-wide">Duration</p>
           <div className="flex gap-2">
             {DURATIONS.map((duration) => (
@@ -178,13 +222,7 @@ export function OmCoachSetup({ onBegin, isLoading, error }: OmCoachSetupProps) {
             ))}
           </div>
           <p className="text-xs text-ink/40 mt-2 text-center">
-            {selectedMode === 'flexible' ? (
-              <>~{estimatedCycles} cycles (self-paced)</>
-            ) : (
-              <>
-                {estimatedCycles} cycles ({cycleDurationSec}s each)
-              </>
-            )}
+            {estimatedCycles} cycles ({cycleDurationSec}s each)
           </p>
         </div>
 

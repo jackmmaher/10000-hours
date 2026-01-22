@@ -2,10 +2,11 @@
  * CircularProgress - Phase progress ring for Aum Coach
  *
  * Features:
- * - Phase segment markers showing Breathe/Ah/Oo/Mm boundaries
+ * - Clean, minimal ring design following Human-Crafted Design principles
+ * - Phase labels positioned around the outside for orientation
  * - Smooth crossfade transitions between phase labels
- * - Ring fills continuously through entire cycle
- * - "Get Ready" shows ring structure preview
+ * - Ring fills continuously clockwise through entire cycle
+ * - Breathe marker at 12 o'clock position
  */
 
 import { useState, useEffect, useRef } from 'react'
@@ -16,22 +17,16 @@ interface CircularProgressProps {
   currentPhase: CyclePhase
   phaseProgress: number // 0-1 (for phase countdown display)
   cycleProgress: number // 0-1 (for ring - continuous through cycle)
-  phaseTimeRemainingMs: number | null // null for flexible mode
+  phaseTimeRemainingMs: number | null
   timingMode: TimingMode
   size?: number
 }
 
 /**
  * Calculate phase boundary positions as percentages of the cycle
- * Returns positions for: [breatheEnd, ahEnd, ooEnd] (mm goes to 100%)
- * Returns null for flexible mode (no fixed timing)
+ * Returns positions for: [breatheEnd, ahEnd, ooEnd] (mm ends at 1.0)
  */
-function getPhasePositions(mode: TimingMode): number[] | null {
-  if (mode === 'flexible') {
-    // Flexible mode has no fixed timing - phases driven by user's voice
-    return null
-  }
-
+function getPhasePositions(mode: TimingMode): number[] {
   const config = TIMING_CONFIGS[mode]
   const total = config.breathe + config.ah + config.oo + config.mm
 
@@ -51,14 +46,18 @@ export function CircularProgress({
   size = 220,
 }: CircularProgressProps) {
   const center = size / 2
-  const strokeWidth = 8
-  const radius = (size - strokeWidth) / 2 - 4
-  const markerRadius = radius + 16 // Position markers outside the ring
+  const strokeWidth = 6
+  const radius = (size - strokeWidth) / 2 - 8
+  const markerRadius = radius + 28 // Position markers well outside the ring
 
   // Track previous phase for crossfade
   const [displayPhase, setDisplayPhase] = useState(currentPhase)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const prevPhaseRef = useRef(currentPhase)
+
+  // Track previous cycle progress to detect resets
+  const prevCycleProgressRef = useRef(cycleProgress)
+  const [isCycleReset, setIsCycleReset] = useState(false)
 
   // Handle phase transitions with crossfade
   useEffect(() => {
@@ -76,80 +75,73 @@ export function CircularProgress({
     }
   }, [currentPhase])
 
+  // Detect cycle reset (progress jumps from near 1 to near 0)
+  useEffect(() => {
+    const prevProgress = prevCycleProgressRef.current
+    const currProgress = cycleProgress
+
+    // If previous was > 0.9 and current is < 0.1, it's a cycle boundary
+    if (prevProgress > 0.9 && currProgress < 0.1) {
+      setIsCycleReset(true)
+      // Re-enable transition after a brief moment
+      const timer = setTimeout(() => {
+        setIsCycleReset(false)
+      }, 50)
+      return () => clearTimeout(timer)
+    }
+
+    prevCycleProgressRef.current = currProgress
+  }, [cycleProgress])
+
   // Calculate SVG arc path
   const circumference = 2 * Math.PI * radius
   const cycleOffset = circumference * (1 - cycleProgress)
 
-  // Get phase boundary positions (null for flexible mode)
+  // Get phase boundary positions
   const phasePositions = getPhasePositions(timingMode)
-  const isFlexible = timingMode === 'flexible'
 
   // Format countdown
   const countdownSeconds =
     phaseTimeRemainingMs !== null ? Math.ceil(phaseTimeRemainingMs / 1000) : null
 
   // Get phase display label
-  // During getReady, show "Breathe" so transition is seamless
-  const phaseLabel = displayPhase === 'getReady' ? 'Breathe' : getPhaseLabel(displayPhase)
+  const phaseLabel = getPhaseLabel(displayPhase)
 
-  // Determine special phases
-  const isGetReady = currentPhase === 'getReady'
+  // Determine if breathing phase
   const isBreathing = currentPhase === 'breathe'
-  const isRestPhase = isGetReady || isBreathing
 
-  // Calculate marker positions
-  // For timed modes: positions based on actual phase durations
-  // For flexible mode: evenly spaced as orientation guide (user drives pace)
-  const markers = isFlexible
-    ? [
-        // Flexible: equal spacing, just for orientation
-        { pos: 0, label: '~', phase: 'breathe' as const },
-        { pos: 0.25, label: 'Ah', phase: 'ah' as const },
-        { pos: 0.5, label: 'Oo', phase: 'oo' as const },
-        { pos: 0.75, label: 'Mm', phase: 'mm' as const },
-      ]
-    : [
-        // Timed: positions based on actual durations
-        { pos: 0, label: '~', phase: 'breathe' as const },
-        { pos: phasePositions![0], label: 'Ah', phase: 'ah' as const },
-        { pos: phasePositions![1], label: 'Oo', phase: 'oo' as const },
-        { pos: phasePositions![2], label: 'Mm', phase: 'mm' as const },
-      ]
+  // Calculate marker positions based on actual phase durations
+  const markers = [
+    { pos: 0, label: 'Breathe', phase: 'breathe' as const },
+    { pos: phasePositions[0], label: 'Ah', phase: 'ah' as const },
+    { pos: phasePositions[1], label: 'Oo', phase: 'oo' as const },
+    { pos: phasePositions[2], label: 'Mm', phase: 'mm' as const },
+  ]
 
   return (
-    <div className="relative" style={{ width: size + 40, height: size + 40 }}>
-      {/* Phase markers around the outside */}
+    <div className="relative" style={{ width: size + 56, height: size + 56 }}>
+      {/* Phase markers around the outside - these ARE the demarcation */}
       {markers.map(({ pos, label, phase }) => {
         // Convert position (0-1) to angle (radians), starting from top
         const angle = pos * 2 * Math.PI - Math.PI / 2
-        const x = (size + 40) / 2 + Math.cos(angle) * markerRadius
-        const y = (size + 40) / 2 + Math.sin(angle) * markerRadius
+        const x = (size + 56) / 2 + Math.cos(angle) * markerRadius
+        const y = (size + 56) / 2 + Math.sin(angle) * markerRadius
 
-        // Highlight current phase marker (getReady highlights breathe)
-        const effectivePhase = currentPhase === 'getReady' ? 'breathe' : currentPhase
-        const isCurrentPhase = phase === effectivePhase
-        const isPastPhase = !isFlexible && cycleProgress > pos
-
-        // Flexible mode: markers are orientation only (always subtle except current)
-        // Timed mode: markers show progress (past = faded, current = highlighted)
-        const markerClass = isCurrentPhase
-          ? 'text-accent scale-110'
-          : isFlexible
-            ? 'text-ink/30' // Flexible: all non-current are subtle
-            : isPastPhase
-              ? 'text-ink/40'
-              : 'text-ink/20'
+        const isCurrentPhase = phase === currentPhase
 
         return (
           <div
             key={phase}
-            className={`absolute flex items-center justify-center transition-all duration-300 ${markerClass}`}
+            className="absolute flex items-center justify-center"
             style={{
               left: x,
               top: y,
               transform: 'translate(-50%, -50%)',
-              fontSize: label === '~' ? '1rem' : '0.7rem',
+              fontSize: '0.75rem',
               fontWeight: isCurrentPhase ? 600 : 400,
+              color: isCurrentPhase ? 'var(--accent)' : 'var(--text-secondary)',
+              opacity: isCurrentPhase ? 1 : 0.7,
+              transition: 'all 300ms var(--ease-out)',
             }}
           >
             {label}
@@ -161,8 +153,8 @@ export function CircularProgress({
       <div
         className="absolute"
         style={{
-          left: 20,
-          top: 20,
+          left: 28,
+          top: 28,
           width: size,
           height: size,
         }}
@@ -173,54 +165,29 @@ export function CircularProgress({
           viewBox={`0 0 ${size} ${size}`}
           className="transform -rotate-90"
         >
-          {/* Background ring with phase segments */}
+          {/* Background ring - subtle track */}
           <circle
             cx={center}
             cy={center}
             r={radius}
             fill="none"
-            className="stroke-ink/10"
+            stroke="var(--border)"
             strokeWidth={strokeWidth}
           />
 
-          {/* Phase segment tick marks on background ring (timed modes only) */}
-          {phasePositions &&
-            phasePositions.map((pos, i) => {
-              const angle = pos * 2 * Math.PI
-              const innerR = radius - strokeWidth / 2 - 2
-              const outerR = radius + strokeWidth / 2 + 2
-              const x1 = center + Math.cos(angle) * innerR
-              const y1 = center + Math.sin(angle) * innerR
-              const x2 = center + Math.cos(angle) * outerR
-              const y2 = center + Math.sin(angle) * outerR
-
-              return (
-                <line
-                  key={i}
-                  x1={x1}
-                  y1={y1}
-                  x2={x2}
-                  y2={y2}
-                  className="stroke-ink/20"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                />
-              )
-            })}
-
-          {/* Cycle progress ring - continuous through entire cycle */}
+          {/* Cycle progress ring - the hero element */}
           <circle
             cx={center}
             cy={center}
             r={radius}
             fill="none"
-            className="stroke-accent"
+            stroke="var(--accent)"
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={cycleOffset}
             style={{
-              transition: isFlexible ? 'none' : 'stroke-dashoffset 0.1s linear',
+              transition: isCycleReset ? 'none' : 'stroke-dashoffset 0.1s linear',
             }}
           />
         </svg>
@@ -229,33 +196,32 @@ export function CircularProgress({
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           {/* Phase label with crossfade transition */}
           <div
-            className={`font-serif font-semibold text-ink ${isRestPhase ? 'animate-pulse' : ''}`}
+            className={`font-serif font-semibold ${isBreathing ? 'animate-pulse' : ''}`}
             style={{
-              fontSize: isRestPhase ? '2rem' : '3.5rem',
+              fontSize: isBreathing ? '1.75rem' : '3rem',
               lineHeight: 1,
               opacity: isTransitioning ? 0 : 1,
               transition: 'opacity 150ms ease-in-out',
+              color: 'var(--text-primary)',
             }}
           >
             {phaseLabel}
           </div>
 
           {/* Countdown seconds */}
-          {countdownSeconds !== null && !isFlexible && (
+          {countdownSeconds !== null && (
             <div
-              className="font-serif text-ink/50 mt-2"
+              className="font-serif mt-1"
               style={{
-                fontSize: '1.5rem',
-                opacity: isTransitioning ? 0 : 1,
+                fontSize: '1.25rem',
+                opacity: isTransitioning ? 0 : 0.6,
                 transition: 'opacity 150ms ease-in-out',
+                color: 'var(--text-secondary)',
               }}
             >
               {countdownSeconds}s
             </div>
           )}
-
-          {/* Flexible mode indicator */}
-          {isFlexible && !isRestPhase && <div className="text-sm text-ink/40 mt-2">hold...</div>}
         </div>
       </div>
     </div>

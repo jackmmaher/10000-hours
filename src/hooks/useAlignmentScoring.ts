@@ -1,5 +1,5 @@
 /**
- * useAlignmentScoring - Rolling window alignment score for Om chanting
+ * useAlignmentScoring - Rolling window alignment score for Aum chanting
  *
  * Calculates a forgiving, responsive alignment score based on:
  * - Pitch stability (variance within window)
@@ -12,7 +12,12 @@
 
 import { useRef, useCallback, useEffect } from 'react'
 import type { PitchData } from './usePitchDetection'
-import type { PhonemeData, Phoneme } from './usePhonemeDetection'
+import type { Phoneme } from './useFormantDetection'
+
+// Minimal interface for phoneme data - only what alignment scoring needs
+interface PhonemeDataMinimal {
+  current: Phoneme
+}
 
 // Rolling window configuration
 const WINDOW_DURATION_MS = 4000 // 4 seconds
@@ -55,7 +60,7 @@ export interface UseAlignmentScoringResult {
   // Get current alignment data
   getAlignmentData: () => AlignmentData
   // Record a sample (call regularly, e.g., in rAF loop)
-  recordSample: (pitchData: PitchData, phonemeData: PhonemeData) => void
+  recordSample: (pitchData: PitchData, phonemeData: PhonemeDataMinimal) => void
   // Reset scoring
   reset: () => void
 }
@@ -154,7 +159,7 @@ export function useAlignmentScoring(): UseAlignmentScoringResult {
    * Record a sample and update alignment score
    */
   const recordSample = useCallback(
-    (pitchData: PitchData, phonemeData: PhonemeData): void => {
+    (pitchData: PitchData, phonemeData: PhonemeDataMinimal): void => {
       const now = performance.now()
 
       // Rate limit sampling

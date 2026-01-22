@@ -65,6 +65,7 @@
   --progress-track: #E2E8F0;
   --progress-fill: #0EA5E9;
   --progress-glow: rgba(14, 165, 233, 0.25);
+  --shimmer-color: rgba(255, 255, 255, 0.4);
 
   /* === INTERACTIVE === */
   --button-primary-bg: #0EA5E9;

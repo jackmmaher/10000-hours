@@ -1,5 +1,5 @@
 /**
- * useOmAudioCapture - Microphone stream and AudioContext for Om Coach
+ * useOmAudioCapture - Microphone stream and AudioContext for Aum Coach
  *
  * Provides raw audio data for pitch and phoneme detection.
  * Critical: Uses refs for continuous audio data - NOT React state.

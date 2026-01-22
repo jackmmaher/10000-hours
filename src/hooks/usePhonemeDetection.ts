@@ -1,8 +1,14 @@
 /**
+ * @deprecated Use useFormantDetection.ts instead
+ *
+ * This hook uses spectral centroid which doesn't accurately distinguish vowels.
+ * The new useFormantDetection uses frequency band energy ratios with optional
+ * calibration for much better A/U/M classification.
+ *
  * usePhonemeDetection - A/U/M phoneme classification using spectral features
  *
  * Uses Meyda for spectral centroid and flatness analysis to classify
- * the three phonemes of Om chanting:
+ * the three phonemes of Aum chanting:
  * - "A" (Ah): Open vowel with high spectral centroid (1500-2500 Hz)
  * - "U" (Oo): Closed vowel with low spectral centroid (500-1000 Hz)
  * - "M" (Mm): Nasal hum with very low centroid + high spectral flatness
@@ -36,29 +42,34 @@ export interface UsePhonemeDetectionResult {
 
 // Spectral centroid thresholds in Hz
 // Meyda returns centroid as frequency in Hz, not normalized
-// Based on real-world testing of Om chanting:
-// - "M" (Mm): Nasal hum has very low spectral centroid (mostly fundamental)
-// - "U" (Oo): Closed vowel has low-mid centroid
-// - "A" (Ah): Open vowel has higher spectral centroid
+// Based on real-world testing of Aum chanting at ~130 Hz fundamental:
+// - User's actual centroid values when chanting: 30-80 Hz
+// - Energy is concentrated around the fundamental frequency
+// - Formant frequencies (which distinguish vowels) are subtle compared to fundamental
+// UPDATED: Lowered thresholds dramatically to match real-world data
 const PHONEME_THRESHOLDS = {
-  M_MAX: 250, // Hz - nasal hum has low centroid
-  U_MIN: 250, // Hz
-  U_MAX: 550, // Hz - closed vowel
-  A_MIN: 550, // Hz - open vowel has higher centroid
+  M_MAX: 50, // Hz - nasal hum, very concentrated energy
+  U_MIN: 50, // Hz
+  U_MAX: 70, // Hz - closed vowel "oo"
+  A_MIN: 70, // Hz - open vowel "ah" has slightly more harmonics
+}
+
+// Spectral flatness thresholds for secondary validation
+// Flatness near 1 = noise-like, near 0 = tonal
+// These help distinguish phonemes when centroid alone is ambiguous
+const FLATNESS_THRESHOLDS = {
+  M_MIN: 0.3, // M (hum) has higher flatness due to nasal resonance
+  A_MAX: 0.2, // A (ah) is more tonal, lower flatness
 }
 
 // Hysteresis buffer to prevent flickering at boundaries
-const HYSTERESIS_BUFFER = 40 // Hz
+const HYSTERESIS_BUFFER = 10 // Hz - reduced for smaller threshold ranges
 
-// Note: Spectral flatness is used in classifyPhoneme for M detection
-// Flatness near 1 = noise-like, near 0 = tonal
-// Humming has moderate flatness due to nasal resonance
-
-// RMS threshold for silence detection
-const SILENCE_THRESHOLD = 0.01
+// RMS threshold for silence detection (much more sensitive)
+const SILENCE_THRESHOLD = 0.001
 
 // Debounce time in milliseconds to prevent rapid transitions
-const DEBOUNCE_MS = 150
+const DEBOUNCE_MS = 100
 
 // Buffer size must match what we pass to Meyda
 const BUFFER_SIZE = 2048
@@ -99,10 +110,14 @@ export function usePhonemeDetection(): UsePhonemeDetectionResult {
   const debugCounterRef = useRef(0)
 
   /**
-   * Classify phoneme from spectral features with hysteresis
-   * centroid is in Hz from Meyda
-   * Hysteresis prevents flickering at boundaries by requiring
-   * the signal to cross threshold + buffer to switch phonemes
+   * Classify phoneme from spectral features using centroid + flatness
+   *
+   * Detection strategy:
+   * - M (hum): Low centroid + higher flatness (nasal resonance creates broader spectrum)
+   * - A (ah): Higher centroid + lower flatness (open vowel, more tonal)
+   * - U (oo): Mid-range (between A and M characteristics)
+   *
+   * Hysteresis prevents flickering at boundaries.
    */
   const classifyPhoneme = useCallback(
     (centroid: number, flatness: number, rms: number): Phoneme => {
@@ -129,59 +144,100 @@ export function usePhonemeDetection(): UsePhonemeDetectionResult {
 
       const lastPhoneme = lastConfirmedPhonemeRef.current
 
-      // Apply hysteresis: require signal to cross threshold + buffer to change
-      // This prevents rapid oscillation at phoneme boundaries
+      // === PRIMARY CLASSIFICATION using centroid + flatness ===
 
-      // M detection: very low centroid (mostly fundamental frequency)
+      // M detection: Low centroid AND higher flatness (nasal hum)
+      // Flatness validation helps distinguish M from low-pitched A/U
+      const isMBySpectrum =
+        centroid < PHONEME_THRESHOLDS.M_MAX && flatness >= FLATNESS_THRESHOLDS.M_MIN
+      const isMByCentroidOnly = centroid < PHONEME_THRESHOLDS.M_MAX - HYSTERESIS_BUFFER
+
+      // A detection: Higher centroid AND lower flatness (open vowel, tonal)
+      const isABySpectrum =
+        centroid >= PHONEME_THRESHOLDS.A_MIN && flatness < FLATNESS_THRESHOLDS.A_MAX
+      const isAByCentroidOnly = centroid >= PHONEME_THRESHOLDS.A_MIN + HYSTERESIS_BUFFER
+
+      // === APPLY HYSTERESIS for stability ===
+
+      // Stay in current phoneme if at boundary (prevents flickering)
       if (lastPhoneme === 'M') {
-        // Stay in M unless centroid rises above M_MAX + buffer
-        if (centroid < PHONEME_THRESHOLDS.M_MAX + HYSTERESIS_BUFFER) {
-          return 'M'
-        }
-      } else {
-        // Switch to M if centroid drops below M_MAX
-        if (centroid < PHONEME_THRESHOLDS.M_MAX) {
-          lastConfirmedPhonemeRef.current = 'M'
-          return 'M'
-        }
-      }
-
-      // U detection: low-mid centroid (closed vowel "oo")
-      if (lastPhoneme === 'U') {
-        // Stay in U unless centroid moves outside U range + buffer
-        if (
-          centroid >= PHONEME_THRESHOLDS.U_MIN - HYSTERESIS_BUFFER &&
-          centroid < PHONEME_THRESHOLDS.U_MAX + HYSTERESIS_BUFFER
-        ) {
-          return 'U'
-        }
-      } else {
-        // Switch to U if centroid is solidly in U range
-        if (centroid >= PHONEME_THRESHOLDS.U_MIN && centroid < PHONEME_THRESHOLDS.U_MAX) {
-          lastConfirmedPhonemeRef.current = 'U'
-          return 'U'
-        }
-      }
-
-      // A detection: higher centroid (open vowel "ah")
-      if (lastPhoneme === 'A') {
-        // Stay in A unless centroid drops below A_MIN - buffer
-        if (centroid >= PHONEME_THRESHOLDS.A_MIN - HYSTERESIS_BUFFER) {
-          return 'A'
-        }
-      } else {
-        // Switch to A if centroid rises above A_MIN
-        if (centroid >= PHONEME_THRESHOLDS.A_MIN) {
+        // Stay in M unless clearly A or U
+        if (isABySpectrum || isAByCentroidOnly) {
           lastConfirmedPhonemeRef.current = 'A'
           return 'A'
         }
+        if (
+          centroid >= PHONEME_THRESHOLDS.U_MIN + HYSTERESIS_BUFFER &&
+          centroid < PHONEME_THRESHOLDS.A_MIN
+        ) {
+          lastConfirmedPhonemeRef.current = 'U'
+          return 'U'
+        }
+        return 'M'
       }
 
-      // In transition zone, stay with current phoneme if vocalized, else default to U
-      if (lastPhoneme !== 'silence') {
-        return lastPhoneme
+      if (lastPhoneme === 'A') {
+        // Stay in A unless clearly M or U
+        if (isMBySpectrum || isMByCentroidOnly) {
+          lastConfirmedPhonemeRef.current = 'M'
+          return 'M'
+        }
+        if (
+          centroid >= PHONEME_THRESHOLDS.U_MIN &&
+          centroid < PHONEME_THRESHOLDS.A_MIN - HYSTERESIS_BUFFER
+        ) {
+          lastConfirmedPhonemeRef.current = 'U'
+          return 'U'
+        }
+        return 'A'
       }
-      return 'U' // Default for new vocalization in transition zone
+
+      if (lastPhoneme === 'U') {
+        // Stay in U unless clearly A or M
+        if (isABySpectrum || isAByCentroidOnly) {
+          lastConfirmedPhonemeRef.current = 'A'
+          return 'A'
+        }
+        if (isMBySpectrum || isMByCentroidOnly) {
+          lastConfirmedPhonemeRef.current = 'M'
+          return 'M'
+        }
+        return 'U'
+      }
+
+      // === NEW VOCALIZATION (coming from silence) - classify fresh ===
+
+      // Check A first (using combined detection)
+      if (isABySpectrum || isAByCentroidOnly) {
+        lastConfirmedPhonemeRef.current = 'A'
+        return 'A'
+      }
+
+      // Check M (using combined detection)
+      if (isMBySpectrum || isMByCentroidOnly) {
+        lastConfirmedPhonemeRef.current = 'M'
+        return 'M'
+      }
+
+      // Check U (mid-range)
+      if (centroid >= PHONEME_THRESHOLDS.U_MIN && centroid < PHONEME_THRESHOLDS.U_MAX) {
+        lastConfirmedPhonemeRef.current = 'U'
+        return 'U'
+      }
+
+      // Default based on centroid for edge cases
+      if (centroid >= PHONEME_THRESHOLDS.A_MIN) {
+        lastConfirmedPhonemeRef.current = 'A'
+        return 'A'
+      }
+      if (centroid >= PHONEME_THRESHOLDS.U_MIN) {
+        lastConfirmedPhonemeRef.current = 'U'
+        return 'U'
+      }
+
+      // Very low centroid defaults to M
+      lastConfirmedPhonemeRef.current = 'M'
+      return 'M'
     },
     []
   )

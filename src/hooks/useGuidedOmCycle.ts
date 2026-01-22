@@ -1,23 +1,31 @@
 /**
  * useGuidedOmCycle - Guided Aum practice session state machine
  *
- * Supports three timing modes:
- * - Traditional (1:1:2): Ah 3s, Oo 3s, Mm 6s, Breathe 4s = 16s cycle
- * - Extended: Ah 4s, Oo 4s, Mm 8s, Breathe 4s = 20s cycle
- * - Flexible: Phoneme-detection driven, user controls pace
+ * Flow:
+ * 1. Practice Phase (3 cycles) - User learns rhythm, not scored
+ *    - First breathe is 1.5x longer for gentle introduction
+ *    - Cycles labeled "Practice Cycle 1/2/3 of 3"
+ * 2. "Session begins now" message (dissolves)
+ * 3. Scored Phase (N cycles) - Counts toward session metrics
+ *    - Cycles labeled "Cycle 1 of N"
  *
- * Tracks per-phoneme alignment for scoring.
+ * Supports three timing modes (all use 2:1:1:2 ratio):
+ * - Traditional: 18s cycle (Breathe 6s, Ah 3s, Oo 3s, Mm 6s)
+ * - Extended: 24s cycle (Breathe 8s, Ah 4s, Oo 4s, Mm 8s)
+ * - Long Breath: 36s cycle (Breathe 12s, Ah 6s, Oo 6s, Mm 12s)
+ *
+ * Circle progress is always clockwise, continuous flow.
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react'
-import type { Phoneme } from './usePhonemeDetection'
+import type { Phoneme } from './useFormantDetection'
 import type { PitchData } from './usePitchDetection'
 
 // Timing modes
-export type TimingMode = 'traditional' | 'extended' | 'flexible'
+export type TimingMode = 'traditional' | 'extended' | 'longbreath'
 
 // Phase timing configurations in milliseconds
-// Breath duration matches Mm duration for balanced cycles
+// All modes use 1:1:2 ratio (breathe:ah:oo:mm = 2:1:1:2)
 export const TIMING_CONFIGS: Record<
   TimingMode,
   {
@@ -29,58 +37,56 @@ export const TIMING_CONFIGS: Record<
 > = {
   traditional: { breathe: 6000, ah: 3000, oo: 3000, mm: 6000 }, // 18s total
   extended: { breathe: 8000, ah: 4000, oo: 4000, mm: 8000 }, // 24s total
-  flexible: { breathe: 0, ah: 0, oo: 0, mm: 0 }, // Phoneme-driven
+  longbreath: { breathe: 12000, ah: 6000, oo: 6000, mm: 12000 }, // 36s total
 }
+
+// First breathe multiplier for gentle introduction
+export const FIRST_BREATHE_MULTIPLIER = 1.5
+
+// Number of practice cycles before scored session
+export const PRACTICE_CYCLES = 3
 
 // Get phase durations for a timing mode
 export function getPhaseDurations(mode: TimingMode) {
   return TIMING_CONFIGS[mode]
 }
 
-// Get cycle duration for a timing mode
+// Get cycle duration for a timing mode (normal cycle, not first)
 export function getCycleDuration(mode: TimingMode): number {
   const config = TIMING_CONFIGS[mode]
   return config.breathe + config.ah + config.oo + config.mm
 }
 
+// Get first cycle duration (with extended first breathe)
+export function getFirstCycleDuration(mode: TimingMode): number {
+  const config = TIMING_CONFIGS[mode]
+  const firstBreathe = config.breathe * FIRST_BREATHE_MULTIPLIER
+  return firstBreathe + config.ah + config.oo + config.mm
+}
+
 // Session duration options
 export type SessionDuration = 5 | 10 | 15
 
-// Calculate cycles for duration and timing mode
+// Calculate scored cycles for duration and timing mode
 export function getSessionCycles(duration: SessionDuration, mode: TimingMode): number {
-  if (mode === 'flexible') {
-    // For flexible, estimate based on ~20s average cycle
-    return Math.floor((duration * 60 * 1000) / 20000)
-  }
   const cycleDuration = getCycleDuration(mode)
   return Math.floor((duration * 60 * 1000) / cycleDuration)
 }
 
-// Legacy export for backwards compatibility
+// Legacy exports for backwards compatibility
 export const SESSION_CYCLES: Record<SessionDuration, number> = {
   5: 18,
   10: 37,
   15: 56,
 }
-
-// Legacy export for backwards compatibility
 export const PHASE_DURATIONS = TIMING_CONFIGS.traditional
 
-// Phases in order (getReady is warmup before session timer starts)
-export type CyclePhase = 'getReady' | 'breathe' | 'ah' | 'oo' | 'mm'
-
-// Timed phases (excludes getReady which has its own duration logic)
-type TimedPhase = 'breathe' | 'ah' | 'oo' | 'mm'
-const PHASE_ORDER: TimedPhase[] = ['breathe', 'ah', 'oo', 'mm']
-
-// Get Ready duration = one full cycle duration
-export function getReadyDuration(mode: TimingMode): number {
-  return getCycleDuration(mode)
-}
+// Phases in order (no more getReady - starts directly with breathe)
+export type CyclePhase = 'breathe' | 'ah' | 'oo' | 'mm'
+const PHASE_ORDER: CyclePhase[] = ['breathe', 'ah', 'oo', 'mm']
 
 // Map phases to expected phonemes for scoring
 const PHASE_PHONEMES: Record<CyclePhase, Phoneme | null> = {
-  getReady: null,
   breathe: null,
   ah: 'A',
   oo: 'U',
@@ -109,21 +115,36 @@ export interface GuidedCycleState {
   isRunning: boolean
   timingMode: TimingMode
   currentPhase: CyclePhase
-  phaseProgress: number
-  cycleProgress: number
-  sessionProgress: number
-  currentCycle: number
-  totalCycles: number
-  elapsedMs: number // Count-up time (does NOT include getReady)
-  totalSessionMs: number // Total session duration
+  phaseProgress: number // 0-1 within current phase
+  cycleProgress: number // 0-1 within current cycle
+
+  // Practice phase (3 cycles, not scored)
+  isPractice: boolean
+  practiceCycleNumber: number // 1, 2, or 3 during practice
+  practiceTotalCycles: number // always 3
+
+  // Transition indicator
+  showSessionStart: boolean // briefly true when scored session begins
+
+  // Scored session (what counts)
+  currentCycle: number // 1 to totalCycles (scored only)
+  totalCycles: number // total scored cycles
+
+  // Timing
+  elapsedMs: number // elapsed time in SCORED session only (not practice)
+  totalSessionMs: number // total scored session duration
   sessionDurationMin: SessionDuration
-  isGetReady: boolean // True during warmup phase
-  getReadyProgress: number // 0-1 progress through getReady
+
+  // Legacy compatibility (deprecated)
+  isGetReady: boolean
+  getReadyProgress: number
 }
 
 export interface UseGuidedOmCycleOptions {
   onCycleComplete?: (quality: CycleQuality, cycleNumber: number) => void
   onSessionComplete?: () => void
+  onPracticeCycleComplete?: (cycleNumber: number) => void
+  onScoredSessionStart?: () => void
 }
 
 export interface UseGuidedOmCycleResult {
@@ -137,7 +158,8 @@ export interface UseGuidedOmCycleResult {
 }
 
 export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuidedOmCycleResult {
-  const { onCycleComplete, onSessionComplete } = options
+  const { onCycleComplete, onSessionComplete, onPracticeCycleComplete, onScoredSessionStart } =
+    options
 
   const [state, setState] = useState<GuidedCycleState>({
     isRunning: false,
@@ -145,25 +167,32 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
     currentPhase: 'breathe',
     phaseProgress: 0,
     cycleProgress: 0,
-    sessionProgress: 0,
+    isPractice: true,
+    practiceCycleNumber: 1,
+    practiceTotalCycles: PRACTICE_CYCLES,
+    showSessionStart: false,
     currentCycle: 1,
     totalCycles: 0,
     elapsedMs: 0,
     totalSessionMs: 0,
     sessionDurationMin: 5,
+    // Legacy (deprecated)
     isGetReady: false,
     getReadyProgress: 0,
   })
 
   // Refs for timing
   const sessionStartRef = useRef<number | null>(null)
-  const getReadyStartRef = useRef<number | null>(null)
-  const getReadyDurationRef = useRef<number>(0)
+  const practiceStartRef = useRef<number | null>(null)
+  const scoredStartRef = useRef<number | null>(null)
   const animationFrameRef = useRef<number | null>(null)
   const timingModeRef = useRef<TimingMode>('traditional')
-  const isGetReadyRef = useRef<boolean>(false)
 
-  // Per-cycle quality tracking
+  // Track which cycle we're in (absolute, includes practice)
+  const absoluteCycleRef = useRef(1)
+  const isPracticeRef = useRef(true)
+
+  // Per-cycle quality tracking (for scored cycles only)
   const phaseScoresRef = useRef<{
     ah: { samples: number; aligned: number }
     oo: { samples: number; aligned: number }
@@ -182,7 +211,7 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
     isLocked: false,
   })
 
-  // Session-wide phoneme alignment tracking (for results)
+  // Session-wide phoneme alignment tracking (for results - scored only)
   const phonemeAlignmentRef = useRef<PhonemeAlignmentData>({
     ah: { totalMs: 0, inRangeMs: 0 },
     oo: { totalMs: 0, inRangeMs: 0 },
@@ -190,41 +219,50 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
   })
 
   const lastSampleTimeRef = useRef<number>(0)
-  const lastCycleRef = useRef(0)
+  const lastAbsoluteCycleRef = useRef(0)
   const lastPhaseRef = useRef<CyclePhase>('breathe')
 
-  // Flexible mode tracking
-  const flexiblePhaseRef = useRef<CyclePhase>('breathe')
-  const flexibleCycleStateRef = useRef<'idle' | 'a' | 'u' | 'm'>('idle')
+  /**
+   * Get cycle duration accounting for first cycle's extended breathe
+   */
+  const getCycleDurationForCycle = useCallback((cycleNumber: number, mode: TimingMode): number => {
+    if (cycleNumber === 1) {
+      return getFirstCycleDuration(mode)
+    }
+    return getCycleDuration(mode)
+  }, [])
 
   /**
-   * Calculate phase from elapsed time (for timed modes)
+   * Calculate phase from elapsed time within a cycle (for TIMED modes only)
    */
-  const calculatePhaseFromTime = useCallback(
+  const calculatePhaseFromCyclePosition = useCallback(
     (
-      elapsedMs: number,
+      positionInCycle: number,
+      isFirstCycle: boolean,
       mode: TimingMode
     ): {
       phase: CyclePhase
       phaseProgress: number
-      cycleProgress: number
-      cycleNumber: number
+      cycleDuration: number
     } => {
       const config = TIMING_CONFIGS[mode]
-      const cycleDuration = config.breathe + config.ah + config.oo + config.mm
+      const breatheDuration = isFirstCycle
+        ? config.breathe * FIRST_BREATHE_MULTIPLIER
+        : config.breathe
 
-      const cycleNumber = Math.floor(elapsedMs / cycleDuration) + 1
-      const positionInCycle = elapsedMs % cycleDuration
+      const cycleDuration = breatheDuration + config.ah + config.oo + config.mm
 
       let phase: CyclePhase = 'breathe'
       let phaseStart = 0
-      let phaseDuration = config.breathe
+      let phaseDuration = breatheDuration
+
+      const phaseDurations = [breatheDuration, config.ah, config.oo, config.mm]
 
       let accumulated = 0
-      for (const p of PHASE_ORDER) {
-        const dur = config[p]
+      for (let i = 0; i < PHASE_ORDER.length; i++) {
+        const dur = phaseDurations[i]
         if (positionInCycle < accumulated + dur) {
-          phase = p
+          phase = PHASE_ORDER[i]
           phaseStart = accumulated
           phaseDuration = dur
           break
@@ -234,106 +272,193 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
 
       const positionInPhase = positionInCycle - phaseStart
       const phaseProgress = phaseDuration > 0 ? Math.min(1, positionInPhase / phaseDuration) : 0
-      const cycleProgress = cycleDuration > 0 ? positionInCycle / cycleDuration : 0
 
-      return { phase, phaseProgress, cycleProgress, cycleNumber }
+      return { phase, phaseProgress, cycleDuration }
     },
     []
   )
 
   /**
-   * Update loop for timed modes
+   * Calculate absolute cycle number and position from total elapsed time (for TIMED modes)
    */
-  const update = useCallback(() => {
+  const calculateCycleFromTime = useCallback(
+    (
+      totalElapsed: number,
+      mode: TimingMode
+    ): {
+      absoluteCycle: number
+      positionInCycle: number
+      cycleDuration: number
+    } => {
+      let elapsed = 0
+      let cycleNum = 1
+
+      while (true) {
+        const cycleDur = getCycleDurationForCycle(cycleNum, mode)
+        if (totalElapsed < elapsed + cycleDur) {
+          return {
+            absoluteCycle: cycleNum,
+            positionInCycle: totalElapsed - elapsed,
+            cycleDuration: cycleDur,
+          }
+        }
+        elapsed += cycleDur
+        cycleNum++
+
+        // Safety limit
+        if (cycleNum > 1000) break
+      }
+
+      return { absoluteCycle: cycleNum, positionInCycle: 0, cycleDuration: getCycleDuration(mode) }
+    },
+    [getCycleDurationForCycle]
+  )
+
+  /**
+   * Handle cycle completion
+   */
+  const handleCycleComplete = useCallback(
+    (previousCycle: number, now: number) => {
+      const mode = timingModeRef.current
+
+      // Was previous cycle a practice cycle?
+      if (previousCycle <= PRACTICE_CYCLES) {
+        onPracticeCycleComplete?.(previousCycle)
+
+        // If transitioning FROM practice TO scored
+        if (previousCycle === PRACTICE_CYCLES) {
+          isPracticeRef.current = false
+          scoredStartRef.current = now
+
+          // Show "Session begins now" message
+          setState((prev) => ({ ...prev, showSessionStart: true }))
+
+          // Clear message after 2 seconds
+          setTimeout(() => {
+            setState((prev) => ({ ...prev, showSessionStart: false }))
+          }, 2000)
+
+          onScoredSessionStart?.()
+        }
+      } else {
+        // Previous cycle was a scored cycle - calculate quality
+        const scores = phaseScoresRef.current
+        const config = TIMING_CONFIGS[mode]
+
+        const ahScore =
+          scores.ah.samples > 0 ? Math.round((scores.ah.aligned / scores.ah.samples) * 100) : 0
+        const ooScore =
+          scores.oo.samples > 0 ? Math.round((scores.oo.aligned / scores.oo.samples) * 100) : 0
+        const mmScore =
+          scores.mm.samples > 0 ? Math.round((scores.mm.aligned / scores.mm.samples) * 100) : 0
+
+        // Weight by phase duration
+        const totalVocalDuration = config.ah + config.oo + config.mm || 12000
+        const overallScore =
+          totalVocalDuration > 0
+            ? Math.round(
+                (ahScore * (config.ah || 3000) +
+                  ooScore * (config.oo || 3000) +
+                  mmScore * (config.mm || 6000)) /
+                  totalVocalDuration
+              )
+            : 0
+
+        const quality: CycleQuality = {
+          ahScore,
+          ooScore,
+          mmScore,
+          overallScore,
+          isLocked: overallScore >= LOCK_THRESHOLD,
+        }
+
+        cycleQualityRef.current = quality
+        onCycleComplete?.(quality, previousCycle - PRACTICE_CYCLES)
+
+        // Reset for next cycle
+        phaseScoresRef.current = {
+          ah: { samples: 0, aligned: 0 },
+          oo: { samples: 0, aligned: 0 },
+          mm: { samples: 0, aligned: 0 },
+        }
+      }
+    },
+    [onCycleComplete, onPracticeCycleComplete, onScoredSessionStart]
+  )
+
+  /**
+   * Update loop for TIMED modes (traditional, extended)
+   */
+  const updateTimed = useCallback(() => {
     const now = performance.now()
     const mode = timingModeRef.current
 
-    // Handle "Get Ready" phase (warmup before session timer starts)
-    if (isGetReadyRef.current && getReadyStartRef.current) {
-      const getReadyElapsed = now - getReadyStartRef.current
-      const getReadyDuration = getReadyDurationRef.current
+    if (!practiceStartRef.current) return
 
-      if (getReadyElapsed >= getReadyDuration) {
-        // Get Ready complete - start the actual session
-        isGetReadyRef.current = false
-        sessionStartRef.current = now
+    const totalElapsed = now - practiceStartRef.current
 
-        setState((prev) => ({
-          ...prev,
-          isGetReady: false,
-          getReadyProgress: 1,
-          currentPhase: 'breathe',
-          phaseProgress: 0,
-          cycleProgress: 0,
-          elapsedMs: 0,
-        }))
-      } else {
-        // Still in Get Ready - update progress
-        const progress = getReadyElapsed / getReadyDuration
+    // Calculate current position
+    const { absoluteCycle, positionInCycle, cycleDuration } = calculateCycleFromTime(
+      totalElapsed,
+      mode
+    )
+    const isFirstCycle = absoluteCycle === 1
+    const { phase, phaseProgress } = calculatePhaseFromCyclePosition(
+      positionInCycle,
+      isFirstCycle,
+      mode
+    )
+    const cycleProgress = cycleDuration > 0 ? positionInCycle / cycleDuration : 0
 
-        setState((prev) => ({
-          ...prev,
-          getReadyProgress: progress,
-          cycleProgress: progress, // Ring fills during getReady
-        }))
-      }
+    // Update phase ref for sample recording
+    lastPhaseRef.current = phase
 
-      animationFrameRef.current = requestAnimationFrame(update)
-      return
+    // Determine if still in practice phase
+    const stillInPractice = absoluteCycle <= PRACTICE_CYCLES
+    const practiceCycleNumber = stillInPractice ? absoluteCycle : 0
+    const scoredCycleNumber = stillInPractice ? 0 : absoluteCycle - PRACTICE_CYCLES
+
+    // Check for cycle transitions
+    if (absoluteCycle !== absoluteCycleRef.current) {
+      handleCycleComplete(absoluteCycleRef.current, now)
+      absoluteCycleRef.current = absoluteCycle
     }
 
-    // Normal session logic (after Get Ready)
-    if (!sessionStartRef.current) return
-
-    const elapsed = now - sessionStartRef.current
+    // Calculate scored session elapsed time
+    const scoredElapsed = scoredStartRef.current ? now - scoredStartRef.current : 0
 
     setState((prev) => {
       if (!prev.isRunning) return prev
 
-      // Check if session is complete (time-based)
-      if (elapsed >= prev.totalSessionMs) {
+      // Check if scored session is complete (time-based)
+      if (!stillInPractice && scoredElapsed >= prev.totalSessionMs) {
         onSessionComplete?.()
         return {
           ...prev,
           isRunning: false,
-          sessionProgress: 1,
           elapsedMs: prev.totalSessionMs,
         }
       }
-
-      if (mode === 'flexible') {
-        // Flexible mode: phase determined by phoneme detection
-        const sessionProgress = elapsed / prev.totalSessionMs
-        return {
-          ...prev,
-          currentPhase: flexiblePhaseRef.current,
-          phaseProgress: 0, // No fixed progress in flexible
-          cycleProgress: 0,
-          sessionProgress,
-          elapsedMs: elapsed,
-        }
-      }
-
-      // Timed modes
-      const { phase, phaseProgress, cycleProgress, cycleNumber } = calculatePhaseFromTime(
-        elapsed,
-        mode
-      )
-      const sessionProgress = elapsed / prev.totalSessionMs
 
       return {
         ...prev,
         currentPhase: phase,
         phaseProgress,
         cycleProgress,
-        sessionProgress,
-        currentCycle: Math.min(cycleNumber, prev.totalCycles),
-        elapsedMs: elapsed,
+        isPractice: stillInPractice,
+        practiceCycleNumber,
+        currentCycle: stillInPractice ? 1 : scoredCycleNumber,
+        elapsedMs: stillInPractice ? 0 : scoredElapsed,
       }
     })
 
-    animationFrameRef.current = requestAnimationFrame(update)
-  }, [calculatePhaseFromTime, onSessionComplete])
+    animationFrameRef.current = requestAnimationFrame(updateTimed)
+  }, [
+    calculateCycleFromTime,
+    calculatePhaseFromCyclePosition,
+    handleCycleComplete,
+    onSessionComplete,
+  ])
 
   /**
    * Start a guided session
@@ -341,24 +466,19 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
   const startSession = useCallback(
     (duration: SessionDuration, mode: TimingMode = 'traditional') => {
       const totalCycles = getSessionCycles(duration, mode)
-      const totalSessionMs = duration * 60 * 1000 // Always use actual duration
+      const totalSessionMs = duration * 60 * 1000
 
-      // Calculate getReady duration (one full cycle)
-      const readyDuration = getReadyDuration(mode)
-
-      // Start with Get Ready phase
       const now = performance.now()
-      getReadyStartRef.current = now
-      getReadyDurationRef.current = readyDuration
-      isGetReadyRef.current = true
-      sessionStartRef.current = null // Session timer starts AFTER getReady
+      practiceStartRef.current = now
+      scoredStartRef.current = null // Will be set when practice ends
+      sessionStartRef.current = now
 
-      lastCycleRef.current = 0
+      absoluteCycleRef.current = 1
+      isPracticeRef.current = true
+      lastAbsoluteCycleRef.current = 0
       lastPhaseRef.current = 'breathe'
       lastSampleTimeRef.current = now
       timingModeRef.current = mode
-      flexiblePhaseRef.current = 'breathe'
-      flexibleCycleStateRef.current = 'idle'
 
       // Reset tracking
       phaseScoresRef.current = {
@@ -384,22 +504,26 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
       setState({
         isRunning: true,
         timingMode: mode,
-        currentPhase: 'getReady',
+        currentPhase: 'breathe',
         phaseProgress: 0,
         cycleProgress: 0,
-        sessionProgress: 0,
+        isPractice: true,
+        practiceCycleNumber: 1,
+        practiceTotalCycles: PRACTICE_CYCLES,
+        showSessionStart: false,
         currentCycle: 1,
         totalCycles,
         elapsedMs: 0,
         totalSessionMs,
         sessionDurationMin: duration,
-        isGetReady: true,
+        // Legacy (deprecated)
+        isGetReady: false,
         getReadyProgress: 0,
       })
 
-      animationFrameRef.current = requestAnimationFrame(update)
+      animationFrameRef.current = requestAnimationFrame(updateTimed)
     },
-    [update]
+    [updateTimed]
   )
 
   /**
@@ -410,181 +534,54 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
       cancelAnimationFrame(animationFrameRef.current)
       animationFrameRef.current = null
     }
+    practiceStartRef.current = null
+    scoredStartRef.current = null
     sessionStartRef.current = null
-    getReadyStartRef.current = null
-    isGetReadyRef.current = false
+    isPracticeRef.current = true
 
     setState((prev) => ({
       ...prev,
       isRunning: false,
-      isGetReady: false,
+      isPractice: false,
+      showSessionStart: false,
     }))
   }, [])
 
   /**
    * Record a sample for quality calculation
    */
-  const recordSample = useCallback(
-    (phoneme: Phoneme, pitch: PitchData) => {
-      if (!sessionStartRef.current) return
+  const recordSample = useCallback((phoneme: Phoneme, pitch: PitchData) => {
+    if (!practiceStartRef.current) return
 
-      const now = performance.now()
-      const elapsed = now - sessionStartRef.current
-      const deltaMs = now - lastSampleTimeRef.current
-      lastSampleTimeRef.current = now
+    const now = performance.now()
+    const deltaMs = now - lastSampleTimeRef.current
+    lastSampleTimeRef.current = now
 
-      const mode = timingModeRef.current
+    // Skip scoring during practice cycles
+    if (isPracticeRef.current) return
 
-      // Handle flexible mode differently
-      if (mode === 'flexible') {
-        // Update phase based on detected phoneme
-        const cycleState = flexibleCycleStateRef.current
+    // Get current phase from state
+    const currentPhase = lastPhaseRef.current
 
-        // State machine for flexible mode
-        if (phoneme === 'silence') {
-          if (cycleState === 'm') {
-            // Completed a cycle: A → U → M → silence
-            const scores = phaseScoresRef.current
-            const ahScore =
-              scores.ah.samples > 0 ? Math.round((scores.ah.aligned / scores.ah.samples) * 100) : 0
-            const ooScore =
-              scores.oo.samples > 0 ? Math.round((scores.oo.aligned / scores.oo.samples) * 100) : 0
-            const mmScore =
-              scores.mm.samples > 0 ? Math.round((scores.mm.aligned / scores.mm.samples) * 100) : 0
+    // Record sample for current phase (skip breathe phase)
+    if (currentPhase !== 'breathe') {
+      const phaseKey = currentPhase as 'ah' | 'oo' | 'mm'
+      const scores = phaseScoresRef.current[phaseKey]
+      const alignment = phonemeAlignmentRef.current[phaseKey]
 
-            const overallScore = Math.round(ahScore * 0.25 + ooScore * 0.25 + mmScore * 0.5)
+      // Only count when user is vocalizing (not silence)
+      if (phoneme !== 'silence' && pitch.frequency !== null) {
+        scores.samples++
+        alignment.totalMs += deltaMs
 
-            const quality: CycleQuality = {
-              ahScore,
-              ooScore,
-              mmScore,
-              overallScore,
-              isLocked: overallScore >= LOCK_THRESHOLD,
-            }
-
-            cycleQualityRef.current = quality
-            lastCycleRef.current++
-            onCycleComplete?.(quality, lastCycleRef.current)
-
-            // Update state with new cycle count
-            setState((prev) => ({
-              ...prev,
-              currentCycle: lastCycleRef.current + 1,
-            }))
-
-            // Reset for next cycle
-            phaseScoresRef.current = {
-              ah: { samples: 0, aligned: 0 },
-              oo: { samples: 0, aligned: 0 },
-              mm: { samples: 0, aligned: 0 },
-            }
-
-            flexibleCycleStateRef.current = 'idle'
-          }
-          flexiblePhaseRef.current = 'breathe'
-        } else if (phoneme === 'A') {
-          flexiblePhaseRef.current = 'ah'
-          if (cycleState === 'idle') {
-            flexibleCycleStateRef.current = 'a'
-          }
-        } else if (phoneme === 'U') {
-          flexiblePhaseRef.current = 'oo'
-          if (cycleState === 'a') {
-            flexibleCycleStateRef.current = 'u'
-          }
-        } else if (phoneme === 'M') {
-          flexiblePhaseRef.current = 'mm'
-          if (cycleState === 'u') {
-            flexibleCycleStateRef.current = 'm'
-          }
-        }
-
-        // Track alignment for current phoneme (only when vocalizing with detected pitch)
-        if ((phoneme === 'A' || phoneme === 'U' || phoneme === 'M') && pitch.frequency !== null) {
-          const phaseKey = phoneme === 'A' ? 'ah' : phoneme === 'U' ? 'oo' : 'mm'
-          const scores = phaseScoresRef.current[phaseKey]
-          const alignment = phonemeAlignmentRef.current[phaseKey]
-
-          scores.samples++
-          alignment.totalMs += deltaMs
-
-          if (pitch.isWithinTolerance) {
-            scores.aligned++
-            alignment.inRangeMs += deltaMs
-          }
-        }
-
-        return
-      }
-
-      // Timed modes
-      const { phase, cycleNumber } = calculatePhaseFromTime(elapsed, mode)
-
-      // Check for phase transition
-      if (phase !== lastPhaseRef.current) {
-        lastPhaseRef.current = phase
-
-        // If entering breathe phase from mm, cycle just completed
-        if (phase === 'breathe' && cycleNumber > lastCycleRef.current) {
-          const scores = phaseScoresRef.current
-          const config = TIMING_CONFIGS[mode]
-
-          const ahScore =
-            scores.ah.samples > 0 ? Math.round((scores.ah.aligned / scores.ah.samples) * 100) : 0
-          const ooScore =
-            scores.oo.samples > 0 ? Math.round((scores.oo.aligned / scores.oo.samples) * 100) : 0
-          const mmScore =
-            scores.mm.samples > 0 ? Math.round((scores.mm.aligned / scores.mm.samples) * 100) : 0
-
-          // Weight by duration
-          const totalVocalDuration = config.ah + config.oo + config.mm
-          const overallScore = Math.round(
-            (ahScore * config.ah + ooScore * config.oo + mmScore * config.mm) / totalVocalDuration
-          )
-
-          const quality: CycleQuality = {
-            ahScore,
-            ooScore,
-            mmScore,
-            overallScore,
-            isLocked: overallScore >= LOCK_THRESHOLD,
-          }
-
-          cycleQualityRef.current = quality
-          onCycleComplete?.(quality, lastCycleRef.current)
-
-          // Reset for next cycle
-          phaseScoresRef.current = {
-            ah: { samples: 0, aligned: 0 },
-            oo: { samples: 0, aligned: 0 },
-            mm: { samples: 0, aligned: 0 },
-          }
-
-          lastCycleRef.current = cycleNumber
+        // Aligned if within pitch tolerance
+        if (pitch.isWithinTolerance) {
+          scores.aligned++
+          alignment.inRangeMs += deltaMs
         }
       }
-
-      // Record sample for current phase (skip breathe phase)
-      if (phase !== 'breathe') {
-        const phaseKey = phase as 'ah' | 'oo' | 'mm'
-        const scores = phaseScoresRef.current[phaseKey]
-        const alignment = phonemeAlignmentRef.current[phaseKey]
-
-        // Only count when user is vocalizing (not silence)
-        if (phoneme !== 'silence' && pitch.frequency !== null) {
-          scores.samples++
-          alignment.totalMs += deltaMs
-
-          // Aligned if within pitch tolerance (regardless of which phoneme detected)
-          if (pitch.isWithinTolerance) {
-            scores.aligned++
-            alignment.inRangeMs += deltaMs
-          }
-        }
-      }
-    },
-    [calculatePhaseFromTime, onCycleComplete]
-  )
+    }
+  }, [])
 
   /**
    * Get expected phoneme for current phase
@@ -632,8 +629,6 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
  */
 export function getPhaseLabel(phase: CyclePhase): string {
   switch (phase) {
-    case 'getReady':
-      return 'Get Ready'
     case 'breathe':
       return 'Breathe'
     case 'ah':
@@ -660,4 +655,11 @@ export function formatTime(ms: number): string {
  */
 export function formatTimeRemaining(ms: number): string {
   return formatTime(ms)
+}
+
+/**
+ * Legacy: Get Ready duration (deprecated - returns 0)
+ */
+export function getReadyDuration(_mode: TimingMode): number {
+  return 0
 }

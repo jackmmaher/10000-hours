@@ -1,10 +1,11 @@
 /**
- * useOmSession - Session management for Om Coach practice
+ * useOmSession - Session management for Aum Coach practice
  *
  * Handles:
  * - Session timing (start/stop)
  * - Saving session to database with practice tool metadata
- * - Hour bank consumption
+ * - Hour bank consumption (deducted at session START with selected duration)
+ * - Actual time spent added to meditation total
  * - Session-in-progress recovery
  */
 
@@ -32,7 +33,7 @@ export interface OmSessionResult {
 export interface UseOmSessionResult {
   // Session state
   state: OmSessionState
-  // Start a new Om Coach session (deducts selectedDurationSeconds from hour bank at START)
+  // Start a new Aum Coach session (deducts selectedDurationSeconds from hour bank at START)
   startSession: (selectedDurationSeconds: number) => Promise<void>
   // End the session and save to database (saves ACTUAL time spent to meditation total)
   endSession: (
@@ -71,7 +72,7 @@ export function useOmSession(): UseOmSessionResult {
       try {
         const appState = await db.appState.get(APP_STATE_KEY)
         if (appState?.sessionInProgress && appState.sessionStartTime) {
-          // For Om Coach, we don't auto-recover mid-session since
+          // For Aum Coach, we don't auto-recover mid-session since
           // real-time audio is required. Just clear the flag.
           await db.appState.update(APP_STATE_KEY, {
             sessionInProgress: false,
@@ -79,14 +80,14 @@ export function useOmSession(): UseOmSessionResult {
           })
         }
       } catch (error) {
-        console.error('[OmSession] Recovery check failed:', error)
+        console.error('[AumSession] Recovery check failed:', error)
       }
     }
     checkRecovery()
   }, [])
 
   /**
-   * Start a new Om Coach session
+   * Start a new Aum Coach session
    * Deducts selectedDurationSeconds from hour bank at START
    */
   const startSession = useCallback(
@@ -105,7 +106,7 @@ export function useOmSession(): UseOmSessionResult {
       try {
         await consumeSessionHours(selectedDurationSeconds)
       } catch (error) {
-        console.error('[OmSession] Failed to consume hours at start:', error)
+        console.error('[AumSession] Failed to consume hours at start:', error)
         // Continue anyway - don't block session start
       }
 
@@ -119,7 +120,7 @@ export function useOmSession(): UseOmSessionResult {
           })
         }
       } catch (error) {
-        console.error('[OmSession] Failed to mark session in progress:', error)
+        console.error('[AumSession] Failed to mark session in progress:', error)
       }
 
       setState({
@@ -144,7 +145,7 @@ export function useOmSession(): UseOmSessionResult {
       const wallClockStart = wallClockStartRef.current
 
       if (!uuid || startTime === null || wallClockStart === null) {
-        console.warn('[OmSession] Cannot end session: no active session')
+        console.warn('[AumSession] Cannot end session: no active session')
         return null
       }
 
@@ -210,7 +211,7 @@ export function useOmSession(): UseOmSessionResult {
           metrics: omCoachMetrics,
         }
       } catch (error) {
-        console.error('[OmSession] Failed to save session:', error)
+        console.error('[AumSession] Failed to save session:', error)
         return null
       }
     },

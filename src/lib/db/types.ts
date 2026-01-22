@@ -12,7 +12,7 @@ export type SessionType = 'meditation' | 'practice'
 // Practice tool identifiers
 export type PracticeToolId = 'om-coach' | 'neural-decelerator' | 'posture-training'
 
-// Om Coach specific metrics
+// Aum Coach specific metrics
 export interface OmCoachMetrics {
   completedCycles: number
   averageAlignmentScore: number
@@ -33,7 +33,7 @@ export interface Session {
   sessionType?: SessionType
   // Practice tool identifier (when sessionType === 'practice')
   practiceToolId?: PracticeToolId
-  // Om Coach specific metrics (when practiceToolId === 'om-coach')
+  // Aum Coach specific metrics (when practiceToolId === 'om-coach')
   omCoachMetrics?: OmCoachMetrics
 }
 

@@ -107,6 +107,7 @@ export default {
         'orb-glow': 'orbGlow 4s ease-in-out infinite',
         'box-breathe': 'boxBreathe 16s ease-in-out infinite',
         'spotlight-breathe': 'spotlightBreathe 16s ease-in-out infinite',
+        'shimmer': 'shimmer 2s ease-in-out infinite',
         // Timer transitions now handled by Framer Motion
       },
       keyframes: {
@@ -161,6 +162,11 @@ export default {
           '75%': { backgroundSize: '200% 200%', backgroundPosition: 'center 45%' },
           '87.5%': { backgroundSize: '200% 200%', backgroundPosition: 'center 45%' },
           '100%': { backgroundSize: '200% 200%', backgroundPosition: 'center 45%' },
+        },
+        // Shimmer effect for practice progress bar
+        shimmer: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(200%)' },
         },
         // Timer transitions now handled by Framer Motion (see src/lib/motion.ts)
       },

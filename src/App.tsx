@@ -275,7 +275,7 @@ function AppContent() {
   return (
     <NeutralThemeProvider>
       <div className="h-full">
-        {/* Top header - hidden during fullscreen experiences (Om Coach practice) */}
+        {/* Top header - hidden during fullscreen experiences (Aum Coach practice) */}
         {!isFullscreen && <Header onNavigateToSettings={() => setView('settings')} />}
 
         {view === 'timer' && <Timer />}
@@ -295,7 +295,6 @@ function AppContent() {
             onNavigateToStore={() => setView('store')}
             onNavigateToPrivacy={() => setView('privacy')}
             onNavigateToTerms={() => setView('terms')}
-            onNavigateToOmCoach={() => setView('om-coach')}
           />
         )}
         {view === 'store' && <Store onBack={() => setView('settings')} />}

@@ -6,7 +6,7 @@
  * - Theme-aware colors only (no hardcoded blues)
  * - Clear visual hierarchy
  * - Consistent spacing from scale
- * - Supports timed and flexible modes
+ * - Shows time remaining for each phase
  */
 
 import { type CyclePhase, type TimingMode, getPhaseDurations } from '../../hooks/useGuidedOmCycle'
@@ -14,7 +14,7 @@ import { type CyclePhase, type TimingMode, getPhaseDurations } from '../../hooks
 interface PhaseGuideProps {
   currentPhase: CyclePhase
   phaseProgress: number // 0-1
-  phaseTimeRemainingMs: number | null // null for flexible mode
+  phaseTimeRemainingMs: number | null
   timingMode: TimingMode
 }
 
@@ -37,7 +37,6 @@ export function PhaseGuide({
   timingMode,
 }: PhaseGuideProps) {
   const isBreathing = currentPhase === 'breathe'
-  const isFlexible = timingMode === 'flexible'
   const phaseDurations = getPhaseDurations(timingMode)
 
   // Determine which phases are completed in this cycle
@@ -85,8 +84,8 @@ export function PhaseGuide({
                     : 'bg-elevated'
               }`}
             >
-              {/* Progress fill for active phase (timed modes only) */}
-              {isActive && !isFlexible && (
+              {/* Progress fill for active phase */}
+              {isActive && (
                 <div
                   className="absolute inset-0 bg-accent/15 origin-left"
                   style={{
@@ -111,13 +110,9 @@ export function PhaseGuide({
                     isActive ? 'text-accent/70' : 'text-ink/40'
                   }`}
                 >
-                  {isFlexible
-                    ? isActive
-                      ? 'now'
-                      : '—'
-                    : isActive && phaseTimeRemainingMs !== null
-                      ? formatSeconds(phaseTimeRemainingMs)
-                      : `${phaseDuration / 1000}s`}
+                  {isActive && phaseTimeRemainingMs !== null
+                    ? formatSeconds(phaseTimeRemainingMs)
+                    : `${phaseDuration / 1000}s`}
                 </div>
 
                 {/* Checkmark for done phases */}

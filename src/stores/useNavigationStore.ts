@@ -19,7 +19,7 @@ export type AppView =
   | 'store' // In-app purchases: hour packs
   | 'privacy' // Privacy policy page
   | 'terms' // Terms of service page
-  | 'om-coach' // Practice tool: Om chanting biofeedback
+  | 'om-coach' // Practice tool: Aum chanting biofeedback
   // Legacy views (still accessible via internal links)
   | 'calendar' // -> accessed from progress
   | 'insights' // -> accessed from journey

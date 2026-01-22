@@ -4,7 +4,7 @@
  * Main orchestrator component that coordinates:
  * - Audio capture (microphone)
  * - Pitch detection (pitchy)
- * - Phoneme detection (meyda)
+ * - Formant-based phoneme detection (calibrated)
  * - Guided cycle timing with multiple modes
  * - Session recording with per-phoneme alignment
  *
@@ -12,17 +12,20 @@
  * - Humming at ~130 Hz increases nasal NO 15-20x
  * - Aum chanting shows fMRI patterns matching vagus nerve stimulation
  * - Extended exhalation improves HRV (target: 16-20s cycles)
+ * - Vowel shapes matter: Ah (chest), Oo (vagus), Mm (nitric oxide)
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useNavigationStore } from '../../stores/useNavigationStore'
+import { useHourBankStore } from '../../stores/useHourBankStore'
 import { useOmAudioCapture, isAboveNoiseGate } from '../../hooks/useOmAudioCapture'
 import {
   usePitchDetection,
   OPTIMAL_NO_FREQUENCY,
   DEFAULT_TOLERANCE_CENTS,
 } from '../../hooks/usePitchDetection'
-import { usePhonemeDetection } from '../../hooks/usePhonemeDetection'
+import { useFormantDetection, type FormantData } from '../../hooks/useFormantDetection'
+import { usePhonemeCalibration } from '../../hooks/usePhonemeCalibration'
 import { useAlignmentScoring } from '../../hooks/useAlignmentScoring'
 import { useOmSession, type OmSessionResult } from '../../hooks/useOmSession'
 import {
@@ -35,8 +38,11 @@ import {
 import { OmCoachSetup } from './OmCoachSetup'
 import { OmCoachPractice } from './OmCoachPractice'
 import { OmCoachResults } from './OmCoachResults'
+import { PhonemeCalibration } from './PhonemeCalibration'
+import { Paywall } from '../Paywall'
+import { LowHoursWarning } from '../LowHoursWarning'
 
-type OmCoachPhase = 'setup' | 'practice' | 'results'
+type OmCoachPhase = 'setup' | 'calibration' | 'practice' | 'results'
 
 interface OmCoachProps {
   onClose: () => void
@@ -50,6 +56,9 @@ interface CelebrationState {
 
 export function OmCoach({ onClose }: OmCoachProps) {
   const setFullscreen = useNavigationStore((s) => s.setFullscreen)
+  const setView = useNavigationStore((s) => s.setView)
+  const { canMeditate, isCriticallyLow, available } = useHourBankStore()
+
   const [phase, setPhase] = useState<OmCoachPhase>('setup')
   const [error, setError] = useState<string | null>(null)
   const [isStarting, setIsStarting] = useState(false)
@@ -57,6 +66,17 @@ export function OmCoach({ onClose }: OmCoachProps) {
   const [isAudioActive, setIsAudioActive] = useState(false)
   const [celebration, setCelebration] = useState<CelebrationState | null>(null)
   const [phonemeAlignment, setPhonemeAlignment] = useState<PhonemeAlignmentData | null>(null)
+
+  // Formant data for real-time phoneme indicator (reserved for future use)
+  const [_currentFormantData, _setCurrentFormantData] = useState<FormantData | null>(null)
+
+  // Paywall modal states
+  const [showPaywall, setShowPaywall] = useState(false)
+  const [showLowHoursWarning, setShowLowHoursWarning] = useState(false)
+  const [pendingSession, setPendingSession] = useState<{
+    duration: SessionDuration
+    mode: TimingMode
+  } | null>(null)
 
   // Track locked cycles for results
   const lockedCyclesRef = useRef(0)
@@ -71,9 +91,21 @@ export function OmCoach({ onClose }: OmCoachProps) {
     targetFrequency: OPTIMAL_NO_FREQUENCY,
     toleranceCents: DEFAULT_TOLERANCE_CENTS,
   })
-  const phonemeDetection = usePhonemeDetection()
+
+  // NEW: Formant-based phoneme detection with calibration
+  const formantDetection = useFormantDetection()
+  const phonemeCalibration = usePhonemeCalibration()
+
   const alignmentScoring = useAlignmentScoring()
   const omSession = useOmSession()
+
+  // Load calibration on mount and apply to formant detection
+  useEffect(() => {
+    const profile = phonemeCalibration.loadCalibration()
+    if (profile) {
+      formantDetection.setCalibration(profile)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Guided cycle hook
   const handleCycleComplete = useCallback((quality: CycleQuality, cycleNumber: number) => {
@@ -100,6 +132,8 @@ export function OmCoach({ onClose }: OmCoachProps) {
   /**
    * Audio processing loop - runs at ~60fps
    * CRITICAL: Reads from refs, not React state
+   *
+   * Uses formant-based phoneme detection for accurate A/U/M classification.
    */
   const processAudio = useCallback(() => {
     try {
@@ -116,14 +150,30 @@ export function OmCoach({ onClose }: OmCoachProps) {
         // Analyze pitch
         const pitchData = pitchDetection.analyze(frequencyData, sampleRate)
 
-        // Analyze phoneme
-        const phonemeData = phonemeDetection.analyze(frequencyData, sampleRate)
+        // Analyze phoneme using formant detection (NEW)
+        const formantData = formantDetection.analyze(frequencyData, sampleRate)
+
+        // Create compatible phoneme data for alignment scoring
+        const phonemeDataCompat = {
+          current: formantData.detectedPhoneme,
+          previousPhoneme: formantData.detectedPhoneme, // Simplified
+          spectralCentroid: 0,
+          spectralFlatness: formantData.spectralFlatness,
+          rms: formantData.rms,
+          completedCycles: 0,
+          timestamp: formantData.timestamp,
+        }
 
         // Update alignment scoring
-        alignmentScoring.recordSample(pitchData, phonemeData)
+        alignmentScoring.recordSample(pitchData, phonemeDataCompat)
 
         // Record sample for guided cycle quality
-        guidedCycle.recordSample(phonemeData.current, pitchData)
+        guidedCycle.recordSample(formantData.detectedPhoneme, pitchData)
+
+        // Update formant data state for UI (throttled to avoid excessive re-renders)
+        if (formantData.timestamp % 3 === 0) {
+          _setCurrentFormantData(formantData)
+        }
 
         // Track alignment samples for session average
         const alignment = alignmentScoring.getAlignmentData()
@@ -134,9 +184,23 @@ export function OmCoach({ onClose }: OmCoachProps) {
         // Still analyze with silence data for phoneme state machine
         if (frequencyData) {
           const pitchData = pitchDetection.analyze(frequencyData, sampleRate)
-          const phonemeData = phonemeDetection.analyze(frequencyData, sampleRate)
-          alignmentScoring.recordSample(pitchData, phonemeData)
-          guidedCycle.recordSample(phonemeData.current, pitchData)
+          const formantData = formantDetection.analyze(frequencyData, sampleRate)
+
+          const phonemeDataCompat = {
+            current: formantData.detectedPhoneme,
+            previousPhoneme: formantData.detectedPhoneme,
+            spectralCentroid: 0,
+            spectralFlatness: formantData.spectralFlatness,
+            rms: formantData.rms,
+            completedCycles: 0,
+            timestamp: formantData.timestamp,
+          }
+
+          alignmentScoring.recordSample(pitchData, phonemeDataCompat)
+          guidedCycle.recordSample(formantData.detectedPhoneme, pitchData)
+
+          // Update formant data even during silence
+          _setCurrentFormantData(formantData)
         }
       }
 
@@ -147,12 +211,13 @@ export function OmCoach({ onClose }: OmCoachProps) {
     } catch (err) {
       console.error('[processAudio] ERROR:', err)
     }
-  }, [audioCapture, pitchDetection, phonemeDetection, alignmentScoring, guidedCycle])
+  }, [audioCapture, pitchDetection, formantDetection, alignmentScoring, guidedCycle])
 
   /**
-   * Start the Aum Coach session with selected duration and timing mode
+   * Internal function to start the Aum Coach session
+   * Called after hour bank checks pass
    */
-  const handleBegin = useCallback(
+  const startSessionInternal = useCallback(
     async (duration: SessionDuration, mode: TimingMode) => {
       setIsStarting(true)
       setError(null)
@@ -175,8 +240,9 @@ export function OmCoach({ onClose }: OmCoachProps) {
 
         // Reset detection states
         pitchDetection.reset()
-        phonemeDetection.reset()
+        formantDetection.reset()
         alignmentScoring.reset()
+        _setCurrentFormantData(null)
 
         // Start guided cycle session with timing mode
         guidedCycle.startSession(duration, mode)
@@ -197,7 +263,7 @@ export function OmCoach({ onClose }: OmCoachProps) {
       audioCapture,
       omSession,
       pitchDetection,
-      phonemeDetection,
+      formantDetection,
       alignmentScoring,
       guidedCycle,
       processAudio,
@@ -205,9 +271,40 @@ export function OmCoach({ onClose }: OmCoachProps) {
   )
 
   /**
+   * Handle begin button - checks hour bank before starting
+   */
+  const handleBegin = useCallback(
+    (duration: SessionDuration, mode: TimingMode) => {
+      // Check if user has hours available
+      if (!canMeditate) {
+        setShowPaywall(true)
+        return
+      }
+
+      // Check if critically low (< 30 min) - show warning before proceeding
+      if (isCriticallyLow) {
+        setPendingSession({ duration, mode })
+        setShowLowHoursWarning(true)
+        return
+      }
+
+      // Proceed with session
+      startSessionInternal(duration, mode)
+    },
+    [canMeditate, isCriticallyLow, startSessionInternal]
+  )
+
+  /**
    * End the session
    */
   const handleEndSession = useCallback(async () => {
+    // Capture state BEFORE stopping (to avoid race conditions with state updates)
+    const guidedState = guidedCycle.state
+    const phonemeAlignmentData = guidedCycle.getPhonemeAlignment()
+
+    // Store totalCycles immediately (before any state changes)
+    totalCyclesRef.current = guidedState.totalCycles
+
     // Stop guided cycle
     guidedCycle.stopSession()
 
@@ -223,12 +320,10 @@ export function OmCoach({ onClose }: OmCoachProps) {
     audioCapture.stopCapture()
 
     // Calculate final metrics
-    const phonemeData = phonemeDetection.getPhonemeData()
+    formantDetection.getFormantData() // Ensure final state is captured
     const alignmentData = alignmentScoring.getAlignmentData()
-    const guidedState = guidedCycle.state
 
-    // Get per-phoneme alignment data from guided cycle
-    const phonemeAlignmentData = guidedCycle.getPhonemeAlignment()
+    // Store phoneme alignment for results
     setPhonemeAlignment(phonemeAlignmentData)
 
     // Calculate average alignment score
@@ -241,13 +336,10 @@ export function OmCoach({ onClose }: OmCoachProps) {
 
     // End session and save to database
     const result = await omSession.endSession({
-      completedCycles: Math.max(completedCycles, phonemeData.completedCycles),
+      completedCycles: Math.max(completedCycles, 0), // Cycles tracked by guidedCycle
       averageAlignmentScore: averageAlignment,
       vocalizationRatio: alignmentData.vocalizationRatio,
     })
-
-    // Store additional stats for results
-    totalCyclesRef.current = guidedState.totalCycles
 
     if (result) {
       setSessionResult(result)
@@ -258,7 +350,7 @@ export function OmCoach({ onClose }: OmCoachProps) {
         uuid: '',
         durationSeconds: omSession.getElapsedSeconds(),
         metrics: {
-          completedCycles: Math.max(completedCycles, phonemeData.completedCycles),
+          completedCycles: Math.max(completedCycles, 0),
           averageAlignmentScore: averageAlignment,
           vocalizationSeconds: Math.round(
             omSession.getElapsedSeconds() * alignmentData.vocalizationRatio
@@ -267,7 +359,7 @@ export function OmCoach({ onClose }: OmCoachProps) {
       })
       setPhase('results')
     }
-  }, [audioCapture, omSession, phonemeDetection, alignmentScoring, guidedCycle])
+  }, [audioCapture, omSession, formantDetection, alignmentScoring, guidedCycle])
 
   /**
    * Cancel session without saving
@@ -308,6 +400,71 @@ export function OmCoach({ onClose }: OmCoachProps) {
   }, [])
 
   /**
+   * Navigate to Timer tab for silent meditation
+   */
+  const handleMeditateNow = useCallback(() => {
+    setView('timer')
+    onClose()
+  }, [setView, onClose])
+
+  /**
+   * Start calibration flow
+   */
+  const handleStartCalibration = useCallback(async () => {
+    try {
+      // Start audio capture if not already capturing
+      if (!audioCapture.isCapturing) {
+        await audioCapture.startCapture()
+      }
+      setIsAudioActive(true)
+      setPhase('calibration')
+
+      // Start calibration process
+      phonemeCalibration.startCalibration(audioCapture.getFrequencyData, audioCapture.getSampleRate)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to access microphone'
+      setError(message)
+    }
+  }, [audioCapture, phonemeCalibration])
+
+  /**
+   * Handle calibration completion
+   */
+  const handleCalibrationComplete = useCallback(() => {
+    // Apply the new calibration profile to formant detection
+    const profile = phonemeCalibration.profile
+    if (profile) {
+      formantDetection.setCalibration(profile)
+    }
+
+    // Stop audio capture (will restart when session begins)
+    audioCapture.stopCapture()
+    setIsAudioActive(false)
+
+    // Return to setup
+    setPhase('setup')
+  }, [audioCapture, phonemeCalibration.profile, formantDetection])
+
+  /**
+   * Cancel calibration
+   */
+  const handleCancelCalibration = useCallback(() => {
+    phonemeCalibration.cancelCalibration()
+    audioCapture.stopCapture()
+    setIsAudioActive(false)
+    setPhase('setup')
+  }, [audioCapture, phonemeCalibration])
+
+  /**
+   * Clear calibration and recalibrate
+   */
+  const handleRecalibrate = useCallback(() => {
+    phonemeCalibration.clearCalibration()
+    formantDetection.setCalibration(null)
+    handleStartCalibration()
+  }, [phonemeCalibration, formantDetection, handleStartCalibration])
+
+  /**
    * Dismiss celebration overlay
    */
   const handleCelebrationDismiss = useCallback(() => {
@@ -336,40 +493,58 @@ export function OmCoach({ onClose }: OmCoachProps) {
   }, [phase, setFullscreen])
 
   return (
-    <div className="flex flex-col h-full bg-base">
-      {/* Header */}
-      <div className="flex-none flex items-center justify-between px-4 py-3 border-b border-border-subtle">
-        <button
-          onClick={phase === 'practice' ? handleCancel : onClose}
-          className="text-sm text-ink/70 hover:text-ink"
-        >
-          {phase === 'practice' ? 'Cancel' : 'Close'}
-        </button>
-
-        <h2 className="text-sm font-medium text-ink">Aum Coach</h2>
-
-        {phase === 'practice' ? (
+    <div className="flex flex-col h-full bg-base pb-20">
+      {/* Header - hidden during calibration (calibration has its own header) */}
+      {phase !== 'calibration' && (
+        <div className="flex-none flex items-center justify-between px-4 py-3 border-b border-border-subtle">
           <button
-            onClick={handleEndSession}
-            className="text-sm font-medium text-accent hover:text-accent-hover"
+            onClick={phase === 'practice' ? handleCancel : onClose}
+            className="text-sm text-ink/70 hover:text-ink"
           >
-            End
+            {phase === 'practice' ? 'Cancel' : 'Close'}
           </button>
-        ) : (
-          <div className="w-12" /> // Spacer for alignment
-        )}
-      </div>
+
+          <h2 className="text-sm font-medium text-ink">Aum Coach</h2>
+
+          {phase === 'practice' ? (
+            <button
+              onClick={handleEndSession}
+              className="text-sm font-medium text-accent hover:text-accent-hover"
+            >
+              End
+            </button>
+          ) : (
+            <div className="w-12" /> // Spacer for alignment
+          )}
+        </div>
+      )}
 
       {/* Content */}
       <div className="flex-1 min-h-0 flex flex-col">
         {phase === 'setup' && (
-          <OmCoachSetup onBegin={handleBegin} isLoading={isStarting} error={error} />
+          <OmCoachSetup
+            onBegin={handleBegin}
+            isLoading={isStarting}
+            error={error}
+            hasCalibration={phonemeCalibration.hasCalibration}
+            onRecalibrate={handleRecalibrate}
+            onStartCalibration={handleStartCalibration}
+          />
+        )}
+
+        {phase === 'calibration' && (
+          <PhonemeCalibration
+            state={phonemeCalibration.state}
+            onCancel={handleCancelCalibration}
+            onComplete={handleCalibrationComplete}
+          />
         )}
 
         {phase === 'practice' && (
           <OmCoachPractice
             guidedState={guidedCycle.state}
             getPitchData={pitchDetection.getPitchData}
+            getFormantData={formantDetection.getFormantData}
             isActive={isAudioActive}
             celebration={celebration}
             onCelebrationDismiss={handleCelebrationDismiss}
@@ -385,9 +560,32 @@ export function OmCoach({ onClose }: OmCoachProps) {
             phonemeAlignment={phonemeAlignment}
             onClose={onClose}
             onPracticeAgain={handlePracticeAgain}
+            onMeditateNow={handleMeditateNow}
           />
         )}
       </div>
+
+      {/* Paywall modal */}
+      <Paywall isOpen={showPaywall} onClose={() => setShowPaywall(false)} />
+
+      {/* Low hours warning modal */}
+      <LowHoursWarning
+        isOpen={showLowHoursWarning}
+        onClose={() => setShowLowHoursWarning(false)}
+        onContinue={() => {
+          setShowLowHoursWarning(false)
+          if (pendingSession) {
+            startSessionInternal(pendingSession.duration, pendingSession.mode)
+            setPendingSession(null)
+          }
+        }}
+        onTopUp={() => {
+          setShowLowHoursWarning(false)
+          setPendingSession(null)
+          setShowPaywall(true)
+        }}
+        availableHours={available}
+      />
     </div>
   )
 }

@@ -25,6 +25,10 @@ import { InsightStream } from '../InsightStream'
 import { Calendar } from '../Calendar'
 import { JourneySavedContent } from '../JourneySavedContent'
 import { JourneyMyPearls } from '../JourneyMyPearls'
+import { LockSetupFlow } from '../LockSetupFlow'
+import { LockComingSoonModal } from '../LockComingSoonModal'
+import { JourneyPractice } from './JourneyPractice'
+import { useMeditationLock } from '../../hooks/useMeditationLock'
 import {
   getPlannedSessionsForWeek,
   getNextPlannedSession,
@@ -69,6 +73,9 @@ export function Journey() {
   const [showTemplateEditor, setShowTemplateEditor] = useState(false)
   const [nextPlannedSession, setNextPlannedSession] = useState<PlannedSession | null>(null)
   const [templateToPlan, setTemplateToPlan] = useState<SessionTemplate | null>(null)
+  const [showLockSetupFlow, setShowLockSetupFlow] = useState(false)
+  const [showLockComingSoon, setShowLockComingSoon] = useState(false)
+  const meditationLock = useMeditationLock()
 
   // Calculate total hours for creator badge
   const totalHours = useMemo(() => {
@@ -344,6 +351,13 @@ export function Journey() {
             }}
           />
         )}
+
+        {/* Practice Section - Always visible at bottom */}
+        <JourneyPractice
+          onOpenLockModal={() => setShowLockSetupFlow(true)}
+          onOpenLockComingSoon={() => setShowLockComingSoon(true)}
+          onNavigateOmCoach={() => setView('om-coach')}
+        />
       </div>
 
       {/* Modals */}
@@ -398,6 +412,27 @@ export function Journey() {
             incrementSavedContentVersion()
           }}
           creatorHours={totalHours}
+        />
+      )}
+
+      {/* Lock Coming Soon modal - shows before setup when Screen Time isn't ready */}
+      <LockComingSoonModal
+        isOpen={showLockComingSoon}
+        onClose={() => setShowLockComingSoon(false)}
+        onContinueSetup={() => {
+          setShowLockComingSoon(false)
+          setShowLockSetupFlow(true)
+        }}
+      />
+
+      {showLockSetupFlow && (
+        <LockSetupFlow
+          onComplete={() => {
+            setShowLockSetupFlow(false)
+            // Refresh meditation lock status after setup completes
+            meditationLock.refreshStatus?.()
+          }}
+          onClose={() => setShowLockSetupFlow(false)}
         />
       )}
     </div>
