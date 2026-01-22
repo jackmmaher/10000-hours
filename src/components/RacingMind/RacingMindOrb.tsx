@@ -3,18 +3,31 @@
  *
  * Renders the animated orb visualization.
  * The canvas fills the container and handles the PixiJS lifecycle.
+ * Supports eye tracking feedback via glow intensity.
  */
 
 import { useRef } from 'react'
 import { useRacingMindOrb } from './useRacingMindOrb'
 import { RACING_MIND_COLORS } from '../../lib/racingMindAnimation'
+import type { OrientationPhase } from './RacingMindPractice'
 
 interface RacingMindOrbProps {
   getProgress: () => number
   isActive: boolean
+  orientationPhase?: OrientationPhase
+  /** Tracking accuracy 0-100 for glow feedback (higher = brighter glow) */
+  trackingAccuracy?: number
+  /** Callback when orb position updates (for eye tracking comparison) */
+  onPositionUpdate?: (x: number, y: number) => void
 }
 
-export function RacingMindOrb({ getProgress, isActive }: RacingMindOrbProps) {
+export function RacingMindOrb({
+  getProgress,
+  isActive,
+  orientationPhase = 'portrait',
+  trackingAccuracy = 50,
+  onPositionUpdate,
+}: RacingMindOrbProps) {
   const containerRef = useRef<HTMLDivElement>(null)
 
   // Initialize and manage PixiJS lifecycle
@@ -22,6 +35,9 @@ export function RacingMindOrb({ getProgress, isActive }: RacingMindOrbProps) {
     containerRef,
     getProgress,
     isActive,
+    orientationPhase,
+    trackingAccuracy,
+    onPositionUpdate,
   })
 
   return (

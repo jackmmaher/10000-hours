@@ -47,5 +47,7 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Still Hours uses the camera to track your eye movements during Racing Mind practice. This helps measure how well you follow the orb and shows your progress. Eye tracking data stays on your device.</string>
 </dict>
 </plist>

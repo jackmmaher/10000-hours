@@ -25,6 +25,7 @@ import {
   getGlowStrength,
   prefersReducedMotion,
 } from '../../lib/racingMindAnimation'
+import type { OrientationPhase } from './RacingMindPractice'
 
 /**
  * Convert hex color string to number
@@ -37,9 +38,21 @@ interface UseRacingMindOrbOptions {
   containerRef: React.RefObject<HTMLDivElement | null>
   getProgress: () => number
   isActive: boolean
+  orientationPhase?: OrientationPhase
+  /** Tracking accuracy 0-100 for glow feedback */
+  trackingAccuracy?: number
+  /** Callback when orb position updates */
+  onPositionUpdate?: (x: number, y: number) => void
 }
 
-export function useRacingMindOrb({ containerRef, getProgress, isActive }: UseRacingMindOrbOptions) {
+export function useRacingMindOrb({
+  containerRef,
+  getProgress,
+  isActive,
+  orientationPhase = 'portrait',
+  trackingAccuracy: _trackingAccuracy = 50,
+  onPositionUpdate: _onPositionUpdate,
+}: UseRacingMindOrbOptions) {
   const appRef = useRef<Application | null>(null)
   const orbRef = useRef<Graphics | null>(null)
   const glowFilterRef = useRef<GlowFilter | null>(null)
@@ -100,6 +113,14 @@ export function useRacingMindOrb({ containerRef, getProgress, isActive }: UseRac
     startTimeRef.current = performance.now()
   }, [containerRef])
 
+  // Ref for tracking accuracy to avoid stale closures
+  const trackingAccuracyRef = useRef(_trackingAccuracy)
+  trackingAccuracyRef.current = _trackingAccuracy
+
+  // Ref for position update callback
+  const onPositionUpdateRef = useRef(_onPositionUpdate)
+  onPositionUpdateRef.current = _onPositionUpdate
+
   /**
    * Animation loop - runs at 30fps
    */
@@ -112,26 +133,54 @@ export function useRacingMindOrb({ containerRef, getProgress, isActive }: UseRac
     const elapsedMs = now - startTimeRef.current
     const progress = getProgress()
 
-    const { width, height } = appRef.current.screen
+    // Use container dimensions for accurate centering (handles safe areas)
+    const container = containerRef.current
+    const width = container?.clientWidth ?? appRef.current.screen.width
+    const height = container?.clientHeight ?? appRef.current.screen.height
+
+    // Determine if we're in landscape mode
+    const isLandscape = orientationPhase === 'landscape'
 
     // Calculate orb position
+    let orbX: number
+    let orbY: number
+
     if (isReducedMotionRef.current) {
       // Reduced motion: static orb in center
-      orbRef.current.x = width / 2
-      orbRef.current.y = height / 2
+      orbX = width / 2
+      orbY = height / 2
     } else {
-      const position = calculateOrbPosition(elapsedMs, progress, width, height, noiseRef.current)
-      orbRef.current.x = position.x
-      orbRef.current.y = position.y
+      const position = calculateOrbPosition(
+        elapsedMs,
+        progress,
+        width,
+        height,
+        noiseRef.current,
+        isLandscape
+      )
+      orbX = position.x
+      orbY = position.y
     }
 
-    // Update glow strength
-    const glowStrength = getGlowStrength(elapsedMs)
-    glowFilterRef.current.outerStrength = glowStrength
+    orbRef.current.x = orbX
+    orbRef.current.y = orbY
+
+    // Report position for eye tracking comparison
+    onPositionUpdateRef.current?.(orbX, orbY)
+
+    // Update glow strength - base glow plus tracking accuracy boost
+    const baseGlow = getGlowStrength(elapsedMs)
+
+    // When eye tracking is active, boost glow based on tracking accuracy
+    // trackingAccuracy 0-100 maps to 0-0.5 additional glow strength
+    const accuracyBoost = (trackingAccuracyRef.current / 100) * 0.5
+    const finalGlow = baseGlow + accuracyBoost
+
+    glowFilterRef.current.outerStrength = finalGlow
 
     // Schedule next frame
     animationIdRef.current = requestAnimationFrame(animate)
-  }, [isActive, getProgress])
+  }, [isActive, getProgress, containerRef, orientationPhase])
 
   /**
    * Start animation loop

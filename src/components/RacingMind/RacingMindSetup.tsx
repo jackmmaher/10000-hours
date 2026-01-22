@@ -9,17 +9,17 @@
 
 import { useState } from 'react'
 import type { SessionDuration } from './index'
+import { MindStateSlider } from './MindStateSlider'
 
 interface RacingMindSetupProps {
-  onBegin: (duration: SessionDuration) => void
+  onBegin: (duration: SessionDuration, preScore: number) => void
   isLoading?: boolean
 }
 
-const DURATIONS: SessionDuration[] = [5, 10, 15]
-
 export function RacingMindSetup({ onBegin, isLoading }: RacingMindSetupProps) {
   const [showDetails, setShowDetails] = useState(false)
-  const [selectedDuration, setSelectedDuration] = useState<SessionDuration>(5)
+  const [selectedDuration, setSelectedDuration] = useState<SessionDuration>(10) // Default to hero duration
+  const [preScore, setPreScore] = useState<number | null>(null)
 
   return (
     <div className="h-full overflow-y-auto">
@@ -94,49 +94,98 @@ export function RacingMindSetup({ onBegin, isLoading }: RacingMindSetupProps) {
         {/* Spacer pushes controls to bottom on tall screens */}
         <div className="flex-1 min-h-4" />
 
-        {/* Duration picker */}
+        {/* Duration picker - 10 min hero, 5 & 15 min secondary */}
         <div className="mb-6">
-          <p className="text-xs text-ink/50 mb-2 text-center uppercase tracking-wide">Duration</p>
-          <div className="flex gap-2">
-            {DURATIONS.map((duration) => (
-              <button
-                key={duration}
-                onClick={() => setSelectedDuration(duration)}
-                className={`flex-1 py-3 rounded-xl transition-colors relative ${
-                  selectedDuration === duration
-                    ? 'bg-accent text-white'
-                    : 'bg-elevated text-ink hover:bg-elevated/80'
+          <p className="text-xs text-ink/50 mb-3 text-center uppercase tracking-wide">Duration</p>
+          <div className="flex items-center justify-center gap-3">
+            {/* 5 min - secondary option */}
+            <button
+              onClick={() => setSelectedDuration(5)}
+              className={`w-16 h-16 rounded-xl transition-all ${
+                selectedDuration === 5
+                  ? 'bg-accent text-white'
+                  : 'bg-elevated text-ink hover:bg-elevated/80'
+              }`}
+            >
+              <div className="text-lg font-semibold">5</div>
+              <div
+                className={`text-[10px] ${
+                  selectedDuration === 5 ? 'text-white/70' : 'text-ink/50'
                 }`}
               >
-                <div className="text-xl font-semibold">{duration}</div>
-                <div
-                  className={`text-xs ${
-                    selectedDuration === duration ? 'text-white/70' : 'text-ink/50'
-                  }`}
-                >
-                  min
-                </div>
-                {duration === 5 && (
-                  <span
-                    className={`absolute -top-2 -right-1 text-[10px] px-1.5 py-0.5 rounded-full ${
-                      selectedDuration === 5 ? 'bg-white/20 text-white' : 'bg-accent/10 text-accent'
-                    }`}
-                  >
-                    rec
-                  </span>
-                )}
-              </button>
-            ))}
+                min
+              </div>
+            </button>
+
+            {/* 10 min - HERO option */}
+            <button
+              onClick={() => setSelectedDuration(10)}
+              className={`w-24 h-24 rounded-2xl transition-all relative ${
+                selectedDuration === 10
+                  ? 'bg-accent text-white shadow-lg shadow-accent/30'
+                  : 'bg-elevated text-ink hover:bg-elevated/80 ring-1 ring-accent/20'
+              }`}
+            >
+              <div className="text-2xl font-semibold">10</div>
+              <div
+                className={`text-xs ${selectedDuration === 10 ? 'text-white/70' : 'text-ink/50'}`}
+              >
+                min
+              </div>
+              <div
+                className={`absolute -bottom-2.5 left-1/2 -translate-x-1/2 text-[9px] px-2 py-0.5 rounded-full whitespace-nowrap ${
+                  selectedDuration === 10 ? 'bg-white/20 text-white' : 'bg-accent/10 text-accent'
+                }`}
+              >
+                Enhanced
+              </div>
+            </button>
+
+            {/* 15 min - secondary option */}
+            <button
+              onClick={() => setSelectedDuration(15)}
+              className={`w-16 h-16 rounded-xl transition-all ${
+                selectedDuration === 15
+                  ? 'bg-accent text-white'
+                  : 'bg-elevated text-ink hover:bg-elevated/80'
+              }`}
+            >
+              <div className="text-lg font-semibold">15</div>
+              <div
+                className={`text-[10px] ${
+                  selectedDuration === 15 ? 'text-white/70' : 'text-ink/50'
+                }`}
+              >
+                min
+              </div>
+            </button>
           </div>
+        </div>
+
+        {/* Pre-session assessment */}
+        <div className="mb-6 bg-elevated rounded-xl p-4">
+          <MindStateSlider
+            value={preScore}
+            onChange={setPreScore}
+            label="How is your mind right now?"
+          />
         </div>
 
         {/* CTA */}
         <button
-          onClick={() => onBegin(selectedDuration)}
-          disabled={isLoading}
-          className="w-full h-14 bg-accent hover:bg-accent-hover text-white font-medium rounded-xl transition-colors disabled:opacity-50"
+          onClick={() => preScore !== null && onBegin(selectedDuration, preScore)}
+          disabled={isLoading || preScore === null}
+          className={`w-full h-14 font-medium rounded-xl transition-colors ${
+            preScore !== null
+              ? 'bg-accent hover:bg-accent-hover text-white'
+              : 'bg-ink/10 text-ink/30 cursor-not-allowed'
+          } disabled:opacity-50`}
         >
-          {isLoading ? 'Starting...' : 'Begin Practice'}
+          {isLoading
+            ? 'Starting...'
+            : preScore === null
+              ? 'Rate your mind state to begin'
+              : 'Begin Practice'}
         </button>
 
         <p className="text-xs text-ink/40 mt-3 text-center">

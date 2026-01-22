@@ -3,15 +3,22 @@
  *
  * Features:
  * - Checkmark completion icon
+ * - Self-assessment validation (before/after comparison)
+ * - Eye tracking correlation (if available)
  * - Session duration stat
  * - Suggestion to try silent meditation
  * - CTAs: Meditate Now | Practice Again | Done
  */
 
 import { formatElapsedTime } from '../../lib/racingMindAnimation'
+import { ValidationDisplay } from './ValidationDisplay'
+import type { TrackingMetrics } from './index'
 
 interface RacingMindResultsProps {
   durationSeconds: number
+  preSessionScore: number | null
+  postSessionScore: number | null
+  trackingMetrics: TrackingMetrics | null
   onClose: () => void
   onPracticeAgain: () => void
   onMeditateNow?: () => void
@@ -19,10 +26,15 @@ interface RacingMindResultsProps {
 
 export function RacingMindResults({
   durationSeconds,
+  preSessionScore,
+  postSessionScore,
+  trackingMetrics,
   onClose,
   onPracticeAgain,
   onMeditateNow,
 }: RacingMindResultsProps) {
+  const hasAssessment = preSessionScore !== null && postSessionScore !== null
+
   return (
     <div className="h-full overflow-y-auto">
       <div className="flex flex-col items-center min-h-full px-6 py-6">
@@ -41,13 +53,34 @@ export function RacingMindResults({
         <h1 className="font-serif text-2xl text-ink mb-2">Practice Complete</h1>
         <p className="text-sm text-ink/60 text-center mb-6">Session saved to your practice log</p>
 
-        {/* Session Stats Card */}
-        <div className="w-full max-w-sm bg-elevated rounded-xl p-5 mb-4 shadow-sm">
-          <div className="text-center">
-            <p className="text-xs text-ink/50 mb-1">Duration</p>
-            <p className="text-2xl font-serif text-ink">{formatElapsedTime(durationSeconds)}</p>
+        {/* Validation Display - shows before/after with eye tracking correlation */}
+        {hasAssessment ? (
+          <div className="mb-6">
+            <ValidationDisplay
+              preScore={preSessionScore}
+              postScore={postSessionScore}
+              trackingMetrics={trackingMetrics}
+            />
           </div>
-        </div>
+        ) : (
+          /* Session Stats Card (fallback when no assessment) */
+          <div className="w-full max-w-sm bg-elevated rounded-xl p-5 mb-4 shadow-sm">
+            <div className="text-center">
+              <p className="text-xs text-ink/50 mb-1">Duration</p>
+              <p className="text-2xl font-serif text-ink">{formatElapsedTime(durationSeconds)}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Duration stat (when assessment is shown) */}
+        {hasAssessment && (
+          <div className="w-full max-w-sm bg-elevated rounded-xl p-4 mb-4 shadow-sm">
+            <div className="text-center">
+              <p className="text-xs text-ink/50 mb-1">Duration</p>
+              <p className="text-xl font-serif text-ink">{formatElapsedTime(durationSeconds)}</p>
+            </div>
+          </div>
+        )}
 
         {/* Suggestion Card */}
         <div className="w-full max-w-sm bg-elevated rounded-xl p-5 mb-6 shadow-sm">

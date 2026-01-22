@@ -21,13 +21,20 @@ import {
 } from '../../hooks/useRacingMindSession'
 import { RacingMindSetup } from './RacingMindSetup'
 import { RacingMindPractice } from './RacingMindPractice'
+import { RacingMindPostAssessment } from './RacingMindPostAssessment'
 import { RacingMindResults } from './RacingMindResults'
 import { Paywall } from '../Paywall'
 import { LowHoursWarning } from '../LowHoursWarning'
 
 export type SessionDuration = 5 | 10 | 15
 
-type RacingMindPhase = 'setup' | 'practice' | 'results'
+type RacingMindPhase = 'setup' | 'practice' | 'postAssessment' | 'results'
+
+export interface TrackingMetrics {
+  improvementPercent: number
+  accuracy?: number
+  saccadeCount?: number
+}
 
 interface RacingMindProps {
   onClose: () => void
@@ -41,7 +48,14 @@ export function RacingMind({ onClose }: RacingMindProps) {
   const [phase, setPhase] = useState<RacingMindPhase>('setup')
   const [isStarting, setIsStarting] = useState(false)
   const [sessionResult, setSessionResult] = useState<RacingMindSessionResult | null>(null)
-  const [selectedDuration, setSelectedDuration] = useState<SessionDuration>(5)
+  const [selectedDuration, setSelectedDuration] = useState<SessionDuration>(10)
+
+  // Self-assessment scores
+  const [preSessionScore, setPreSessionScore] = useState<number | null>(null)
+  const [postSessionScore, setPostSessionScore] = useState<number | null>(null)
+
+  // Eye tracking metrics (populated after session if tracking was enabled)
+  const [trackingMetrics, setTrackingMetrics] = useState<TrackingMetrics | null>(null)
 
   // Paywall modal states
   const [showPaywall, setShowPaywall] = useState(false)
@@ -79,7 +93,10 @@ export function RacingMind({ onClose }: RacingMindProps) {
    * Handle begin button - checks hour bank before starting
    */
   const handleBegin = useCallback(
-    (duration: SessionDuration) => {
+    (duration: SessionDuration, preScore: number) => {
+      // Store pre-session assessment
+      setPreSessionScore(preScore)
+
       // Check if user has hours available
       if (!canMeditate) {
         setShowPaywall(true)
@@ -101,22 +118,43 @@ export function RacingMind({ onClose }: RacingMindProps) {
 
   /**
    * End the session (called when timer completes or user ends early)
+   * Goes to post-assessment phase before showing results
    */
-  const handleEndSession = useCallback(async () => {
-    const result = await racingMindSession.endSession()
+  const handleEndSession = useCallback(
+    async (practiceTrackingMetrics?: TrackingMetrics) => {
+      const result = await racingMindSession.endSession()
 
-    if (result) {
-      setSessionResult(result)
-      setPhase('results')
-    } else {
-      // If session save failed, still show results with estimated data
-      setSessionResult({
-        uuid: '',
-        durationSeconds: racingMindSession.getElapsedSeconds(),
-      })
-      setPhase('results')
+      if (result) {
+        setSessionResult(result)
+      } else {
+        // If session save failed, still continue with estimated data
+        setSessionResult({
+          uuid: '',
+          durationSeconds: racingMindSession.getElapsedSeconds(),
+        })
+      }
+
+      // Store tracking metrics from practice session
+      if (practiceTrackingMetrics) {
+        setTrackingMetrics(practiceTrackingMetrics)
+      }
+
+      // Go to post-assessment before showing results
+      setPhase('postAssessment')
+    },
+    [racingMindSession]
+  )
+
+  /**
+   * Handle post-assessment completion - show results
+   */
+  const handlePostAssessment = useCallback((postScore: number, metrics?: TrackingMetrics) => {
+    setPostSessionScore(postScore)
+    if (metrics) {
+      setTrackingMetrics(metrics)
     }
-  }, [racingMindSession])
+    setPhase('results')
+  }, [])
 
   /**
    * Cancel session without saving
@@ -131,6 +169,9 @@ export function RacingMind({ onClose }: RacingMindProps) {
    */
   const handlePracticeAgain = useCallback(() => {
     setSessionResult(null)
+    setPreSessionScore(null)
+    setPostSessionScore(null)
+    setTrackingMetrics(null)
     setPhase('setup')
   }, [])
 
@@ -150,8 +191,8 @@ export function RacingMind({ onClose }: RacingMindProps) {
 
   return (
     <div className="flex flex-col h-full bg-base pb-20">
-      {/* Header - hidden during practice (fullscreen) */}
-      {phase !== 'practice' && (
+      {/* Header - hidden during practice and post-assessment (fullscreen-like) */}
+      {phase !== 'practice' && phase !== 'postAssessment' && (
         <div className="flex-none flex items-center justify-between px-4 py-3 border-b border-border-subtle">
           <button onClick={onClose} className="text-sm text-ink/70 hover:text-ink">
             Close
@@ -175,9 +216,16 @@ export function RacingMind({ onClose }: RacingMindProps) {
           />
         )}
 
+        {phase === 'postAssessment' && (
+          <RacingMindPostAssessment onComplete={handlePostAssessment} />
+        )}
+
         {phase === 'results' && sessionResult && (
           <RacingMindResults
             durationSeconds={sessionResult.durationSeconds}
+            preSessionScore={preSessionScore}
+            postSessionScore={postSessionScore}
+            trackingMetrics={trackingMetrics}
             onClose={onClose}
             onPracticeAgain={handlePracticeAgain}
             onMeditateNow={handleMeditateNow}

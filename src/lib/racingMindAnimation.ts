@@ -96,14 +96,17 @@ export function getOscillationFrequency(speed: number): number {
 }
 
 /**
- * Calculate oscillation amplitude based on viewport width
+ * Calculate oscillation amplitude based on viewport width and orientation
  *
  * @param viewportWidth - Width of the viewport in pixels
+ * @param isLandscape - Whether device is in landscape orientation
  * @returns Amplitude in pixels (orb moves this far from center)
  */
-export function getOscillationAmplitude(viewportWidth: number): number {
-  // Use 35% of viewport width as max displacement from center
-  return viewportWidth * 0.35
+export function getOscillationAmplitude(viewportWidth: number, isLandscape = false): number {
+  // Landscape mode: wider travel for more eye movement
+  // Portrait mode: standard travel for better tracking accuracy
+  const amplitudeFraction = isLandscape ? 0.4 : 0.35
+  return viewportWidth * amplitudeFraction
 }
 
 /**
@@ -134,6 +137,7 @@ export function getGlowStrength(timeMs: number): number {
  * @param viewportWidth - Viewport width in pixels
  * @param viewportHeight - Viewport height in pixels
  * @param noise - SimplexNoise instance for organic drift
+ * @param isLandscape - Whether device is in landscape orientation
  * @returns { x, y } position in pixels
  */
 export function calculateOrbPosition(
@@ -141,7 +145,8 @@ export function calculateOrbPosition(
   progress: number,
   viewportWidth: number,
   viewportHeight: number,
-  noise: { noise2D: (x: number, y: number) => number }
+  noise: { noise2D: (x: number, y: number) => number },
+  isLandscape = false
 ): { x: number; y: number } {
   const centerX = viewportWidth / 2
   const centerY = viewportHeight / 2
@@ -149,19 +154,30 @@ export function calculateOrbPosition(
   // Get current speed and derived oscillation params
   const speed = getOrbSpeed(progress)
   const frequency = getOscillationFrequency(speed)
-  const amplitude = getOscillationAmplitude(viewportWidth)
+  const amplitude = getOscillationAmplitude(viewportWidth, isLandscape)
 
   // Primary horizontal oscillation
   const oscillationX = Math.sin(timeMs * frequency) * amplitude
 
   // Organic noise drift
-  const { noiseScale, noiseAmplitudeX, noiseAmplitudeY } = ANIMATION_PARAMS
+  const { noiseScale, noiseAmplitudeX, noiseAmplitudeY, orbRadius } = ANIMATION_PARAMS
   const noiseX = noise.noise2D(timeMs * noiseScale, 0) * noiseAmplitudeX
   const noiseY = noise.noise2D(0, timeMs * noiseScale) * noiseAmplitudeY
 
+  // Calculate raw position
+  const rawX = centerX + oscillationX + noiseX
+  const rawY = centerY + noiseY
+
+  // Clamp to safe bounds - keep orb fully visible on screen
+  const safeMargin = orbRadius + 20 // Orb radius + padding
+  const minX = safeMargin
+  const maxX = viewportWidth - safeMargin
+  const minY = safeMargin
+  const maxY = viewportHeight - safeMargin
+
   return {
-    x: centerX + oscillationX + noiseX,
-    y: centerY + noiseY,
+    x: Math.max(minX, Math.min(maxX, rawX)),
+    y: Math.max(minY, Math.min(maxY, rawY)),
   }
 }
 

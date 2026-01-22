@@ -19,6 +19,18 @@ export interface OmCoachMetrics {
   vocalizationSeconds: number
 }
 
+// Racing Mind specific metrics (self-assessment + eye tracking)
+export interface RacingMindMetrics {
+  // Self-assessment scores (1-10 scale)
+  preSessionMindScore?: number
+  postSessionMindScore?: number
+  // Eye tracking metrics (if supported on device)
+  eyeTrackingEnabled?: boolean
+  trackingAccuracy?: number // 0-100
+  saccadeCount?: number
+  improvementPercent?: number // First half vs second half smoothness
+}
+
 export interface Session {
   id?: number
   uuid: string
@@ -35,6 +47,8 @@ export interface Session {
   practiceToolId?: PracticeToolId
   // Aum Coach specific metrics (when practiceToolId === 'om-coach')
   omCoachMetrics?: OmCoachMetrics
+  // Racing Mind specific metrics (when practiceToolId === 'racing-mind')
+  racingMindMetrics?: RacingMindMetrics
 }
 
 export interface AppState {
