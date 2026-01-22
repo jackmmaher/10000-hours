@@ -33,6 +33,7 @@ interface SettingsProps {
   onNavigateToStore: () => void
   onNavigateToPrivacy: () => void
   onNavigateToTerms: () => void
+  onNavigateToOmCoach?: () => void
 }
 
 // Format lock active status display
@@ -69,6 +70,7 @@ export function Settings({
   onNavigateToStore,
   onNavigateToPrivacy,
   onNavigateToTerms,
+  onNavigateToOmCoach,
 }: SettingsProps) {
   const {
     hideTimeDisplay,
@@ -470,124 +472,157 @@ export function Settings({
           )}
         </div>
 
-        {/* Focus Mode - Meditation Lock (iOS only, shown in dev for preview) */}
-        {(meditationLock.isAvailable || import.meta.env.DEV) && (
-          <div className="mb-8">
-            <p className="font-serif text-sm text-ink/50 tracking-wide mb-4">Focus Mode</p>
-            <div className="p-5 bg-elevated shadow-sm rounded-xl space-y-4">
-              <div>
-                <p className="text-sm text-ink font-medium">Meditation Lock</p>
-                <p className="text-xs text-ink/40 mt-1">
-                  {meditationLock.settings?.enabled &&
-                  meditationLock.settings.scheduleWindows.length > 0
-                    ? formatLockActiveStatus(meditationLock.settings)
-                    : 'Block distracting apps until you meditate'}
-                </p>
-              </div>
+        {/* Focus Mode - Meditation Lock (always visible, Coming Soon modal handles pre-approval) */}
+        <div className="mb-8">
+          <p className="font-serif text-sm text-ink/50 tracking-wide mb-4">Focus Mode</p>
+          <div className="p-5 bg-elevated shadow-sm rounded-xl space-y-4">
+            <div>
+              <p className="text-sm text-ink font-medium">Meditation Lock</p>
+              <p className="text-xs text-ink/40 mt-1">
+                {meditationLock.settings?.enabled &&
+                meditationLock.settings.scheduleWindows.length > 0
+                  ? formatLockActiveStatus(meditationLock.settings)
+                  : 'Block distracting apps until you meditate'}
+              </p>
+            </div>
 
-              {/* Setup Button - launches the guided setup flow */}
-              {/* Shows "Coming Soon" modal if Screen Time isn't ready yet */}
-              <button
-                onClick={() => {
-                  haptic.light()
-                  // If Screen Time is authorized, go directly to setup
-                  // Otherwise show the "Coming Soon" modal first
-                  if (meditationLock.authorizationStatus === 'authorized') {
-                    setShowLockSetupFlow(true)
-                  } else {
-                    setShowLockComingSoon(true)
-                  }
-                }}
-                className="w-full py-2.5 px-4 bg-moss text-cream text-sm rounded-lg text-center
+            {/* Setup Button - launches the guided setup flow */}
+            {/* Shows "Coming Soon" modal if Screen Time isn't ready yet */}
+            <button
+              onClick={() => {
+                haptic.light()
+                // If Screen Time is authorized, go directly to setup
+                // Otherwise show the "Coming Soon" modal first
+                if (meditationLock.authorizationStatus === 'authorized') {
+                  setShowLockSetupFlow(true)
+                } else {
+                  setShowLockComingSoon(true)
+                }
+              }}
+              className="w-full py-2.5 px-4 bg-moss text-cream text-sm rounded-lg text-center
                   hover:bg-moss/90 transition-colors active:scale-[0.98] touch-manipulation"
-              >
-                {meditationLock.settings?.enabled ? 'Edit Focus Mode' : 'Set Up Focus Mode'}
-              </button>
+            >
+              {meditationLock.settings?.enabled ? 'Edit Focus Mode' : 'Set Up Focus Mode'}
+            </button>
 
-              {/* Authorization Status */}
-              <div className="flex items-center justify-between py-2 border-t border-ink/5">
-                <p className="text-xs text-ink/50">Screen Time</p>
-                <p
-                  className={`text-xs font-medium ${
-                    meditationLock.authorizationStatus === 'authorized'
-                      ? 'text-moss'
-                      : meditationLock.authorizationStatus === 'denied'
-                        ? 'text-red-500'
-                        : 'text-ink/40'
-                  }`}
-                >
-                  {meditationLock.authorizationStatus === 'authorized'
-                    ? 'Authorized'
+            {/* Authorization Status */}
+            <div className="flex items-center justify-between py-2 border-t border-ink/5">
+              <p className="text-xs text-ink/50">Screen Time</p>
+              <p
+                className={`text-xs font-medium ${
+                  meditationLock.authorizationStatus === 'authorized'
+                    ? 'text-moss'
                     : meditationLock.authorizationStatus === 'denied'
-                      ? 'Denied'
-                      : 'Not Set Up'}
-                </p>
-              </div>
+                      ? 'text-red-500'
+                      : 'text-ink/40'
+                }`}
+              >
+                {meditationLock.authorizationStatus === 'authorized'
+                  ? 'Authorized'
+                  : meditationLock.authorizationStatus === 'denied'
+                    ? 'Denied'
+                    : 'Not Set Up'}
+              </p>
+            </div>
 
-              {/* Quick authorize if not set up - only show on native iOS where it actually works */}
-              {meditationLock.isAvailable &&
-                meditationLock.authorizationStatus !== 'authorized' && (
-                  <button
-                    onClick={async () => {
-                      haptic.light()
-                      await meditationLock.requestAuth()
-                    }}
-                    disabled={meditationLock.isLoading}
-                    className="w-full py-2.5 px-4 bg-cream-warm text-ink text-sm rounded-lg text-center
+            {/* Quick authorize if not set up - only show on native iOS where it actually works */}
+            {meditationLock.isAvailable && meditationLock.authorizationStatus !== 'authorized' && (
+              <button
+                onClick={async () => {
+                  haptic.light()
+                  await meditationLock.requestAuth()
+                }}
+                disabled={meditationLock.isLoading}
+                className="w-full py-2.5 px-4 bg-cream-warm text-ink text-sm rounded-lg text-center
                     hover:bg-cream-deep transition-colors active:scale-[0.98] touch-manipulation
                     disabled:opacity-50"
-                  >
-                    {meditationLock.isLoading ? 'Requesting...' : 'Authorize Screen Time'}
-                  </button>
-                )}
+              >
+                {meditationLock.isLoading ? 'Requesting...' : 'Authorize Screen Time'}
+              </button>
+            )}
 
-              {/* Blocked Apps Status (only when authorized and apps blocked) */}
-              {meditationLock.authorizationStatus === 'authorized' &&
-                meditationLock.blockedAppTokens.length > 0 && (
-                  <div className="flex items-center justify-between py-2 border-t border-ink/5">
-                    <p className="text-xs text-ink/50">
-                      {meditationLock.blockedAppTokens.length} app
-                      {meditationLock.blockedAppTokens.length === 1 ? '' : 's'} blocked
-                    </p>
-                    <button
-                      onClick={async () => {
-                        haptic.light()
-                        await meditationLock.unblock()
-                      }}
-                      disabled={meditationLock.isLoading}
-                      className="text-xs text-red-500 hover:text-red-600 transition-colors touch-manipulation"
-                    >
-                      Unblock All
-                    </button>
-                  </div>
-                )}
-
-              {/* Error display */}
-              {meditationLock.error && (
-                <p className="text-xs text-red-500 py-2">{meditationLock.error}</p>
-              )}
-
-              {/* Deactivate option - only show when lock is enabled */}
-              {meditationLock.settings?.enabled && (
-                <div className="pt-3 border-t border-ink/5">
+            {/* Blocked Apps Status (only when authorized and apps blocked) */}
+            {meditationLock.authorizationStatus === 'authorized' &&
+              meditationLock.blockedAppTokens.length > 0 && (
+                <div className="flex items-center justify-between py-2 border-t border-ink/5">
+                  <p className="text-xs text-ink/50">
+                    {meditationLock.blockedAppTokens.length} app
+                    {meditationLock.blockedAppTokens.length === 1 ? '' : 's'} blocked
+                  </p>
                   <button
                     onClick={async () => {
                       haptic.light()
-                      if (
-                        window.confirm(
-                          'Deactivate Focus Lock? You can re-enable it anytime from this screen.'
-                        )
-                      ) {
-                        await meditationLock.disable?.()
-                      }
+                      await meditationLock.unblock()
                     }}
-                    className="text-xs text-ink/40 hover:text-red-500 transition-colors touch-manipulation"
+                    disabled={meditationLock.isLoading}
+                    className="text-xs text-red-500 hover:text-red-600 transition-colors touch-manipulation"
                   >
-                    Deactivate Focus Lock
+                    Unblock All
                   </button>
                 </div>
               )}
-            </div>
+
+            {/* Error display */}
+            {meditationLock.error && (
+              <p className="text-xs text-red-500 py-2">{meditationLock.error}</p>
+            )}
+
+            {/* Deactivate option - only show when lock is enabled */}
+            {meditationLock.settings?.enabled && (
+              <div className="pt-3 border-t border-ink/5">
+                <button
+                  onClick={async () => {
+                    haptic.light()
+                    if (
+                      window.confirm(
+                        'Deactivate Focus Lock? You can re-enable it anytime from this screen.'
+                      )
+                    ) {
+                      await meditationLock.disable?.()
+                    }
+                  }}
+                  className="text-xs text-ink/40 hover:text-red-500 transition-colors touch-manipulation"
+                >
+                  Deactivate Focus Lock
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Practice Tools */}
+        {onNavigateToOmCoach && (
+          <div className="mb-8">
+            <p className="font-serif text-sm text-ink/50 tracking-wide mb-4">Practice Tools</p>
+            <button
+              onClick={() => {
+                haptic.light()
+                onNavigateToOmCoach()
+              }}
+              className="w-full p-5 bg-elevated shadow-sm rounded-xl text-left hover:bg-cream-deep transition-colors active:scale-[0.99] touch-manipulation"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-ink font-medium">Aum Coach</p>
+                  <p className="text-xs text-ink/40 mt-1">
+                    Real-time vocal biofeedback for Aum chanting
+                  </p>
+                </div>
+                <svg
+                  className="w-5 h-5 text-ink/30"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </div>
+            </button>
           </div>
         )}
 
