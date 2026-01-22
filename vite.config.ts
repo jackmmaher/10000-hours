@@ -34,6 +34,8 @@ export default defineConfig({
         clientsClaim: true,
         // Don't cache-bust URLs with hashes (Vite already does this)
         dontCacheBustURLsMatching: /\.[a-f0-9]{8}\./,
+        // Allow large bundles to be precached (default 2MB, bundle is ~3.7MB)
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
       },
     }),
   ],
