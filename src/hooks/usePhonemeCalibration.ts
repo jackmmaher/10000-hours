@@ -4,16 +4,19 @@
  * Guides user through 15-second calibration (5s each for Ah, Oo, Mm).
  * Stores calibration profile in localStorage for persistence.
  *
+ * Enhanced with MFCC baseline capture for hybrid classification.
+ *
  * The calibration captures:
  * - Upper/lower frequency ratio for "Ah" (user's voice)
  * - Upper/lower frequency ratio for "Oo" (user's voice)
  * - Spectral flatness baseline for "Mm" (nasal resonance)
+ * - MFCC mean/variance for each phoneme (personalized detection)
  * - Background noise floor
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Meyda from 'meyda'
-import type { CalibrationProfile } from './useFormantDetection'
+import type { CalibrationProfile, MfccBaseline } from './useFormantDetection'
 
 // LocalStorage key
 const STORAGE_KEY = 'aum-calibration'
@@ -49,6 +52,7 @@ export interface CalibrationSamples {
   ratios: number[] // Upper/lower ratios for current phase
   flatnesses: number[] // Spectral flatness samples
   rmsValues: number[] // RMS values for noise floor
+  mfccSamples: number[][] // MFCC vectors for current phase
 }
 
 export interface UsePhonemeCalibrationResult {
@@ -62,6 +66,42 @@ export interface UsePhonemeCalibrationResult {
   cancelCalibration: () => void
   clearCalibration: () => void
   loadCalibration: () => CalibrationProfile | null
+}
+
+/**
+ * Calculate MFCC baseline (mean and variance) from samples
+ */
+function calculateMfccBaseline(samples: number[][]): MfccBaseline | undefined {
+  if (samples.length < 5) return undefined
+
+  const numCoeffs = samples[0]?.length || 13
+  const mean = new Array(numCoeffs).fill(0)
+  const variance = new Array(numCoeffs).fill(0)
+
+  // Calculate mean
+  for (const sample of samples) {
+    for (let i = 0; i < numCoeffs; i++) {
+      mean[i] += sample[i] || 0
+    }
+  }
+  for (let i = 0; i < numCoeffs; i++) {
+    mean[i] /= samples.length
+  }
+
+  // Calculate variance
+  for (const sample of samples) {
+    for (let i = 0; i < numCoeffs; i++) {
+      const diff = (sample[i] || 0) - mean[i]
+      variance[i] += diff * diff
+    }
+  }
+  for (let i = 0; i < numCoeffs; i++) {
+    variance[i] /= samples.length
+    // Add small epsilon to prevent division by zero
+    variance[i] = Math.max(variance[i], 0.001)
+  }
+
+  return { mean, variance }
 }
 
 /**
@@ -204,6 +244,7 @@ export function usePhonemeCalibration(): UsePhonemeCalibrationResult {
     ratios: [],
     flatnesses: [],
     rmsValues: [],
+    mfccSamples: [],
   })
   const animationFrameRef = useRef<number | null>(null)
   const getFrequencyDataRef = useRef<(() => Float32Array | null) | null>(null)
@@ -214,6 +255,11 @@ export function usePhonemeCalibration(): UsePhonemeCalibrationResult {
   const ooRatiosRef = useRef<number[]>([])
   const mmFlatnessesRef = useRef<number[]>([])
   const noiseFloorRef = useRef<number>(0)
+
+  // MFCC samples for each phase
+  const ahMfccSamplesRef = useRef<number[][]>([])
+  const ooMfccSamplesRef = useRef<number[][]>([])
+  const mmMfccSamplesRef = useRef<number[][]>([])
 
   const meydaConfiguredRef = useRef(false)
 
@@ -227,7 +273,6 @@ export function usePhonemeCalibration(): UsePhonemeCalibrationResult {
   const shouldContinueLoopRef = useRef(false)
 
   // Voice detection threshold - lowered for sensitivity
-  // Typical RMS values: silence ~0.001, quiet voice ~0.005, normal voice ~0.02
   const VOICE_THRESHOLD = 0.003
 
   /**
@@ -276,8 +321,8 @@ export function usePhonemeCalibration(): UsePhonemeCalibrationResult {
         signal.set(audioData.subarray(0, copyLength))
       }
 
-      // Extract features
-      const features = Meyda.extract(['spectralFlatness', 'rms', 'powerSpectrum'], signal)
+      // Extract features including MFCC
+      const features = Meyda.extract(['spectralFlatness', 'rms', 'powerSpectrum', 'mfcc'], signal)
 
       if (!features) {
         if (process.env.NODE_ENV === 'development') {
@@ -289,6 +334,7 @@ export function usePhonemeCalibration(): UsePhonemeCalibrationResult {
       const flatness = (features.spectralFlatness as number) || 0
       const rms = (features.rms as number) || 0
       const powerSpectrum = features.powerSpectrum as Float32Array | undefined
+      const mfcc = features.mfcc as number[] | undefined
 
       result.rms = rms
       result.isVoiceDetected = rms > VOICE_THRESHOLD
@@ -308,6 +354,8 @@ export function usePhonemeCalibration(): UsePhonemeCalibrationResult {
             flatness.toFixed(3),
             'powerSpectrum:',
             powerSpectrum ? powerSpectrum.length : 'NONE',
+            'mfcc:',
+            mfcc ? mfcc.length : 'NONE',
             'samples:',
             samplesRef.current.ratios.length
           )
@@ -333,11 +381,22 @@ export function usePhonemeCalibration(): UsePhonemeCalibrationResult {
 
         samplesRef.current.ratios.push(ratio)
         samplesRef.current.flatnesses.push(flatness)
+
+        // Collect MFCC sample if available
+        if (mfcc && mfcc.length > 0) {
+          samplesRef.current.mfccSamples.push([...mfcc])
+        }
+
         result.sampleCollected = true
       } else {
         // Fallback when powerSpectrum unavailable
         samplesRef.current.ratios.push(1.0)
         samplesRef.current.flatnesses.push(flatness)
+
+        if (mfcc && mfcc.length > 0) {
+          samplesRef.current.mfccSamples.push([...mfcc])
+        }
+
         result.sampleCollected = true
         if (process.env.NODE_ENV === 'development') {
           console.log('[Calibration] Using fallback - no powerSpectrum')
@@ -375,7 +434,9 @@ export function usePhonemeCalibration(): UsePhonemeCalibrationResult {
           'flatnesses:',
           samples.flatnesses.length,
           'rmsValues:',
-          samples.rmsValues.length
+          samples.rmsValues.length,
+          'mfccSamples:',
+          samples.mfccSamples.length
         )
       }
 
@@ -389,26 +450,44 @@ export function usePhonemeCalibration(): UsePhonemeCalibrationResult {
           break
         case 'ah':
           ahRatiosRef.current = [...samples.ratios]
+          ahMfccSamplesRef.current = [...samples.mfccSamples]
           if (process.env.NODE_ENV === 'development') {
-            console.log('[Calibration] Ah ratios collected:', ahRatiosRef.current.length)
+            console.log(
+              '[Calibration] Ah ratios collected:',
+              ahRatiosRef.current.length,
+              'MFCC samples:',
+              ahMfccSamplesRef.current.length
+            )
           }
           break
         case 'oo':
           ooRatiosRef.current = [...samples.ratios]
+          ooMfccSamplesRef.current = [...samples.mfccSamples]
           if (process.env.NODE_ENV === 'development') {
-            console.log('[Calibration] Oo ratios collected:', ooRatiosRef.current.length)
+            console.log(
+              '[Calibration] Oo ratios collected:',
+              ooRatiosRef.current.length,
+              'MFCC samples:',
+              ooMfccSamplesRef.current.length
+            )
           }
           break
         case 'mm':
           mmFlatnessesRef.current = [...samples.flatnesses]
+          mmMfccSamplesRef.current = [...samples.mfccSamples]
           if (process.env.NODE_ENV === 'development') {
-            console.log('[Calibration] Mm flatnesses collected:', mmFlatnessesRef.current.length)
+            console.log(
+              '[Calibration] Mm flatnesses collected:',
+              mmFlatnessesRef.current.length,
+              'MFCC samples:',
+              mmMfccSamplesRef.current.length
+            )
           }
           break
       }
 
       // Reset samples for next phase
-      samplesRef.current = { ratios: [], flatnesses: [], rmsValues: [] }
+      samplesRef.current = { ratios: [], flatnesses: [], rmsValues: [], mfccSamples: [] }
 
       // Determine next phase
       const phaseOrder: CalibrationPhase[] = ['noise', 'ah', 'oo', 'mm', 'complete']
@@ -421,6 +500,11 @@ export function usePhonemeCalibration(): UsePhonemeCalibrationResult {
         const ooRatio = median(ooRatiosRef.current)
         const mmFlatness = median(mmFlatnessesRef.current)
 
+        // Calculate MFCC baselines
+        const ahMfcc = calculateMfccBaseline(ahMfccSamplesRef.current)
+        const ooMfcc = calculateMfccBaseline(ooMfccSamplesRef.current)
+        const mmMfcc = calculateMfccBaseline(mmMfccSamplesRef.current)
+
         if (process.env.NODE_ENV === 'development') {
           console.log(
             '[Calibration] Final counts - ah:',
@@ -429,6 +513,14 @@ export function usePhonemeCalibration(): UsePhonemeCalibrationResult {
             ooRatiosRef.current.length,
             'mm:',
             mmFlatnessesRef.current.length
+          )
+          console.log(
+            '[Calibration] MFCC baselines - ah:',
+            ahMfcc ? 'YES' : 'no',
+            'oo:',
+            ooMfcc ? 'YES' : 'no',
+            'mm:',
+            mmMfcc ? 'YES' : 'no'
           )
         }
 
@@ -462,6 +554,10 @@ export function usePhonemeCalibration(): UsePhonemeCalibrationResult {
           ooRatio,
           mmFlatness,
           noiseFloor: noiseFloorRef.current,
+          // Include MFCC baselines if available
+          ahMfcc,
+          ooMfcc,
+          mmMfcc,
         }
 
         // Log detailed calibration results (development only)
@@ -474,6 +570,7 @@ export function usePhonemeCalibration(): UsePhonemeCalibrationResult {
             noiseFloor: noiseFloorRef.current.toFixed(4),
             separation: separation.toFixed(3),
             isGoodSeparation: separation >= 0.3,
+            hasMfccBaselines: !!(ahMfcc && ooMfcc && mmMfcc),
           })
 
           // Warn if calibration values are too similar
@@ -582,7 +679,10 @@ export function usePhonemeCalibration(): UsePhonemeCalibrationResult {
       ooRatiosRef.current = []
       mmFlatnessesRef.current = []
       noiseFloorRef.current = 0
-      samplesRef.current = { ratios: [], flatnesses: [], rmsValues: [] }
+      ahMfccSamplesRef.current = []
+      ooMfccSamplesRef.current = []
+      mmMfccSamplesRef.current = []
+      samplesRef.current = { ratios: [], flatnesses: [], rmsValues: [], mfccSamples: [] }
 
       // Start with noise phase
       currentPhaseRef.current = 'noise'

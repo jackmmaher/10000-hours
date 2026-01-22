@@ -4,12 +4,22 @@
  * Uses the pitchy library for accurate pitch detection.
  * All data stored in refs for 60fps Canvas rendering - NOT React state.
  *
+ * Mobile-optimized features:
+ * - MedianFilterBuffer (5 samples) for stable frequency output
+ * - Adaptive clarity threshold that adjusts to signal quality
+ * - No more HOLD_DURATION ghost readings
+ *
  * Scientific note: ~130 Hz is optimal for nasal nitric oxide production
  * (peer-reviewed evidence supports 15-20x increase during humming at this frequency)
  */
 
 import { useRef, useCallback, useEffect } from 'react'
 import { PitchDetector } from 'pitchy'
+import {
+  MedianFilterBuffer,
+  AdaptiveClarityTracker,
+  ADAPTIVE_CLARITY_CONFIG,
+} from '../utils/audioProcessing'
 
 // Target pitch for optimal nitric oxide production
 export const OPTIMAL_NO_FREQUENCY = 130 // Hz
@@ -17,12 +27,11 @@ export const OPTIMAL_NO_FREQUENCY = 130 // Hz
 // Default tolerance in cents (generous for beginners)
 export const DEFAULT_TOLERANCE_CENTS = 50
 
-// Minimum clarity threshold for valid pitch detection
-const MIN_CLARITY_THRESHOLD = 0.9
+// Base clarity threshold (lowered from 0.9 for mobile compatibility)
+const BASE_CLARITY_THRESHOLD = ADAPTIVE_CLARITY_CONFIG.defaultThreshold // 0.75
 
 // Hysteresis for stable transitions (prevents flickering)
 const CLARITY_HYSTERESIS = 0.05 // Once detected, allow slightly lower clarity
-const HOLD_DURATION_MS = 150 // Hold last valid value briefly when signal drops
 
 // Typical chanting range (for visualization scaling)
 export const PITCH_RANGE = {
@@ -41,7 +50,9 @@ export interface PitchData {
 export interface UsePitchDetectionOptions {
   targetFrequency?: number // Target pitch in Hz (default: 130)
   toleranceCents?: number // Tolerance in cents (default: 50)
-  clarityThreshold?: number // Min clarity to accept (default: 0.9)
+  clarityThreshold?: number // Base clarity to accept (default: 0.75)
+  useMedianFilter?: boolean // Enable median filtering (default: true)
+  useAdaptiveThreshold?: boolean // Enable adaptive threshold (default: true)
 }
 
 export interface UsePitchDetectionResult {
@@ -53,6 +64,8 @@ export interface UsePitchDetectionResult {
   analyze: (audioData: Float32Array, sampleRate: number) => PitchData
   // Reset detector state
   reset: () => void
+  // Get current adaptive clarity threshold
+  getCurrentThreshold: () => number
 }
 
 /**
@@ -75,7 +88,9 @@ export function usePitchDetection(options: UsePitchDetectionOptions = {}): UsePi
   const {
     targetFrequency: initialTarget = OPTIMAL_NO_FREQUENCY,
     toleranceCents = DEFAULT_TOLERANCE_CENTS,
-    clarityThreshold = MIN_CLARITY_THRESHOLD,
+    clarityThreshold = BASE_CLARITY_THRESHOLD,
+    useMedianFilter = true,
+    useAdaptiveThreshold = true,
   } = options
 
   // All mutable state in refs for performance
@@ -91,8 +106,13 @@ export function usePitchDetection(options: UsePitchDetectionOptions = {}): UsePi
 
   // Hysteresis state for stable transitions
   const wasDetectingRef = useRef(false)
-  const lastValidDataRef = useRef<PitchData | null>(null)
-  const lastValidTimestampRef = useRef(0)
+
+  // Median filter for frequency stability (5 samples = ~83ms at 60fps)
+  const frequencyFilterRef = useRef<MedianFilterBuffer<number>>(new MedianFilterBuffer<number>(5))
+
+  // Adaptive clarity threshold tracker
+  const clarityTrackerRef = useRef<AdaptiveClarityTracker>(new AdaptiveClarityTracker())
+  const currentThresholdRef = useRef(clarityThreshold)
 
   /**
    * Get current pitch data (for use in render loops)
@@ -109,6 +129,13 @@ export function usePitchDetection(options: UsePitchDetectionOptions = {}): UsePi
   }, [])
 
   /**
+   * Get current adaptive clarity threshold
+   */
+  const getCurrentThreshold = useCallback((): number => {
+    return currentThresholdRef.current
+  }, [])
+
+  /**
    * Analyze a single frame of audio data
    * Call this in your requestAnimationFrame loop
    */
@@ -120,31 +147,30 @@ export function usePitchDetection(options: UsePitchDetectionOptions = {}): UsePi
       }
 
       const detector = detectorRef.current
-      const [frequency, clarity] = detector.findPitch(audioData, sampleRate)
+      const [rawFrequency, clarity] = detector.findPitch(audioData, sampleRate)
 
       const target = targetFrequencyRef.current
       const now = performance.now()
 
+      // Track clarity for adaptive threshold
+      if (useAdaptiveThreshold) {
+        clarityTrackerRef.current.push(clarity)
+        currentThresholdRef.current = clarityTrackerRef.current.calculateThreshold()
+      }
+
+      // Use adaptive or base threshold
+      const baseThreshold = useAdaptiveThreshold ? currentThresholdRef.current : clarityThreshold
+
       // Apply hysteresis: use lower threshold if we were already detecting
       const effectiveThreshold = wasDetectingRef.current
-        ? clarityThreshold - CLARITY_HYSTERESIS
-        : clarityThreshold
+        ? baseThreshold - CLARITY_HYSTERESIS
+        : baseThreshold
 
       // Check if detection is valid
-      const isValid = clarity >= effectiveThreshold && frequency > 0
+      const isValid = clarity >= effectiveThreshold && rawFrequency > 0
 
       if (!isValid) {
         wasDetectingRef.current = false
-
-        // Hold the last valid value briefly to prevent flickering
-        if (lastValidDataRef.current && now - lastValidTimestampRef.current < HOLD_DURATION_MS) {
-          // Return the held data with updated timestamp
-          pitchDataRef.current = {
-            ...lastValidDataRef.current,
-            timestamp: now,
-          }
-          return pitchDataRef.current
-        }
 
         pitchDataRef.current = {
           frequency: null,
@@ -153,8 +179,13 @@ export function usePitchDetection(options: UsePitchDetectionOptions = {}): UsePi
           isWithinTolerance: false,
           timestamp: now,
         }
-        lastValidDataRef.current = null
         return pitchDataRef.current
+      }
+
+      // Apply median filter for stable frequency output
+      let frequency = rawFrequency
+      if (useMedianFilter) {
+        frequency = frequencyFilterRef.current.push(rawFrequency)
       }
 
       // Calculate cents deviation from target
@@ -171,13 +202,11 @@ export function usePitchDetection(options: UsePitchDetectionOptions = {}): UsePi
 
       // Update hysteresis state
       wasDetectingRef.current = true
-      lastValidDataRef.current = newData
-      lastValidTimestampRef.current = now
       pitchDataRef.current = newData
 
       return pitchDataRef.current
     },
-    [clarityThreshold, toleranceCents]
+    [clarityThreshold, toleranceCents, useMedianFilter, useAdaptiveThreshold]
   )
 
   /**
@@ -194,9 +223,12 @@ export function usePitchDetection(options: UsePitchDetectionOptions = {}): UsePi
     }
     // Reset hysteresis state
     wasDetectingRef.current = false
-    lastValidDataRef.current = null
-    lastValidTimestampRef.current = 0
-  }, [])
+    // Reset median filter
+    frequencyFilterRef.current.reset()
+    // Reset clarity tracker
+    clarityTrackerRef.current.reset()
+    currentThresholdRef.current = clarityThreshold
+  }, [clarityThreshold])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -210,6 +242,7 @@ export function usePitchDetection(options: UsePitchDetectionOptions = {}): UsePi
     setTargetFrequency,
     analyze,
     reset,
+    getCurrentThreshold,
   }
 }
 

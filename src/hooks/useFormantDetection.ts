@@ -1,9 +1,10 @@
 /**
  * useFormantDetection - Formant-based A/U/M phoneme classification
  *
- * Replaces spectral centroid approach with frequency band energy ratios.
- * The key insight: vowel sounds differ in their formant frequencies (F1, F2),
- * and using RATIOS makes detection speaker-independent.
+ * Mobile-optimized with hybrid classification approach:
+ * 1. Primary: Band energy ratios (fast, speaker-independent)
+ * 2. Confirmation: MFCC features (more accurate, personalized)
+ * 3. Stability: MedianFilterBuffer for phoneme smoothing
  *
  * | Vowel | F1 Range    | F2 Range      | Detection Strategy              |
  * |-------|-------------|---------------|--------------------------------|
@@ -19,8 +20,14 @@
 
 import { useRef, useCallback, useEffect } from 'react'
 import Meyda from 'meyda'
+import { MedianFilterBuffer } from '../utils/audioProcessing'
 
 export type Phoneme = 'silence' | 'A' | 'U' | 'M'
+
+export interface MfccBaseline {
+  mean: number[]
+  variance: number[]
+}
 
 export interface CalibrationProfile {
   id: string
@@ -29,6 +36,10 @@ export interface CalibrationProfile {
   ooRatio: number // Upper/lower energy ratio for Oo
   mmFlatness: number // Baseline flatness for Mm
   noiseFloor: number // Background noise level
+  // MFCC baselines (optional - for enhanced detection)
+  ahMfcc?: MfccBaseline
+  ooMfcc?: MfccBaseline
+  mmMfcc?: MfccBaseline
 }
 
 export interface FormantData {
@@ -41,6 +52,13 @@ export interface FormantData {
   confidence: number // 0-1
   rms: number
   timestamp: number
+  // MFCC data (for debugging/calibration)
+  mfcc?: number[]
+}
+
+export interface UseFormantDetectionOptions {
+  useMedianFilter?: boolean // Enable phoneme smoothing (default: true)
+  useMfcc?: boolean // Enable MFCC hybrid classification (default: true)
 }
 
 export interface UseFormantDetectionResult {
@@ -71,16 +89,38 @@ const SILENCE_THRESHOLD = 0.005
 // Buffer size for Meyda
 const BUFFER_SIZE = 2048
 
-// Debounce settings for stability
-// REDUCED: Was 80ms, now 30ms for faster response when starting to vocalize
-const DEBOUNCE_MS = 30
-// REDUCED: Was 0.4, now 0.3 for faster pickup
+// Confidence threshold for phoneme acceptance
 const CONFIDENCE_THRESHOLD = 0.3
 
 /**
+ * Calculate Euclidean distance between two MFCC vectors
+ */
+function mfccDistance(a: number[], b: number[]): number {
+  if (a.length !== b.length) return Infinity
+  let sum = 0
+  for (let i = 0; i < a.length; i++) {
+    const diff = a[i] - b[i]
+    sum += diff * diff
+  }
+  return Math.sqrt(sum)
+}
+
+/**
+ * Calculate MFCC confidence based on distance from baseline
+ * Returns 0-1 confidence score
+ */
+function mfccConfidence(mfcc: number[], baseline: MfccBaseline): number {
+  const distance = mfccDistance(mfcc, baseline.mean)
+  // Normalize by expected variance
+  const avgVariance = baseline.variance.reduce((a, b) => a + b, 0) / baseline.variance.length
+  const normalizedDistance = distance / Math.sqrt(avgVariance * mfcc.length + 0.001)
+  // Convert to confidence (closer = higher confidence)
+  return Math.max(0, 1 - normalizedDistance / 10)
+}
+
+/**
  * Classify phoneme using frequency band energy ratios
- *
- * FIXED: Added minimum separation requirement and better M detection
+ * With optional MFCC confirmation for hybrid classification
  */
 function classifyPhoneme(
   lowEnergy: number,
@@ -88,6 +128,7 @@ function classifyPhoneme(
   highEnergy: number,
   flatness: number,
   calibration: CalibrationProfile | null,
+  mfcc: number[] | null,
   classifyDebugCounter: number
 ): { phoneme: Phoneme; confidence: number } {
   // Calculate upper/lower ratio early for logging
@@ -96,13 +137,19 @@ function classifyPhoneme(
   const upperLowerRatio = upperEnergy / lowerEnergy
 
   // Mm detection: high flatness (nasal resonance creates broader spectrum)
-  // LOWERED threshold - Mm is harder to detect, be more generous
   const mmFlatnessThreshold = calibration?.mmFlatness
     ? calibration.mmFlatness * 0.8 // Use 80% of calibrated value for easier M detection
     : DEFAULT_THRESHOLDS.mmFlatnessMin * 0.8
 
   if (flatness > mmFlatnessThreshold) {
-    const confidence = Math.min(1, flatness / (mmFlatnessThreshold * 1.5))
+    let confidence = Math.min(1, flatness / (mmFlatnessThreshold * 1.5))
+
+    // MFCC confirmation if available
+    if (mfcc && calibration?.mmMfcc) {
+      const mfccConf = mfccConfidence(mfcc, calibration.mmMfcc)
+      confidence = confidence * 0.6 + mfccConf * 0.4 // Weighted combination
+    }
+
     return { phoneme: 'M', confidence }
   }
 
@@ -138,7 +185,6 @@ function classifyPhoneme(
     const separation = Math.abs(calibration.ahRatio - calibration.ooRatio)
 
     // If calibration values are too close (< 0.3 apart), use default thresholds
-    // This prevents wild oscillation when Ah and Oo have similar ratios
     if (separation < 0.3) {
       if (process.env.NODE_ENV === 'development') {
         console.warn(
@@ -149,22 +195,38 @@ function classifyPhoneme(
       // Fall through to default logic below
     } else {
       // Use calibrated thresholds with dead zone
-      // Require ratio to be clearly on one side of the midpoint
       const deadZone = separation * 0.15 // 15% dead zone around midpoint
 
       if (upperLowerRatio > midpoint + deadZone) {
         // Clearly closer to the higher-ratio phoneme
         const distance = Math.abs(upperLowerRatio - highRatio)
-        const confidence = Math.min(1, 1 - distance / separation)
-        return { phoneme: highPhoneme, confidence: Math.max(0.5, confidence) }
+        let confidence = Math.min(1, 1 - distance / separation)
+        confidence = Math.max(0.5, confidence)
+
+        // MFCC confirmation
+        const mfccBaseline = highPhoneme === 'A' ? calibration.ahMfcc : calibration.ooMfcc
+        if (mfcc && mfccBaseline) {
+          const mfccConf = mfccConfidence(mfcc, mfccBaseline)
+          confidence = confidence * 0.6 + mfccConf * 0.4
+        }
+
+        return { phoneme: highPhoneme, confidence }
       } else if (upperLowerRatio < midpoint - deadZone) {
         // Clearly closer to the lower-ratio phoneme
         const distance = Math.abs(upperLowerRatio - lowRatio)
-        const confidence = Math.min(1, 1 - distance / separation)
-        return { phoneme: lowPhoneme, confidence: Math.max(0.5, confidence) }
+        let confidence = Math.min(1, 1 - distance / separation)
+        confidence = Math.max(0.5, confidence)
+
+        // MFCC confirmation
+        const mfccBaseline = lowPhoneme === 'A' ? calibration.ahMfcc : calibration.ooMfcc
+        if (mfcc && mfccBaseline) {
+          const mfccConf = mfccConfidence(mfcc, mfccBaseline)
+          confidence = confidence * 0.6 + mfccConf * 0.4
+        }
+
+        return { phoneme: lowPhoneme, confidence }
       } else {
-        // In dead zone - return LOW confidence (below CONFIDENCE_THRESHOLD of 0.3)
-        // This causes debounce logic to maintain lastConfirmedPhoneme instead of flickering
+        // In dead zone - return LOW confidence
         if (upperLowerRatio >= midpoint) {
           return { phoneme: highPhoneme, confidence: 0.25 }
         } else {
@@ -176,11 +238,9 @@ function classifyPhoneme(
 
   // Default thresholds (population average)
   if (upperLowerRatio > DEFAULT_THRESHOLDS.ahRatioMin) {
-    // Higher ratio = more energy in upper bands = Ah
     const confidence = Math.min(1, (upperLowerRatio - 1) / 1.5)
     return { phoneme: 'A', confidence: Math.max(0.5, confidence) }
   } else if (upperLowerRatio < DEFAULT_THRESHOLDS.ooRatioMax) {
-    // Lower ratio = more energy in lower bands = Oo
     const confidence = Math.min(1, (DEFAULT_THRESHOLDS.ooRatioMax - upperLowerRatio) / 0.5)
     return { phoneme: 'U', confidence: Math.max(0.5, confidence) }
   }
@@ -189,7 +249,11 @@ function classifyPhoneme(
   return { phoneme: 'A', confidence: 0.4 }
 }
 
-export function useFormantDetection(): UseFormantDetectionResult {
+export function useFormantDetection(
+  options: UseFormantDetectionOptions = {}
+): UseFormantDetectionResult {
+  const { useMedianFilter = true, useMfcc = true } = options
+
   // Calibration profile
   const calibrationRef = useRef<CalibrationProfile | null>(null)
 
@@ -206,9 +270,10 @@ export function useFormantDetection(): UseFormantDetectionResult {
     timestamp: 0,
   })
 
-  // Debounce state
-  const lastTransitionTimeRef = useRef(0)
-  const pendingPhonemeRef = useRef<Phoneme>('silence')
+  // Median filter for phoneme stability (mode-based for strings)
+  const phonemeFilterRef = useRef<MedianFilterBuffer<string>>(new MedianFilterBuffer<string>(5))
+
+  // Track last confirmed phoneme for debounce fallback
   const lastConfirmedPhonemeRef = useRef<Phoneme>('silence')
 
   // Track if Meyda has been configured
@@ -217,7 +282,7 @@ export function useFormantDetection(): UseFormantDetectionResult {
   // Debug counter for throttled logging
   const debugCounterRef = useRef(0)
 
-  // Debug counter for classify function (moved from global to avoid shared state)
+  // Debug counter for classify function
   const classifyDebugCounterRef = useRef(0)
 
   /**
@@ -244,173 +309,165 @@ export function useFormantDetection(): UseFormantDetectionResult {
   /**
    * Analyze a single frame of audio
    */
-  const analyze = useCallback((audioData: Float32Array, sampleRate: number): FormantData => {
-    const now = performance.now()
+  const analyze = useCallback(
+    (audioData: Float32Array, sampleRate: number): FormantData => {
+      const now = performance.now()
 
-    // Configure Meyda if needed
-    if (!meydaConfiguredRef.current || Meyda.sampleRate !== sampleRate) {
-      Meyda.bufferSize = BUFFER_SIZE
-      Meyda.sampleRate = sampleRate
-      meydaConfiguredRef.current = true
-    }
-
-    // Ensure we have the right buffer size
-    let signal: Float32Array = audioData
-    if (audioData.length !== BUFFER_SIZE) {
-      signal = new Float32Array(BUFFER_SIZE)
-      const copyLength = Math.min(audioData.length, BUFFER_SIZE)
-      signal.set(audioData.subarray(0, copyLength))
-    }
-
-    // Extract features using Meyda
-    const features = Meyda.extract(
-      ['spectralFlatness', 'rms', 'amplitudeSpectrum', 'powerSpectrum'],
-      signal
-    )
-
-    if (!features) {
-      return formantDataRef.current
-    }
-
-    const flatness = (features.spectralFlatness as number) || 0
-    const rms = (features.rms as number) || 0
-    const powerSpectrum = features.powerSpectrum as Float32Array | undefined
-
-    // Check for silence
-    if (rms < SILENCE_THRESHOLD) {
-      lastConfirmedPhonemeRef.current = 'silence'
-      formantDataRef.current = {
-        lowBandEnergy: 0,
-        midBandEnergy: 0,
-        highBandEnergy: 0,
-        spectralFlatness: flatness,
-        upperLowerRatio: 0,
-        detectedPhoneme: 'silence',
-        confidence: 1,
-        rms,
-        timestamp: now,
+      // Configure Meyda if needed
+      if (!meydaConfiguredRef.current || Meyda.sampleRate !== sampleRate) {
+        Meyda.bufferSize = BUFFER_SIZE
+        Meyda.sampleRate = sampleRate
+        meydaConfiguredRef.current = true
       }
-      return formantDataRef.current
-    }
 
-    // Calculate band energies from power spectrum
-    let lowEnergy = 0
-    let midEnergy = 0
-    let highEnergy = 0
+      // Ensure we have the right buffer size
+      let signal: Float32Array = audioData
+      if (audioData.length !== BUFFER_SIZE) {
+        signal = new Float32Array(BUFFER_SIZE)
+        const copyLength = Math.min(audioData.length, BUFFER_SIZE)
+        signal.set(audioData.subarray(0, copyLength))
+      }
 
-    if (powerSpectrum && powerSpectrum.length > 0) {
-      const binWidth = sampleRate / (powerSpectrum.length * 2)
+      // Extract features using Meyda (including MFCC if enabled)
+      const features = useMfcc
+        ? Meyda.extract(
+            ['spectralFlatness', 'rms', 'amplitudeSpectrum', 'powerSpectrum', 'mfcc'],
+            signal
+          )
+        : Meyda.extract(['spectralFlatness', 'rms', 'amplitudeSpectrum', 'powerSpectrum'], signal)
 
-      // Calculate energy in each band
-      for (let i = 0; i < powerSpectrum.length; i++) {
-        const freq = i * binWidth
-        const power = powerSpectrum[i] || 0
+      if (!features) {
+        return formantDataRef.current
+      }
 
-        if (freq >= BANDS.low.min && freq <= BANDS.low.max) {
-          lowEnergy += power
-        } else if (freq >= BANDS.mid.min && freq <= BANDS.mid.max) {
-          midEnergy += power
-        } else if (freq >= BANDS.high.min && freq <= BANDS.high.max) {
-          highEnergy += power
+      const flatness = (features.spectralFlatness as number) || 0
+      const rms = (features.rms as number) || 0
+      const powerSpectrum = features.powerSpectrum as Float32Array | undefined
+      const mfcc = useMfcc ? (features.mfcc as number[] | undefined) : undefined
+
+      // Check for silence
+      if (rms < SILENCE_THRESHOLD) {
+        lastConfirmedPhonemeRef.current = 'silence'
+        phonemeFilterRef.current.reset() // Clear filter on silence
+
+        formantDataRef.current = {
+          lowBandEnergy: 0,
+          midBandEnergy: 0,
+          highBandEnergy: 0,
+          spectralFlatness: flatness,
+          upperLowerRatio: 0,
+          detectedPhoneme: 'silence',
+          confidence: 1,
+          rms,
+          timestamp: now,
+          mfcc,
+        }
+        return formantDataRef.current
+      }
+
+      // Calculate band energies from power spectrum
+      let lowEnergy = 0
+      let midEnergy = 0
+      let highEnergy = 0
+
+      if (powerSpectrum && powerSpectrum.length > 0) {
+        const binWidth = sampleRate / (powerSpectrum.length * 2)
+
+        // Calculate energy in each band
+        for (let i = 0; i < powerSpectrum.length; i++) {
+          const freq = i * binWidth
+          const power = powerSpectrum[i] || 0
+
+          if (freq >= BANDS.low.min && freq <= BANDS.low.max) {
+            lowEnergy += power
+          } else if (freq >= BANDS.mid.min && freq <= BANDS.mid.max) {
+            midEnergy += power
+          } else if (freq >= BANDS.high.min && freq <= BANDS.high.max) {
+            highEnergy += power
+          }
+        }
+
+        // Normalize by number of bins in each band
+        const lowBins = Math.ceil((BANDS.low.max - BANDS.low.min) / binWidth)
+        const midBins = Math.ceil((BANDS.mid.max - BANDS.mid.min) / binWidth)
+        const highBins = Math.ceil((BANDS.high.max - BANDS.high.min) / binWidth)
+
+        lowEnergy = lowBins > 0 ? Math.sqrt(lowEnergy / lowBins) : 0
+        midEnergy = midBins > 0 ? Math.sqrt(midEnergy / midBins) : 0
+        highEnergy = highBins > 0 ? Math.sqrt(highEnergy / highBins) : 0
+      }
+
+      // Calculate upper/lower ratio
+      const upperLowerRatio = lowEnergy > 0.001 ? (midEnergy + highEnergy) / lowEnergy : 0
+
+      // Classify raw phoneme with hybrid approach
+      classifyDebugCounterRef.current++
+      const { phoneme: rawPhoneme, confidence: rawConfidence } = classifyPhoneme(
+        lowEnergy,
+        midEnergy,
+        highEnergy,
+        flatness,
+        calibrationRef.current,
+        mfcc || null,
+        classifyDebugCounterRef.current
+      )
+
+      // Apply median filter for stable phoneme output
+      let finalPhoneme: Phoneme = rawPhoneme
+      let finalConfidence = rawConfidence
+
+      if (useMedianFilter && rawConfidence >= CONFIDENCE_THRESHOLD) {
+        // Push to filter and get stable result
+        const filteredPhoneme = phonemeFilterRef.current.push(rawPhoneme) as Phoneme
+        finalPhoneme = filteredPhoneme
+        lastConfirmedPhonemeRef.current = filteredPhoneme
+      } else if (rawConfidence < CONFIDENCE_THRESHOLD) {
+        // Low confidence - stick with last confirmed
+        finalPhoneme = lastConfirmedPhonemeRef.current
+        finalConfidence = rawConfidence * 0.7
+      }
+
+      // Debug logging (throttled, development only)
+      if (process.env.NODE_ENV === 'development') {
+        debugCounterRef.current++
+        if (debugCounterRef.current % 30 === 0) {
+          console.log(
+            '[Formant] low:',
+            lowEnergy.toFixed(3),
+            'mid:',
+            midEnergy.toFixed(3),
+            'high:',
+            highEnergy.toFixed(3),
+            'ratio:',
+            upperLowerRatio.toFixed(2),
+            'flat:',
+            flatness.toFixed(3),
+            'detected:',
+            finalPhoneme,
+            'conf:',
+            finalConfidence.toFixed(2),
+            useMfcc && mfcc ? `mfcc[0-2]: ${mfcc.slice(0, 3).map((v) => v.toFixed(1))}` : ''
+          )
         }
       }
 
-      // Normalize by number of bins in each band
-      const lowBins = Math.ceil((BANDS.low.max - BANDS.low.min) / binWidth)
-      const midBins = Math.ceil((BANDS.mid.max - BANDS.mid.min) / binWidth)
-      const highBins = Math.ceil((BANDS.high.max - BANDS.high.min) / binWidth)
-
-      lowEnergy = lowBins > 0 ? Math.sqrt(lowEnergy / lowBins) : 0
-      midEnergy = midBins > 0 ? Math.sqrt(midEnergy / midBins) : 0
-      highEnergy = highBins > 0 ? Math.sqrt(highEnergy / highBins) : 0
-    }
-
-    // Calculate upper/lower ratio
-    const upperLowerRatio = lowEnergy > 0.001 ? (midEnergy + highEnergy) / lowEnergy : 0
-
-    // Classify raw phoneme (increment debug counter for throttled logging)
-    classifyDebugCounterRef.current++
-    const { phoneme: rawPhoneme, confidence: rawConfidence } = classifyPhoneme(
-      lowEnergy,
-      midEnergy,
-      highEnergy,
-      flatness,
-      calibrationRef.current,
-      classifyDebugCounterRef.current
-    )
-
-    // Apply debounce with hysteresis
-    // FAST PATH: Instant transition from silence to any phoneme (no debounce needed)
-    const currentPhoneme = lastConfirmedPhonemeRef.current
-    let finalPhoneme = currentPhoneme
-    let finalConfidence = rawConfidence
-
-    if (
-      currentPhoneme === 'silence' &&
-      rawPhoneme !== 'silence' &&
-      rawConfidence >= CONFIDENCE_THRESHOLD
-    ) {
-      // Coming from silence - instant pickup, no debounce
-      finalPhoneme = rawPhoneme
-      lastConfirmedPhonemeRef.current = rawPhoneme
-      pendingPhonemeRef.current = rawPhoneme
-    } else if (rawPhoneme !== pendingPhonemeRef.current) {
-      // New pending phoneme, start debounce timer
-      pendingPhonemeRef.current = rawPhoneme
-      lastTransitionTimeRef.current = now
-    } else if (rawPhoneme !== currentPhoneme) {
-      // Same pending phoneme, check if debounce period elapsed
-      if (
-        now - lastTransitionTimeRef.current >= DEBOUNCE_MS &&
-        rawConfidence >= CONFIDENCE_THRESHOLD
-      ) {
-        finalPhoneme = rawPhoneme
-        lastConfirmedPhonemeRef.current = rawPhoneme
+      formantDataRef.current = {
+        lowBandEnergy: lowEnergy,
+        midBandEnergy: midEnergy,
+        highBandEnergy: highEnergy,
+        spectralFlatness: flatness,
+        upperLowerRatio,
+        detectedPhoneme: finalPhoneme,
+        confidence: finalConfidence,
+        rms,
+        timestamp: now,
+        mfcc,
       }
-    }
 
-    // If staying with current phoneme, use averaged confidence
-    if (finalPhoneme === currentPhoneme && finalPhoneme !== rawPhoneme) {
-      finalConfidence = rawConfidence * 0.7 // Slightly lower confidence when raw differs
-    }
-
-    // Debug logging (throttled, development only)
-    if (process.env.NODE_ENV === 'development') {
-      debugCounterRef.current++
-      if (debugCounterRef.current % 30 === 0) {
-        console.log(
-          '[Formant] low:',
-          lowEnergy.toFixed(3),
-          'mid:',
-          midEnergy.toFixed(3),
-          'high:',
-          highEnergy.toFixed(3),
-          'ratio:',
-          upperLowerRatio.toFixed(2),
-          'flat:',
-          flatness.toFixed(3),
-          'detected:',
-          finalPhoneme,
-          'conf:',
-          finalConfidence.toFixed(2)
-        )
-      }
-    }
-
-    formantDataRef.current = {
-      lowBandEnergy: lowEnergy,
-      midBandEnergy: midEnergy,
-      highBandEnergy: highEnergy,
-      spectralFlatness: flatness,
-      upperLowerRatio,
-      detectedPhoneme: finalPhoneme,
-      confidence: finalConfidence,
-      rms,
-      timestamp: now,
-    }
-
-    return formantDataRef.current
-  }, [])
+      return formantDataRef.current
+    },
+    [useMedianFilter, useMfcc]
+  )
 
   /**
    * Reset state
@@ -427,8 +484,7 @@ export function useFormantDetection(): UseFormantDetectionResult {
       rms: 0,
       timestamp: 0,
     }
-    pendingPhonemeRef.current = 'silence'
-    lastTransitionTimeRef.current = 0
+    phonemeFilterRef.current.reset()
     lastConfirmedPhonemeRef.current = 'silence'
   }, [])
 

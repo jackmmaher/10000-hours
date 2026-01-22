@@ -5,10 +5,22 @@
  * Critical: Uses refs for continuous audio data - NOT React state.
  * This is essential for 60fps Canvas rendering without re-render overhead.
  *
- * Based on patterns from useAudioLevel.ts and voiceRecording.ts
+ * Mobile-optimized audio pipeline:
+ * source → gainNode → compressor → analyser
+ *
+ * Features:
+ * - GainNode for input normalization (mobile mics are quieter)
+ * - DynamicsCompressor for consistent levels across devices
+ * - RMS tracking for auto-gain calculation
+ * - Exposed setGain() and getRecommendedGain() methods
  */
 
 import { useRef, useCallback, useEffect, useState } from 'react'
+import {
+  configureVoiceCompressor,
+  RmsHistoryTracker,
+  calculateRmsFromFloat32,
+} from '../utils/audioProcessing'
 
 export interface OmAudioCaptureResult {
   isCapturing: boolean
@@ -19,6 +31,11 @@ export interface OmAudioCaptureResult {
   getAnalyser: () => AnalyserNode | null
   getAudioContext: () => AudioContext | null
   getSampleRate: () => number
+  // Gain control methods
+  setGain: (gain: number) => void
+  getGain: () => number
+  getRecommendedGain: () => number
+  getCurrentRms: () => number
   // Control methods
   startCapture: () => Promise<void>
   stopCapture: () => void
@@ -27,6 +44,9 @@ export interface OmAudioCaptureResult {
 // Buffer size for sub-50ms latency (1024 samples @ 48kHz = ~21ms)
 const FFT_SIZE = 2048
 const NOISE_GATE_THRESHOLD = 0.01 // RMS below this = silence
+
+// Default gain (1.0 = no change)
+const DEFAULT_GAIN = 1.0
 
 export function useOmAudioCapture(): OmAudioCaptureResult {
   // isCapturing and error use React state for re-renders
@@ -38,11 +58,18 @@ export function useOmAudioCapture(): OmAudioCaptureResult {
   const analyserRef = useRef<AnalyserNode | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null)
+  const gainNodeRef = useRef<GainNode | null>(null)
+  const compressorRef = useRef<DynamicsCompressorNode | null>(null)
   const isCapturingRef = useRef(false) // Keep ref for sync checks in callbacks
 
   // Pre-allocated buffers for zero-allocation reads
   const timeDomainDataRef = useRef<Uint8Array | null>(null)
   const frequencyDataRef = useRef<Float32Array | null>(null)
+
+  // RMS tracking for auto-gain
+  const rmsTrackerRef = useRef<RmsHistoryTracker>(new RmsHistoryTracker())
+  const currentRmsRef = useRef<number>(0)
+  const currentGainRef = useRef<number>(DEFAULT_GAIN)
 
   /**
    * Get current time-domain audio data
@@ -59,6 +86,7 @@ export function useOmAudioCapture(): OmAudioCaptureResult {
 
   /**
    * Get current frequency data (for pitch detection)
+   * Also updates RMS tracking for auto-gain
    * Returns null if not capturing
    */
   const getFrequencyData = useCallback((): Float32Array | null => {
@@ -67,6 +95,12 @@ export function useOmAudioCapture(): OmAudioCaptureResult {
     if (!analyser || !data || !isCapturingRef.current) return null
 
     analyser.getFloatTimeDomainData(data as Float32Array<ArrayBuffer>)
+
+    // Update RMS tracking
+    const rms = calculateRmsFromFloat32(data)
+    currentRmsRef.current = rms
+    rmsTrackerRef.current.push(rms)
+
     return data
   }, [])
 
@@ -89,6 +123,42 @@ export function useOmAudioCapture(): OmAudioCaptureResult {
    */
   const getSampleRate = useCallback((): number => {
     return audioContextRef.current?.sampleRate ?? 44100
+  }, [])
+
+  /**
+   * Set the input gain (for manual sensitivity control)
+   */
+  const setGain = useCallback((gain: number): void => {
+    const clampedGain = Math.max(0.5, Math.min(8.0, gain))
+    currentGainRef.current = clampedGain
+
+    if (gainNodeRef.current) {
+      gainNodeRef.current.gain.setValueAtTime(
+        clampedGain,
+        audioContextRef.current?.currentTime ?? 0
+      )
+    }
+  }, [])
+
+  /**
+   * Get current gain value
+   */
+  const getGain = useCallback((): number => {
+    return currentGainRef.current
+  }, [])
+
+  /**
+   * Get recommended gain based on RMS history
+   */
+  const getRecommendedGain = useCallback((): number => {
+    return rmsTrackerRef.current.calculateAutoGain()
+  }, [])
+
+  /**
+   * Get current RMS value
+   */
+  const getCurrentRms = useCallback((): number => {
+    return currentRmsRef.current
   }, [])
 
   /**
@@ -136,20 +206,37 @@ export function useOmAudioCapture(): OmAudioCaptureResult {
         }
       })
 
+      // Create audio nodes
+      const source = audioContext.createMediaStreamSource(stream)
+      sourceRef.current = source
+
+      // Create GainNode for input normalization
+      const gainNode = audioContext.createGain()
+      gainNode.gain.setValueAtTime(currentGainRef.current, audioContext.currentTime)
+      gainNodeRef.current = gainNode
+
+      // Create DynamicsCompressor for voice normalization
+      const compressor = audioContext.createDynamicsCompressor()
+      configureVoiceCompressor(compressor)
+      compressorRef.current = compressor
+
       // Create and configure AnalyserNode
       const analyser = audioContext.createAnalyser()
       analyser.fftSize = FFT_SIZE
       analyser.smoothingTimeConstant = 0.3 // Lower = more responsive
       analyserRef.current = analyser
 
-      // Connect microphone to analyser
-      const source = audioContext.createMediaStreamSource(stream)
-      source.connect(analyser)
-      sourceRef.current = source
+      // Connect audio chain: source → gainNode → compressor → analyser
+      source.connect(gainNode)
+      gainNode.connect(compressor)
+      compressor.connect(analyser)
 
       // Pre-allocate buffers
       timeDomainDataRef.current = new Uint8Array(analyser.fftSize)
       frequencyDataRef.current = new Float32Array(analyser.fftSize)
+
+      // Reset RMS tracker
+      rmsTrackerRef.current.reset()
 
       isCapturingRef.current = true
       setIsCapturing(true)
@@ -173,10 +260,20 @@ export function useOmAudioCapture(): OmAudioCaptureResult {
       streamRef.current = null
     }
 
-    // Disconnect source node
+    // Disconnect audio nodes
     if (sourceRef.current) {
       sourceRef.current.disconnect()
       sourceRef.current = null
+    }
+
+    if (gainNodeRef.current) {
+      gainNodeRef.current.disconnect()
+      gainNodeRef.current = null
+    }
+
+    if (compressorRef.current) {
+      compressorRef.current.disconnect()
+      compressorRef.current = null
     }
 
     // Close audio context
@@ -205,6 +302,10 @@ export function useOmAudioCapture(): OmAudioCaptureResult {
     getAnalyser,
     getAudioContext,
     getSampleRate,
+    setGain,
+    getGain,
+    getRecommendedGain,
+    getCurrentRms,
     startCapture,
     stopCapture,
   }
