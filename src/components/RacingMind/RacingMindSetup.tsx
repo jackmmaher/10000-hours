@@ -82,10 +82,10 @@ export function RacingMindSetup({ onBegin, isLoading }: RacingMindSetupProps) {
           {showDetails && (
             <div className="mt-3 p-3 bg-base rounded-lg">
               <p className="text-xs text-ink/70 leading-relaxed">
-                Smooth pursuit eye tracking suppresses the Default Mode Network, reducing rumination
-                and anxious thoughts. Blue light around 471nm wavelength has been shown to
-                accelerate relaxation 3x compared to white light. This "soft fascination" state is a
-                validated restorative attention pattern.
+                Horizontal eye movements deactivate the amygdala, reducing the stress response (de
+                Voogd et al. 2018). The gentle oscillation aligns with cardiac coherence rhythms,
+                promoting parasympathetic activation (Lehrer & Gevirtz 2014). This "soft
+                fascination" state is a validated restorative attention pattern.
               </p>
             </div>
           )}
