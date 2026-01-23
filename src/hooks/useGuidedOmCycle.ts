@@ -20,6 +20,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import type { Phoneme } from './useFormantDetection'
 import type { PitchData } from './usePitchDetection'
+import type { CoherenceData } from './useVocalCoherence'
 
 // Timing modes
 export type TimingMode = 'traditional' | 'extended' | 'longbreath'
@@ -151,7 +152,7 @@ export interface UseGuidedOmCycleResult {
   state: GuidedCycleState
   startSession: (duration: SessionDuration, mode?: TimingMode) => void
   stopSession: () => void
-  recordSample: (phoneme: Phoneme, pitch: PitchData) => void
+  recordSample: (phoneme: Phoneme, pitch: PitchData, coherence?: CoherenceData) => void
   getExpectedPhoneme: () => Phoneme | null
   getCurrentCycleQuality: () => CycleQuality
   getPhonemeAlignment: () => PhonemeAlignmentData
@@ -193,7 +194,10 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
   const absoluteCycleRef = useRef(1)
   const isPracticeRef = useRef(true)
 
-  // Per-cycle quality tracking (for scored cycles only)
+  // Per-cycle quality tracking using coherence scores (for scored cycles only)
+  const coherenceScoresRef = useRef<number[]>([])
+
+  // Legacy per-phase tracking (kept for PhonemeAlignmentData compatibility)
   const phaseScoresRef = useRef<{
     ah: { samples: number; aligned: number }
     oo: { samples: number; aligned: number }
@@ -320,8 +324,6 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
    */
   const handleCycleComplete = useCallback(
     (previousCycle: number, now: number) => {
-      const mode = timingModeRef.current
-
       // Was previous cycle a practice cycle?
       if (previousCycle <= PRACTICE_CYCLES) {
         onPracticeCycleComplete?.(previousCycle)
@@ -347,33 +349,21 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
           onScoredSessionStart?.()
         }
       } else {
-        // Previous cycle was a scored cycle - calculate quality
-        const scores = phaseScoresRef.current
-        const config = TIMING_CONFIGS[mode]
+        // Previous cycle was a scored cycle - calculate quality from coherence
+        const coherenceScores = coherenceScoresRef.current
 
-        const ahScore =
-          scores.ah.samples > 0 ? Math.round((scores.ah.aligned / scores.ah.samples) * 100) : 0
-        const ooScore =
-          scores.oo.samples > 0 ? Math.round((scores.oo.aligned / scores.oo.samples) * 100) : 0
-        const mmScore =
-          scores.mm.samples > 0 ? Math.round((scores.mm.aligned / scores.mm.samples) * 100) : 0
-
-        // Weight by phase duration
-        const totalVocalDuration = config.ah + config.oo + config.mm || 12000
+        // Calculate average coherence for the cycle
         const overallScore =
-          totalVocalDuration > 0
-            ? Math.round(
-                (ahScore * (config.ah || 3000) +
-                  ooScore * (config.oo || 3000) +
-                  mmScore * (config.mm || 6000)) /
-                  totalVocalDuration
-              )
+          coherenceScores.length > 0
+            ? Math.round(coherenceScores.reduce((a, b) => a + b, 0) / coherenceScores.length)
             : 0
 
+        // Per-phase scores are now deprecated but kept for UI compatibility
+        // Just use overall coherence for all phases
         const quality: CycleQuality = {
-          ahScore,
-          ooScore,
-          mmScore,
+          ahScore: overallScore,
+          ooScore: overallScore,
+          mmScore: overallScore,
           overallScore,
           isLocked: overallScore >= LOCK_THRESHOLD,
         }
@@ -381,7 +371,10 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
         cycleQualityRef.current = quality
         onCycleComplete?.(quality, previousCycle - PRACTICE_CYCLES)
 
-        // Reset for next cycle
+        // Reset coherence scores for next cycle
+        coherenceScoresRef.current = []
+
+        // Reset legacy phase scores
         phaseScoresRef.current = {
           ah: { samples: 0, aligned: 0 },
           oo: { samples: 0, aligned: 0 },
@@ -496,6 +489,7 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
       timingModeRef.current = mode
 
       // Reset tracking
+      coherenceScoresRef.current = []
       phaseScoresRef.current = {
         ah: { samples: 0, aligned: 0 },
         oo: { samples: 0, aligned: 0 },
@@ -569,39 +563,45 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
 
   /**
    * Record a sample for quality calculation
+   * Now primarily uses coherence data instead of pitch tolerance
    */
-  const recordSample = useCallback((phoneme: Phoneme, pitch: PitchData) => {
-    if (!practiceStartRef.current) return
+  const recordSample = useCallback(
+    (phoneme: Phoneme, pitch: PitchData, coherence?: CoherenceData) => {
+      if (!practiceStartRef.current) return
 
-    const now = performance.now()
-    const deltaMs = now - lastSampleTimeRef.current
-    lastSampleTimeRef.current = now
+      const now = performance.now()
+      const deltaMs = now - lastSampleTimeRef.current
+      lastSampleTimeRef.current = now
 
-    // Skip scoring during practice cycles
-    if (isPracticeRef.current) return
+      // Skip scoring during practice cycles
+      if (isPracticeRef.current) return
 
-    // Get current phase from state
-    const currentPhase = lastPhaseRef.current
+      // Get current phase from state
+      const currentPhase = lastPhaseRef.current
 
-    // Record sample for current phase (skip breathe phase)
-    if (currentPhase !== 'breathe') {
-      const phaseKey = currentPhase as 'ah' | 'oo' | 'mm'
-      const scores = phaseScoresRef.current[phaseKey]
-      const alignment = phonemeAlignmentRef.current[phaseKey]
+      // Record coherence sample for cycle quality (skip breathe phase)
+      if (currentPhase !== 'breathe' && coherence && coherence.score > 0) {
+        coherenceScoresRef.current.push(coherence.score)
+      }
 
-      // Only count when user is vocalizing (not silence)
-      if (phoneme !== 'silence' && pitch.frequency !== null) {
-        scores.samples++
-        alignment.totalMs += deltaMs
+      // Legacy per-phase tracking for PhonemeAlignmentData (skip breathe phase)
+      if (currentPhase !== 'breathe') {
+        const phaseKey = currentPhase as 'ah' | 'oo' | 'mm'
+        const alignment = phonemeAlignmentRef.current[phaseKey]
 
-        // Aligned if within pitch tolerance
-        if (pitch.isWithinTolerance) {
-          scores.aligned++
-          alignment.inRangeMs += deltaMs
+        // Only count when user is vocalizing (not silence)
+        if (phoneme !== 'silence' && pitch.frequency !== null) {
+          alignment.totalMs += deltaMs
+
+          // For legacy compatibility, count as "in range" if coherence is good
+          if (coherence && coherence.score >= 50) {
+            alignment.inRangeMs += deltaMs
+          }
         }
       }
-    }
-  }, [])
+    },
+    []
+  )
 
   /**
    * Get expected phoneme for current phase

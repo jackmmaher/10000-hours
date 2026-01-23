@@ -75,7 +75,7 @@ export function CycleCelebration({ cycleNumber, quality, onDismiss }: CycleCeleb
         {/* Text */}
         <div className="text-center">
           <div className="text-lg font-semibold text-primary">Cycle {cycleNumber} locked!</div>
-          <div className="text-sm text-success-text mt-1">{quality.overallScore}% alignment</div>
+          <div className="text-sm text-success-text mt-1">{quality.overallScore}% coherence</div>
         </div>
       </div>
 

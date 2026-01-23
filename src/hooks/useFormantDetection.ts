@@ -83,8 +83,11 @@ const DEFAULT_THRESHOLDS = {
   ooRatioMax: 1.2, // Oo has energy in lower bands
 }
 
-// RMS threshold for silence detection
-const SILENCE_THRESHOLD = 0.005
+// Default RMS threshold for silence detection (used when no calibration)
+const DEFAULT_SILENCE_THRESHOLD = 0.005
+
+// Multiplier above noise floor for voice detection
+const NOISE_FLOOR_MULTIPLIER = 2.5
 
 // Buffer size for Meyda
 const BUFFER_SIZE = 2048
@@ -363,8 +366,15 @@ export function useFormantDetection(
       const powerSpectrum = features.powerSpectrum as Float32Array | undefined
       const mfcc = useMfcc ? (features.mfcc as number[] | undefined) : undefined
 
+      // Calculate silence threshold - use calibrated noise floor if available
+      // This makes silence detection adapt to user's environment
+      const calibration = calibrationRef.current
+      const silenceThreshold = calibration?.noiseFloor
+        ? Math.max(DEFAULT_SILENCE_THRESHOLD, calibration.noiseFloor * NOISE_FLOOR_MULTIPLIER)
+        : DEFAULT_SILENCE_THRESHOLD
+
       // Check for silence
-      if (rms < SILENCE_THRESHOLD) {
+      if (rms < silenceThreshold) {
         lastConfirmedPhonemeRef.current = 'silence'
         phonemeFilterRef.current.reset() // Clear filter on silence
 

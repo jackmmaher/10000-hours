@@ -3,7 +3,7 @@
  *
  * Layout (top to bottom):
  * - Circular progress with large phoneme + countdown in center
- * - Frequency scale with Hz and accuracy
+ * - Coherence scale with percentage (0-100%)
  * - Cycle progress counter (Practice or Scored)
  * - Session elapsed time (Timer-tab style, only during scored)
  *
@@ -16,8 +16,7 @@
 import { useRef, useEffect, useCallback, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CircularProgress } from './CircularProgress'
-import { FrequencyScale } from './FrequencyScale'
-import { PhonemeIndicator } from './PhonemeIndicator'
+import { CoherenceScale } from './CoherenceScale'
 import { CycleCelebration } from './CycleCelebration'
 import {
   type GuidedCycleState,
@@ -25,13 +24,11 @@ import {
   getPhaseDurations,
   FIRST_BREATHE_MULTIPLIER,
 } from '../../hooks/useGuidedOmCycle'
-import type { PitchData } from '../../hooks/usePitchDetection'
-import type { FormantData } from '../../hooks/useFormantDetection'
+import type { CoherenceData } from '../../hooks/useVocalCoherence'
 
 interface OmCoachPracticeProps {
   guidedState: GuidedCycleState
-  getPitchData: () => PitchData
-  getFormantData: () => FormantData
+  getCoherenceData: () => CoherenceData
   isActive: boolean
   celebration: { show: boolean; quality: CycleQuality; cycleNumber: number } | null
   onCelebrationDismiss: () => void
@@ -52,52 +49,29 @@ function formatElapsed(ms: number): { minutes: string; seconds: string } {
 
 export function OmCoachPractice({
   guidedState,
-  getPitchData,
-  getFormantData,
+  getCoherenceData,
   isActive,
   celebration,
   onCelebrationDismiss,
 }: OmCoachPracticeProps) {
-  const [pitch, setPitch] = useState<PitchData>({
-    frequency: null,
-    clarity: 0,
-    cents: null,
-    isWithinTolerance: false,
-    timestamp: 0,
-  })
-
-  const [formant, setFormant] = useState<FormantData>({
-    lowBandEnergy: 0,
-    midBandEnergy: 0,
-    highBandEnergy: 0,
-    spectralFlatness: 0,
-    upperLowerRatio: 0,
-    detectedPhoneme: 'silence',
-    confidence: 0,
-    rms: 0,
-    timestamp: 0,
+  const [coherence, setCoherence] = useState<CoherenceData>({
+    score: 0,
+    pitchStabilityScore: 0,
+    amplitudeSmoothnessScore: 0,
+    voicingContinuityScore: 0,
+    sessionMedianFrequency: null,
   })
 
   const animationRef = useRef<number | null>(null)
 
-  // Animation loop for smooth pitch and formant updates
-  // IMPORTANT: Spread to create new object reference so React detects changes
+  // Animation loop for smooth coherence updates
   const updateLoop = useCallback(() => {
-    const pitchData = getPitchData()
-    const formantData = getFormantData()
+    const coherenceData = getCoherenceData()
 
-    // Only update pitch state if frequency changed (main visual element)
-    setPitch((prev) => {
-      if (prev.frequency !== pitchData.frequency || prev.clarity !== pitchData.clarity) {
-        return { ...pitchData }
-      }
-      return prev
-    })
-
-    // Update formant less aggressively (phoneme indicator)
-    setFormant((prev) => {
-      if (prev.detectedPhoneme !== formantData.detectedPhoneme) {
-        return { ...formantData }
+    // Only update state if score changed meaningfully (avoid re-renders)
+    setCoherence((prev) => {
+      if (Math.abs(prev.score - coherenceData.score) >= 1) {
+        return { ...coherenceData }
       }
       return prev
     })
@@ -105,7 +79,7 @@ export function OmCoachPractice({
     if (isActive) {
       animationRef.current = requestAnimationFrame(updateLoop)
     }
-  }, [isActive, getPitchData, getFormantData])
+  }, [isActive, getCoherenceData])
 
   useEffect(() => {
     if (isActive) {
@@ -117,9 +91,6 @@ export function OmCoachPractice({
       }
     }
   }, [isActive, updateLoop])
-
-  const frequency = pitch.frequency
-  const isWithinTolerance = pitch.isWithinTolerance
 
   // Practice vs Scored state
   const isPractice = guidedState.isPractice
@@ -140,7 +111,6 @@ export function OmCoachPractice({
   }
 
   const phaseTimeRemainingMs = Math.ceil(currentPhaseDuration * (1 - guidedState.phaseProgress))
-  const phaseElapsedMs = Math.floor(currentPhaseDuration * guidedState.phaseProgress)
 
   // Format elapsed time (Timer-tab style)
   const elapsed = formatElapsed(guidedState.elapsedMs)
@@ -201,24 +171,9 @@ export function OmCoachPractice({
         {/* Spacer */}
         <div className="h-6" />
 
-        {/* Frequency scale */}
+        {/* Coherence scale */}
         <div className="w-full max-w-sm">
-          <FrequencyScale frequency={frequency} isWithinTolerance={isWithinTolerance} />
-        </div>
-
-        {/* Spacer */}
-        <div className="h-4" />
-
-        {/* Phoneme indicator - shows detected vs expected phoneme */}
-        <div className="w-full max-w-sm">
-          <PhonemeIndicator
-            detectedPhoneme={formant.detectedPhoneme}
-            expectedPhase={guidedState.currentPhase}
-            confidence={formant.confidence}
-            isBreathing={guidedState.currentPhase === 'breathe'}
-            phaseElapsedMs={phaseElapsedMs}
-            phaseRemainingMs={phaseTimeRemainingMs}
-          />
+          <CoherenceScale coherence={coherence.score} />
         </div>
 
         {/* Spacer */}

@@ -10,7 +10,6 @@
  */
 
 import { useState } from 'react'
-import { OPTIMAL_NO_FREQUENCY } from '../../hooks/usePitchDetection'
 import {
   type SessionDuration,
   type TimingMode,
@@ -123,7 +122,7 @@ export function OmCoachSetup({
                 <span className="text-[10px] font-semibold text-accent">2</span>
               </div>
               <p className="text-sm text-ink">
-                Match your pitch to ~{OPTIMAL_NO_FREQUENCY} Hz for all sounds
+                Sustain a steady, comfortable tone through each phase
               </p>
             </div>
 
@@ -131,7 +130,9 @@ export function OmCoachSetup({
               <div className="w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <span className="text-[10px] font-semibold text-accent">3</span>
               </div>
-              <p className="text-sm text-ink">Complete cycles to build your alignment score</p>
+              <p className="text-sm text-ink">
+                Build coherence by keeping your voice smooth and continuous
+              </p>
             </div>
           </div>
 
@@ -145,9 +146,10 @@ export function OmCoachSetup({
           {showDetails && (
             <div className="mt-3 p-3 bg-base rounded-lg">
               <p className="text-xs text-ink/70 leading-relaxed">
-                Humming at ~130 Hz increases nasal nitric oxide production 15-20x. Extended
-                exhalation activates the parasympathetic nervous system. The A-U-M sequence engages
-                different vocal resonances for full benefit.
+                Sustained humming increases nasal nitric oxide production 15-20x. Extended
+                exhalation activates the parasympathetic nervous system. The A-U-M sequence
+                naturally emerges at the optimal frequency through correct technique - focus on
+                steady breath support rather than hitting a specific pitch.
               </p>
             </div>
           )}

@@ -6,35 +6,32 @@
  * - Pitch detection (pitchy)
  * - Formant-based phoneme detection (calibrated)
  * - Guided cycle timing with multiple modes
- * - Session recording with per-phoneme alignment
+ * - Session recording with vocal coherence scoring
  *
  * Scientific foundation:
- * - Humming at ~130 Hz increases nasal NO 15-20x
+ * - Sustained humming increases nasal NO 15-20x
  * - Aum chanting shows fMRI patterns matching vagus nerve stimulation
  * - Extended exhalation improves HRV (target: 16-20s cycles)
  * - Vowel shapes matter: Ah (chest), Oo (vagus), Mm (nitric oxide)
+ * - Optimal frequency emerges naturally through correct technique
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useNavigationStore } from '../../stores/useNavigationStore'
 import { useHourBankStore } from '../../stores/useHourBankStore'
 import { useOmAudioCapture, isAboveNoiseGate } from '../../hooks/useOmAudioCapture'
-import {
-  usePitchDetection,
-  OPTIMAL_NO_FREQUENCY,
-  DEFAULT_TOLERANCE_CENTS,
-} from '../../hooks/usePitchDetection'
+import { usePitchDetection } from '../../hooks/usePitchDetection'
 import { useFormantDetection } from '../../hooks/useFormantDetection'
 import { usePhonemeCalibration } from '../../hooks/usePhonemeCalibration'
-import { useAlignmentScoring } from '../../hooks/useAlignmentScoring'
+import { useVocalCoherence } from '../../hooks/useVocalCoherence'
 import { useOmSession, type OmSessionResult } from '../../hooks/useOmSession'
 import {
   useGuidedOmCycle,
   type SessionDuration,
   type TimingMode,
   type CycleQuality,
-  type PhonemeAlignmentData,
 } from '../../hooks/useGuidedOmCycle'
+import type { CoherenceMetrics } from './OmCoachResults'
 import { OmCoachSetup } from './OmCoachSetup'
 import { OmCoachPractice } from './OmCoachPractice'
 import { OmCoachResults } from './OmCoachResults'
@@ -66,7 +63,7 @@ export function OmCoach({ onClose }: OmCoachProps) {
   const [sessionResult, setSessionResult] = useState<OmSessionResult | null>(null)
   const [isAudioActive, setIsAudioActive] = useState(false)
   const [celebration, setCelebration] = useState<CelebrationState | null>(null)
-  const [phonemeAlignment, setPhonemeAlignment] = useState<PhonemeAlignmentData | null>(null)
+  const [coherenceMetrics, setCoherenceMetrics] = useState<CoherenceMetrics | null>(null)
 
   // Note: Formant data is accessed via getFormantData() getter passed to OmCoachPractice
   // No need for state here as the getter provides real-time data from refs
@@ -83,21 +80,19 @@ export function OmCoach({ onClose }: OmCoachProps) {
   const lockedCyclesRef = useRef(0)
   const totalCyclesRef = useRef(0)
 
-  // Cumulative metrics tracked during session
-  const alignmentSamplesRef = useRef<number[]>([])
+  // Cumulative coherence tracking during session
+  const coherenceSamplesRef = useRef<number[]>([])
 
   // Audio hooks
   const audioCapture = useOmAudioCapture()
-  const pitchDetection = usePitchDetection({
-    targetFrequency: OPTIMAL_NO_FREQUENCY,
-    toleranceCents: DEFAULT_TOLERANCE_CENTS,
-  })
+  const pitchDetection = usePitchDetection()
 
-  // NEW: Formant-based phoneme detection with calibration
+  // Formant-based phoneme detection with calibration
   const formantDetection = useFormantDetection()
   const phonemeCalibration = usePhonemeCalibration()
 
-  const alignmentScoring = useAlignmentScoring()
+  // Vocal coherence tracking (replaces alignment scoring)
+  const vocalCoherence = useVocalCoherence()
   const omSession = useOmSession()
 
   // Load calibration on mount and apply to formant detection
@@ -152,7 +147,7 @@ export function OmCoach({ onClose }: OmCoachProps) {
    * Audio processing loop - runs at ~60fps
    * CRITICAL: Reads from refs, not React state
    *
-   * Uses formant-based phoneme detection for accurate A/U/M classification.
+   * Uses formant-based phoneme detection and vocal coherence scoring.
    */
   const processAudio = useCallback(() => {
     try {
@@ -169,36 +164,27 @@ export function OmCoach({ onClose }: OmCoachProps) {
       const sampleRate = audioCapture.getSampleRate()
 
       if (frequencyData && timeDomainData && isAboveNoiseGate(timeDomainData)) {
-        // Analyze pitch EVERY frame for smooth frequency bar
+        // Analyze pitch EVERY frame for smooth coherence display
         const pitchData = pitchDetection.analyze(frequencyData, sampleRate)
 
         // Analyze phoneme less frequently (every 3rd frame) - it's CPU heavy
         if (shouldAnalyzeFormant) {
           const formantData = formantDetection.analyze(frequencyData, sampleRate)
 
-          // Create compatible phoneme data for alignment scoring
-          const phonemeDataCompat = {
-            current: formantData.detectedPhoneme,
-            previousPhoneme: formantData.detectedPhoneme,
-            spectralCentroid: 0,
-            spectralFlatness: formantData.spectralFlatness,
-            rms: formantData.rms,
-            completedCycles: 0,
-            timestamp: formantData.timestamp,
-          }
+          // Record sample for vocal coherence
+          vocalCoherence.recordSample(pitchData.frequency, formantData.rms)
 
-          // Update alignment scoring
-          alignmentScoring.recordSample(pitchData, phonemeDataCompat)
+          // Record sample for guided cycle quality (still uses coherence for lock detection)
+          guidedCycle.recordSample(
+            formantData.detectedPhoneme,
+            pitchData,
+            vocalCoherence.getCoherenceData()
+          )
 
-          // Record sample for guided cycle quality
-          guidedCycle.recordSample(formantData.detectedPhoneme, pitchData)
-
-          // Formant data available via getFormantData() getter - no state update needed
-
-          // Track alignment samples for session average
-          const alignment = alignmentScoring.getAlignmentData()
-          if (alignment.score > 0) {
-            alignmentSamplesRef.current.push(alignment.score)
+          // Track coherence samples for session average
+          const coherenceData = vocalCoherence.getCoherenceData()
+          if (coherenceData.score > 0) {
+            coherenceSamplesRef.current.push(coherenceData.score)
           }
         }
       } else {
@@ -207,18 +193,13 @@ export function OmCoach({ onClose }: OmCoachProps) {
           const pitchData = pitchDetection.analyze(frequencyData, sampleRate)
           const formantData = formantDetection.analyze(frequencyData, sampleRate)
 
-          const phonemeDataCompat = {
-            current: formantData.detectedPhoneme,
-            previousPhoneme: formantData.detectedPhoneme,
-            spectralCentroid: 0,
-            spectralFlatness: formantData.spectralFlatness,
-            rms: formantData.rms,
-            completedCycles: 0,
-            timestamp: formantData.timestamp,
-          }
-
-          alignmentScoring.recordSample(pitchData, phonemeDataCompat)
-          guidedCycle.recordSample(formantData.detectedPhoneme, pitchData)
+          // Record silence/low signal for coherence tracking
+          vocalCoherence.recordSample(pitchData.frequency, formantData.rms)
+          guidedCycle.recordSample(
+            formantData.detectedPhoneme,
+            pitchData,
+            vocalCoherence.getCoherenceData()
+          )
         }
       }
 
@@ -229,7 +210,7 @@ export function OmCoach({ onClose }: OmCoachProps) {
     } catch (err) {
       console.error('[processAudio] ERROR:', err)
     }
-  }, [audioCapture, pitchDetection, formantDetection, alignmentScoring, guidedCycle])
+  }, [audioCapture, pitchDetection, formantDetection, vocalCoherence, guidedCycle])
 
   /**
    * Internal function to start the Aum Coach session
@@ -251,15 +232,15 @@ export function OmCoach({ onClose }: OmCoachProps) {
         await omSession.startSession(durationSeconds)
 
         // Initialize tracking
-        alignmentSamplesRef.current = []
+        coherenceSamplesRef.current = []
         lockedCyclesRef.current = 0
         totalCyclesRef.current = 0
-        setPhonemeAlignment(null)
+        setCoherenceMetrics(null)
 
         // Reset detection states
         pitchDetection.reset()
         formantDetection.reset()
-        alignmentScoring.reset()
+        vocalCoherence.reset()
 
         // Start guided cycle session with timing mode
         guidedCycle.startSession(duration, mode)
@@ -281,7 +262,7 @@ export function OmCoach({ onClose }: OmCoachProps) {
       omSession,
       pitchDetection,
       formantDetection,
-      alignmentScoring,
+      vocalCoherence,
       guidedCycle,
       processAudio,
     ]
@@ -317,7 +298,7 @@ export function OmCoach({ onClose }: OmCoachProps) {
   const handleEndSession = useCallback(async () => {
     // Capture state BEFORE stopping (to avoid race conditions with state updates)
     const guidedState = guidedCycle.state
-    const phonemeAlignmentData = guidedCycle.getPhonemeAlignment()
+    const finalCoherence = vocalCoherence.getCoherenceData()
 
     // Store totalCycles immediately (before any state changes)
     totalCyclesRef.current = guidedState.totalCycles
@@ -336,26 +317,32 @@ export function OmCoach({ onClose }: OmCoachProps) {
     // Stop audio capture
     audioCapture.stopCapture()
 
-    // Calculate final metrics
-    formantDetection.getFormantData() // Ensure final state is captured
-    const alignmentData = alignmentScoring.getAlignmentData()
-
-    // Store phoneme alignment for results
-    setPhonemeAlignment(phonemeAlignmentData)
-
-    // Calculate average alignment score
-    const samples = alignmentSamplesRef.current
-    const averageAlignment =
+    // Calculate average coherence score from samples
+    const samples = coherenceSamplesRef.current
+    const averageCoherence =
       samples.length > 0 ? Math.round(samples.reduce((a, b) => a + b, 0) / samples.length) : 0
+
+    // Store coherence metrics for results
+    setCoherenceMetrics({
+      averageCoherenceScore: averageCoherence,
+      pitchStabilityScore: finalCoherence.pitchStabilityScore,
+      amplitudeSmoothnessScore: finalCoherence.amplitudeSmoothnessScore,
+      voicingContinuityScore: finalCoherence.voicingContinuityScore,
+      sessionMedianFrequency: finalCoherence.sessionMedianFrequency,
+    })
 
     // Use guided cycle completions for metrics
     const completedCycles = guidedState.currentCycle - 1 // Subtract 1 since current cycle wasn't completed
 
+    // Estimate vocalization ratio from voicing continuity
+    const vocalizationRatio = finalCoherence.voicingContinuityScore / 100
+
     // End session and save to database
+    // Note: averageAlignmentScore is kept for backwards compatibility
     const result = await omSession.endSession({
-      completedCycles: Math.max(completedCycles, 0), // Cycles tracked by guidedCycle
-      averageAlignmentScore: averageAlignment,
-      vocalizationRatio: alignmentData.vocalizationRatio,
+      completedCycles: Math.max(completedCycles, 0),
+      averageAlignmentScore: averageCoherence, // Store coherence as alignment for compatibility
+      vocalizationRatio: vocalizationRatio,
     })
 
     if (result) {
@@ -368,15 +355,13 @@ export function OmCoach({ onClose }: OmCoachProps) {
         durationSeconds: omSession.getElapsedSeconds(),
         metrics: {
           completedCycles: Math.max(completedCycles, 0),
-          averageAlignmentScore: averageAlignment,
-          vocalizationSeconds: Math.round(
-            omSession.getElapsedSeconds() * alignmentData.vocalizationRatio
-          ),
+          averageAlignmentScore: averageCoherence,
+          vocalizationSeconds: Math.round(omSession.getElapsedSeconds() * vocalizationRatio),
         },
       })
       setPhase('results')
     }
-  }, [audioCapture, omSession, formantDetection, alignmentScoring, guidedCycle])
+  }, [audioCapture, omSession, vocalCoherence, guidedCycle])
 
   // Keep handleEndSession ref in sync for use in handleSessionComplete callback
   useEffect(() => {
@@ -608,8 +593,7 @@ export function OmCoach({ onClose }: OmCoachProps) {
           {phase === 'practice' && (
             <OmCoachPractice
               guidedState={guidedCycle.state}
-              getPitchData={pitchDetection.getPitchData}
-              getFormantData={formantDetection.getFormantData}
+              getCoherenceData={vocalCoherence.getCoherenceData}
               isActive={isAudioActive}
               celebration={celebration}
               onCelebrationDismiss={handleCelebrationDismiss}
@@ -622,7 +606,7 @@ export function OmCoach({ onClose }: OmCoachProps) {
               metrics={sessionResult.metrics}
               lockedCycles={lockedCyclesRef.current}
               totalCycles={totalCyclesRef.current}
-              phonemeAlignment={phonemeAlignment}
+              coherenceMetrics={coherenceMetrics}
               onClose={onClose}
               onPracticeAgain={handlePracticeAgain}
               onMeditateNow={handleMeditateNow}

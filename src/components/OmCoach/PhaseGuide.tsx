@@ -135,8 +135,8 @@ export function PhaseGuide({
         })}
       </div>
 
-      {/* Target frequency hint - subtle */}
-      <p className="text-xs text-ink/40 text-center mt-2">Target: 130 Hz for all sounds</p>
+      {/* Technique hint - subtle */}
+      <p className="text-xs text-ink/40 text-center mt-2">Keep a steady, continuous tone</p>
     </div>
   )
 }
