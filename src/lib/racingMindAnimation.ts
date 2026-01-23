@@ -20,14 +20,29 @@
 
 import BezierEasing from 'bezier-easing'
 
-// Visual Constants
+// Visual Constants - reads from CSS variables (defined in index.css)
+// Falls back to hardcoded values for SSR/testing
+function getCSSVariable(name: string, fallback: string): string {
+  if (typeof window === 'undefined') return fallback
+  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+  return value || fallback
+}
+
+// Lazy-loaded colors that read from CSS variables at runtime
+// This ensures theme system is the single source of truth
 export const RACING_MIND_COLORS = {
   // Primary orb color - blue ~471nm for 3x faster relaxation
-  orb: '#2C5AA0',
+  get orb() {
+    return getCSSVariable('--racing-mind-orb', '#2C5AA0')
+  },
   // Glow color - slightly lighter for bloom effect
-  glow: '#4A7FD4',
+  get glow() {
+    return getCSSVariable('--racing-mind-glow', '#4A7FD4')
+  },
   // Background - dark, low contrast
-  background: '#0A0A12',
+  get background() {
+    return getCSSVariable('--racing-mind-bg', '#0A0A12')
+  },
 } as const
 
 // Animation Constants

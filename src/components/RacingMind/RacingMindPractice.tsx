@@ -248,7 +248,7 @@ export function RacingMindPractice({
 
   return (
     <motion.div
-      className="relative w-full h-full"
+      className="fixed inset-0 z-50"
       style={{ backgroundColor: RACING_MIND_COLORS.background }}
       initial={{ opacity: 0 }}
       animate={{ opacity: hasStarted ? 1 : 0 }}
@@ -263,24 +263,29 @@ export function RacingMindPractice({
         onPositionUpdate={isTracking ? recordOrbPosition : undefined}
       />
 
-      {/* Cancel button - ghost style for dark background */}
+      {/* Cancel button - ghost style for dark background, respects safe area */}
       <button
         onClick={handleCancel}
-        className="absolute top-4 left-4 px-3 py-1.5 text-caption font-medium text-white/50 hover:text-white/80 hover:bg-white/10 rounded-lg transition-all duration-150 ease-out z-10"
+        className="absolute left-4 px-3 py-1.5 text-caption font-medium text-white/50 hover:text-white/80 hover:bg-white/10 rounded-lg transition-all duration-150 ease-out z-10"
+        style={{ top: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
       >
         Cancel
       </button>
 
-      {/* End button - secondary style for dark background */}
+      {/* End button - secondary style for dark background, respects safe area */}
       <button
         onClick={handleEnd}
-        className="absolute top-4 right-4 px-4 py-2 text-body font-medium text-white/90 hover:text-white bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-150 ease-out z-10"
+        className="absolute right-4 px-4 py-2 text-body font-medium text-white/90 hover:text-white bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-150 ease-out z-10"
+        style={{ top: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
       >
         End
       </button>
 
-      {/* Elapsed time - styled to match OmCoach */}
-      <div className="absolute bottom-8 left-0 right-0 flex justify-center z-10">
+      {/* Elapsed time - styled to match OmCoach, respects safe area */}
+      <div
+        className="absolute left-0 right-0 flex justify-center z-10"
+        style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 2rem)' }}
+      >
         <div
           className="flex items-baseline justify-center gap-2 font-serif"
           style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}
@@ -336,9 +341,6 @@ export function RacingMindPractice({
           </div>
         </div>
       )}
-
-      {/* Safe area padding for newer iPhones */}
-      <div className="absolute bottom-0 left-0 right-0 h-safe-area-inset-bottom" />
     </motion.div>
   )
 }

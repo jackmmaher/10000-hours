@@ -137,6 +137,13 @@
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
 
+  /* === RACING MIND (Immersive visual meditation) === */
+  /* Dark background is intentional - blue ~471nm light against dark
+     accelerates relaxation 3x vs white light (scientific basis) */
+  --racing-mind-bg: #0A0A12;
+  --racing-mind-orb: #2C5AA0;
+  --racing-mind-glow: #4A7FD4;
+
   /* === SPACING SCALE === */
   /* Non-negotiable scale: adjacent values differ by at least 25% */
   --space-1: 4px;
@@ -255,7 +262,14 @@ html.racing-mind-transitioning body {
 
 html.racing-mind-mode,
 html.racing-mind-mode body {
-  background-color: #0A0A12 !important;
+  background-color: var(--racing-mind-bg) !important;
+}
+
+/* Remove #root safe area padding during racing mind mode -
+   the practice component handles its own safe area insets */
+html.racing-mind-mode #root {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 body {
