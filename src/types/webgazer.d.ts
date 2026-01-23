@@ -40,6 +40,8 @@ declare module 'webgazer' {
     isReady(): boolean
     /** Add mouse click data for calibration */
     recordScreenPosition(x: number, y: number, type?: string): void
+    /** Clear calibration data */
+    clearData(): void
   }
 
   const webgazer: WebGazer

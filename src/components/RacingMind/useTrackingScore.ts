@@ -88,15 +88,6 @@ function findClosestOrb(timestamp: number, orbHistory: OrbPosition[]): OrbPositi
 }
 
 /**
- * Calculate orb velocity at a given point in the history
- */
-function _getOrbVelocityAt(index: number, orbHistory: OrbPosition[]): number {
-  if (index < 1 || index >= orbHistory.length) return 0
-
-  return calculateVelocity(orbHistory[index - 1], orbHistory[index])
-}
-
-/**
  * Calculate pursuit gain: ratio of eye velocity to target velocity
  * Gain of 1.0 = perfect tracking
  * Gain < 1.0 = eyes lagging behind target
@@ -206,28 +197,6 @@ function calculateSmoothnessScore(velocities: number[]): number {
   const maxCV = 2
   const normalizedCV = Math.min(cv, maxCV) / maxCV
   return Math.round((1 - normalizedCV) * 100)
-}
-
-/**
- * Calculate average distance from gaze to orb (for real-time feedback)
- */
-function _calculateAverageDistance(gazeHistory: GazePoint[], orbHistory: OrbPosition[]): number {
-  if (gazeHistory.length === 0 || orbHistory.length === 0) return 100
-
-  let totalDistance = 0
-  let count = 0
-
-  for (const gaze of gazeHistory) {
-    const orbPos = findClosestOrb(gaze.timestamp, orbHistory)
-    if (orbPos) {
-      const dx = gaze.x - orbPos.x
-      const dy = gaze.y - orbPos.y
-      totalDistance += Math.sqrt(dx * dx + dy * dy)
-      count++
-    }
-  }
-
-  return count > 0 ? totalDistance / count : 100
 }
 
 export function useTrackingScore(): UseTrackingScoreResult {

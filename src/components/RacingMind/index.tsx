@@ -3,12 +3,13 @@
  *
  * Main orchestrator component that coordinates:
  * - Setup phase (duration picker)
+ * - Calibration phase (eye tracking calibration)
  * - Practice phase (PixiJS visualization)
  * - Results phase (session summary)
  *
  * Scientific foundation:
  * - Visual tracking suppresses Default Mode Network (rumination)
- * - Blue light (~471nm) accelerates relaxation 3x vs white light
+ * - Horizontal eye movements deactivate amygdala (de Voogd et al. 2018)
  * - "Soft fascination" is a validated restorative attention state
  */
 
@@ -22,12 +23,13 @@ import {
 import { RacingMindSetup } from './RacingMindSetup'
 import { RacingMindPractice } from './RacingMindPractice'
 import { RacingMindSummary } from './RacingMindSummary'
+import { EyeCalibration } from './EyeCalibration'
 import { Paywall } from '../Paywall'
 import { LowHoursWarning } from '../LowHoursWarning'
 
 export type SessionDuration = 5 | 10 | 15
 
-type RacingMindPhase = 'setup' | 'practice' | 'results'
+type RacingMindPhase = 'setup' | 'calibration' | 'practice' | 'results'
 
 export interface TrackingMetrics {
   improvementPercent: number
@@ -59,6 +61,9 @@ export function RacingMind({ onClose }: RacingMindProps) {
   const [showPaywall, setShowPaywall] = useState(false)
   const [showLowHoursWarning, setShowLowHoursWarning] = useState(false)
   const [pendingSession, setPendingSession] = useState<{ duration: SessionDuration } | null>(null)
+
+  // Calibration state - track if user wants to return to setup after calibration
+  const [returnToSetupAfterCalibration, setReturnToSetupAfterCalibration] = useState(false)
 
   // Session hook
   const racingMindSession = useRacingMindSession()
@@ -169,16 +174,44 @@ export function RacingMind({ onClose }: RacingMindProps) {
     onClose()
   }, [setView, onClose])
 
-  // Fullscreen mode during practice - hides app header/navigation
+  /**
+   * Start calibration flow from setup screen
+   */
+  const handleCalibrate = useCallback(() => {
+    setReturnToSetupAfterCalibration(true)
+    setPhase('calibration')
+  }, [])
+
+  /**
+   * Handle calibration complete
+   */
+  const handleCalibrationComplete = useCallback(() => {
+    if (returnToSetupAfterCalibration) {
+      setReturnToSetupAfterCalibration(false)
+      setPhase('setup')
+    }
+  }, [returnToSetupAfterCalibration])
+
+  /**
+   * Handle calibration skip
+   */
+  const handleCalibrationSkip = useCallback(() => {
+    if (returnToSetupAfterCalibration) {
+      setReturnToSetupAfterCalibration(false)
+      setPhase('setup')
+    }
+  }, [returnToSetupAfterCalibration])
+
+  // Fullscreen mode during practice and calibration - hides app header/navigation
   useEffect(() => {
-    setFullscreen(phase === 'practice')
+    setFullscreen(phase === 'practice' || phase === 'calibration')
     return () => setFullscreen(false)
   }, [phase, setFullscreen])
 
   return (
     <div className={`flex flex-col h-full bg-base ${phase === 'setup' ? 'pb-20' : ''}`}>
-      {/* Header - hidden during practice (fullscreen) */}
-      {phase !== 'practice' && (
+      {/* Header - hidden during practice and calibration (fullscreen) */}
+      {phase !== 'practice' && phase !== 'calibration' && (
         <div className="flex-none flex items-center justify-between px-4 py-3 border-b border-border-subtle">
           <button onClick={onClose} className="text-sm text-ink/70 hover:text-ink">
             Close
@@ -190,7 +223,17 @@ export function RacingMind({ onClose }: RacingMindProps) {
 
       {/* Content */}
       <div className="flex-1 min-h-0 flex flex-col">
-        {phase === 'setup' && <RacingMindSetup onBegin={handleBegin} isLoading={isStarting} />}
+        {phase === 'setup' && (
+          <RacingMindSetup
+            onBegin={handleBegin}
+            onCalibrate={handleCalibrate}
+            isLoading={isStarting}
+          />
+        )}
+
+        {phase === 'calibration' && (
+          <EyeCalibration onComplete={handleCalibrationComplete} onSkip={handleCalibrationSkip} />
+        )}
 
         {phase === 'practice' && (
           <RacingMindPractice

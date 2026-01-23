@@ -5,21 +5,44 @@
  * - Duration picker (5/10/15 min, 5 recommended)
  * - Visual preview (CSS-animated orb)
  * - Instructions for visual focus practice
+ * - Eye tracking calibration status
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { SessionDuration } from './index'
 import { MindStateSlider } from './MindStateSlider'
+import { CalibrationStatus } from './EyeCalibration/CalibrationStatus'
+import { type CalibrationProfile } from './useEyeCalibration'
 
 interface RacingMindSetupProps {
   onBegin: (duration: SessionDuration, preScore: number) => void
+  onCalibrate: () => void
   isLoading?: boolean
 }
 
-export function RacingMindSetup({ onBegin, isLoading }: RacingMindSetupProps) {
+// Storage key for calibration profile (matches useEyeCalibration)
+const STORAGE_KEY = 'racing-mind-eye-calibration'
+
+function loadCalibrationProfile(): CalibrationProfile | null {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (!stored) return null
+    return JSON.parse(stored)
+  } catch {
+    return null
+  }
+}
+
+export function RacingMindSetup({ onBegin, onCalibrate, isLoading }: RacingMindSetupProps) {
   const [showDetails, setShowDetails] = useState(false)
   const [selectedDuration, setSelectedDuration] = useState<SessionDuration>(10) // Default to hero duration
   const [preScore, setPreScore] = useState<number | null>(null)
+  const [calibrationProfile, setCalibrationProfile] = useState<CalibrationProfile | null>(null)
+
+  // Load calibration profile on mount
+  useEffect(() => {
+    setCalibrationProfile(loadCalibrationProfile())
+  }, [])
 
   return (
     <div className="h-full overflow-y-auto">
@@ -91,46 +114,16 @@ export function RacingMindSetup({ onBegin, isLoading }: RacingMindSetupProps) {
           )}
         </div>
 
-        {/* Eye tracking notice */}
-        <div
-          className="rounded-xl p-4 mb-6 border border-border-subtle"
-          style={{ backgroundColor: 'var(--bg-deep)' }}
-        >
-          <div className="flex gap-ds-3">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ backgroundColor: 'var(--accent-muted)' }}
-            >
-              <svg
-                className="w-4 h-4"
-                style={{ color: 'var(--accent)' }}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.64 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.64 0-8.573-3.007-9.963-7.178z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <p className="text-body text-ink leading-relaxed">
-                <span className="font-medium">Eye tracking validates your progress</span> — see real
-                data showing your mind settling down.
-              </p>
-              <p className="text-caption text-muted mt-ds-2">
-                Uses front camera. You can deny access and the session still works.
-              </p>
-            </div>
-          </div>
+        {/* Eye tracking calibration status */}
+        <div className="mb-6">
+          <CalibrationStatus
+            profile={calibrationProfile}
+            onCalibrate={onCalibrate}
+            onRecalibrate={onCalibrate}
+          />
+          <p className="text-xs text-ink/40 mt-2 text-center">
+            Eye tracking is optional — session works without camera access
+          </p>
         </div>
 
         {/* Spacer pushes controls to bottom on tall screens */}
