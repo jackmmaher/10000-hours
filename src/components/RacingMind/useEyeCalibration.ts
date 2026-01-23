@@ -294,6 +294,26 @@ export function useEyeCalibration(): UseEyeCalibrationResult {
           maxError: estimatedAccuracy,
           pointsTested: calibrationPoints.length,
         })
+
+        // Save calibration profile to localStorage
+        // (Must do inline since state updates are batched and completeCalibration
+        // depends on validationResult which won't be updated yet)
+        const profile: CalibrationProfile = {
+          id: generateId(),
+          createdAt: Date.now(),
+          lastUsedAt: Date.now(),
+          accuracy: estimatedAccuracy,
+          pointsCalibrated: calibrationPoints.length,
+          deviceInfo: {
+            screenWidth: window.innerWidth,
+            screenHeight: window.innerHeight,
+            userAgent: navigator.userAgent,
+          },
+        }
+        saveProfile(profile)
+        setExistingProfile(profile)
+        console.log('[EyeCalibration] Calibration complete, profile saved')
+
         setPhase('complete')
       }
     },
