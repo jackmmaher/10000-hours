@@ -7,15 +7,18 @@
  * - Glow pulse timing
  *
  * Scientific basis:
- * - Visual tracking suppresses Default Mode Network (rumination)
- * - Blue light (~471nm) accelerates relaxation 3x vs white light
+ * - Horizontal bilateral eye movements deactivate the amygdala
+ *   (de Voogd et al. 2018, Journal of Neuroscience)
+ * - Smooth pursuit at 0.2-0.5 Hz aligns with cardiac coherence/HRV resonance
+ *   (Lehrer & Gevirtz 2014, Frontiers in Psychology)
  * - "Soft fascination" is a validated restorative attention state
  *
- * Visual parameters from feasibility doc:
- * - Start speed: 22°/sec (upper comfortable pursuit)
+ * Visual parameters:
+ * - Start speed: 22°/sec (upper comfortable pursuit, <30°/sec threshold)
  * - End speed: 12°/sec (lower comfortable range)
+ * - Oscillation: ~0.3-0.5 Hz (aligned with coherence breathing research)
  * - Glow pulse: 0.7 Hz (well below 3Hz seizure threshold)
- * - Frame rate: 30 fps (battery efficient)
+ * - Frame rate: 60 fps (smooth animation)
  */
 
 import BezierEasing from 'bezier-easing'
@@ -31,7 +34,7 @@ function getCSSVariable(name: string, fallback: string): string {
 // Lazy-loaded colors that read from CSS variables at runtime
 // This ensures theme system is the single source of truth
 export const RACING_MIND_COLORS = {
-  // Primary orb color - blue ~471nm for 3x faster relaxation
+  // Primary orb color - calming blue for visual tracking
   get orb() {
     return getCSSVariable('--racing-mind-orb', '#2C5AA0')
   },
@@ -69,8 +72,9 @@ export const ANIMATION_PARAMS = {
   noiseAmplitudeX: 30, // Pixels of horizontal drift
   noiseAmplitudeY: 15, // Pixels of vertical drift (less than X for horizontal bias)
 
-  // Orb radius
-  orbRadius: 40,
+  // Orb radius - 50px for 100px diameter
+  // Research suggests 4-6° visual angle optimal; 100px at 30cm viewing distance ≈ 5.7°
+  orbRadius: 50,
 
   // Target frame rate
   targetFps: 60,
@@ -117,16 +121,16 @@ export function getOscillationFrequency(speed: number): number {
 }
 
 /**
- * Calculate oscillation amplitude based on viewport width and orientation
+ * Calculate oscillation amplitude based on viewport width
+ * Portrait-only mode for optimal eye tracking accuracy
  *
  * @param viewportWidth - Width of the viewport in pixels
- * @param isLandscape - Whether device is in landscape orientation
  * @returns Amplitude in pixels (orb moves this far from center)
  */
-export function getOscillationAmplitude(viewportWidth: number, isLandscape = false): number {
-  // Landscape mode: wider travel for more eye movement
-  // Portrait mode: standard travel for better tracking accuracy
-  const amplitudeFraction = isLandscape ? 0.4 : 0.35
+export function getOscillationAmplitude(viewportWidth: number): number {
+  // 35% of viewport width provides good bilateral coverage
+  // while staying within comfortable pursuit range
+  const amplitudeFraction = 0.35
   return viewportWidth * amplitudeFraction
 }
 
@@ -173,7 +177,6 @@ function smoothSine(t: number): number {
  * @param viewportWidth - Viewport width in pixels
  * @param viewportHeight - Viewport height in pixels
  * @param noise - SimplexNoise instance for organic drift
- * @param isLandscape - Whether device is in landscape orientation
  * @returns { x, y } position in pixels
  */
 export function calculateOrbPosition(
@@ -181,8 +184,7 @@ export function calculateOrbPosition(
   progress: number,
   viewportWidth: number,
   viewportHeight: number,
-  noise: { noise2D: (x: number, y: number) => number },
-  isLandscape = false
+  noise: { noise2D: (x: number, y: number) => number }
 ): { x: number; y: number } {
   const centerX = viewportWidth / 2
   const centerY = viewportHeight / 2
@@ -190,7 +192,7 @@ export function calculateOrbPosition(
   // Get current speed and derived oscillation params
   const speed = getOrbSpeed(progress)
   const frequency = getOscillationFrequency(speed)
-  const amplitude = getOscillationAmplitude(viewportWidth, isLandscape)
+  const amplitude = getOscillationAmplitude(viewportWidth)
 
   // Primary horizontal oscillation (using smoothSine for smoother direction changes)
   const oscillationX = smoothSine(timeMs * frequency) * amplitude

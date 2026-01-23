@@ -155,17 +155,26 @@ export function useEyeTracking(maxHistorySize = 1800): UseEyeTrackingResult {
     }
   }, [isSupported, maxHistorySize])
 
-  // Stop tracking
+  // Stop tracking and release camera
   const stopTracking = useCallback(async () => {
-    console.debug('[useEyeTracking] Stopping...')
+    console.debug('[useEyeTracking] Stopping and releasing camera...')
     try {
-      webgazer.pause()
+      // Final history update before stopping
+      setGazeHistory([...gazeHistoryRef.current])
+
+      // Clear listener first
       webgazer.clearGazeListener()
+
+      // End WebGazer completely to release the camera
+      // This is the only way to actually stop the camera indicator
+      if (isInitializedRef.current) {
+        webgazer.end()
+        isInitializedRef.current = false
+        console.debug('[useEyeTracking] WebGazer ended, camera released')
+      }
+
       setIsTracking(false)
       setGazePoint(null)
-
-      // Final history update
-      setGazeHistory([...gazeHistoryRef.current])
     } catch (error) {
       console.error('[useEyeTracking] Failed to stop:', error)
     }

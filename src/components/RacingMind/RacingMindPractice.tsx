@@ -10,6 +10,7 @@
  * 4. Complete: "Practice Complete" overlay with CTA to see results
  *
  * The intro/outro are experiential transitions - not part of tracked session time.
+ * Portrait-only mode for optimal eye tracking accuracy.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
@@ -25,7 +26,6 @@ import { useEyeTracking } from '../../hooks/useEyeTracking'
 import { useTrackingScore } from './useTrackingScore'
 import type { TrackingMetrics } from './index'
 
-export type OrientationPhase = 'portrait' | 'transition' | 'landscape'
 export type SessionPhase = 'intro' | 'active' | 'outro' | 'complete'
 
 interface RacingMindPracticeProps {
@@ -53,10 +53,6 @@ export function RacingMindPractice({
   const outroStartTimeRef = useRef<number>(0)
   const [amplitudeScale, setAmplitudeScale] = useState(0)
   const [introText, setIntroText] = useState<string | null>(null)
-
-  // Orientation switching state
-  const [orientationPhase, setOrientationPhase] = useState<OrientationPhase>('portrait')
-  const hasTriggeredTransitionRef = useRef(false)
 
   // Eye tracking integration
   const {
@@ -149,7 +145,7 @@ export function RacingMindPractice({
     return () => cancelAnimationFrame(animationId)
   }, [sessionPhase])
 
-  // Active session monitoring (check for completion and orientation transition)
+  // Active session monitoring (check for completion)
   useEffect(() => {
     if (sessionPhase !== 'active') return
 
@@ -173,18 +169,6 @@ export function RacingMindPractice({
         // Transition to outro
         outroStartTimeRef.current = performance.now()
         setSessionPhase('outro')
-        return
-      }
-
-      // Check for orientation transition (at 50% progress)
-      const progress = getProgress()
-      if (
-        progress >= 0.5 &&
-        orientationPhase === 'portrait' &&
-        !hasTriggeredTransitionRef.current
-      ) {
-        hasTriggeredTransitionRef.current = true
-        setOrientationPhase('transition')
       }
     }
 
@@ -195,8 +179,6 @@ export function RacingMindPractice({
     sessionPhase,
     durationSeconds,
     getElapsedSeconds,
-    getProgress,
-    orientationPhase,
     isTracking,
     stopEyeTracking,
     gazeHistory,
@@ -231,27 +213,6 @@ export function RacingMindPractice({
     animationId = requestAnimationFrame(animate)
     return () => cancelAnimationFrame(animationId)
   }, [sessionPhase])
-
-  // Detect orientation changes
-  useEffect(() => {
-    if (orientationPhase !== 'transition') return
-
-    const handleOrientation = () => {
-      const isLandscape = window.innerWidth > window.innerHeight
-      if (isLandscape) {
-        setOrientationPhase('landscape')
-      }
-    }
-
-    handleOrientation()
-    window.addEventListener('resize', handleOrientation)
-    return () => window.removeEventListener('resize', handleOrientation)
-  }, [orientationPhase])
-
-  // Dismiss rotation prompt
-  const dismissRotationPrompt = useCallback(() => {
-    setOrientationPhase('landscape')
-  }, [])
 
   // Update tracking accuracy when gaze point changes
   useEffect(() => {
@@ -325,7 +286,6 @@ export function RacingMindPractice({
       <RacingMindOrb
         getProgress={getProgress}
         isActive={isOrbActive}
-        orientationPhase={orientationPhase}
         trackingAccuracy={isTracking ? trackingAccuracy : undefined}
         onPositionUpdate={isTracking ? recordOrbPosition : undefined}
         amplitudeScale={amplitudeScale}
@@ -392,41 +352,6 @@ export function RacingMindPractice({
             >
               {timeParts.seconds}
             </span>
-          </div>
-        </div>
-      )}
-
-      {/* Rotation prompt overlay - shown at 50% progress during active phase */}
-      {sessionPhase === 'active' && orientationPhase === 'transition' && (
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-20">
-          <div className="text-center px-8">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-white/10 flex items-center justify-center">
-              <svg
-                className="w-10 h-10 text-white animate-pulse"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-            </div>
-
-            <h2 className="text-xl font-serif text-white mb-2">Rotate Your Device</h2>
-            <p className="text-sm text-white/60 mb-8 max-w-xs mx-auto">
-              Turn to landscape for a wider field of view in the second half
-            </p>
-
-            <button
-              onClick={dismissRotationPrompt}
-              className="text-sm text-white/40 hover:text-white/60 transition-colors"
-            >
-              Continue in portrait
-            </button>
           </div>
         </div>
       )}

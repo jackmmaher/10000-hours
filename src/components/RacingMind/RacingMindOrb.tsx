@@ -9,12 +9,10 @@
 import { useRef } from 'react'
 import { useRacingMindOrb } from './useRacingMindOrb'
 import { RACING_MIND_COLORS } from '../../lib/racingMindAnimation'
-import type { OrientationPhase } from './RacingMindPractice'
 
 interface RacingMindOrbProps {
   getProgress: () => number
   isActive: boolean
-  orientationPhase?: OrientationPhase
   /** Tracking accuracy 0-100 for glow feedback (higher = brighter glow) */
   trackingAccuracy?: number
   /** Callback when orb position updates (for eye tracking comparison) */
@@ -26,7 +24,6 @@ interface RacingMindOrbProps {
 export function RacingMindOrb({
   getProgress,
   isActive,
-  orientationPhase = 'portrait',
   trackingAccuracy = 50,
   onPositionUpdate,
   amplitudeScale = 1,
@@ -38,7 +35,6 @@ export function RacingMindOrb({
     containerRef,
     getProgress,
     isActive,
-    orientationPhase,
     trackingAccuracy,
     onPositionUpdate,
     amplitudeScale,

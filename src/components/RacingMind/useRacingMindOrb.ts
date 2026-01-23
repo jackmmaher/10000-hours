@@ -4,14 +4,15 @@
  * Manages:
  * - PixiJS Application creation/destruction
  * - Canvas setup with proper dimensions
- * - Orb graphics with glow filter
- * - Animation loop at 30fps
+ * - Orb graphics with gradient blur for "soft gaze" effect
+ * - Glow filter for visual feedback
+ * - Animation loop at 60fps
  * - Reduced motion support
  *
- * Performance optimizations:
- * - powerPreference: 'low-power' for battery efficiency
- * - maxFPS: 30 for iOS Low Power Mode compatibility
- * - Single canvas resize at init (iOS Safari memory leak prevention)
+ * Scientific basis for soft-edge gradient:
+ * - Blurred edges discourage "hard" fixation and encourage peripheral awareness
+ * - Peripheral vision activation is incompatible with high-stress states
+ * - Promotes parasympathetic "soft gaze" response
  */
 
 import { useEffect, useRef, useCallback } from 'react'
@@ -25,7 +26,6 @@ import {
   getGlowStrength,
   prefersReducedMotion,
 } from '../../lib/racingMindAnimation'
-import type { OrientationPhase } from './RacingMindPractice'
 
 /**
  * Convert hex color string to number
@@ -38,7 +38,6 @@ interface UseRacingMindOrbOptions {
   containerRef: React.RefObject<HTMLDivElement | null>
   getProgress: () => number
   isActive: boolean
-  orientationPhase?: OrientationPhase
   /** Tracking accuracy 0-100 for glow feedback */
   trackingAccuracy?: number
   /** Callback when orb position updates */
@@ -51,7 +50,6 @@ export function useRacingMindOrb({
   containerRef,
   getProgress,
   isActive,
-  orientationPhase = 'portrait',
   trackingAccuracy: _trackingAccuracy = 50,
   onPositionUpdate: _onPositionUpdate,
   amplitudeScale: _amplitudeScale = 1,
@@ -111,20 +109,40 @@ export function useRacingMindOrb({
     container.appendChild(app.canvas)
     appRef.current = app
 
-    // Create orb graphics
+    // Create orb graphics with soft-edge gradient for "soft gaze" effect
+    // Multiple concentric circles with decreasing opacity create a smooth falloff
     const orb = new Graphics()
-    orb.circle(0, 0, ANIMATION_PARAMS.orbRadius)
-    orb.fill(RACING_MIND_COLORS.orb)
+    const radius = ANIMATION_PARAMS.orbRadius
+    const orbColor = hexToNumber(RACING_MIND_COLORS.orb)
+
+    // Create gradient effect with concentric circles
+    // Core (100% opacity) - inner 70% of radius
+    const coreRadius = radius * 0.7
+    orb.circle(0, 0, coreRadius)
+    orb.fill({ color: orbColor, alpha: 1.0 })
+
+    // Middle ring (70% opacity) - 70% to 85% of radius
+    orb.circle(0, 0, radius * 0.85)
+    orb.fill({ color: orbColor, alpha: 0.7 })
+
+    // Outer ring (40% opacity) - 85% to 95% of radius
+    orb.circle(0, 0, radius * 0.95)
+    orb.fill({ color: orbColor, alpha: 0.4 })
+
+    // Soft edge (15% opacity) - full radius
+    orb.circle(0, 0, radius)
+    orb.fill({ color: orbColor, alpha: 0.15 })
+
     orb.x = width / 2
     orb.y = height / 2
     app.stage.addChild(orb)
     orbRef.current = orb
 
-    // Create glow filter
+    // Create glow filter - slightly larger distance for soft-edge orb
     const glowFilter = new GlowFilter({
-      distance: 25,
+      distance: 30,
       outerStrength: ANIMATION_PARAMS.glowMinStrength,
-      innerStrength: 0.5,
+      innerStrength: 0.3,
       color: hexToNumber(RACING_MIND_COLORS.glow),
       quality: 0.3, // Lower quality for better performance
     })
@@ -171,9 +189,6 @@ export function useRacingMindOrb({
     const width = container?.clientWidth ?? appRef.current.screen.width
     const height = container?.clientHeight ?? appRef.current.screen.height
 
-    // Determine if we're in landscape mode
-    const isLandscape = orientationPhase === 'landscape'
-
     // Calculate target orb position
     let targetX: number
     let targetY: number
@@ -185,14 +200,7 @@ export function useRacingMindOrb({
       targetX = centerX
       targetY = centerY
     } else {
-      const position = calculateOrbPosition(
-        elapsedMs,
-        progress,
-        width,
-        height,
-        noiseRef.current,
-        isLandscape
-      )
+      const position = calculateOrbPosition(elapsedMs, progress, width, height, noiseRef.current)
 
       // Apply amplitude scale for intro/outro animations
       // Scale the offset from center, not the absolute position
@@ -235,7 +243,7 @@ export function useRacingMindOrb({
 
     // Schedule next frame
     animationIdRef.current = requestAnimationFrame(animate)
-  }, [isActive, getProgress, containerRef, orientationPhase])
+  }, [isActive, getProgress, containerRef])
 
   /**
    * Start animation loop
