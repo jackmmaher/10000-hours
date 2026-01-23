@@ -1,15 +1,13 @@
 /**
- * useTrackingScore - Calculate eye tracking metrics using scientific methodology
+ * useTrackingScore - Calculate eye tracking engagement metrics
  *
- * Metrics based on smooth pursuit research (PMC6753966, Behavior Research Methods):
- * - Pursuit Gain: eye velocity / target velocity (1.0 = perfect tracking)
- * - Saccade Count: Adaptive threshold based on per-session velocity statistics
- * - Smoothness Improvement: First half vs second half comparison
+ * New engagement-based metrics (replacing old motor-skill metrics):
+ * - Focus Time: Total seconds where gaze was within 150px of orb center
+ * - Engagement Rate: Focus Time / Session Duration * 100
+ * - Longest Streak: Longest continuous period without gaze breaking away
  *
- * Key fixes from previous implementation:
- * - Uses pursuit gain instead of position distance (scientifically correct)
- * - Adaptive saccade detection threshold (mean + 2.5*SD)
- * - Proper timestamp matching between gaze and orb data
+ * Scientific basis: Time spent tracking the orb drives amygdala deactivation,
+ * not the precision of tracking. These metrics measure therapeutic engagement.
  */
 
 import { useCallback, useRef } from 'react'
@@ -25,7 +23,7 @@ interface OrbPosition {
 interface UseTrackingScoreResult {
   /** Calculate final tracking metrics from gaze and orb history */
   calculateMetrics: (gazeHistory: GazePoint[], orbHistory: OrbPosition[]) => TrackingMetrics
-  /** Calculate current accuracy for real-time feedback */
+  /** Calculate current accuracy for real-time feedback (0 or 100 based on threshold) */
   getCurrentAccuracy: (gazePoint: GazePoint | null, orbPosition: OrbPosition | null) => number
   /** Add orb position to history */
   recordOrbPosition: (x: number, y: number) => void
@@ -35,31 +33,14 @@ interface UseTrackingScoreResult {
   clearOrbHistory: () => void
 }
 
-// Minimum time difference for velocity calculation (ms)
-const MIN_TIME_DELTA = 10
+// On-orb radius threshold in pixels (~3x orb size, accounts for WebGazer accuracy)
+const FOCUS_THRESHOLD_PX = 150
+
+// Break duration threshold in milliseconds (brief glances don't count as breaks)
+const BREAK_THRESHOLD_MS = 500
 
 // Maximum time difference for matching gaze to orb (ms)
-// Allow up to 100ms of timestamp difference for matching
 const MAX_TIMESTAMP_DIFF = 100
-
-// Minimum velocity to consider (filters out noise when stationary)
-const MIN_VELOCITY_THRESHOLD = 5 // pixels per second
-
-/**
- * Calculate velocity between two points
- * Returns pixels per second
- */
-function calculateVelocity(
-  p1: { x: number; y: number; timestamp: number },
-  p2: { x: number; y: number; timestamp: number }
-): number {
-  const dx = p2.x - p1.x
-  const dy = p2.y - p1.y
-  const dt = (p2.timestamp - p1.timestamp) / 1000 // Convert to seconds
-
-  if (dt < MIN_TIME_DELTA / 1000) return 0
-  return Math.sqrt(dx * dx + dy * dy) / dt
-}
 
 /**
  * Find orb position closest to a given timestamp
@@ -88,115 +69,114 @@ function findClosestOrb(timestamp: number, orbHistory: OrbPosition[]): OrbPositi
 }
 
 /**
- * Calculate pursuit gain: ratio of eye velocity to target velocity
- * Gain of 1.0 = perfect tracking
- * Gain < 1.0 = eyes lagging behind target
- * Gain > 1.0 = eyes overshooting target
+ * Calculate distance between gaze point and orb position
  */
-function calculatePursuitGain(gazeHistory: GazePoint[], orbHistory: OrbPosition[]): number {
-  if (gazeHistory.length < 2 || orbHistory.length < 2) return 0
-
-  const gains: number[] = []
-
-  for (let i = 1; i < gazeHistory.length; i++) {
-    const gazeVelocity = calculateVelocity(gazeHistory[i - 1], gazeHistory[i])
-
-    // Find corresponding orb positions
-    const orb1 = findClosestOrb(gazeHistory[i - 1].timestamp, orbHistory)
-    const orb2 = findClosestOrb(gazeHistory[i].timestamp, orbHistory)
-
-    if (!orb1 || !orb2) continue
-
-    const orbVelocity = calculateVelocity(orb1, orb2)
-
-    // Skip if orb is barely moving (avoid division by near-zero)
-    if (orbVelocity < MIN_VELOCITY_THRESHOLD) continue
-
-    // Calculate instantaneous gain
-    const gain = gazeVelocity / orbVelocity
-
-    // Filter out extreme outliers (likely noise or saccades)
-    if (gain > 0 && gain < 3) {
-      gains.push(gain)
-    }
-  }
-
-  if (gains.length === 0) return 0
-
-  // Return median gain (more robust than mean)
-  gains.sort((a, b) => a - b)
-  const mid = Math.floor(gains.length / 2)
-  return gains.length % 2 !== 0 ? gains[mid] : (gains[mid - 1] + gains[mid]) / 2
+function calculateDistance(gaze: GazePoint, orb: OrbPosition): number {
+  const dx = gaze.x - orb.x
+  const dy = gaze.y - orb.y
+  return Math.sqrt(dx * dx + dy * dy)
 }
 
 /**
- * Adaptive saccade detection using per-session velocity statistics
- * Based on research: threshold = mean + (multiplier × standard deviation)
+ * Calculate focus time: total seconds where gaze was within threshold of orb
  */
-function countSaccadesAdaptive(gazeHistory: GazePoint[]): {
-  count: number
+function calculateFocusTime(
+  gazeHistory: GazePoint[],
+  orbHistory: OrbPosition[],
   threshold: number
-  velocities: number[]
-} {
-  if (gazeHistory.length < 3) {
-    return { count: 0, threshold: 0, velocities: [] }
-  }
+): number {
+  if (gazeHistory.length < 2 || orbHistory.length === 0) return 0
 
-  // Calculate all velocities
-  const velocities: number[] = []
+  let focusTimeMs = 0
+
   for (let i = 1; i < gazeHistory.length; i++) {
-    const velocity = calculateVelocity(gazeHistory[i - 1], gazeHistory[i])
-    if (velocity > 0) {
-      velocities.push(velocity)
+    const gaze = gazeHistory[i]
+    const prevGaze = gazeHistory[i - 1]
+    const orb = findClosestOrb(gaze.timestamp, orbHistory)
+
+    if (!orb) continue
+
+    const distance = calculateDistance(gaze, orb)
+
+    if (distance < threshold) {
+      // Gaze is within threshold - add the time delta since previous gaze point
+      const timeDelta = gaze.timestamp - prevGaze.timestamp
+      focusTimeMs += timeDelta
     }
   }
 
-  if (velocities.length < 10) {
-    return { count: 0, threshold: 0, velocities }
-  }
-
-  // Calculate mean and standard deviation
-  const mean = velocities.reduce((a, b) => a + b, 0) / velocities.length
-  const variance = velocities.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / velocities.length
-  const stdDev = Math.sqrt(variance)
-
-  // Adaptive threshold: mean + 2.5 × standard deviation
-  // This is a common research standard for saccade detection
-  const threshold = mean + 2.5 * stdDev
-
-  // Count velocities exceeding threshold
-  let saccadeCount = 0
-  for (const velocity of velocities) {
-    if (velocity > threshold) {
-      saccadeCount++
-    }
-  }
-
-  return { count: saccadeCount, threshold, velocities }
+  return focusTimeMs / 1000 // Convert to seconds
 }
 
 /**
- * Calculate smoothness score based on velocity consistency
- * Higher score = more consistent smooth pursuit
+ * Calculate longest streak: longest continuous period where gaze stayed within threshold
+ * A "break" occurs when gaze is outside threshold for breakDuration ms or more
  */
-function calculateSmoothnessScore(velocities: number[]): number {
-  if (velocities.length < 3) return 50 // Neutral score
+function calculateLongestStreak(
+  gazeHistory: GazePoint[],
+  orbHistory: OrbPosition[],
+  threshold: number,
+  breakDuration: number
+): number {
+  if (gazeHistory.length < 2 || orbHistory.length === 0) return 0
 
-  // Calculate coefficient of variation (CV = stdDev / mean)
-  // Lower CV = more consistent velocities = smoother pursuit
-  const mean = velocities.reduce((a, b) => a + b, 0) / velocities.length
-  if (mean < MIN_VELOCITY_THRESHOLD) return 50 // Not enough movement to judge
+  let longestStreakMs = 0
+  let currentStreakStartMs: number | null = null
+  let outsideStartMs: number | null = null
 
-  const variance = velocities.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / velocities.length
-  const stdDev = Math.sqrt(variance)
-  const cv = stdDev / mean
+  for (let i = 0; i < gazeHistory.length; i++) {
+    const gaze = gazeHistory[i]
+    const orb = findClosestOrb(gaze.timestamp, orbHistory)
 
-  // Convert CV to 0-100 score
-  // CV of 0 = perfect consistency = 100
-  // CV of 2+ = very inconsistent = 0
-  const maxCV = 2
-  const normalizedCV = Math.min(cv, maxCV) / maxCV
-  return Math.round((1 - normalizedCV) * 100)
+    if (!orb) continue
+
+    const distance = calculateDistance(gaze, orb)
+    const isWithinThreshold = distance < threshold
+
+    if (isWithinThreshold) {
+      // Gaze is within threshold
+      if (currentStreakStartMs === null) {
+        // Start a new streak
+        currentStreakStartMs = gaze.timestamp
+      }
+      // Reset outside timer since we're back within threshold
+      outsideStartMs = null
+    } else {
+      // Gaze is outside threshold
+      if (currentStreakStartMs !== null) {
+        if (outsideStartMs === null) {
+          // Start tracking how long we've been outside
+          outsideStartMs = gaze.timestamp
+        } else {
+          // Check if we've been outside long enough to count as a break
+          const outsideDuration = gaze.timestamp - outsideStartMs
+          if (outsideDuration >= breakDuration) {
+            // Break occurred - record the streak (up to when we first went outside)
+            const streakDuration = outsideStartMs - currentStreakStartMs
+            if (streakDuration > longestStreakMs) {
+              longestStreakMs = streakDuration
+            }
+            // Reset streak tracking
+            currentStreakStartMs = null
+            outsideStartMs = null
+          }
+        }
+      }
+    }
+  }
+
+  // Handle case where session ended while in a streak
+  if (currentStreakStartMs !== null && gazeHistory.length > 0) {
+    const lastGaze = gazeHistory[gazeHistory.length - 1]
+    // If we were outside but not long enough for a break, include that time
+    const streakEnd = outsideStartMs ?? lastGaze.timestamp
+    const streakDuration = streakEnd - currentStreakStartMs
+    if (streakDuration > longestStreakMs) {
+      longestStreakMs = streakDuration
+    }
+  }
+
+  return longestStreakMs / 1000 // Convert to seconds
 }
 
 export function useTrackingScore(): UseTrackingScoreResult {
@@ -226,22 +206,19 @@ export function useTrackingScore(): UseTrackingScoreResult {
   }, [])
 
   /**
-   * Get current accuracy for real-time feedback (0-100)
-   * Uses simple distance for immediate feedback during session
+   * Get current accuracy for real-time feedback (0 or 100)
+   * Simple binary: within threshold = 100, outside = 0
    */
   const getCurrentAccuracy = useCallback(
     (gazePoint: GazePoint | null, orbPosition: OrbPosition | null): number => {
-      if (!gazePoint || !orbPosition) return 50 // Neutral
+      if (!gazePoint || !orbPosition) return 0
 
       const dx = gazePoint.x - orbPosition.x
       const dy = gazePoint.y - orbPosition.y
       const distance = Math.sqrt(dx * dx + dy * dy)
 
-      // Convert distance to 0-100 accuracy score
-      // 0 pixels = 100%, 150 pixels = 0%
-      const maxDistance = 150
-      const accuracy = Math.max(0, 100 - (distance / maxDistance) * 100)
-      return Math.round(accuracy)
+      // Binary score: within threshold = 100, outside = 0
+      return distance < FOCUS_THRESHOLD_PX ? 100 : 0
     },
     []
   )
@@ -254,65 +231,48 @@ export function useTrackingScore(): UseTrackingScoreResult {
       if (gazeHistory.length < 10 || orbHistory.length < 10) {
         // Not enough data
         return {
-          improvementPercent: 0,
-          accuracy: 50,
-          saccadeCount: 0,
+          focusTimeSeconds: 0,
+          engagementPercent: 0,
+          longestStreakSeconds: 0,
         }
       }
 
-      // Calculate pursuit gain (the scientifically correct metric)
-      const pursuitGain = calculatePursuitGain(gazeHistory, orbHistory)
+      // Calculate session duration from gaze history timestamps
+      const sessionStartMs = gazeHistory[0].timestamp
+      const sessionEndMs = gazeHistory[gazeHistory.length - 1].timestamp
+      const sessionDurationSeconds = (sessionEndMs - sessionStartMs) / 1000
 
-      // Convert gain to accuracy percentage for display
-      // Gain of 1.0 = 100% accuracy
-      // Gain of 0.5 = 50% accuracy
-      // Gain > 1.0 is capped at 100%
-      const accuracy = Math.min(100, Math.round(pursuitGain * 100))
+      // Calculate focus time (total time gaze was within threshold of orb)
+      const focusTimeSeconds = calculateFocusTime(gazeHistory, orbHistory, FOCUS_THRESHOLD_PX)
 
-      // Count saccades with adaptive threshold
-      const { count: saccadeCount } = countSaccadesAdaptive(gazeHistory)
+      // Calculate engagement percent (focus time / session duration * 100)
+      const engagementPercent =
+        sessionDurationSeconds > 0
+          ? Math.min(100, Math.round((focusTimeSeconds / sessionDurationSeconds) * 100))
+          : 0
 
-      // Calculate improvement (first half vs second half)
-      const midpoint = Math.floor(gazeHistory.length / 2)
-      const firstHalf = gazeHistory.slice(0, midpoint)
-      const secondHalf = gazeHistory.slice(midpoint)
-
-      const firstHalfResult = countSaccadesAdaptive(firstHalf)
-      const secondHalfResult = countSaccadesAdaptive(secondHalf)
-
-      // Calculate improvement as percentage reduction in saccades
-      let saccadeImprovement = 0
-      if (firstHalfResult.count > 0) {
-        saccadeImprovement =
-          ((firstHalfResult.count - secondHalfResult.count) / firstHalfResult.count) * 100
-      }
-
-      // Also calculate smoothness improvement
-      const firstHalfSmoothness = calculateSmoothnessScore(firstHalfResult.velocities)
-      const secondHalfSmoothness = calculateSmoothnessScore(secondHalfResult.velocities)
-      const smoothnessImprovement = secondHalfSmoothness - firstHalfSmoothness
-
-      // Use the better of the two improvement measures
-      const finalImprovement = Math.max(saccadeImprovement, smoothnessImprovement)
+      // Calculate longest streak (longest continuous focus period)
+      const longestStreakSeconds = calculateLongestStreak(
+        gazeHistory,
+        orbHistory,
+        FOCUS_THRESHOLD_PX,
+        BREAK_THRESHOLD_MS
+      )
 
       // Debug logging for development
       console.debug('[TrackingScore] Metrics calculated:', {
         gazePoints: gazeHistory.length,
         orbPoints: orbHistory.length,
-        pursuitGain: pursuitGain.toFixed(2),
-        accuracy,
-        saccadeCount,
-        firstHalfSaccades: firstHalfResult.count,
-        secondHalfSaccades: secondHalfResult.count,
-        saccadeImprovement: saccadeImprovement.toFixed(1),
-        smoothnessImprovement: smoothnessImprovement.toFixed(1),
-        finalImprovement: finalImprovement.toFixed(1),
+        sessionDurationSeconds: sessionDurationSeconds.toFixed(1),
+        focusTimeSeconds: focusTimeSeconds.toFixed(1),
+        engagementPercent,
+        longestStreakSeconds: longestStreakSeconds.toFixed(1),
       })
 
       return {
-        improvementPercent: Math.round(finalImprovement),
-        accuracy: accuracy > 0 ? accuracy : 50, // Default to 50 if calculation failed
-        saccadeCount,
+        focusTimeSeconds: Math.round(focusTimeSeconds * 10) / 10, // Round to 1 decimal
+        engagementPercent,
+        longestStreakSeconds: Math.round(longestStreakSeconds * 10) / 10, // Round to 1 decimal
       }
     },
     []

@@ -1,20 +1,14 @@
 /**
- * ValidationDisplay - Shows before/after self-assessment comparison
+ * ValidationDisplay - DEPRECATED
  *
- * Displays the change in mental state with contextual messaging.
- * When eye tracking data is available, correlates subjective and objective data.
+ * This component is no longer used. The new results screen logic is
+ * consolidated in RacingMindSummary.tsx per the eye tracking KPIs redesign.
  *
- * Metrics explained:
- * - Tracking (formerly Accuracy): Pursuit gain - how well eyes matched orb speed (0.9-1.0 = excellent)
- * - Smoothness: Improvement in eye movement consistency from first to second half
- * - Saccades: Count of sudden jerky eye movements (lower = calmer mind)
+ * Keeping this file to avoid breaking imports, but it should be removed
+ * in a future cleanup.
  */
 
-interface TrackingMetrics {
-  improvementPercent: number
-  accuracy?: number
-  saccadeCount?: number
-}
+import type { TrackingMetrics } from './index'
 
 interface ValidationDisplayProps {
   preScore: number
@@ -23,36 +17,25 @@ interface ValidationDisplayProps {
 }
 
 /**
- * Convert pursuit gain (shown as accuracy) to user-friendly label
+ * Format seconds as "Xm Ys"
  */
-function getTrackingLabel(accuracy: number): { label: string; color: string } {
-  if (accuracy >= 85) return { label: 'Excellent', color: 'text-green-500' }
-  if (accuracy >= 70) return { label: 'Good', color: 'text-accent' }
-  if (accuracy >= 50) return { label: 'Moderate', color: 'text-ink/70' }
+function formatFocusTime(seconds: number): string {
+  const mins = Math.floor(seconds / 60)
+  const secs = Math.round(seconds % 60)
+  if (mins === 0) {
+    return `${secs}s`
+  }
+  return `${mins}m ${secs}s`
+}
+
+/**
+ * Get engagement label based on percentage
+ */
+function getEngagementLabel(percent: number): { label: string; color: string } {
+  if (percent >= 85) return { label: 'Excellent', color: 'text-green-500' }
+  if (percent >= 75) return { label: 'Good', color: 'text-accent' }
+  if (percent >= 60) return { label: 'Moderate', color: 'text-ink/70' }
   return { label: 'Developing', color: 'text-ink/50' }
-}
-
-/**
- * Convert smoothness improvement to user-friendly label
- */
-function getSmoothnessLabel(improvement: number): { label: string; color: string } {
-  if (improvement >= 20) return { label: 'Much calmer', color: 'text-green-500' }
-  if (improvement >= 10) return { label: 'Calmer', color: 'text-accent' }
-  if (improvement >= 0) return { label: 'Stable', color: 'text-ink/70' }
-  return { label: 'Restless', color: 'text-ink/50' }
-}
-
-/**
- * Convert saccade count to user-friendly context
- */
-function getSaccadeLabel(count: number): { label: string; color: string } {
-  // Saccades are relative to session length, but generally:
-  // A 10-minute session at 30fps = 18000 data points
-  // Typical saccade rate during pursuit is ~2-5% of samples
-  if (count < 50) return { label: 'Very calm', color: 'text-green-500' }
-  if (count < 150) return { label: 'Focused', color: 'text-accent' }
-  if (count < 300) return { label: 'Active', color: 'text-ink/70' }
-  return { label: 'Busy mind', color: 'text-ink/50' }
 }
 
 export function ValidationDisplay({
@@ -60,43 +43,42 @@ export function ValidationDisplay({
   postScore,
   trackingMetrics,
 }: ValidationDisplayProps) {
-  // With scale 1=Calm, 10=Racing: a DECREASE in score means calmer
-  const scoreDiff = postScore - preScore
-  const feltCalmer = scoreDiff <= -1
-  const trackingImproved = trackingMetrics && trackingMetrics.improvementPercent > 10
+  // New paradigm: preScore = racing (higher = worse), postScore = calm (higher = better)
+  const highEngagement = trackingMetrics && trackingMetrics.engagementPercent >= 75
+  const feelsCalm = postScore >= 5
 
   // Determine the validation message based on subjective + objective data
   const getMessage = () => {
-    if (feltCalmer && trackingImproved) {
+    if (highEngagement && feelsCalm) {
       return {
-        title: 'Your Eyes Confirm It',
-        message: `Your eye movements became ${Math.round(trackingMetrics!.improvementPercent)}% smoother over the session`,
+        title: 'You Earned That',
+        message: `${formatFocusTime(trackingMetrics!.focusTimeSeconds)} of focus. Calm of ${postScore}.`,
         icon: 'check',
       }
     }
-    if (feltCalmer && !trackingImproved && trackingMetrics) {
+    if (highEngagement && !feelsCalm) {
       return {
-        title: 'Trust What You Feel',
-        message: 'Your mind knows when it has settled, even when the data is subtle',
-        icon: 'heart',
-      }
-    }
-    if (!feltCalmer && trackingImproved) {
-      return {
-        title: 'More Happened Than You Realize',
-        message: `Your focus smoothed by ${Math.round(trackingMetrics!.improvementPercent)}% - the benefits are building`,
+        title: 'The Settling Is Happening',
+        message: `${formatFocusTime(trackingMetrics!.focusTimeSeconds)} of focus. You'll feel it more each session.`,
         icon: 'sparkle',
       }
     }
-    if (!feltCalmer && !trackingImproved) {
+    if (!highEngagement && feelsCalm && trackingMetrics) {
       return {
-        title: 'Some Sessions Plant Seeds',
-        message: 'Not every session feels transformative. The practice itself matters.',
+        title: 'Imagine Full Focus',
+        message: `${formatFocusTime(trackingMetrics.focusTimeSeconds)} of focus. Calm of ${postScore}.`,
+        icon: 'heart',
+      }
+    }
+    if (!highEngagement && !feelsCalm && trackingMetrics) {
+      return {
+        title: 'More Focus, More Calm',
+        message: `${formatFocusTime(trackingMetrics.focusTimeSeconds)} of focus. That's the deal.`,
         icon: 'seed',
       }
     }
     // No tracking data available
-    if (feltCalmer) {
+    if (feelsCalm) {
       return {
         title: 'Your Mind Settled',
         message: 'You felt the shift. That awareness itself is valuable.',
@@ -111,17 +93,9 @@ export function ValidationDisplay({
   }
 
   const validation = getMessage()
-
-  // Get user-friendly labels for metrics
-  const trackingLabel =
-    trackingMetrics?.accuracy !== undefined ? getTrackingLabel(trackingMetrics.accuracy) : null
-  const smoothnessLabel = trackingMetrics
-    ? getSmoothnessLabel(trackingMetrics.improvementPercent)
+  const engagementLabel = trackingMetrics
+    ? getEngagementLabel(trackingMetrics.engagementPercent)
     : null
-  const saccadeLabel =
-    trackingMetrics?.saccadeCount !== undefined
-      ? getSaccadeLabel(trackingMetrics.saccadeCount)
-      : null
 
   return (
     <div className="w-full max-w-sm space-y-4">
@@ -134,7 +108,7 @@ export function ValidationDisplay({
         <div className="flex items-center justify-center gap-4">
           {/* Before */}
           <div className="text-center">
-            <p className="text-xs text-ink/50 mb-1">Before</p>
+            <p className="text-xs text-ink/50 mb-1">Racing</p>
             <div className="text-2xl font-serif text-ink">{preScore}</div>
           </div>
 
@@ -153,21 +127,11 @@ export function ValidationDisplay({
                 d="M13 7l5 5m0 0l-5 5m5-5H6"
               />
             </svg>
-            {scoreDiff !== 0 && (
-              <span
-                className={`text-xs font-medium mt-1 ${
-                  scoreDiff < 0 ? 'text-green-500' : 'text-ink/50'
-                }`}
-              >
-                {scoreDiff > 0 ? '+' : ''}
-                {scoreDiff}
-              </span>
-            )}
           </div>
 
           {/* After */}
           <div className="text-center">
-            <p className="text-xs text-ink/50 mb-1">After</p>
+            <p className="text-xs text-ink/50 mb-1">Calm</p>
             <div className="text-2xl font-serif text-ink">{postScore}</div>
           </div>
         </div>
@@ -232,34 +196,27 @@ export function ValidationDisplay({
             Eye Tracking Insights
           </p>
           <div className="flex justify-around text-center">
-            {trackingMetrics.accuracy !== undefined && trackingLabel && (
+            <div>
+              <p className="text-lg font-serif text-ink">
+                {formatFocusTime(trackingMetrics.focusTimeSeconds)}
+              </p>
+              <p className="text-[10px] text-ink/50 mt-0.5">Focus</p>
+            </div>
+            {engagementLabel && (
               <div>
-                <p className={`text-sm font-medium ${trackingLabel.color}`}>
-                  {trackingLabel.label}
+                <p className={`text-sm font-medium ${engagementLabel.color}`}>
+                  {engagementLabel.label}
                 </p>
-                <p className="text-[10px] text-ink/50 mt-0.5">Tracking</p>
+                <p className="text-[10px] text-ink/50 mt-0.5">Engaged</p>
               </div>
             )}
-            {smoothnessLabel && (
-              <div>
-                <p className={`text-sm font-medium ${smoothnessLabel.color}`}>
-                  {smoothnessLabel.label}
-                </p>
-                <p className="text-[10px] text-ink/50 mt-0.5">Progress</p>
-              </div>
-            )}
-            {trackingMetrics.saccadeCount !== undefined && saccadeLabel && (
-              <div>
-                <p className={`text-sm font-medium ${saccadeLabel.color}`}>{saccadeLabel.label}</p>
-                <p className="text-[10px] text-ink/50 mt-0.5">Focus</p>
-              </div>
-            )}
+            <div>
+              <p className="text-lg font-serif text-ink">
+                {formatFocusTime(trackingMetrics.longestStreakSeconds)}
+              </p>
+              <p className="text-[10px] text-ink/50 mt-0.5">Streak</p>
+            </div>
           </div>
-
-          {/* Explanatory note */}
-          <p className="text-[10px] text-ink/40 text-center mt-3">
-            Based on how smoothly your eyes followed the orb
-          </p>
         </div>
       )}
     </div>

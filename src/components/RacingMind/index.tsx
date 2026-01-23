@@ -32,9 +32,9 @@ export type SessionDuration = 5 | 10 | 15
 type RacingMindPhase = 'setup' | 'calibration' | 'practice' | 'results'
 
 export interface TrackingMetrics {
-  improvementPercent: number
-  accuracy?: number
-  saccadeCount?: number
+  focusTimeSeconds: number
+  engagementPercent: number
+  longestStreakSeconds: number
 }
 
 interface RacingMindProps {
