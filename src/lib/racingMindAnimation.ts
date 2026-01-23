@@ -74,6 +74,12 @@ export const ANIMATION_PARAMS = {
 
   // Target frame rate
   targetFps: 60,
+
+  // Intro/outro ceremony timing (4-4-4-4 breathing = 16 seconds)
+  // These are experiential transitions, not part of tracked session time
+  introDurationMs: 16000,
+  outroDurationMs: 16000,
+  breathingCycleMs: 4000, // Each phase of 4-4-4-4 breathing
 } as const
 
 // Bezier easing for smooth deceleration (ease-out-cubic-like)
@@ -226,4 +232,54 @@ export function formatElapsedTime(seconds: number): string {
 export function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined') return false
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+/**
+ * Calculate amplitude scale for intro/outro ceremony
+ * Uses smooth ease-in-out curve synced to 4-4-4-4 breathing rhythm
+ *
+ * @param elapsedMs - Time elapsed in the ceremony phase
+ * @param isOutro - If true, reverses the curve (1 → 0)
+ * @returns Scale factor 0 to 1
+ */
+export function getCeremonyAmplitudeScale(elapsedMs: number, isOutro = false): number {
+  const { introDurationMs, outroDurationMs } = ANIMATION_PARAMS
+  const duration = isOutro ? outroDurationMs : introDurationMs
+
+  // Clamp progress to 0-1
+  const progress = Math.max(0, Math.min(1, elapsedMs / duration))
+
+  // For outro, reverse the progress
+  const effectiveProgress = isOutro ? 1 - progress : progress
+
+  // Smooth ease-in-out curve that syncs with breathing rhythm
+  // Each 4s breathing phase corresponds to ~25% of the ceremony
+  // Use a sine-based easing for organic feel
+  const eased = 0.5 - 0.5 * Math.cos(effectiveProgress * Math.PI)
+
+  return eased
+}
+
+/**
+ * Get instructional text for intro ceremony based on progress
+ *
+ * @param elapsedMs - Time elapsed in intro
+ * @returns Text to display, or null if no text
+ */
+export function getIntroText(elapsedMs: number): string | null {
+  const { breathingCycleMs } = ANIMATION_PARAMS
+
+  // Text sequence synced to breathing phases
+  if (elapsedMs < breathingCycleMs) {
+    return 'Follow the ball with your eyes...'
+  } else if (elapsedMs < breathingCycleMs * 2) {
+    return 'Back and forth...'
+  } else if (elapsedMs < breathingCycleMs * 3) {
+    return 'Let your mind settle...'
+  } else if (elapsedMs < breathingCycleMs * 3.5) {
+    return 'Beginning shortly...'
+  }
+
+  // Fade out text in final phase
+  return null
 }

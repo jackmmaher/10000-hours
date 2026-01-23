@@ -1,23 +1,32 @@
 /**
- * RacingMindPractice - Full-screen practice view
+ * RacingMindPractice - Full-screen practice view with ceremonial intro/outro
  *
- * Features:
- * - Dark background with PixiJS canvas
- * - Subtle elapsed time display (bottom center)
- * - End button (top-right)
- * - Auto-ends when duration completes
- * - Orientation switching mid-session (portrait -> landscape)
+ * Session phases:
+ * 1. Intro (16s): Orb appears stationary, expands to full orbit with 4-4-4-4 breathing
+ *    - Instructional text fades through sequence
+ *    - Camera permission requested during this time
+ * 2. Active: Core practice session (timer counts, eye tracking active)
+ * 3. Outro (16s): Orb decelerates back to center, camera stops automatically
+ * 4. Complete: "Practice Complete" overlay with CTA to see results
+ *
+ * The intro/outro are experiential transitions - not part of tracked session time.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { RacingMindOrb } from './RacingMindOrb'
-import { RACING_MIND_COLORS } from '../../lib/racingMindAnimation'
+import {
+  RACING_MIND_COLORS,
+  ANIMATION_PARAMS,
+  getCeremonyAmplitudeScale,
+  getIntroText,
+} from '../../lib/racingMindAnimation'
 import { useEyeTracking } from '../../hooks/useEyeTracking'
 import { useTrackingScore } from './useTrackingScore'
 import type { TrackingMetrics } from './index'
 
 export type OrientationPhase = 'portrait' | 'transition' | 'landscape'
+export type SessionPhase = 'intro' | 'active' | 'outro' | 'complete'
 
 interface RacingMindPracticeProps {
   durationSeconds: number
@@ -34,9 +43,16 @@ export function RacingMindPractice({
   onEnd,
   onCancel,
 }: RacingMindPracticeProps) {
-  const [isActive, setIsActive] = useState(true)
+  // Session phase state machine
+  const [sessionPhase, setSessionPhase] = useState<SessionPhase>('intro')
   const [hasStarted, setHasStarted] = useState(false)
   const hasEndedRef = useRef(false)
+
+  // Ceremony timing
+  const introStartTimeRef = useRef<number>(performance.now())
+  const outroStartTimeRef = useRef<number>(0)
+  const [amplitudeScale, setAmplitudeScale] = useState(0)
+  const [introText, setIntroText] = useState<string | null>(null)
 
   // Orientation switching state
   const [orientationPhase, setOrientationPhase] = useState<OrientationPhase>('portrait')
@@ -57,6 +73,9 @@ export function RacingMindPractice({
 
   // Current tracking accuracy for visual feedback (0-100)
   const [trackingAccuracy, setTrackingAccuracy] = useState(50)
+
+  // Stored metrics for end of session
+  const storedMetricsRef = useRef<TrackingMetrics | undefined>(undefined)
 
   // Trigger fade-in after mount
   useEffect(() => {
@@ -82,36 +101,82 @@ export function RacingMindPractice({
     }
   }, [])
 
-  // Check for session end and orientation transition every second
+  // Start eye tracking during intro phase
   useEffect(() => {
-    if (!isActive) return
-
-    const updateDisplay = () => {
-      const elapsed = getElapsedSeconds()
-
-      // Check if session should auto-end
-      if (elapsed >= durationSeconds && !hasEndedRef.current) {
-        hasEndedRef.current = true
-        setIsActive(false)
-
-        // Stop eye tracking and calculate metrics
-        const endSession = async () => {
-          if (isTracking) {
-            await stopEyeTracking()
-
-            // Calculate tracking metrics if we have enough data
-            if (gazeHistory.length > 10 && orbHistory.length > 10) {
-              const metrics = calculateMetrics(gazeHistory, orbHistory)
-              onEnd(metrics)
-              return
-            }
-          }
-          onEnd()
+    if (sessionPhase === 'intro' && eyeTrackingSupported === true) {
+      console.log('[RacingMind] Starting eye tracking during intro...')
+      startEyeTracking().then((success) => {
+        if (success) {
+          console.log('[RacingMind] Eye tracking started successfully')
+          clearOrbHistory()
+        } else {
+          console.log('[RacingMind] Eye tracking failed to start')
         }
-        endSession()
+      })
+    }
+  }, [sessionPhase, eyeTrackingSupported, startEyeTracking, clearOrbHistory])
+
+  // Intro ceremony animation loop
+  useEffect(() => {
+    if (sessionPhase !== 'intro') return
+
+    const { introDurationMs } = ANIMATION_PARAMS
+    let animationId: number
+
+    const animate = () => {
+      const elapsed = performance.now() - introStartTimeRef.current
+
+      // Calculate amplitude scale (0 → 1 over intro duration)
+      const scale = getCeremonyAmplitudeScale(elapsed, false)
+      setAmplitudeScale(scale)
+
+      // Update instructional text
+      const text = getIntroText(elapsed)
+      setIntroText(text)
+
+      // Check if intro is complete
+      if (elapsed >= introDurationMs) {
+        setSessionPhase('active')
+        setAmplitudeScale(1)
+        setIntroText(null)
+        return
       }
 
-      // Check if we should trigger orientation transition (at 50% progress)
+      animationId = requestAnimationFrame(animate)
+    }
+
+    animationId = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(animationId)
+  }, [sessionPhase])
+
+  // Active session monitoring (check for completion and orientation transition)
+  useEffect(() => {
+    if (sessionPhase !== 'active') return
+
+    const checkSession = () => {
+      const elapsed = getElapsedSeconds()
+
+      // Check if session should end (transition to outro)
+      if (elapsed >= durationSeconds && !hasEndedRef.current) {
+        hasEndedRef.current = true
+
+        // Calculate and store metrics before stopping tracking
+        if (isTracking && gazeHistory.length > 10 && orbHistory.length > 10) {
+          storedMetricsRef.current = calculateMetrics(gazeHistory, orbHistory)
+        }
+
+        // Stop eye tracking as part of outro
+        if (isTracking) {
+          stopEyeTracking()
+        }
+
+        // Transition to outro
+        outroStartTimeRef.current = performance.now()
+        setSessionPhase('outro')
+        return
+      }
+
+      // Check for orientation transition (at 50% progress)
       const progress = getProgress()
       if (
         progress >= 0.5 &&
@@ -123,19 +188,14 @@ export function RacingMindPractice({
       }
     }
 
-    // Initial update
-    updateDisplay()
-
-    // Update every second
-    const interval = setInterval(updateDisplay, 1000)
-
+    checkSession()
+    const interval = setInterval(checkSession, 1000)
     return () => clearInterval(interval)
   }, [
-    isActive,
+    sessionPhase,
     durationSeconds,
     getElapsedSeconds,
     getProgress,
-    onEnd,
     orientationPhase,
     isTracking,
     stopEyeTracking,
@@ -143,6 +203,34 @@ export function RacingMindPractice({
     orbHistory,
     calculateMetrics,
   ])
+
+  // Outro ceremony animation loop
+  useEffect(() => {
+    if (sessionPhase !== 'outro') return
+
+    const { outroDurationMs } = ANIMATION_PARAMS
+    let animationId: number
+
+    const animate = () => {
+      const elapsed = performance.now() - outroStartTimeRef.current
+
+      // Calculate amplitude scale (1 → 0 over outro duration)
+      const scale = getCeremonyAmplitudeScale(elapsed, true)
+      setAmplitudeScale(scale)
+
+      // Check if outro is complete
+      if (elapsed >= outroDurationMs) {
+        setSessionPhase('complete')
+        setAmplitudeScale(0)
+        return
+      }
+
+      animationId = requestAnimationFrame(animate)
+    }
+
+    animationId = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(animationId)
+  }, [sessionPhase])
 
   // Detect orientation changes
   useEffect(() => {
@@ -155,49 +243,15 @@ export function RacingMindPractice({
       }
     }
 
-    // Check immediately
     handleOrientation()
-
-    // Listen for resize events (orientation change triggers resize)
     window.addEventListener('resize', handleOrientation)
     return () => window.removeEventListener('resize', handleOrientation)
   }, [orientationPhase])
 
-  // Dismiss rotation prompt (user can continue in portrait if they prefer)
+  // Dismiss rotation prompt
   const dismissRotationPrompt = useCallback(() => {
-    setOrientationPhase('landscape') // Move to next phase even if not rotated
+    setOrientationPhase('landscape')
   }, [])
-
-  // Start eye tracking when session begins
-  useEffect(() => {
-    console.log(
-      '[RacingMind] Eye tracking effect - isActive:',
-      isActive,
-      'supported:',
-      eyeTrackingSupported
-    )
-
-    if (isActive && eyeTrackingSupported === true) {
-      console.log('[RacingMind] Starting eye tracking...')
-      startEyeTracking().then((success) => {
-        if (success) {
-          console.log('[RacingMind] Eye tracking started successfully')
-          clearOrbHistory()
-        } else {
-          console.log('[RacingMind] Eye tracking failed to start')
-        }
-      })
-    } else if (isActive && eyeTrackingSupported === false) {
-      console.log('[RacingMind] Eye tracking not supported, proceeding without it')
-    }
-
-    return () => {
-      if (isTracking) {
-        console.log('[RacingMind] Stopping eye tracking on cleanup')
-        stopEyeTracking()
-      }
-    }
-  }, [isActive, eyeTrackingSupported]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Update tracking accuracy when gaze point changes
   useEffect(() => {
@@ -208,34 +262,43 @@ export function RacingMindPractice({
     }
   }, [gazePoint, orbHistory, getCurrentAccuracy])
 
-  // Handle manual end
+  // Handle manual end (during active phase)
   const handleEnd = useCallback(async () => {
     if (hasEndedRef.current) return
     hasEndedRef.current = true
-    setIsActive(false)
 
-    // Stop eye tracking and calculate metrics
-    if (isTracking) {
-      await stopEyeTracking()
-
-      // Calculate tracking metrics if we have enough data
-      if (gazeHistory.length > 10 && orbHistory.length > 10) {
-        const metrics = calculateMetrics(gazeHistory, orbHistory)
-        onEnd(metrics)
-        return
-      }
+    // Calculate and store metrics
+    if (isTracking && gazeHistory.length > 10 && orbHistory.length > 10) {
+      storedMetricsRef.current = calculateMetrics(gazeHistory, orbHistory)
     }
 
-    onEnd()
-  }, [onEnd, isTracking, stopEyeTracking, gazeHistory, orbHistory, calculateMetrics])
+    // Stop eye tracking
+    if (isTracking) {
+      await stopEyeTracking()
+    }
+
+    // Transition to outro
+    outroStartTimeRef.current = performance.now()
+    setSessionPhase('outro')
+  }, [isTracking, stopEyeTracking, gazeHistory, orbHistory, calculateMetrics])
 
   // Handle cancel
   const handleCancel = useCallback(() => {
     if (hasEndedRef.current) return
     hasEndedRef.current = true
-    setIsActive(false)
+
+    // Stop eye tracking
+    if (isTracking) {
+      stopEyeTracking()
+    }
+
     onCancel()
-  }, [onCancel])
+  }, [onCancel, isTracking, stopEyeTracking])
+
+  // Handle "See Results" from complete overlay
+  const handleSeeResults = useCallback(() => {
+    onEnd(storedMetricsRef.current)
+  }, [onEnd])
 
   // Helper function for split time display
   function formatElapsedParts(seconds: number): { minutes: string; seconds: string } {
@@ -245,6 +308,10 @@ export function RacingMindPractice({
   }
 
   const timeParts = formatElapsedParts(getElapsedSeconds())
+
+  // Determine if orb should be animating
+  const isOrbActive =
+    sessionPhase === 'intro' || sessionPhase === 'active' || sessionPhase === 'outro'
 
   return (
     <motion.div
@@ -257,59 +324,82 @@ export function RacingMindPractice({
       {/* PixiJS Canvas */}
       <RacingMindOrb
         getProgress={getProgress}
-        isActive={isActive}
+        isActive={isOrbActive}
         orientationPhase={orientationPhase}
         trackingAccuracy={isTracking ? trackingAccuracy : undefined}
         onPositionUpdate={isTracking ? recordOrbPosition : undefined}
+        amplitudeScale={amplitudeScale}
       />
 
-      {/* Cancel button - ghost style for dark background, respects safe area */}
-      <button
-        onClick={handleCancel}
-        className="absolute left-4 px-3 py-1.5 text-caption font-medium text-white/50 hover:text-white/80 hover:bg-white/10 rounded-lg transition-all duration-150 ease-out z-10"
-        style={{ top: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
-      >
-        Cancel
-      </button>
-
-      {/* End button - secondary style for dark background, respects safe area */}
-      <button
-        onClick={handleEnd}
-        className="absolute right-4 px-4 py-2 text-body font-medium text-white/90 hover:text-white bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-150 ease-out z-10"
-        style={{ top: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
-      >
-        End
-      </button>
-
-      {/* Elapsed time - styled to match OmCoach, respects safe area */}
-      <div
-        className="absolute left-0 right-0 flex justify-center z-10"
-        style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 2rem)' }}
-      >
-        <div
-          className="flex items-baseline justify-center gap-2 font-serif"
-          style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}
+      {/* Cancel button - only during intro and active phases */}
+      {(sessionPhase === 'intro' || sessionPhase === 'active') && (
+        <button
+          onClick={handleCancel}
+          className="absolute left-4 px-3 py-1.5 text-caption font-medium text-white/50 hover:text-white/80 hover:bg-white/10 rounded-lg transition-all duration-150 ease-out z-10"
+          style={{ top: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
         >
-          <span
-            className="font-semibold"
-            style={{ fontSize: '2rem', lineHeight: 1, color: 'rgba(255, 255, 255, 0.7)' }}
-          >
-            {timeParts.minutes}
-          </span>
-          <span
-            className="font-light"
-            style={{ fontSize: '1.5rem', lineHeight: 1, color: 'rgba(255, 255, 255, 0.4)' }}
-          >
-            {timeParts.seconds}
-          </span>
-        </div>
-      </div>
+          Cancel
+        </button>
+      )}
 
-      {/* Rotation prompt overlay - shown at 50% progress */}
-      {orientationPhase === 'transition' && (
+      {/* End button - only during active phase */}
+      {sessionPhase === 'active' && (
+        <button
+          onClick={handleEnd}
+          className="absolute right-4 px-4 py-2 text-body font-medium text-white/90 hover:text-white bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-150 ease-out z-10"
+          style={{ top: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
+        >
+          End
+        </button>
+      )}
+
+      {/* Intro instructional text */}
+      <AnimatePresence mode="wait">
+        {sessionPhase === 'intro' && introText && (
+          <motion.div
+            key={introText}
+            className="absolute left-0 right-0 flex justify-center z-10"
+            style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 6rem)' }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+          >
+            <p className="text-lg font-serif text-white/70 text-center px-8">{introText}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Elapsed time - only during active phase */}
+      {sessionPhase === 'active' && (
+        <div
+          className="absolute left-0 right-0 flex justify-center z-10"
+          style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 2rem)' }}
+        >
+          <div
+            className="flex items-baseline justify-center gap-2 font-serif"
+            style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}
+          >
+            <span
+              className="font-semibold"
+              style={{ fontSize: '2rem', lineHeight: 1, color: 'rgba(255, 255, 255, 0.7)' }}
+            >
+              {timeParts.minutes}
+            </span>
+            <span
+              className="font-light"
+              style={{ fontSize: '1.5rem', lineHeight: 1, color: 'rgba(255, 255, 255, 0.4)' }}
+            >
+              {timeParts.seconds}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Rotation prompt overlay - shown at 50% progress during active phase */}
+      {sessionPhase === 'active' && orientationPhase === 'transition' && (
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-20">
           <div className="text-center px-8">
-            {/* Rotation icon */}
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-white/10 flex items-center justify-center">
               <svg
                 className="w-10 h-10 text-white animate-pulse"
@@ -331,7 +421,6 @@ export function RacingMindPractice({
               Turn to landscape for a wider field of view in the second half
             </p>
 
-            {/* Skip button */}
             <button
               onClick={dismissRotationPrompt}
               className="text-sm text-white/40 hover:text-white/60 transition-colors"
@@ -341,6 +430,60 @@ export function RacingMindPractice({
           </div>
         </div>
       )}
+
+      {/* Practice Complete overlay - shown after outro */}
+      <AnimatePresence>
+        {sessionPhase === 'complete' && (
+          <motion.div
+            className="absolute inset-0 flex flex-col items-center justify-center z-20"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+          >
+            {/* Completion indicator */}
+            <motion.div
+              className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-6"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+            >
+              <svg
+                className="w-8 h-8 text-white/80"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </motion.div>
+
+            <motion.h1
+              className="font-serif text-2xl text-white mb-8"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.3 }}
+            >
+              Practice Complete
+            </motion.h1>
+
+            {/* CTA Button */}
+            <motion.button
+              onClick={handleSeeResults}
+              className="px-8 py-4 bg-white text-[#0A0A12] font-medium rounded-xl hover:bg-white/90 transition-colors"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.5 }}
+            >
+              See Your Results
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }

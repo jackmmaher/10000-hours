@@ -19,6 +19,8 @@ interface RacingMindOrbProps {
   trackingAccuracy?: number
   /** Callback when orb position updates (for eye tracking comparison) */
   onPositionUpdate?: (x: number, y: number) => void
+  /** Amplitude scale 0-1 for intro/outro animations (1 = full amplitude) */
+  amplitudeScale?: number
 }
 
 export function RacingMindOrb({
@@ -27,6 +29,7 @@ export function RacingMindOrb({
   orientationPhase = 'portrait',
   trackingAccuracy = 50,
   onPositionUpdate,
+  amplitudeScale = 1,
 }: RacingMindOrbProps) {
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -38,6 +41,7 @@ export function RacingMindOrb({
     orientationPhase,
     trackingAccuracy,
     onPositionUpdate,
+    amplitudeScale,
   })
 
   return (

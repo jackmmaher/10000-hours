@@ -43,6 +43,8 @@ interface UseRacingMindOrbOptions {
   trackingAccuracy?: number
   /** Callback when orb position updates */
   onPositionUpdate?: (x: number, y: number) => void
+  /** Amplitude scale 0-1 for intro/outro animations (1 = full amplitude) */
+  amplitudeScale?: number
 }
 
 export function useRacingMindOrb({
@@ -52,6 +54,7 @@ export function useRacingMindOrb({
   orientationPhase = 'portrait',
   trackingAccuracy: _trackingAccuracy = 50,
   onPositionUpdate: _onPositionUpdate,
+  amplitudeScale: _amplitudeScale = 1,
 }: UseRacingMindOrbOptions) {
   const appRef = useRef<Application | null>(null)
   const orbRef = useRef<Graphics | null>(null)
@@ -140,6 +143,10 @@ export function useRacingMindOrb({
   const onPositionUpdateRef = useRef(_onPositionUpdate)
   onPositionUpdateRef.current = _onPositionUpdate
 
+  // Ref for amplitude scale (intro/outro animations)
+  const amplitudeScaleRef = useRef(_amplitudeScale)
+  amplitudeScaleRef.current = _amplitudeScale
+
   /**
    * Linear interpolation helper for smooth position transitions
    */
@@ -170,11 +177,13 @@ export function useRacingMindOrb({
     // Calculate target orb position
     let targetX: number
     let targetY: number
+    const centerX = width / 2
+    const centerY = height / 2
 
     if (isReducedMotionRef.current) {
       // Reduced motion: static orb in center
-      targetX = width / 2
-      targetY = height / 2
+      targetX = centerX
+      targetY = centerY
     } else {
       const position = calculateOrbPosition(
         elapsedMs,
@@ -184,8 +193,12 @@ export function useRacingMindOrb({
         noiseRef.current,
         isLandscape
       )
-      targetX = position.x
-      targetY = position.y
+
+      // Apply amplitude scale for intro/outro animations
+      // Scale the offset from center, not the absolute position
+      const scale = amplitudeScaleRef.current
+      targetX = centerX + (position.x - centerX) * scale
+      targetY = centerY + (position.y - centerY) * scale
     }
 
     // Frame-rate independent lerp for smooth transitions
