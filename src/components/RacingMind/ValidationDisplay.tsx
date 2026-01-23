@@ -3,6 +3,11 @@
  *
  * Displays the change in mental state with contextual messaging.
  * When eye tracking data is available, correlates subjective and objective data.
+ *
+ * Metrics explained:
+ * - Tracking (formerly Accuracy): Pursuit gain - how well eyes matched orb speed (0.9-1.0 = excellent)
+ * - Smoothness: Improvement in eye movement consistency from first to second half
+ * - Saccades: Count of sudden jerky eye movements (lower = calmer mind)
  */
 
 interface TrackingMetrics {
@@ -15,6 +20,39 @@ interface ValidationDisplayProps {
   preScore: number
   postScore: number
   trackingMetrics?: TrackingMetrics | null
+}
+
+/**
+ * Convert pursuit gain (shown as accuracy) to user-friendly label
+ */
+function getTrackingLabel(accuracy: number): { label: string; color: string } {
+  if (accuracy >= 85) return { label: 'Excellent', color: 'text-green-500' }
+  if (accuracy >= 70) return { label: 'Good', color: 'text-accent' }
+  if (accuracy >= 50) return { label: 'Moderate', color: 'text-ink/70' }
+  return { label: 'Developing', color: 'text-ink/50' }
+}
+
+/**
+ * Convert smoothness improvement to user-friendly label
+ */
+function getSmoothnessLabel(improvement: number): { label: string; color: string } {
+  if (improvement >= 20) return { label: 'Much calmer', color: 'text-green-500' }
+  if (improvement >= 10) return { label: 'Calmer', color: 'text-accent' }
+  if (improvement >= 0) return { label: 'Stable', color: 'text-ink/70' }
+  return { label: 'Restless', color: 'text-ink/50' }
+}
+
+/**
+ * Convert saccade count to user-friendly context
+ */
+function getSaccadeLabel(count: number): { label: string; color: string } {
+  // Saccades are relative to session length, but generally:
+  // A 10-minute session at 30fps = 18000 data points
+  // Typical saccade rate during pursuit is ~2-5% of samples
+  if (count < 50) return { label: 'Very calm', color: 'text-green-500' }
+  if (count < 150) return { label: 'Focused', color: 'text-accent' }
+  if (count < 300) return { label: 'Active', color: 'text-ink/70' }
+  return { label: 'Busy mind', color: 'text-ink/50' }
 }
 
 export function ValidationDisplay({
@@ -32,7 +70,7 @@ export function ValidationDisplay({
     if (feltCalmer && trackingImproved) {
       return {
         title: 'Your Eyes Confirm It',
-        message: `Eye tracking showed your focus smoothed by ${Math.round(trackingMetrics!.improvementPercent)}% over the session`,
+        message: `Your eye movements became ${Math.round(trackingMetrics!.improvementPercent)}% smoother over the session`,
         icon: 'check',
       }
     }
@@ -73,6 +111,17 @@ export function ValidationDisplay({
   }
 
   const validation = getMessage()
+
+  // Get user-friendly labels for metrics
+  const trackingLabel =
+    trackingMetrics?.accuracy !== undefined ? getTrackingLabel(trackingMetrics.accuracy) : null
+  const smoothnessLabel = trackingMetrics
+    ? getSmoothnessLabel(trackingMetrics.improvementPercent)
+    : null
+  const saccadeLabel =
+    trackingMetrics?.saccadeCount !== undefined
+      ? getSaccadeLabel(trackingMetrics.saccadeCount)
+      : null
 
   return (
     <div className="w-full max-w-sm space-y-4">
@@ -180,31 +229,37 @@ export function ValidationDisplay({
       {trackingMetrics && (
         <div className="bg-elevated rounded-xl p-4">
           <p className="text-xs text-ink/50 mb-3 text-center uppercase tracking-wide">
-            Eye Tracking Data
+            Eye Tracking Insights
           </p>
           <div className="flex justify-around text-center">
-            {trackingMetrics.accuracy !== undefined && (
+            {trackingMetrics.accuracy !== undefined && trackingLabel && (
               <div>
-                <p className="text-lg font-serif text-ink">
-                  {Math.round(trackingMetrics.accuracy)}%
+                <p className={`text-sm font-medium ${trackingLabel.color}`}>
+                  {trackingLabel.label}
                 </p>
-                <p className="text-[10px] text-ink/50">Accuracy</p>
+                <p className="text-[10px] text-ink/50 mt-0.5">Tracking</p>
               </div>
             )}
-            <div>
-              <p className="text-lg font-serif text-ink">
-                {trackingMetrics.improvementPercent > 0 ? '+' : ''}
-                {Math.round(trackingMetrics.improvementPercent)}%
-              </p>
-              <p className="text-[10px] text-ink/50">Smoothness</p>
-            </div>
-            {trackingMetrics.saccadeCount !== undefined && (
+            {smoothnessLabel && (
               <div>
-                <p className="text-lg font-serif text-ink">{trackingMetrics.saccadeCount}</p>
-                <p className="text-[10px] text-ink/50">Saccades</p>
+                <p className={`text-sm font-medium ${smoothnessLabel.color}`}>
+                  {smoothnessLabel.label}
+                </p>
+                <p className="text-[10px] text-ink/50 mt-0.5">Progress</p>
+              </div>
+            )}
+            {trackingMetrics.saccadeCount !== undefined && saccadeLabel && (
+              <div>
+                <p className={`text-sm font-medium ${saccadeLabel.color}`}>{saccadeLabel.label}</p>
+                <p className="text-[10px] text-ink/50 mt-0.5">Focus</p>
               </div>
             )}
           </div>
+
+          {/* Explanatory note */}
+          <p className="text-[10px] text-ink/40 text-center mt-3">
+            Based on how smoothly your eyes followed the orb
+          </p>
         </div>
       )}
     </div>

@@ -95,7 +95,10 @@ export function useEyeTracking(maxHistorySize = 1800): UseEyeTrackingResult {
         .showFaceFeedbackBox(false)
 
       // Set up gaze listener
-      webgazer.setGazeListener((data, elapsedTime) => {
+      // IMPORTANT: Use performance.now() for timestamps to match orb position timestamps
+      // WebGazer's elapsedTime is relative to when WebGazer started, which differs from
+      // performance.now() used by orb position recording, causing timestamp mismatch bugs
+      webgazer.setGazeListener((data, _elapsedTime) => {
         if (data === null) {
           // No face detected - quality is 0
           setTrackingQuality(0)
@@ -105,7 +108,7 @@ export function useEyeTracking(maxHistorySize = 1800): UseEyeTrackingResult {
         const point: GazePoint = {
           x: data.x,
           y: data.y,
-          timestamp: elapsedTime,
+          timestamp: performance.now(), // Use same clock as orb positions
           quality: 0.8, // WebGazer doesn't provide quality, assume good if face detected
         }
 
