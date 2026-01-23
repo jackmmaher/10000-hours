@@ -155,24 +155,6 @@ export function getGlowStrength(timeMs: number): number {
 }
 
 /**
- * Smoothed sine function to avoid velocity approaching zero at extremes
- * Uses cubic Hermite interpolation for smooth transition near peaks
- */
-function smoothSine(t: number): number {
-  const sine = Math.sin(t)
-  const absSine = Math.abs(sine)
-
-  // Smooth cubic Hermite transition from 0.9 to 1.0
-  if (absSine > 0.9) {
-    const x = (absSine - 0.9) / 0.1
-    const smoothX = x * x * (3 - 2 * x) // Hermite interpolation (smoothstep)
-    const dampedSine = Math.sign(sine) * (0.9 + 0.1 * (1 - smoothX * 0.3))
-    return dampedSine
-  }
-  return sine
-}
-
-/**
  * Calculate complete orb position for a given time
  *
  * @param timeMs - Current time in milliseconds (from session start)
@@ -197,8 +179,9 @@ export function calculateOrbPosition(
   const frequency = getOscillationFrequency(speed)
   const amplitude = getOscillationAmplitude(viewportWidth)
 
-  // Primary horizontal oscillation (using smoothSine for smoother direction changes)
-  const oscillationX = smoothSine(timeMs * frequency) * amplitude
+  // Primary horizontal oscillation - pure sine for natural pendulum motion
+  // Sine naturally decelerates at peaks (velocity = cos, which is 0 at peaks)
+  const oscillationX = Math.sin(timeMs * frequency) * amplitude
 
   // Organic noise drift
   const { noiseScale, noiseAmplitudeX, noiseAmplitudeY, orbRadius } = ANIMATION_PARAMS

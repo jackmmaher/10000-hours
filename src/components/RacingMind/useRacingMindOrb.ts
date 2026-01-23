@@ -115,29 +115,26 @@ export function useRacingMindOrb({
     container.appendChild(app.canvas)
     appRef.current = app
 
-    // Create orb graphics with soft-edge gradient for "soft gaze" effect
-    // Multiple concentric circles with decreasing opacity create a smooth falloff
+    // Create orb graphics with smooth radial gradient for "soft gaze" effect
+    // Many concentric circles create imperceptible transitions
     const orb = new Graphics()
     const radius = ANIMATION_PARAMS.orbRadius
     const orbColor = hexToNumber(RACING_MIND_COLORS.orb)
 
-    // Create gradient effect with concentric circles
-    // Core (100% opacity) - inner 70% of radius
-    const coreRadius = radius * 0.7
-    orb.circle(0, 0, coreRadius)
-    orb.fill({ color: orbColor, alpha: 1.0 })
+    // Smooth radial gradient using 24 concentric rings
+    // Drawn from outside-in so inner circles overlay outer ones
+    const ringCount = 24
+    for (let i = ringCount; i >= 0; i--) {
+      const t = i / ringCount // 1.0 (outer) to 0.0 (center)
+      const ringRadius = radius * (0.3 + t * 0.7) // 30% to 100% of radius
 
-    // Middle ring (70% opacity) - 70% to 85% of radius
-    orb.circle(0, 0, radius * 0.85)
-    orb.fill({ color: orbColor, alpha: 0.7 })
+      // Quadratic falloff for natural soft edge (steeper near edge, flatter in core)
+      // alpha = 1 at center, fades smoothly to ~0.05 at edge
+      const alpha = Math.pow(1 - t, 2) * 0.95 + 0.05
 
-    // Outer ring (40% opacity) - 85% to 95% of radius
-    orb.circle(0, 0, radius * 0.95)
-    orb.fill({ color: orbColor, alpha: 0.4 })
-
-    // Soft edge (15% opacity) - full radius
-    orb.circle(0, 0, radius)
-    orb.fill({ color: orbColor, alpha: 0.15 })
+      orb.circle(0, 0, ringRadius)
+      orb.fill({ color: orbColor, alpha })
+    }
 
     orb.x = width / 2
     orb.y = height / 2
@@ -177,15 +174,16 @@ export function useRacingMindOrb({
   amplitudeScaleRef.current = _amplitudeScale
 
   /**
-   * Critically damped spring step for organic motion
-   * More natural than lerp - has momentum and overshoots slightly
+   * Slightly underdamped spring for pendulum-like motion
+   * Lower stiffness = more gradual following (less snappy)
+   * Underdamped = subtle overshoot at turnarounds (natural pendulum feel)
    */
   function springStep(
     state: { position: number; velocity: number },
     target: number,
     deltaMs: number,
-    stiffness = 180,
-    damping = 24
+    stiffness = 120,
+    damping = 20
   ): { position: number; velocity: number } {
     const dt = deltaMs / 1000
     const displacement = state.position - target
