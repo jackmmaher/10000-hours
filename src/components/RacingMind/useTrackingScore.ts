@@ -33,8 +33,10 @@ interface UseTrackingScoreResult {
   clearOrbHistory: () => void
 }
 
-// On-orb radius threshold in pixels (~3x orb size, accounts for WebGazer accuracy)
-const FOCUS_THRESHOLD_PX = 150
+// On-orb radius threshold in pixels
+// WebGazer has ~100-200px inherent error, plus the orb moves continuously.
+// 200px threshold balances accuracy with WebGazer's limitations on mobile.
+const FOCUS_THRESHOLD_PX = 200
 
 // Break duration threshold in milliseconds (brief glances don't count as breaks)
 const BREAK_THRESHOLD_MS = 500

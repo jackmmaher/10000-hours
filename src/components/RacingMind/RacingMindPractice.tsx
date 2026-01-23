@@ -185,7 +185,7 @@ export function RacingMindPractice({
   useEffect(() => {
     if (sessionPhase !== 'active') return
 
-    const checkSession = () => {
+    const checkSession = async () => {
       const elapsed = getElapsedSeconds()
 
       // Check if session should end (transition to outro)
@@ -198,9 +198,9 @@ export function RacingMindPractice({
           storedMetricsRef.current = calculateMetrics(gazeHistory, orbHistory)
         }
 
-        // Stop eye tracking as part of outro
+        // Stop eye tracking and release camera before outro
         if (isTracking) {
-          stopEyeTracking()
+          await stopEyeTracking()
         }
 
         // Transition to outro
@@ -222,6 +222,14 @@ export function RacingMindPractice({
     getOrbHistory,
     calculateMetrics,
   ])
+
+  // Ensure camera is stopped when entering complete phase (safety net)
+  useEffect(() => {
+    if (sessionPhase === 'complete' && isTracking) {
+      console.log('[RacingMind] Safety stop: releasing camera in complete phase')
+      stopEyeTracking()
+    }
+  }, [sessionPhase, isTracking, stopEyeTracking])
 
   // Outro ceremony animation loop
   useEffect(() => {

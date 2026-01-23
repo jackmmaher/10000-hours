@@ -159,34 +159,52 @@ export function RacingMindSummary({
             )}
           </AnimatePresence>
 
-          {/* Metrics Row - Shows after rating if tracking available */}
+          {/* Metrics - Stacked cards with explanations */}
           <AnimatePresence>
             {postScore !== null && trackingMetrics && (
               <motion.div
-                className="w-full max-w-sm bg-elevated rounded-xl p-4 mb-4 shadow-sm"
-                initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                animate={{ opacity: 1, height: 'auto', marginBottom: 16 }}
+                className="w-full max-w-sm space-y-3 mb-4"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, ease: 'easeOut', delay: 0.3 }}
               >
-                <div className="flex justify-around text-center">
-                  <div>
-                    <p className="text-lg font-serif text-ink">
+                {/* Focus Time */}
+                <div className="bg-elevated rounded-xl p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium text-ink">Focus Time</span>
+                    <span className="text-lg font-serif text-ink">
                       {formatFocusTime(trackingMetrics.focusTimeSeconds)}
-                    </p>
-                    <p className="text-[10px] text-ink/50">Engaged</p>
+                    </span>
                   </div>
-                  <div>
-                    <p className="text-lg font-serif text-ink">
+                  <p className="text-[11px] text-ink/50 leading-snug">
+                    Time your gaze stayed with the orb. More focus time = deeper calm.
+                  </p>
+                </div>
+
+                {/* Engagement Rate */}
+                <div className="bg-elevated rounded-xl p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium text-ink">Engagement</span>
+                    <span className="text-lg font-serif text-ink">
                       {Math.round(trackingMetrics.engagementPercent)}%
-                    </p>
-                    <p className="text-[10px] text-ink/50">Engaged</p>
+                    </span>
                   </div>
-                  <div>
-                    <p className="text-lg font-serif text-ink">
+                  <p className="text-[11px] text-ink/50 leading-snug">
+                    Percentage of session spent tracking. Higher engagement, greater stillness.
+                  </p>
+                </div>
+
+                {/* Longest Streak */}
+                <div className="bg-elevated rounded-xl p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium text-ink">Best Streak</span>
+                    <span className="text-lg font-serif text-ink">
                       {formatFocusTime(trackingMetrics.longestStreakSeconds)}
-                    </p>
-                    <p className="text-[10px] text-ink/50">Streak</p>
+                    </span>
                   </div>
+                  <p className="text-[11px] text-ink/50 leading-snug">
+                    Longest unbroken focus. Sustained attention quiets the racing mind.
+                  </p>
                 </div>
               </motion.div>
             )}
@@ -224,8 +242,8 @@ export function RacingMindSummary({
             </div>
           )}
 
-          {/* Action buttons - scrolls with content */}
-          <div className="w-full max-w-sm space-y-3 pb-6">
+          {/* Action buttons - scrolls with content, extra padding for footer */}
+          <div className="w-full max-w-sm space-y-3 pb-24">
             {onMeditateNow && (
               <button
                 onClick={onMeditateNow}
