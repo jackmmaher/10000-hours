@@ -91,6 +91,48 @@ export function RacingMindSetup({ onBegin, isLoading }: RacingMindSetupProps) {
           )}
         </div>
 
+        {/* Eye tracking notice */}
+        <div
+          className="rounded-xl p-4 mb-6 border border-border-subtle"
+          style={{ backgroundColor: 'var(--bg-deep)' }}
+        >
+          <div className="flex gap-ds-3">
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: 'var(--accent-muted)' }}
+            >
+              <svg
+                className="w-4 h-4"
+                style={{ color: 'var(--accent)' }}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.64 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.64 0-8.573-3.007-9.963-7.178z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <p className="text-body text-ink leading-relaxed">
+                <span className="font-medium">Eye tracking validates your progress</span> — see real
+                data showing your mind settling down.
+              </p>
+              <p className="text-caption text-muted mt-ds-2">
+                Uses front camera. You can deny access and the session still works.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Spacer pushes controls to bottom on tall screens */}
         <div className="flex-1 min-h-4" />
 
