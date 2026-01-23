@@ -16,7 +16,7 @@ import { addSession } from '../lib/db/sessions'
 import { db } from '../lib/db/schema'
 import { useHourBankStore } from '../stores/useHourBankStore'
 import { useSessionStore } from '../stores/useSessionStore'
-import type { Session } from '../lib/db/types'
+import type { Session, RacingMindMetrics } from '../lib/db/types'
 
 export interface RacingMindSessionState {
   isActive: boolean
@@ -31,13 +31,24 @@ export interface RacingMindSessionResult {
   durationSeconds: number
 }
 
+export interface EndSessionParams {
+  preSessionScore?: number
+  trackingMetrics?: {
+    focusTimeSeconds: number
+    engagementPercent: number
+    longestStreakSeconds: number
+  }
+}
+
 export interface UseRacingMindSessionResult {
   // Session state
   state: RacingMindSessionState
   // Start a new Racing Mind session (deducts selectedDurationSeconds from hour bank at START)
   startSession: (selectedDurationSeconds: number) => Promise<void>
   // End the session and save to database (saves ACTUAL time spent)
-  endSession: () => Promise<RacingMindSessionResult | null>
+  endSession: (params?: EndSessionParams) => Promise<RacingMindSessionResult | null>
+  // Update session metrics after post-session assessment
+  updateSessionMetrics: (uuid: string, metrics: Partial<RacingMindMetrics>) => Promise<void>
   // Cancel without saving (NOTE: hours already deducted at start are not refunded)
   cancelSession: () => void
   // Get elapsed seconds
@@ -141,73 +152,114 @@ export function useRacingMindSession(): UseRacingMindSessionResult {
   /**
    * End the session and save to database
    */
-  const endSession = useCallback(async (): Promise<RacingMindSessionResult | null> => {
-    const uuid = sessionUuidRef.current
-    const startTime = startTimeRef.current
-    const wallClockStart = wallClockStartRef.current
+  const endSession = useCallback(
+    async (params?: EndSessionParams): Promise<RacingMindSessionResult | null> => {
+      const uuid = sessionUuidRef.current
+      const startTime = startTimeRef.current
+      const wallClockStart = wallClockStartRef.current
 
-    if (!uuid || startTime === null || wallClockStart === null) {
-      console.warn('[RacingMindSession] Cannot end session: no active session')
-      return null
-    }
-
-    const now = performance.now()
-    const wallClockEnd = Date.now()
-    const durationMs = now - startTime
-    const durationSeconds = Math.round(durationMs / 1000)
-
-    // Build session record
-    const session: Omit<Session, 'id'> = {
-      uuid,
-      startTime: wallClockStart,
-      endTime: wallClockEnd,
-      durationSeconds,
-      sessionType: 'practice',
-      practiceToolId: 'racing-mind',
-    }
-
-    try {
-      // Save to database (actual time spent goes to practice total)
-      await addSession(session)
-
-      // NOTE: Hours were already deducted at session START with the selected duration
-      // The actual time spent is saved to the session for tracking
-
-      // Clear session-in-progress flag
-      const appState = await db.appState.get(APP_STATE_KEY)
-      if (appState) {
-        await db.appState.update(APP_STATE_KEY, {
-          sessionInProgress: false,
-          sessionStartTime: undefined,
-        })
+      if (!uuid || startTime === null || wallClockStart === null) {
+        console.warn('[RacingMindSession] Cannot end session: no active session')
+        return null
       }
 
-      // Refresh session store to include new session
-      await hydrateSessions()
+      const now = performance.now()
+      const wallClockEnd = Date.now()
+      const durationMs = now - startTime
+      const durationSeconds = Math.round(durationMs / 1000)
 
-      // Clear local state
-      sessionUuidRef.current = null
-      startTimeRef.current = null
-      wallClockStartRef.current = null
-      selectedDurationRef.current = null
+      // Build racing mind metrics if provided
+      const racingMindMetrics: RacingMindMetrics | undefined = params
+        ? {
+            preSessionMindScore: params.preSessionScore,
+            eyeTrackingEnabled: !!params.trackingMetrics,
+            trackingAccuracy: params.trackingMetrics?.engagementPercent,
+          }
+        : undefined
 
-      setState({
-        isActive: false,
-        sessionUuid: null,
-        startTime: null,
-        wallClockStart: null,
-        selectedDurationSeconds: null,
-      })
-
-      return {
+      // Build session record
+      const session: Omit<Session, 'id'> = {
         uuid,
+        startTime: wallClockStart,
+        endTime: wallClockEnd,
         durationSeconds,
+        sessionType: 'practice',
+        practiceToolId: 'racing-mind',
+        racingMindMetrics,
       }
-    } catch (error) {
-      console.error('[RacingMindSession] Failed to save session:', error)
-      return null
-    }
-  }, [hydrateSessions])
+
+      try {
+        // Save to database (actual time spent goes to practice total)
+        await addSession(session)
+
+        // NOTE: Hours were already deducted at session START with the selected duration
+        // The actual time spent is saved to the session for tracking
+
+        // Clear session-in-progress flag
+        const appState = await db.appState.get(APP_STATE_KEY)
+        if (appState) {
+          await db.appState.update(APP_STATE_KEY, {
+            sessionInProgress: false,
+            sessionStartTime: undefined,
+          })
+        }
+
+        // Refresh session store to include new session
+        await hydrateSessions()
+
+        // Clear local state
+        sessionUuidRef.current = null
+        startTimeRef.current = null
+        wallClockStartRef.current = null
+        selectedDurationRef.current = null
+
+        setState({
+          isActive: false,
+          sessionUuid: null,
+          startTime: null,
+          wallClockStart: null,
+          selectedDurationSeconds: null,
+        })
+
+        return {
+          uuid,
+          durationSeconds,
+        }
+      } catch (error) {
+        console.error('[RacingMindSession] Failed to save session:', error)
+        return null
+      }
+    },
+    [hydrateSessions]
+  )
+
+  /**
+   * Update session metrics after post-session assessment
+   * Used to add postSessionMindScore after the user rates their state
+   */
+  const updateSessionMetrics = useCallback(
+    async (uuid: string, metrics: Partial<RacingMindMetrics>): Promise<void> => {
+      try {
+        // Find the session by UUID and update its racingMindMetrics
+        const session = await db.sessions.where('uuid').equals(uuid).first()
+        if (session) {
+          const existingMetrics = session.racingMindMetrics || {}
+          await db.sessions
+            .where('uuid')
+            .equals(uuid)
+            .modify({
+              racingMindMetrics: { ...existingMetrics, ...metrics },
+            })
+          console.log('[RacingMindSession] Updated metrics for session:', uuid, metrics)
+        } else {
+          console.warn('[RacingMindSession] Session not found for metrics update:', uuid)
+        }
+      } catch (error) {
+        console.error('[RacingMindSession] Failed to update session metrics:', error)
+      }
+    },
+    []
+  )
 
   /**
    * Cancel session without saving
@@ -262,6 +314,7 @@ export function useRacingMindSession(): UseRacingMindSessionResult {
     state,
     startSession,
     endSession,
+    updateSessionMetrics,
     cancelSession,
     getElapsedSeconds,
     getProgress,

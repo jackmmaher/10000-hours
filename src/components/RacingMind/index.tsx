@@ -75,6 +75,9 @@ export function RacingMind({ onClose }: RacingMindProps) {
   // Session hook
   const racingMindSession = useRacingMindSession()
 
+  // Store session UUID for post-score update
+  const [sessionUuid, setSessionUuid] = useState<string | null>(null)
+
   // Load calibration profile from localStorage on mount and when returning from calibration
   useEffect(() => {
     const loadCalibrationStatus = () => {
@@ -152,10 +155,15 @@ export function RacingMind({ onClose }: RacingMindProps) {
    */
   const handleEndSession = useCallback(
     async (practiceTrackingMetrics?: TrackingMetrics) => {
-      const result = await racingMindSession.endSession()
+      // Pass initial metrics to endSession (preScore and tracking metrics)
+      const result = await racingMindSession.endSession({
+        preSessionScore: preSessionScore ?? undefined,
+        trackingMetrics: practiceTrackingMetrics,
+      })
 
       if (result) {
         setSessionResult(result)
+        setSessionUuid(result.uuid)
       } else {
         // If session save failed, still continue with estimated data
         setSessionResult({
@@ -172,7 +180,7 @@ export function RacingMind({ onClose }: RacingMindProps) {
       // Go directly to unified results/summary
       setPhase('results')
     },
-    [racingMindSession]
+    [racingMindSession, preSessionScore]
   )
 
   /**
@@ -184,10 +192,25 @@ export function RacingMind({ onClose }: RacingMindProps) {
   }, [racingMindSession])
 
   /**
+   * Handle post-session score update from summary
+   */
+  const handlePostScoreUpdate = useCallback(
+    async (postScore: number) => {
+      if (sessionUuid) {
+        await racingMindSession.updateSessionMetrics(sessionUuid, {
+          postSessionMindScore: postScore,
+        })
+      }
+    },
+    [sessionUuid, racingMindSession]
+  )
+
+  /**
    * Practice again from results
    */
   const handlePracticeAgain = useCallback(() => {
     setSessionResult(null)
+    setSessionUuid(null)
     setPreSessionScore(null)
     setTrackingMetrics(null)
     setPhase('setup')
@@ -282,6 +305,7 @@ export function RacingMind({ onClose }: RacingMindProps) {
             onClose={onClose}
             onPracticeAgain={handlePracticeAgain}
             onMeditateNow={handleMeditateNow}
+            onPostScoreUpdate={handlePostScoreUpdate}
           />
         )}
       </div>

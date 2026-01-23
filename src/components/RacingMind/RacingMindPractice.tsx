@@ -51,6 +51,10 @@ export function RacingMindPractice({
   const [hasStarted, setHasStarted] = useState(false)
   const hasEndedRef = useRef(false)
 
+  // Pause state for when app is backgrounded
+  const [isPaused, setIsPaused] = useState(false)
+  const pauseStartTimeRef = useRef<number>(0)
+
   // Ceremony timing
   const introStartTimeRef = useRef<number>(performance.now())
   const outroStartTimeRef = useRef<number>(0)
@@ -67,8 +71,13 @@ export function RacingMindPractice({
     gazeHistory,
   } = useEyeTracking()
 
-  const { calculateMetrics, getCurrentAccuracy, recordOrbPosition, orbHistory, clearOrbHistory } =
-    useTrackingScore()
+  const {
+    calculateMetrics,
+    getCurrentAccuracy,
+    recordOrbPosition,
+    getOrbHistory,
+    clearOrbHistory,
+  } = useTrackingScore()
 
   // Current tracking accuracy for visual feedback (0-100)
   const [trackingAccuracy, setTrackingAccuracy] = useState(50)
@@ -85,6 +94,25 @@ export function RacingMindPractice({
   useEffect(() => {
     const timer = setTimeout(() => setHasStarted(true), 100)
     return () => clearTimeout(timer)
+  }, [])
+
+  // Handle visibility changes - pause when app is backgrounded
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // App went to background - pause
+        setIsPaused(true)
+        pauseStartTimeRef.current = performance.now()
+        console.log('[RacingMind] Session paused (app backgrounded)')
+      } else {
+        // App came back to foreground - resume
+        setIsPaused(false)
+        console.log('[RacingMind] Session resumed')
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [])
 
   // Manage racing-mind-mode classes on html/body for iOS safe area colors
@@ -165,6 +193,7 @@ export function RacingMindPractice({
         hasEndedRef.current = true
 
         // Calculate and store metrics before stopping tracking
+        const orbHistory = getOrbHistory()
         if (isTracking && gazeHistory.length > 10 && orbHistory.length > 10) {
           storedMetricsRef.current = calculateMetrics(gazeHistory, orbHistory)
         }
@@ -190,7 +219,7 @@ export function RacingMindPractice({
     isTracking,
     stopEyeTracking,
     gazeHistory,
-    orbHistory,
+    getOrbHistory,
     calculateMetrics,
   ])
 
@@ -224,12 +253,13 @@ export function RacingMindPractice({
 
   // Update tracking accuracy when gaze point changes
   useEffect(() => {
+    const orbHistory = getOrbHistory()
     if (gazePoint && orbHistory.length > 0) {
       const latestOrb = orbHistory[orbHistory.length - 1]
       const accuracy = getCurrentAccuracy(gazePoint, latestOrb)
       setTrackingAccuracy(accuracy)
     }
-  }, [gazePoint, orbHistory, getCurrentAccuracy])
+  }, [gazePoint, getOrbHistory, getCurrentAccuracy])
 
   // Handle manual end (during active phase)
   const handleEnd = useCallback(async () => {
@@ -237,6 +267,7 @@ export function RacingMindPractice({
     hasEndedRef.current = true
 
     // Calculate and store metrics
+    const orbHistory = getOrbHistory()
     if (isTracking && gazeHistory.length > 10 && orbHistory.length > 10) {
       storedMetricsRef.current = calculateMetrics(gazeHistory, orbHistory)
     }
@@ -249,7 +280,7 @@ export function RacingMindPractice({
     // Transition to outro
     outroStartTimeRef.current = performance.now()
     setSessionPhase('outro')
-  }, [isTracking, stopEyeTracking, gazeHistory, orbHistory, calculateMetrics])
+  }, [isTracking, stopEyeTracking, gazeHistory, getOrbHistory, calculateMetrics])
 
   // Handle cancel
   const handleCancel = useCallback(() => {
@@ -278,9 +309,9 @@ export function RacingMindPractice({
 
   const timeParts = formatElapsedParts(getElapsedSeconds())
 
-  // Determine if orb should be animating
+  // Determine if orb should be animating (not when paused)
   const isOrbActive =
-    sessionPhase === 'intro' || sessionPhase === 'active' || sessionPhase === 'outro'
+    !isPaused && (sessionPhase === 'intro' || sessionPhase === 'active' || sessionPhase === 'outro')
 
   return (
     <motion.div

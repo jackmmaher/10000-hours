@@ -27,8 +27,8 @@ interface UseTrackingScoreResult {
   getCurrentAccuracy: (gazePoint: GazePoint | null, orbPosition: OrbPosition | null) => number
   /** Add orb position to history */
   recordOrbPosition: (x: number, y: number) => void
-  /** Get orb position history */
-  orbHistory: OrbPosition[]
+  /** Get orb position history (returns copy in chronological order) */
+  getOrbHistory: () => OrbPosition[]
   /** Clear orb history */
   clearOrbHistory: () => void
 }
@@ -179,23 +179,41 @@ function calculateLongestStreak(
   return longestStreakMs / 1000 // Convert to seconds
 }
 
+// Maximum history size (5 minutes at ~60fps)
+const MAX_HISTORY = 18000
+
 export function useTrackingScore(): UseTrackingScoreResult {
   const orbHistoryRef = useRef<OrbPosition[]>([])
+  const orbIndexRef = useRef(0)
 
   /**
-   * Record orb position at current time
+   * Record orb position at current time using circular buffer (O(1) vs O(n) for shift)
    */
   const recordOrbPosition = useCallback((x: number, y: number) => {
-    orbHistoryRef.current.push({
-      x,
-      y,
-      timestamp: performance.now(),
-    })
+    const pos = { x, y, timestamp: performance.now() }
 
-    // Keep last 5 minutes of data (at ~60fps = 18000 points)
-    if (orbHistoryRef.current.length > 18000) {
-      orbHistoryRef.current.shift()
+    if (orbHistoryRef.current.length < MAX_HISTORY) {
+      // Buffer not full yet, just push
+      orbHistoryRef.current.push(pos)
+    } else {
+      // Buffer full, overwrite oldest entry
+      orbHistoryRef.current[orbIndexRef.current] = pos
+      orbIndexRef.current = (orbIndexRef.current + 1) % MAX_HISTORY
     }
+  }, [])
+
+  /**
+   * Get orb history in chronological order (oldest to newest)
+   */
+  const getOrbHistory = useCallback((): OrbPosition[] => {
+    const history = orbHistoryRef.current
+    if (history.length < MAX_HISTORY) {
+      // Buffer not full, already in order
+      return [...history]
+    }
+    // Circular buffer - reorder from oldest to newest
+    const index = orbIndexRef.current
+    return [...history.slice(index), ...history.slice(0, index)]
   }, [])
 
   /**
@@ -203,6 +221,7 @@ export function useTrackingScore(): UseTrackingScoreResult {
    */
   const clearOrbHistory = useCallback(() => {
     orbHistoryRef.current = []
+    orbIndexRef.current = 0
   }, [])
 
   /**
@@ -282,7 +301,7 @@ export function useTrackingScore(): UseTrackingScoreResult {
     calculateMetrics,
     getCurrentAccuracy,
     recordOrbPosition,
-    orbHistory: orbHistoryRef.current,
+    getOrbHistory,
     clearOrbHistory,
   }
 }

@@ -27,6 +27,8 @@ interface RacingMindSummaryProps {
   onClose: () => void
   onPracticeAgain: () => void
   onMeditateNow?: () => void
+  /** Callback to persist post-session score to database */
+  onPostScoreUpdate?: (score: number) => void
 }
 
 /**
@@ -49,8 +51,20 @@ export function RacingMindSummary({
   onClose,
   onPracticeAgain,
   onMeditateNow,
+  onPostScoreUpdate,
 }: RacingMindSummaryProps) {
   const [postScore, setPostScore] = useState<number | null>(null)
+
+  // Persist post-session score when it changes
+  const handlePostScoreChange = useCallback(
+    (score: number | null) => {
+      setPostScore(score)
+      if (score !== null && onPostScoreUpdate) {
+        onPostScoreUpdate(score)
+      }
+    },
+    [onPostScoreUpdate]
+  )
 
   // Determine improvement message when post score is selected
   // preSessionScore = racing (1-10, higher = worse)
@@ -72,7 +86,7 @@ export function RacingMindSummary({
     const feelsCalm = postScore >= 5
 
     if (highEngagement && feelsCalm) {
-      return `${focusTime} of focus. Calm of ${postScore}. You earned that.`
+      return `${focusTime} of focus. Calm of ${postScore}. Your attention contributed.`
     } else if (highEngagement && !feelsCalm) {
       return `${focusTime} of focus. The settling is happening. You'll feel it more each session.`
     } else if (!highEngagement && feelsCalm) {
@@ -112,7 +126,7 @@ export function RacingMindSummary({
 
           {/* Mind State Assessment - Always visible at top */}
           <div className="w-full max-w-sm bg-elevated rounded-xl p-5 mb-4 shadow-sm">
-            <MindStateSlider value={postScore} onChange={setPostScore} scaleType="calm" />
+            <MindStateSlider value={postScore} onChange={handlePostScoreChange} scaleType="calm" />
           </div>
 
           {/* Improvement reveal - Animated when post score is selected */}
@@ -159,7 +173,7 @@ export function RacingMindSummary({
                     <p className="text-lg font-serif text-ink">
                       {formatFocusTime(trackingMetrics.focusTimeSeconds)}
                     </p>
-                    <p className="text-[10px] text-ink/50">Focus</p>
+                    <p className="text-[10px] text-ink/50">Engaged</p>
                   </div>
                   <div>
                     <p className="text-lg font-serif text-ink">

@@ -62,9 +62,15 @@ export function useRacingMindOrb({
   const animationIdRef = useRef<number | null>(null)
   const isReducedMotionRef = useRef(prefersReducedMotion())
 
-  // Position interpolation refs for smoother animation
-  const lastPositionRef = useRef<{ x: number; y: number } | null>(null)
+  // Spring physics state for more organic motion
+  interface SpringState {
+    position: number
+    velocity: number
+  }
+  const springXRef = useRef<SpringState>({ position: 0, velocity: 0 })
+  const springYRef = useRef<SpringState>({ position: 0, velocity: 0 })
   const lastFrameTimeRef = useRef<number>(0)
+  const springInitializedRef = useRef(false)
 
   /**
    * Initialize PixiJS application
@@ -135,6 +141,11 @@ export function useRacingMindOrb({
 
     orb.x = width / 2
     orb.y = height / 2
+
+    // Enable sub-pixel rendering for smoother animation
+    // (prevents orb from snapping to integer pixel positions)
+    orb.roundPixels = false
+
     app.stage.addChild(orb)
     orbRef.current = orb
 
@@ -166,10 +177,26 @@ export function useRacingMindOrb({
   amplitudeScaleRef.current = _amplitudeScale
 
   /**
-   * Linear interpolation helper for smooth position transitions
+   * Critically damped spring step for organic motion
+   * More natural than lerp - has momentum and overshoots slightly
    */
-  function lerp(current: number, target: number, factor: number): number {
-    return current + (target - current) * factor
+  function springStep(
+    state: { position: number; velocity: number },
+    target: number,
+    deltaMs: number,
+    stiffness = 180,
+    damping = 24
+  ): { position: number; velocity: number } {
+    const dt = deltaMs / 1000
+    const displacement = state.position - target
+    const springForce = -stiffness * displacement
+    const dampingForce = -damping * state.velocity
+    const acceleration = springForce + dampingForce
+
+    return {
+      velocity: state.velocity + acceleration * dt,
+      position: state.position + state.velocity * dt,
+    }
   }
 
   /**
@@ -209,21 +236,23 @@ export function useRacingMindOrb({
       targetY = centerY + (position.y - centerY) * scale
     }
 
-    // Frame-rate independent lerp for smooth transitions
+    // Frame-rate independent spring physics for organic motion
     const deltaMs = lastFrameTimeRef.current ? now - lastFrameTimeRef.current : 16.67
     lastFrameTimeRef.current = now
-    const lerpFactor = 1 - Math.pow(0.85, deltaMs / 16.67) // ~0.15 at 60fps
 
-    let orbX: number
-    let orbY: number
-    if (lastPositionRef.current === null) {
-      orbX = targetX
-      orbY = targetY
-    } else {
-      orbX = lerp(lastPositionRef.current.x, targetX, lerpFactor)
-      orbY = lerp(lastPositionRef.current.y, targetY, lerpFactor)
+    // Initialize spring position on first frame
+    if (!springInitializedRef.current) {
+      springXRef.current = { position: targetX, velocity: 0 }
+      springYRef.current = { position: targetY, velocity: 0 }
+      springInitializedRef.current = true
     }
-    lastPositionRef.current = { x: orbX, y: orbY }
+
+    // Update spring physics
+    springXRef.current = springStep(springXRef.current, targetX, deltaMs)
+    springYRef.current = springStep(springYRef.current, targetY, deltaMs)
+
+    const orbX = springXRef.current.position
+    const orbY = springYRef.current.position
 
     orbRef.current.x = orbX
     orbRef.current.y = orbY

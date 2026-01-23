@@ -13,7 +13,6 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useEyeCalibration, type CalibrationPhase } from '../useEyeCalibration'
 import { PhonePositioning } from './PhonePositioning'
 import { CalibrationGrid } from './CalibrationGrid'
-import { ValidationCheck } from './ValidationCheck'
 
 interface EyeCalibrationProps {
   onComplete: () => void
@@ -25,13 +24,9 @@ export function EyeCalibration({ onComplete, onSkip }: EyeCalibrationProps) {
     phase,
     calibrationPoints,
     currentPointIndex,
-    validationResult,
     error,
     startCalibration,
     handlePointTap,
-    runValidation,
-    completeCalibration,
-    resetCalibration,
     skipCalibration,
     setPhase,
   } = useEyeCalibration()
@@ -43,12 +38,9 @@ export function EyeCalibration({ onComplete, onSkip }: EyeCalibrationProps) {
     }
   }, [phase, setPhase])
 
-  // Auto-run validation when entering validating phase
-  useEffect(() => {
-    if (phase === 'validating') {
-      runValidation()
-    }
-  }, [phase, runValidation])
+  // Note: Validation phase has been removed - we now skip directly to complete
+  // after all calibration points are tapped, since validation runs silently
+  // without showing targets to the user
 
   // Handle completion
   useEffect(() => {
@@ -70,14 +62,6 @@ export function EyeCalibration({ onComplete, onSkip }: EyeCalibrationProps) {
     onSkip()
   }, [skipCalibration, onSkip])
 
-  const handleValidationAccept = useCallback(() => {
-    completeCalibration()
-  }, [completeCalibration])
-
-  const handleValidationRetry = useCallback(() => {
-    resetCalibration()
-  }, [resetCalibration])
-
   // Render based on phase
   const renderPhase = (currentPhase: CalibrationPhase) => {
     switch (currentPhase) {
@@ -90,17 +74,6 @@ export function EyeCalibration({ onComplete, onSkip }: EyeCalibrationProps) {
             points={calibrationPoints}
             currentIndex={currentPointIndex}
             onPointTap={handlePointTap}
-          />
-        )
-
-      case 'validating':
-        return (
-          <ValidationCheck
-            result={validationResult}
-            isValidating={!validationResult}
-            onAccept={handleValidationAccept}
-            onRetry={handleValidationRetry}
-            onSkip={handleSkip}
           />
         )
 

@@ -156,15 +156,18 @@ export function getGlowStrength(timeMs: number): number {
 
 /**
  * Smoothed sine function to avoid velocity approaching zero at extremes
- * Near peaks (|sine| > 0.95), blends to maintain some velocity
+ * Uses cubic Hermite interpolation for smooth transition near peaks
  */
 function smoothSine(t: number): number {
   const sine = Math.sin(t)
   const absSine = Math.abs(sine)
-  // Near extremes (|sine| > 0.95), blend to avoid complete velocity stop
-  if (absSine > 0.95) {
-    const blend = (absSine - 0.95) / 0.05
-    return sine * (1 - blend * 0.15)
+
+  // Smooth cubic Hermite transition from 0.9 to 1.0
+  if (absSine > 0.9) {
+    const x = (absSine - 0.9) / 0.1
+    const smoothX = x * x * (3 - 2 * x) // Hermite interpolation (smoothstep)
+    const dampedSine = Math.sign(sine) * (0.9 + 0.1 * (1 - smoothX * 0.3))
+    return dampedSine
   }
   return sine
 }
@@ -264,6 +267,7 @@ export function getCeremonyAmplitudeScale(elapsedMs: number, isOutro = false): n
 
 /**
  * Get instructional text for intro ceremony based on progress
+ * Uses array-based approach for cleaner timing synced to breathing cycles
  *
  * @param elapsedMs - Time elapsed in intro
  * @returns Text to display, or null if no text
@@ -271,17 +275,23 @@ export function getCeremonyAmplitudeScale(elapsedMs: number, isOutro = false): n
 export function getIntroText(elapsedMs: number): string | null {
   const { breathingCycleMs } = ANIMATION_PARAMS
 
-  // Text sequence synced to breathing phases
-  if (elapsedMs < breathingCycleMs) {
-    return 'Follow the ball with your eyes...'
-  } else if (elapsedMs < breathingCycleMs * 2) {
-    return 'Back and forth...'
-  } else if (elapsedMs < breathingCycleMs * 3) {
-    return 'Let your mind settle...'
-  } else if (elapsedMs < breathingCycleMs * 3.5) {
-    return 'Beginning shortly...'
+  const INTRO_TEXTS = [
+    'Follow the ball with your eyes...',
+    'Back and forth...',
+    'Let your mind settle...',
+    'Beginning shortly...',
+  ]
+
+  const phase = Math.floor(elapsedMs / breathingCycleMs)
+
+  // Return text for current phase, null after all phases
+  if (phase < INTRO_TEXTS.length - 1) {
+    return INTRO_TEXTS[phase]
+  } else if (phase < INTRO_TEXTS.length) {
+    // Last phase - show briefly then fade
+    const phaseProgress = (elapsedMs % breathingCycleMs) / breathingCycleMs
+    return phaseProgress < 0.5 ? INTRO_TEXTS[phase] : null
   }
 
-  // Fade out text in final phase
   return null
 }
