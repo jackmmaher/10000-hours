@@ -34,6 +34,8 @@ interface RacingMindPracticeProps {
   getElapsedSeconds: () => number
   onEnd: (trackingMetrics?: TrackingMetrics) => void
   onCancel: () => void
+  /** Whether user has a valid (non-stale) eye tracking calibration */
+  isCalibrated?: boolean
 }
 
 export function RacingMindPractice({
@@ -42,6 +44,7 @@ export function RacingMindPractice({
   getElapsedSeconds,
   onEnd,
   onCancel,
+  isCalibrated = false,
 }: RacingMindPracticeProps) {
   // Session phase state machine
   const [sessionPhase, setSessionPhase] = useState<SessionPhase>('intro')
@@ -72,6 +75,11 @@ export function RacingMindPractice({
 
   // Stored metrics for end of session
   const storedMetricsRef = useRef<TrackingMetrics | undefined>(undefined)
+
+  // Store calibration status in ref for use in metrics/logging
+  // If NOT calibrated and eye tracking is used, engagement scores will be less accurate
+  const isCalibrationValidRef = useRef(isCalibrated)
+  isCalibrationValidRef.current = isCalibrated
 
   // Trigger fade-in after mount
   useEffect(() => {

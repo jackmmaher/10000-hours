@@ -26,6 +26,10 @@ import { RacingMindSummary } from './RacingMindSummary'
 import { EyeCalibration } from './EyeCalibration'
 import { Paywall } from '../Paywall'
 import { LowHoursWarning } from '../LowHoursWarning'
+import { isProfileStale, type CalibrationProfile } from './useEyeCalibration'
+
+// Storage key for calibration profile (same as in useEyeCalibration)
+const CALIBRATION_STORAGE_KEY = 'racing-mind-eye-calibration'
 
 export type SessionDuration = 5 | 10 | 15
 
@@ -65,8 +69,31 @@ export function RacingMind({ onClose }: RacingMindProps) {
   // Calibration state - track if user wants to return to setup after calibration
   const [returnToSetupAfterCalibration, setReturnToSetupAfterCalibration] = useState(false)
 
+  // Eye tracking calibration status - tracks whether user has a valid (non-stale) calibration
+  const [isCalibrated, setIsCalibrated] = useState(false)
+
   // Session hook
   const racingMindSession = useRacingMindSession()
+
+  // Load calibration profile from localStorage on mount and when returning from calibration
+  useEffect(() => {
+    const loadCalibrationStatus = () => {
+      try {
+        const stored = localStorage.getItem(CALIBRATION_STORAGE_KEY)
+        if (!stored) {
+          setIsCalibrated(false)
+          return
+        }
+        const profile: CalibrationProfile = JSON.parse(stored)
+        // Check if profile exists and is not stale (older than 7 days)
+        setIsCalibrated(!isProfileStale(profile))
+      } catch {
+        setIsCalibrated(false)
+      }
+    }
+
+    loadCalibrationStatus()
+  }, [phase]) // Re-check when phase changes (e.g., after calibration completes)
 
   /**
    * Internal function to start the Racing Mind session
@@ -242,6 +269,7 @@ export function RacingMind({ onClose }: RacingMindProps) {
             getElapsedSeconds={racingMindSession.getElapsedSeconds}
             onEnd={handleEndSession}
             onCancel={handleCancel}
+            isCalibrated={isCalibrated}
           />
         )}
 
@@ -250,6 +278,7 @@ export function RacingMind({ onClose }: RacingMindProps) {
             durationSeconds={sessionResult.durationSeconds}
             preSessionScore={preSessionScore}
             trackingMetrics={trackingMetrics}
+            isCalibrated={isCalibrated}
             onClose={onClose}
             onPracticeAgain={handlePracticeAgain}
             onMeditateNow={handleMeditateNow}

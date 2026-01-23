@@ -22,6 +22,8 @@ interface RacingMindSummaryProps {
   durationSeconds: number
   preSessionScore: number | null
   trackingMetrics: TrackingMetrics | null
+  /** Whether user had a valid (non-stale) eye tracking calibration during this session */
+  isCalibrated?: boolean
   onClose: () => void
   onPracticeAgain: () => void
   onMeditateNow?: () => void
@@ -43,6 +45,7 @@ export function RacingMindSummary({
   durationSeconds,
   preSessionScore,
   trackingMetrics,
+  isCalibrated = false,
   onClose,
   onPracticeAgain,
   onMeditateNow,
@@ -187,6 +190,12 @@ export function RacingMindSummary({
                 <p className="text-xs text-ink/50 text-center">
                   Next session: eyes soft, center of the orb, let it lead.
                 </p>
+                {/* Calibration hint - Shows if tracking was used but user was NOT calibrated */}
+                {trackingMetrics && !isCalibrated && (
+                  <p className="text-xs text-ink/40 text-center mt-2 italic">
+                    Calibrate before your next session for more accurate tracking
+                  </p>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
