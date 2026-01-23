@@ -286,7 +286,7 @@ export function RacingMindSummary({
           </div>
 
           {/* Suggestion Card */}
-          <div className="w-full max-w-sm bg-elevated rounded-xl p-5 shadow-sm">
+          <div className="w-full max-w-sm bg-elevated rounded-xl p-5 mb-6 shadow-sm">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
                 <svg
@@ -312,35 +312,30 @@ export function RacingMindSummary({
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Fixed footer with buttons - never scrolls */}
-      <div
-        className="flex-none px-6 pb-6 pt-4 safe-area-bottom"
-        style={{ background: 'var(--bg-base)' }}
-      >
-        <div className="w-full max-w-sm mx-auto space-y-3">
-          {onMeditateNow && (
+          {/* Action buttons - scrolls with content */}
+          <div className="w-full max-w-sm space-y-3 pb-6">
+            {onMeditateNow && (
+              <button
+                onClick={onMeditateNow}
+                className="w-full h-12 bg-accent hover:bg-accent-hover text-white font-medium rounded-xl transition-colors"
+              >
+                Meditate Now
+              </button>
+            )}
             <button
-              onClick={onMeditateNow}
-              className="w-full h-12 bg-accent hover:bg-accent-hover text-white font-medium rounded-xl transition-colors"
+              onClick={onPracticeAgain}
+              className="w-full h-12 bg-[var(--button-secondary-bg)] hover:bg-[var(--bg-deep)] text-[var(--button-secondary-text)] font-medium rounded-xl transition-colors border border-[var(--border)]"
             >
-              Meditate Now
+              Practice Again
             </button>
-          )}
-          <button
-            onClick={onPracticeAgain}
-            className="w-full h-12 bg-[var(--button-secondary-bg)] hover:bg-[var(--bg-deep)] text-[var(--button-secondary-text)] font-medium rounded-xl transition-colors border border-[var(--border)]"
-          >
-            Practice Again
-          </button>
-          <button
-            onClick={onClose}
-            className="w-full h-12 text-ink/70 hover:text-ink font-medium transition-colors"
-          >
-            Done
-          </button>
+            <button
+              onClick={onClose}
+              className="w-full h-12 text-ink/70 hover:text-ink font-medium transition-colors"
+            >
+              Done
+            </button>
+          </div>
         </div>
       </div>
     </div>
