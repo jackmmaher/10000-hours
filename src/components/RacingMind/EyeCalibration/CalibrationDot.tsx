@@ -5,9 +5,12 @@
  * - Pending: Small, muted circle
  * - Active: Large, pulsing, tappable
  * - Completed: Checkmark
+ *
+ * Uses Racing Mind visual style (blue orb) to match session experience.
  */
 
 import { motion } from 'framer-motion'
+import { RACING_MIND_COLORS } from '../../../lib/racingMindAnimation'
 
 export type DotStatus = 'pending' | 'active' | 'completed'
 
@@ -55,16 +58,30 @@ export function CalibrationDot({ x, y, status, onTap, className }: CalibrationDo
 }
 
 function PendingDot() {
-  return <div className="w-3 h-3 rounded-full border-2 border-ink/30 bg-transparent" />
+  return (
+    <div
+      className="w-3 h-3 rounded-full border-2 bg-transparent"
+      style={{ borderColor: `${RACING_MIND_COLORS.orb}50` }}
+    />
+  )
 }
 
 function ActiveDot() {
+  const orbColor = RACING_MIND_COLORS.orb
+  const glowColor = RACING_MIND_COLORS.glow
+
   return (
     <div className="relative">
       {/* Outer pulse ring */}
       <motion.div
-        className="absolute inset-0 rounded-full bg-accent/20"
-        style={{ width: 64, height: 64, marginLeft: -32, marginTop: -32 }}
+        className="absolute inset-0 rounded-full"
+        style={{
+          width: 64,
+          height: 64,
+          marginLeft: -32,
+          marginTop: -32,
+          backgroundColor: `${glowColor}33`,
+        }}
         animate={{
           scale: [1, 1.3, 1],
           opacity: [0.3, 0, 0.3],
@@ -76,11 +93,12 @@ function ActiveDot() {
         }}
       />
 
-      {/* Inner dot */}
+      {/* Inner dot - matches Racing Mind orb style */}
       <motion.div
-        className="w-12 h-12 rounded-full bg-accent flex items-center justify-center shadow-lg"
+        className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
         style={{
-          boxShadow: '0 0 20px rgba(var(--accent-rgb), 0.4)',
+          backgroundColor: orbColor,
+          boxShadow: `0 0 20px ${glowColor}66`,
         }}
         animate={{
           scale: [1, 1.05, 1],
