@@ -272,6 +272,16 @@ html.racing-mind-mode #root {
   padding-bottom: 0 !important;
 }
 
+/* WebGazer elements should never block touches - they're invisible but still in DOM */
+#webgazerVideoFeed,
+#webgazerVideoCanvas,
+#webgazerFaceOverlay,
+#webgazerFaceFeedbackBox,
+#webgazerGazeDot,
+#webgazerVideoContainer {
+  pointer-events: none !important;
+}
+
 body {
   font-family: 'Raleway', system-ui, sans-serif;
   font-weight: 400;

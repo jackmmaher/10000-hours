@@ -37,6 +37,7 @@ export function CalibrationDot({ x, y, status, onTap, className }: CalibrationDo
         pointerEvents: status === 'active' ? 'auto' : 'none',
       }}
       onTap={onTap}
+      onClick={onTap}
       initial={false}
       animate={status}
       variants={{
@@ -76,10 +77,10 @@ function ActiveDot() {
   const glowColor = RACING_MIND_COLORS.glow
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center">
+    <div className="relative w-full h-full flex items-center justify-center pointer-events-none">
       {/* Outer pulse ring - centered in the 64x64 container */}
       <motion.div
-        className="absolute rounded-full"
+        className="absolute rounded-full pointer-events-none"
         style={{
           width: 64,
           height: 64,
@@ -98,7 +99,7 @@ function ActiveDot() {
 
       {/* Inner dot - matches Racing Mind orb style */}
       <motion.div
-        className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg relative"
+        className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg relative pointer-events-none"
         style={{
           backgroundColor: orbColor,
           boxShadow: `0 0 20px ${glowColor}66`,
