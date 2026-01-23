@@ -75,6 +75,7 @@ export function CalibrationGrid({
           y={point.y}
           status={point.status}
           onTap={() => onPointTap(point.id)}
+          className="z-20"
         />
       ))}
 

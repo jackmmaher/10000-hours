@@ -16,18 +16,19 @@ interface CalibrationDotProps {
   y: number // Percentage of screen height
   status: DotStatus
   onTap: () => void
+  className?: string
 }
 
-export function CalibrationDot({ x, y, status, onTap }: CalibrationDotProps) {
+export function CalibrationDot({ x, y, status, onTap, className }: CalibrationDotProps) {
   return (
     <motion.button
-      className="absolute transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center"
+      className={`absolute transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center ${className || ''}`}
       style={{
         left: `${x}%`,
         top: `${y}%`,
+        pointerEvents: status === 'active' ? 'auto' : 'none',
       }}
-      onClick={status === 'active' ? onTap : undefined}
-      disabled={status !== 'active'}
+      onClick={onTap}
       initial={false}
       animate={status}
       variants={{
