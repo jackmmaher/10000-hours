@@ -5,9 +5,10 @@
  * WebGazer learns the correlation between eye position and screen location.
  *
  * Uses Racing Mind visual style (dark background, blue orb) to match session experience.
- * Respects iOS safe areas to prevent content from appearing behind notch/Dynamic Island.
+ * Adds racing-mind-mode class to HTML for iOS safe area colors (same as practice session).
  */
 
+import { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { CalibrationDot, type DotStatus } from './CalibrationDot'
 import { RACING_MIND_COLORS } from '../../../lib/racingMindAnimation'
@@ -32,6 +33,17 @@ export function CalibrationGrid({
 }: CalibrationGridProps) {
   const completedCount = points.filter((p) => p.status === 'completed').length
   const totalPoints = points.length
+
+  // Add racing-mind-mode class to HTML for iOS safe area colors
+  // This ensures the notch/Dynamic Island area and home indicator area are dark
+  useEffect(() => {
+    const html = document.documentElement
+    html.classList.add('racing-mind-mode')
+
+    return () => {
+      html.classList.remove('racing-mind-mode')
+    }
+  }, [])
 
   return (
     <div className="fixed inset-0" style={{ backgroundColor: RACING_MIND_COLORS.background }}>
@@ -61,9 +73,9 @@ export function CalibrationGrid({
         </div>
       </div>
 
-      {/* Progress indicator - positioned with safe area padding */}
+      {/* Progress indicator - positioned with safe area padding, pointer-events-none to not block dots */}
       <div
-        className="absolute top-0 left-0 right-0 z-10"
+        className="absolute top-0 left-0 right-0 z-10 pointer-events-none"
         style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
         <div className="px-6 pt-4 pb-2">
@@ -85,9 +97,9 @@ export function CalibrationGrid({
         </div>
       </div>
 
-      {/* Instructions */}
+      {/* Instructions - pointer-events-none so it doesn't block taps on dots */}
       <motion.div
-        className="absolute left-0 right-0 z-10 text-center px-6"
+        className="absolute left-0 right-0 z-10 text-center px-6 pointer-events-none"
         style={{ top: 'calc(env(safe-area-inset-top, 0px) + 5rem)' }}
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}

@@ -23,12 +23,17 @@ interface CalibrationDotProps {
 }
 
 export function CalibrationDot({ x, y, status, onTap, className }: CalibrationDotProps) {
+  // Determine button size based on status for proper touch target
+  const size = status === 'active' ? 64 : status === 'completed' ? 32 : 16
+
   return (
     <motion.button
       className={`absolute transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center ${className || ''}`}
       style={{
         left: `${x}%`,
         top: `${y}%`,
+        width: size,
+        height: size,
         pointerEvents: status === 'active' ? 'auto' : 'none',
       }}
       onTap={onTap}
@@ -71,15 +76,13 @@ function ActiveDot() {
   const glowColor = RACING_MIND_COLORS.glow
 
   return (
-    <div className="relative">
-      {/* Outer pulse ring */}
+    <div className="relative w-full h-full flex items-center justify-center">
+      {/* Outer pulse ring - centered in the 64x64 container */}
       <motion.div
-        className="absolute inset-0 rounded-full"
+        className="absolute rounded-full"
         style={{
           width: 64,
           height: 64,
-          marginLeft: -32,
-          marginTop: -32,
           backgroundColor: `${glowColor}33`,
         }}
         animate={{
@@ -95,7 +98,7 @@ function ActiveDot() {
 
       {/* Inner dot - matches Racing Mind orb style */}
       <motion.div
-        className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
+        className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg relative"
         style={{
           backgroundColor: orbColor,
           boxShadow: `0 0 20px ${glowColor}66`,
