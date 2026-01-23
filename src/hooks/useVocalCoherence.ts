@@ -18,10 +18,16 @@ import { useRef, useCallback } from 'react'
 // Rolling window size (~400ms at 60fps)
 const WINDOW_SIZE = 24
 
+// Minimum voiced samples before calculating (reduced from 3 for faster response)
+const MIN_VOICED_SAMPLES = 2
+
 // Weights for coherence calculation
 const PITCH_STABILITY_WEIGHT = 0.5
 const AMPLITUDE_SMOOTHNESS_WEIGHT = 0.3
 const VOICING_CONTINUITY_WEIGHT = 0.2
+
+// Score decay rate when transitioning (prevents jarring drops)
+const SCORE_DECAY_RATE = 0.92 // Smooth decay to prevent sudden drops
 
 export interface CoherenceData {
   score: number // 0-100 overall
@@ -112,6 +118,9 @@ export function useVocalCoherence(): UseVocalCoherenceReturn {
     sessionMedianFrequency: null,
   })
 
+  // Previous score for smooth transitions
+  const previousScoreRef = useRef<number>(0)
+
   /**
    * Record a sample (called from audio processing loop)
    */
@@ -157,7 +166,7 @@ export function useVocalCoherence(): UseVocalCoherenceReturn {
 
     // Pitch Stability: standard deviation in cents from reference
     let pitchStabilityScore = 0
-    if (reference !== null && voicedFrequencies.length >= 3) {
+    if (reference !== null && voicedFrequencies.length >= MIN_VOICED_SAMPLES) {
       const centsValues = voicedFrequencies.map((f) => frequencyToCents(f, reference))
       const centsStdDev = standardDeviation(centsValues)
       pitchStabilityScore = calculatePitchStabilityScore(centsStdDev)
@@ -170,7 +179,7 @@ export function useVocalCoherence(): UseVocalCoherenceReturn {
       return freq !== null && freq > 0 && r > 0.01 // Only voiced frames with meaningful RMS
     })
 
-    if (voicedRmsValues.length >= 3) {
+    if (voicedRmsValues.length >= MIN_VOICED_SAMPLES) {
       const mean = voicedRmsValues.reduce((a, b) => a + b, 0) / voicedRmsValues.length
       const stdDev = standardDeviation(voicedRmsValues)
       const cv = mean > 0 ? stdDev / mean : 0
@@ -178,15 +187,22 @@ export function useVocalCoherence(): UseVocalCoherenceReturn {
     }
 
     // Overall coherence score (weighted average)
-    // Only calculate if we have enough voiced samples
     let score = 0
-    if (voicedCount >= 3) {
+    if (voicedCount >= MIN_VOICED_SAMPLES) {
+      // Calculate fresh score
       score = Math.round(
         pitchStabilityScore * PITCH_STABILITY_WEIGHT +
           amplitudeSmoothnessScore * AMPLITUDE_SMOOTHNESS_WEIGHT +
           voicingContinuityScore * VOICING_CONTINUITY_WEIGHT
       )
+    } else if (previousScoreRef.current > 0) {
+      // Not enough samples yet - smooth decay from previous score
+      // This prevents jarring drops during phase transitions
+      score = Math.round(previousScoreRef.current * SCORE_DECAY_RATE)
     }
+
+    // Update previous score for next frame
+    previousScoreRef.current = score
 
     // Update coherence data ref
     coherenceDataRef.current = {
@@ -213,6 +229,7 @@ export function useVocalCoherence(): UseVocalCoherenceReturn {
     rmsWindowRef.current = []
     sessionFrequenciesRef.current = []
     sessionMedianRef.current = null
+    previousScoreRef.current = 0
     coherenceDataRef.current = {
       score: 0,
       pitchStabilityScore: 0,

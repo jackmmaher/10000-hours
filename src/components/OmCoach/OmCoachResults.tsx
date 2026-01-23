@@ -238,10 +238,21 @@ export function OmCoachResults({
               />
             </div>
 
-            {/* Session median frequency (informational) */}
+            {/* Session median frequency with therapeutic context */}
             {coherenceMetrics.sessionMedianFrequency && (
-              <div className="text-xs text-ink/40 text-center mb-4">
-                Your natural tone: ~{Math.round(coherenceMetrics.sessionMedianFrequency)} Hz
+              <div className="text-center mb-4 py-2">
+                <div className="text-sm text-ink/70">
+                  Your natural tone:{' '}
+                  <span className="font-medium text-ink">
+                    ~{Math.round(coherenceMetrics.sessionMedianFrequency)} Hz
+                  </span>
+                </div>
+                {coherenceMetrics.sessionMedianFrequency >= 100 &&
+                  coherenceMetrics.sessionMedianFrequency <= 160 && (
+                    <div className="text-xs text-success-text mt-1">
+                      In the therapeutic range from steady, relaxed chanting
+                    </div>
+                  )}
               </div>
             )}
 

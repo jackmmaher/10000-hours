@@ -39,21 +39,22 @@ function getPhasePositions(mode: TimingMode): number[] {
 
 export function CircularProgress({
   currentPhase,
-  phaseProgress,
+  phaseProgress: _phaseProgress,
   cycleProgress,
   phaseTimeRemainingMs,
   timingMode,
   size = 220,
 }: CircularProgressProps) {
+  // Note: phaseProgress kept in props for API compatibility but unused
+  void _phaseProgress
   const center = size / 2
   const strokeWidth = 6
   const radius = (size - strokeWidth) / 2 - 8
   const markerRadius = radius + 28 // Position markers well outside the ring
 
-  // During breathe phase, show full circle progress for just that phase
-  // This gives users a clear visual countdown for the breathe portion
+  // Always show continuous cycle progress - ring flows clockwise through entire cycle
   const isBreathing = currentPhase === 'breathe'
-  const displayProgress = isBreathing ? phaseProgress : cycleProgress
+  const displayProgress = cycleProgress
 
   // Track previous phase for crossfade
   const [displayPhase, setDisplayPhase] = useState(currentPhase)
