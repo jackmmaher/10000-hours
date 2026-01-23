@@ -28,7 +28,7 @@ export function CalibrationDot({ x, y, status, onTap, className }: CalibrationDo
         top: `${y}%`,
         pointerEvents: status === 'active' ? 'auto' : 'none',
       }}
-      onClick={onTap}
+      onTap={onTap}
       initial={false}
       animate={status}
       variants={{
