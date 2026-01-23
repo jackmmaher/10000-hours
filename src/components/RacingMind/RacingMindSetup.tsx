@@ -206,11 +206,7 @@ export function RacingMindSetup({ onBegin, isLoading }: RacingMindSetupProps) {
 
         {/* Pre-session assessment */}
         <div className="mb-6 bg-elevated rounded-xl p-4">
-          <MindStateSlider
-            value={preScore}
-            onChange={setPreScore}
-            label="How is your mind right now?"
-          />
+          <MindStateSlider value={preScore} onChange={setPreScore} scaleType="racing" />
         </div>
 
         {/* CTA */}

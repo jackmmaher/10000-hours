@@ -1,27 +1,53 @@
 /**
- * MindStateSlider - 1-10 scale for self-assessment
+ * MindStateSlider - Psychologically-framed assessment scales
  *
- * Used for pre and post session assessment of mental state.
- * "Calm" (1) to "Racing" (10)
+ * Two scale types designed using Cialdini/Thaler behavioral principles:
  *
- * Redesigned with a visible track and clear tappable dots.
+ * PRE-SESSION (racing scale):
+ * - "How racing is your mind right now?"
+ * - 1 = "Few thoughts I can't quiet" → 10 = "A chorus that won't let me sit still"
+ * - Gets user to acknowledge/confess their racing mind (pre-commitment)
+ *
+ * POST-SESSION (calm scale):
+ * - "How much calmer is your mind now?"
+ * - 1 = "The voice is still there" → 10 = "Complete mental stillness"
+ * - Assumes benefit occurred (anchoring), higher = better (intuitive)
  */
 
 interface MindStateSliderProps {
   value: number | null
   onChange: (value: number) => void
-  label?: string
+  /** Scale type determines labels and framing */
+  scaleType: 'racing' | 'calm'
   /** Use light text colors for dark backgrounds */
   variant?: 'light' | 'dark'
+}
+
+const SCALE_CONFIG = {
+  racing: {
+    question: 'How racing is your mind right now?',
+    lowLabel: 'Few quiet thoughts',
+    highLabel: 'Relentless chorus',
+    lowDescription: 'Some thoughts, but manageable',
+    highDescription: "Won't let me sit still",
+  },
+  calm: {
+    question: 'How much calmer is your mind now?',
+    lowLabel: 'Still noisy',
+    highLabel: 'Complete stillness',
+    lowDescription: 'Voices still there, listening less',
+    highDescription: 'What voices?',
+  },
 }
 
 export function MindStateSlider({
   value,
   onChange,
-  label,
+  scaleType,
   variant = 'light',
 }: MindStateSliderProps) {
   const dots = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  const config = SCALE_CONFIG[scaleType]
 
   // Color classes based on variant
   const textColor = variant === 'dark' ? 'text-white' : 'text-ink'
@@ -30,14 +56,47 @@ export function MindStateSlider({
   const dotBorder = variant === 'dark' ? 'border-white/40' : 'border-ink/40'
   const dotBg = variant === 'dark' ? 'bg-white/20' : 'bg-base'
 
+  // Contextual description based on selected value
+  const getValueDescription = () => {
+    if (value === null) return null
+
+    if (scaleType === 'racing') {
+      if (value <= 3) return 'Relatively calm, some background noise'
+      if (value <= 5) return 'Moderate mental chatter'
+      if (value <= 7) return 'Active, persistent thoughts'
+      return 'Intense mental activity'
+    } else {
+      if (value <= 3) return 'Some improvement, work to do'
+      if (value <= 5) return 'Noticeably calmer'
+      if (value <= 7) return 'Significantly settled'
+      return 'Deep calm achieved'
+    }
+  }
+
   return (
     <div className="w-full">
-      {label && <p className={`text-center ${textColor} mb-5`}>{label}</p>}
+      {/* Question */}
+      <p className={`text-center ${textColor} font-medium mb-2`}>{config.question}</p>
 
-      {/* Scale labels */}
-      <div className={`flex justify-between text-xs ${textMuted} mb-2 px-2`}>
-        <span>Calm</span>
-        <span>Racing</span>
+      {/* Contextual hint */}
+      <p className={`text-center text-xs ${textMuted} mb-5`}>
+        {value === null
+          ? scaleType === 'racing'
+            ? 'Be honest with yourself'
+            : 'Notice what changed'
+          : getValueDescription()}
+      </p>
+
+      {/* Scale labels with descriptions */}
+      <div className={`flex justify-between text-xs mb-2 px-1`}>
+        <div className="text-left">
+          <span className={textMuted}>1</span>
+          <span className={`ml-1 ${textMuted}`}>{config.lowLabel}</span>
+        </div>
+        <div className="text-right">
+          <span className={textMuted}>{config.highLabel}</span>
+          <span className={`ml-1 ${textMuted}`}>10</span>
+        </div>
       </div>
 
       {/* Slider track with dots */}
@@ -97,6 +156,12 @@ export function MindStateSlider({
             {dot}
           </div>
         ))}
+      </div>
+
+      {/* Endpoint descriptions */}
+      <div className={`flex justify-between text-[10px] ${textMuted} mt-2 px-1`}>
+        <span className="max-w-[80px]">{config.lowDescription}</span>
+        <span className="max-w-[80px] text-right">{config.highDescription}</span>
       </div>
 
       {/* Current value display */}

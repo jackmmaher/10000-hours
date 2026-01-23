@@ -38,39 +38,40 @@ export function RacingMindSummary({
   const [postScore, setPostScore] = useState<number | null>(null)
 
   // Determine improvement message when post score is selected
+  // NEW PARADIGM: preSessionScore = racing (1-10, higher = worse)
+  //               postScore = calm (1-10, higher = better)
   const getImprovementMessage = useCallback(() => {
     if (preSessionScore === null || postScore === null) return null
 
-    // With scale 1=Calm, 10=Racing: a DECREASE in score means calmer
-    const scoreDiff = preSessionScore - postScore
-
-    if (scoreDiff > 0) {
+    // We celebrate high calm scores - the post score directly indicates benefit
+    if (postScore >= 7) {
       return {
-        title: `You went from ${preSessionScore} → ${postScore}`,
-        subtitle: `That's a ${scoreDiff}-point improvement`,
+        title: `Racing mind of ${preSessionScore} → Calm of ${postScore}`,
+        subtitle: 'Significant mental shift achieved',
         isPositive: true,
       }
-    } else if (scoreDiff === 0) {
+    } else if (postScore >= 4) {
       return {
-        title: `You stayed at ${postScore}`,
-        subtitle: 'Consistency is part of the practice',
-        isPositive: null,
+        title: `Racing mind of ${preSessionScore} → Calm of ${postScore}`,
+        subtitle: 'Your mind is settling',
+        isPositive: true,
       }
     } else {
       return {
-        title: `You went from ${preSessionScore} → ${postScore}`,
+        title: `Racing mind of ${preSessionScore} → Calm of ${postScore}`,
         subtitle: 'Some sessions plant seeds for later',
-        isPositive: false,
+        isPositive: null,
       }
     }
   }, [preSessionScore, postScore])
 
   // Get validation message based on subjective + objective data
+  // NEW PARADIGM: postScore is on calm scale (higher = better)
   const getValidationMessage = useCallback(() => {
     if (postScore === null || preSessionScore === null) return null
 
-    const scoreDiff = preSessionScore - postScore
-    const feltCalmer = scoreDiff >= 1
+    // User reports feeling calmer if postScore (calm) is 5+
+    const feltCalmer = postScore >= 5
     const trackingImproved = trackingMetrics && trackingMetrics.improvementPercent > 10
 
     if (feltCalmer && trackingImproved) {
@@ -146,12 +147,7 @@ export function RacingMindSummary({
 
           {/* Mind State Assessment - Always visible at top */}
           <div className="w-full max-w-sm bg-elevated rounded-xl p-5 mb-4 shadow-sm">
-            <MindStateSlider
-              value={postScore}
-              onChange={setPostScore}
-              label="How is your mind now?"
-              variant="light"
-            />
+            <MindStateSlider value={postScore} onChange={setPostScore} scaleType="calm" />
           </div>
 
           {/* Improvement reveal - Animated when post score is selected */}
