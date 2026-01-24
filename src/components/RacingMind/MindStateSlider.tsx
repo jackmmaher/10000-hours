@@ -32,11 +32,11 @@ const SCALE_CONFIG = {
     highDescription: "Won't let me sit still",
   },
   calm: {
-    question: 'How much calmer is your mind now?',
-    lowLabel: 'Still noisy',
-    highLabel: 'Complete stillness',
-    lowDescription: 'Voices still there, listening less',
-    highDescription: 'What voices?',
+    question: 'How calm do you feel now?',
+    lowLabel: 'A little calmer',
+    highLabel: 'Still mind',
+    lowDescription: 'Slightly settled',
+    highDescription: 'Deep stillness',
   },
 }
 
@@ -46,15 +46,12 @@ export function MindStateSlider({
   scaleType,
   variant = 'light',
 }: MindStateSliderProps) {
-  const dots = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
   const config = SCALE_CONFIG[scaleType]
 
   // Color classes based on variant
   const textColor = variant === 'dark' ? 'text-white' : 'text-ink'
   const textMuted = variant === 'dark' ? 'text-white/60' : 'text-ink/60'
   const trackBg = variant === 'dark' ? 'bg-white/10' : 'bg-ink/10'
-  const dotBorder = variant === 'dark' ? 'border-white/40' : 'border-ink/40'
-  const dotBg = variant === 'dark' ? 'bg-white/20' : 'bg-base'
 
   // Contextual description based on selected value
   const getValueDescription = () => {
@@ -66,12 +63,20 @@ export function MindStateSlider({
       if (value <= 7) return 'Active, persistent thoughts'
       return 'Intense mental activity'
     } else {
-      if (value <= 3) return 'Some improvement, work to do'
+      if (value <= 3) return 'Beginning to settle'
       if (value <= 5) return 'Noticeably calmer'
       if (value <= 7) return 'Significantly settled'
-      return 'Deep calm achieved'
+      return 'Deep stillness achieved'
     }
   }
+
+  // Handle slider change
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(parseInt(e.target.value, 10))
+  }
+
+  // Calculate fill percentage for the track
+  const fillPercent = value !== null ? ((value - 1) / 9) * 100 : 0
 
   return (
     <div className="w-full">
@@ -83,12 +88,12 @@ export function MindStateSlider({
         {value === null
           ? scaleType === 'racing'
             ? 'Be honest with yourself'
-            : 'Notice what changed'
+            : "Notice where you've landed"
           : getValueDescription()}
       </p>
 
-      {/* Scale labels with descriptions */}
-      <div className={`flex justify-between text-xs mb-2 px-1`}>
+      {/* Scale labels */}
+      <div className={`flex justify-between text-xs mb-3 px-1`}>
         <div className="text-left">
           <span className={textMuted}>1</span>
           <span className={`ml-1 ${textMuted}`}>{config.lowLabel}</span>
@@ -99,67 +104,60 @@ export function MindStateSlider({
         </div>
       </div>
 
-      {/* Slider track with dots */}
-      <div className="relative px-2">
+      {/* Slider */}
+      <div className="relative px-1">
         {/* Track background */}
         <div
-          className={`absolute top-1/2 left-2 right-2 h-1 -translate-y-1/2 rounded-full ${trackBg}`}
+          className={`absolute top-1/2 left-0 right-0 h-2 -translate-y-1/2 rounded-full ${trackBg}`}
         />
 
-        {/* Filled track up to selected value */}
+        {/* Filled track */}
         {value !== null && (
           <div
-            className="absolute top-1/2 left-2 h-1 -translate-y-1/2 rounded-full bg-accent"
-            style={{ width: `${((value - 1) / 9) * 100}%` }}
+            className="absolute top-1/2 left-0 h-2 -translate-y-1/2 rounded-full bg-accent transition-all duration-150"
+            style={{ width: `${fillPercent}%` }}
           />
         )}
 
-        {/* Dots */}
-        <div className="relative flex justify-between items-center">
-          {dots.map((dot) => {
-            const isSelected = value === dot
-            const isBefore = value !== null && dot < value
-
-            return (
-              <button
-                key={dot}
-                onClick={() => onChange(dot)}
-                className="relative flex items-center justify-center w-8 h-10 -mx-1"
-                aria-label={`Select ${dot}`}
-              >
-                <div
-                  className={`rounded-full transition-all flex items-center justify-center ${
-                    isSelected
-                      ? 'w-9 h-9 bg-accent shadow-lg shadow-accent/40'
-                      : isBefore
-                        ? 'w-4 h-4 bg-accent'
-                        : `w-4 h-4 ${dotBg} border-2 ${dotBorder}`
-                  }`}
-                >
-                  {isSelected && <span className="text-white text-sm font-bold">{dot}</span>}
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Number scale below */}
-      <div className="flex justify-between px-2 mt-1">
-        {dots.map((dot) => (
-          <div
-            key={dot}
-            className={`w-8 -mx-1 text-center text-[10px] ${
-              value === dot ? 'text-accent font-bold' : textMuted
-            }`}
-          >
-            {dot}
-          </div>
-        ))}
+        {/* Native range input */}
+        <input
+          type="range"
+          min={1}
+          max={10}
+          step={1}
+          value={value ?? 5}
+          onChange={handleSliderChange}
+          className="relative w-full h-10 appearance-none bg-transparent cursor-pointer z-10
+            [&::-webkit-slider-thumb]:appearance-none
+            [&::-webkit-slider-thumb]:w-8
+            [&::-webkit-slider-thumb]:h-8
+            [&::-webkit-slider-thumb]:rounded-full
+            [&::-webkit-slider-thumb]:bg-accent
+            [&::-webkit-slider-thumb]:shadow-lg
+            [&::-webkit-slider-thumb]:shadow-accent/40
+            [&::-webkit-slider-thumb]:border-4
+            [&::-webkit-slider-thumb]:border-white
+            [&::-webkit-slider-thumb]:transition-transform
+            [&::-webkit-slider-thumb]:duration-150
+            [&::-webkit-slider-thumb]:hover:scale-110
+            [&::-moz-range-thumb]:w-8
+            [&::-moz-range-thumb]:h-8
+            [&::-moz-range-thumb]:rounded-full
+            [&::-moz-range-thumb]:bg-accent
+            [&::-moz-range-thumb]:shadow-lg
+            [&::-moz-range-thumb]:shadow-accent/40
+            [&::-moz-range-thumb]:border-4
+            [&::-moz-range-thumb]:border-white
+            [&::-moz-range-thumb]:transition-transform
+            [&::-moz-range-thumb]:duration-150
+            [&::-moz-range-thumb]:hover:scale-110"
+          style={{ opacity: value === null ? 0.5 : 1 }}
+          aria-label={config.question}
+        />
       </div>
 
       {/* Endpoint descriptions */}
-      <div className={`flex justify-between text-[10px] ${textMuted} mt-2 px-1`}>
+      <div className={`flex justify-between text-[10px] ${textMuted} mt-1 px-1`}>
         <span className="max-w-[80px]">{config.lowDescription}</span>
         <span className="max-w-[80px] text-right">{config.highDescription}</span>
       </div>

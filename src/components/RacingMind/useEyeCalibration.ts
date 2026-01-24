@@ -158,6 +158,7 @@ export function useEyeCalibration(): UseEyeCalibrationResult {
   const [error, setError] = useState<string | null>(null)
 
   const webgazerInitializedRef = useRef(false)
+  const webgazerBeginCalledRef = useRef(false) // Track if begin() was called (even if not complete)
   const gazeDataRef = useRef<Array<{ x: number; y: number; timestamp: number }>>([])
 
   // Load existing profile on mount
@@ -203,6 +204,7 @@ export function useEyeCalibration(): UseEyeCalibrationResult {
       })
 
       // Start WebGazer (requests camera permission)
+      webgazerBeginCalledRef.current = true // Track that we started (for cleanup if cancelled mid-init)
       await webgazer.begin()
 
       // Clear any existing calibration data for fresh start
@@ -215,6 +217,7 @@ export function useEyeCalibration(): UseEyeCalibrationResult {
       return true
     } catch (err) {
       console.error('[EyeCalibration] Failed to initialize WebGazer:', err)
+      webgazerBeginCalledRef.current = false
       setError('Camera access required for eye tracking calibration')
       return false
     }
@@ -412,11 +415,12 @@ export function useEyeCalibration(): UseEyeCalibrationResult {
   const skipCalibration = useCallback(() => {
     setPhase('idle')
 
-    // Stop WebGazer if it was started
-    if (webgazerInitializedRef.current) {
+    // Stop WebGazer if it was started (check both refs for mid-init cancellation)
+    if (webgazerInitializedRef.current || webgazerBeginCalledRef.current) {
       try {
         webgazer.end()
         webgazerInitializedRef.current = false
+        webgazerBeginCalledRef.current = false
         setIsWebGazerReady(false)
       } catch {
         // Ignore cleanup errors
@@ -424,13 +428,15 @@ export function useEyeCalibration(): UseEyeCalibrationResult {
     }
   }, [])
 
-  // Cleanup on unmount
+  // Cleanup on unmount - ensure camera is released in all cases
   useEffect(() => {
     return () => {
-      if (webgazerInitializedRef.current) {
+      // Check both refs to handle cancellation during initialization window
+      if (webgazerInitializedRef.current || webgazerBeginCalledRef.current) {
         try {
           webgazer.end()
           webgazerInitializedRef.current = false
+          webgazerBeginCalledRef.current = false
         } catch {
           // Ignore cleanup errors
         }

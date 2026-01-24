@@ -66,18 +66,28 @@ export function RacingMindSummary({
     [onPostScoreUpdate]
   )
 
-  // Determine improvement message when post score is selected
-  // preSessionScore = racing (1-10, higher = worse)
-  // postScore = calm (1-10, higher = better)
-  const getImprovementMessage = useCallback(() => {
-    if (preSessionScore === null || postScore === null) return null
+  // Get contextual label for the calm score (celebrates the arrived state)
+  const getCalmLabel = useCallback(() => {
+    if (postScore === null) return null
 
-    return {
-      title: `Racing mind of ${preSessionScore} \u2192 Calm of ${postScore}`,
+    if (postScore <= 3) return 'Beginning to settle'
+    if (postScore <= 5) return 'Noticeably calmer'
+    if (postScore <= 7) return 'Significantly settled'
+    return 'Deep stillness achieved'
+  }, [postScore])
+
+  // Get journey acknowledgment message (acknowledges they came in racing, without comparing numbers)
+  const getJourneyMessage = useCallback(() => {
+    if (postScore === null) return null
+
+    // Acknowledge the journey based on whether they had a high racing mind coming in
+    if (preSessionScore !== null && preSessionScore >= 7) {
+      return 'You arrived with a racing mind. This is where you landed.'
     }
-  }, [preSessionScore, postScore])
+    return 'This is where you landed.'
+  }, [postScore, preSessionScore])
 
-  // Get reward message based on engagement + calm rating
+  // Get reward message based on engagement + calm rating (no numerical comparison)
   const getRewardMessage = useCallback(() => {
     if (postScore === null || !trackingMetrics) return null
 
@@ -86,17 +96,18 @@ export function RacingMindSummary({
     const feelsCalm = postScore >= 5
 
     if (highEngagement && feelsCalm) {
-      return `${focusTime} of focus. Calm of ${postScore}. Your attention contributed.`
+      return `${focusTime} of focused attention. Your presence contributed to this calm.`
     } else if (highEngagement && !feelsCalm) {
-      return `${focusTime} of focus. The settling is happening. You'll feel it more each session.`
+      return `${focusTime} of focused attention. The settling is happening. You'll feel it more each session.`
     } else if (!highEngagement && feelsCalm) {
-      return `${focusTime} of focus. Calm of ${postScore}. Imagine what full focus would feel like.`
+      return `${focusTime} of attention. Imagine what deeper focus would feel like.`
     } else {
-      return `${focusTime} of focus. More focus, more calm. That's the deal.`
+      return `${focusTime} of attention. More focus, more calm. That's the practice.`
     }
   }, [postScore, trackingMetrics])
 
-  const improvementMessage = getImprovementMessage()
+  const calmLabel = getCalmLabel()
+  const journeyMessage = getJourneyMessage()
   const rewardMessage = getRewardMessage()
 
   return (
@@ -129,9 +140,9 @@ export function RacingMindSummary({
             <MindStateSlider value={postScore} onChange={handlePostScoreChange} scaleType="calm" />
           </div>
 
-          {/* Improvement reveal - Animated when post score is selected */}
+          {/* Calm celebration - Animated when post score is selected */}
           <AnimatePresence>
-            {improvementMessage && (
+            {calmLabel && (
               <motion.div
                 className="w-full max-w-sm bg-elevated rounded-xl p-5 mb-4 shadow-sm"
                 initial={{ opacity: 0, height: 0, marginBottom: 0 }}
@@ -139,7 +150,8 @@ export function RacingMindSummary({
                 transition={{ duration: 0.4, ease: 'easeOut' }}
               >
                 <div className="text-center">
-                  <p className="text-lg font-serif text-ink">{improvementMessage.title}</p>
+                  <p className="text-lg font-serif text-ink mb-1">{calmLabel}</p>
+                  {journeyMessage && <p className="text-xs text-ink/50">{journeyMessage}</p>}
                 </div>
               </motion.div>
             )}

@@ -49,6 +49,7 @@ export function useEyeTracking(maxHistorySize = 1800): UseEyeTrackingResult {
 
   const gazeHistoryRef = useRef<GazePoint[]>([])
   const isInitializedRef = useRef(false)
+  const isBeginCalledRef = useRef(false) // Track if webgazer.begin() was called (even if not complete)
   const updateCountRef = useRef(0)
 
   // Check support on mount - WebGazer needs getUserMedia
@@ -131,6 +132,7 @@ export function useEyeTracking(maxHistorySize = 1800): UseEyeTrackingResult {
 
       // Start WebGazer - this will request camera permission
       console.debug('[useEyeTracking] Calling webgazer.begin()...')
+      isBeginCalledRef.current = true // Track that we started (for cleanup if cancelled mid-init)
       await webgazer.begin()
       console.debug('[useEyeTracking] WebGazer started successfully')
 
@@ -154,6 +156,7 @@ export function useEyeTracking(maxHistorySize = 1800): UseEyeTrackingResult {
       return true
     } catch (error) {
       console.error('[useEyeTracking] Failed to start:', error)
+      isBeginCalledRef.current = false
       return false
     }
   }, [isSupported, maxHistorySize])
@@ -170,9 +173,11 @@ export function useEyeTracking(maxHistorySize = 1800): UseEyeTrackingResult {
 
       // End WebGazer completely to release the camera
       // This is the only way to actually stop the camera indicator
-      if (isInitializedRef.current) {
+      // Check isBeginCalledRef to handle cancellation during initialization
+      if (isInitializedRef.current || isBeginCalledRef.current) {
         webgazer.end()
         isInitializedRef.current = false
+        isBeginCalledRef.current = false
         console.debug('[useEyeTracking] WebGazer ended, camera released')
       }
 
@@ -190,14 +195,16 @@ export function useEyeTracking(maxHistorySize = 1800): UseEyeTrackingResult {
     setGazeHistory([])
   }, [])
 
-  // Cleanup on unmount
+  // Cleanup on unmount - ensure camera is released in all cases
   useEffect(() => {
     return () => {
-      if (isInitializedRef.current) {
+      // Check both refs to handle cancellation during initialization window
+      if (isInitializedRef.current || isBeginCalledRef.current) {
         console.debug('[useEyeTracking] Cleanup - ending WebGazer')
         try {
           webgazer.end()
           isInitializedRef.current = false
+          isBeginCalledRef.current = false
         } catch {
           // Ignore cleanup errors
         }

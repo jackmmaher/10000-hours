@@ -96,6 +96,15 @@ export function RacingMindPractice({
     return () => clearTimeout(timer)
   }, [])
 
+  // Safety cleanup: ensure camera is released when component unmounts
+  // This handles cases where cancel/end happens before tracking state is fully set
+  useEffect(() => {
+    return () => {
+      console.debug('[RacingMindPractice] Unmount cleanup - ensuring camera release')
+      stopEyeTracking()
+    }
+  }, [stopEyeTracking])
+
   // Handle visibility changes - pause when app is backgrounded
   useEffect(() => {
     const handleVisibilityChange = () => {
