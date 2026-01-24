@@ -60,6 +60,8 @@ export function OmCoachPractice({
     amplitudeSmoothnessScore: 0,
     voicingContinuityScore: 0,
     sessionMedianFrequency: null,
+    rawPitchVarianceCents: 0,
+    rawAmplitudeCV: 0,
   })
 
   const animationRef = useRef<number | null>(null)
@@ -163,6 +165,8 @@ export function OmCoachPractice({
           currentPhase={guidedState.currentPhase}
           phaseProgress={guidedState.phaseProgress}
           cycleProgress={guidedState.cycleProgress}
+          totalProgress={guidedState.totalProgress}
+          isFirstCycle={guidedState.isFirstCycle}
           phaseTimeRemainingMs={phaseTimeRemainingMs}
           timingMode={guidedState.timingMode}
           size={180}
@@ -173,7 +177,11 @@ export function OmCoachPractice({
 
         {/* Coherence scale */}
         <div className="w-full max-w-sm">
-          <CoherenceScale coherence={coherence.score} />
+          <CoherenceScale
+            coherence={coherence.score}
+            currentPhase={guidedState.currentPhase}
+            phaseTimeRemainingMs={phaseTimeRemainingMs}
+          />
         </div>
 
         {/* Spacer */}

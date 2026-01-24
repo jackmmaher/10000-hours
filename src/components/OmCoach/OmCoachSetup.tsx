@@ -2,19 +2,19 @@
  * OmCoachSetup - Pre-session setup screen for Aum Coach
  *
  * Features:
- * - Duration picker (5/10/15 min)
+ * - Cycle count picker (8/12/16/20 cycles)
  * - Timing mode selector (Traditional 18s / Extended 24s / Long Breath 36s)
- * - Dynamic cycle count based on mode
+ * - Dynamic session time display
  * - Instructions for A-U-M practice
  * - Audio settings for mobile sensitivity adjustment
  */
 
 import { useState } from 'react'
 import {
-  type SessionDuration,
   type TimingMode,
-  getSessionCycles,
+  type CycleCount,
   getCycleDuration,
+  formatSessionTime,
 } from '../../hooks/useGuidedOmCycle'
 import {
   type ClarityPreset,
@@ -24,7 +24,7 @@ import {
 } from '../../hooks/useAudioSensitivity'
 
 interface OmCoachSetupProps {
-  onBegin: (duration: SessionDuration, mode: TimingMode) => void
+  onBegin: (cycleCount: CycleCount, mode: TimingMode) => void
   isLoading?: boolean
   error?: string | null
   hasCalibration?: boolean
@@ -35,7 +35,7 @@ interface OmCoachSetupProps {
   onAudioSettingsChange?: (settings: Partial<AudioSensitivitySettings>) => void
 }
 
-const DURATIONS: SessionDuration[] = [5, 10, 15]
+const CYCLE_COUNTS: CycleCount[] = [8, 12, 16, 20]
 
 const TIMING_MODE_INFO: Record<
   TimingMode,
@@ -72,12 +72,12 @@ export function OmCoachSetup({
 }: OmCoachSetupProps) {
   const [showDetails, setShowDetails] = useState(false)
   const [showAudioSettings, setShowAudioSettings] = useState(false)
-  const [selectedDuration, setSelectedDuration] = useState<SessionDuration>(5)
+  const [selectedCycleCount, setSelectedCycleCount] = useState<CycleCount>(12)
   const [selectedMode, setSelectedMode] = useState<TimingMode>('traditional')
 
-  const estimatedCycles = getSessionCycles(selectedDuration, selectedMode)
   const cycleDuration = getCycleDuration(selectedMode)
   const cycleDurationSec = cycleDuration > 0 ? Math.round(cycleDuration / 1000) : null
+  const sessionTime = formatSessionTime(selectedCycleCount, selectedMode)
 
   // Use provided settings or defaults
   const settings = audioSettings || DEFAULT_SETTINGS
@@ -114,7 +114,7 @@ export function OmCoachSetup({
               <div className="w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <span className="text-[10px] font-semibold text-accent">1</span>
               </div>
-              <p className="text-sm text-ink">Follow the phases: Breathe → Ah → Oo → Mm</p>
+              <p className="text-sm text-ink">Follow the phases: Breathe In → Ah → Oo → Mm</p>
             </div>
 
             <div className="flex gap-3">
@@ -312,7 +312,7 @@ export function OmCoachSetup({
         {/* Timing Mode Picker */}
         <div className="mb-4">
           <p className="text-xs text-ink/50 mb-2 text-center uppercase tracking-wide">
-            Timing Mode
+            Breathing Rhythm
           </p>
           <div className="flex gap-2">
             {(Object.keys(TIMING_MODE_INFO) as TimingMode[]).map((mode) => {
@@ -341,39 +341,39 @@ export function OmCoachSetup({
           </div>
         </div>
 
-        {/* Duration picker */}
+        {/* Cycle Count Picker */}
         <div className="mb-6">
-          <p className="text-xs text-ink/50 mb-2 text-center uppercase tracking-wide">Duration</p>
+          <p className="text-xs text-ink/50 mb-2 text-center uppercase tracking-wide">Cycles</p>
           <div className="flex gap-2">
-            {DURATIONS.map((duration) => (
+            {CYCLE_COUNTS.map((count) => (
               <button
-                key={duration}
-                onClick={() => setSelectedDuration(duration)}
+                key={count}
+                onClick={() => setSelectedCycleCount(count)}
                 className={`flex-1 py-3 rounded-xl transition-colors ${
-                  selectedDuration === duration
+                  selectedCycleCount === count
                     ? 'bg-accent text-white'
                     : 'bg-elevated text-ink hover:bg-elevated/80'
                 }`}
               >
-                <div className="text-xl font-semibold">{duration}</div>
+                <div className="text-xl font-semibold">{count}</div>
                 <div
                   className={`text-xs ${
-                    selectedDuration === duration ? 'text-white/70' : 'text-ink/50'
+                    selectedCycleCount === count ? 'text-white/70' : 'text-ink/50'
                   }`}
                 >
-                  min
+                  cycles
                 </div>
               </button>
             ))}
           </div>
           <p className="text-xs text-ink/40 mt-2 text-center">
-            {estimatedCycles} cycles ({cycleDurationSec}s each)
+            {sessionTime} total ({cycleDurationSec}s per cycle + 3 practice)
           </p>
         </div>
 
         {/* CTA */}
         <button
-          onClick={() => onBegin(selectedDuration, selectedMode)}
+          onClick={() => onBegin(selectedCycleCount, selectedMode)}
           disabled={isLoading}
           className="w-full h-14 bg-accent hover:bg-accent-hover text-white font-medium rounded-xl transition-colors disabled:opacity-50"
         >

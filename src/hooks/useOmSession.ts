@@ -161,6 +161,13 @@ export function useOmSession(): UseOmSessionResult {
         completedCycles: metrics.completedCycles,
         averageAlignmentScore: metrics.averageAlignmentScore,
         vocalizationSeconds,
+        // Enhanced metrics for adaptive algorithm
+        sessionMedianFrequency: metrics.sessionMedianFrequency,
+        avgPitchStabilityScore: metrics.avgPitchStabilityScore,
+        avgAmplitudeSmoothnessScore: metrics.avgAmplitudeSmoothnessScore,
+        avgVoicingContinuityScore: metrics.avgVoicingContinuityScore,
+        rawPitchVarianceCents: metrics.rawPitchVarianceCents,
+        rawAmplitudeCV: metrics.rawAmplitudeCV,
       }
 
       // Build session record

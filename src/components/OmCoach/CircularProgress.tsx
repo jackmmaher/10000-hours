@@ -11,12 +11,18 @@
 
 import { useState, useEffect, useRef } from 'react'
 import type { CyclePhase, TimingMode } from '../../hooks/useGuidedOmCycle'
-import { getPhaseLabel, TIMING_CONFIGS } from '../../hooks/useGuidedOmCycle'
+import {
+  getPhaseLabel,
+  TIMING_CONFIGS,
+  FIRST_BREATHE_MULTIPLIER,
+} from '../../hooks/useGuidedOmCycle'
 
 interface CircularProgressProps {
   currentPhase: CyclePhase
   phaseProgress: number // 0-1 (for phase countdown display)
   cycleProgress: number // 0-1 (for ring - continuous through cycle)
+  totalProgress: number // Continuous progress across cycles (use % 1 for display)
+  isFirstCycle: boolean // True during first cycle (extended breathe)
   phaseTimeRemainingMs: number | null
   timingMode: TimingMode
   size?: number
@@ -25,14 +31,19 @@ interface CircularProgressProps {
 /**
  * Calculate phase boundary positions as percentages of the cycle
  * Returns positions for: [breatheEnd, ahEnd, ooEnd] (mm ends at 1.0)
+ *
+ * For first cycle, accounts for extended breathe duration so markers
+ * are positioned correctly relative to the arc progress.
  */
-function getPhasePositions(mode: TimingMode): number[] {
+function getPhasePositions(mode: TimingMode, isFirstCycle: boolean): number[] {
   const config = TIMING_CONFIGS[mode]
-  const total = config.breathe + config.ah + config.oo + config.mm
+  const breatheDuration = isFirstCycle ? config.breathe * FIRST_BREATHE_MULTIPLIER : config.breathe
 
-  const breatheEnd = config.breathe / total
-  const ahEnd = (config.breathe + config.ah) / total
-  const ooEnd = (config.breathe + config.ah + config.oo) / total
+  const total = breatheDuration + config.ah + config.oo + config.mm
+
+  const breatheEnd = breatheDuration / total
+  const ahEnd = (breatheDuration + config.ah) / total
+  const ooEnd = (breatheDuration + config.ah + config.oo) / total
 
   return [breatheEnd, ahEnd, ooEnd]
 }
@@ -40,30 +51,35 @@ function getPhasePositions(mode: TimingMode): number[] {
 export function CircularProgress({
   currentPhase,
   phaseProgress: _phaseProgress,
-  cycleProgress,
+  cycleProgress: _cycleProgress,
+  totalProgress,
+  isFirstCycle,
   phaseTimeRemainingMs,
   timingMode,
   size = 220,
 }: CircularProgressProps) {
-  // Note: phaseProgress kept in props for API compatibility but unused
+  // Note: phaseProgress and cycleProgress kept in props for API compatibility but unused
   void _phaseProgress
+  void _cycleProgress
   const center = size / 2
   const strokeWidth = 6
   const radius = (size - strokeWidth) / 2 - 8
   const markerRadius = radius + 28 // Position markers well outside the ring
 
-  // Always show continuous cycle progress - ring flows clockwise through entire cycle
+  // Use totalProgress % 1 for display - this NEVER reverses because totalProgress
+  // continuously increases (0 → 1 → 2 → 3...). The modulo gives us 0-1 range
+  // that wraps seamlessly without any backward animation.
   const isBreathing = currentPhase === 'breathe'
-  const displayProgress = cycleProgress
+  const displayProgress = totalProgress % 1
 
   // Track previous phase for crossfade
   const [displayPhase, setDisplayPhase] = useState(currentPhase)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const prevPhaseRef = useRef(currentPhase)
 
-  // Track previous cycle progress to detect resets
-  const prevCycleProgressRef = useRef(cycleProgress)
-  const [isCycleReset, setIsCycleReset] = useState(false)
+  // Track previous totalProgress to detect cycle boundaries (for transition handling)
+  const prevTotalProgressRef = useRef(totalProgress)
+  const [isCycleBoundary, setIsCycleBoundary] = useState(false)
 
   // Handle phase transitions with crossfade
   useEffect(() => {
@@ -81,30 +97,35 @@ export function CircularProgress({
     }
   }, [currentPhase])
 
-  // Detect cycle reset (progress jumps from near 1 to near 0)
+  // Detect cycle boundary crossings (when totalProgress crosses integer boundaries)
+  // We use this to briefly disable transitions for perfectly smooth wrapping
   useEffect(() => {
-    const prevProgress = prevCycleProgressRef.current
-    const currProgress = cycleProgress
+    const prevProgress = prevTotalProgressRef.current
+    const currProgress = totalProgress
 
-    // If previous was > 0.9 and current is < 0.1, it's a cycle boundary
-    if (prevProgress > 0.9 && currProgress < 0.1) {
-      setIsCycleReset(true)
-      // Re-enable transition after a brief moment
+    // Check if we crossed an integer boundary (e.g., 0.95 → 1.05 means crossing 1.0)
+    const prevFloor = Math.floor(prevProgress)
+    const currFloor = Math.floor(currProgress)
+
+    if (currFloor > prevFloor && currProgress > 0) {
+      setIsCycleBoundary(true)
+      // Re-enable transition after the wrap completes
       const timer = setTimeout(() => {
-        setIsCycleReset(false)
+        setIsCycleBoundary(false)
       }, 50)
+      prevTotalProgressRef.current = currProgress
       return () => clearTimeout(timer)
     }
 
-    prevCycleProgressRef.current = currProgress
-  }, [cycleProgress])
+    prevTotalProgressRef.current = currProgress
+  }, [totalProgress])
 
   // Calculate SVG arc path
   const circumference = 2 * Math.PI * radius
   const cycleOffset = circumference * (1 - displayProgress)
 
-  // Get phase boundary positions
-  const phasePositions = getPhasePositions(timingMode)
+  // Get phase boundary positions (dynamic based on first cycle's extended breathe)
+  const phasePositions = getPhasePositions(timingMode, isFirstCycle)
 
   // Format countdown
   const countdownSeconds =
@@ -115,7 +136,7 @@ export function CircularProgress({
 
   // Calculate marker positions based on actual phase durations
   const markers = [
-    { pos: 0, label: 'Breathe', phase: 'breathe' as const },
+    { pos: 0, label: 'In', phase: 'breathe' as const }, // Short for "Breathe In"
     { pos: phasePositions[0], label: 'Ah', phase: 'ah' as const },
     { pos: phasePositions[1], label: 'Oo', phase: 'oo' as const },
     { pos: phasePositions[2], label: 'Mm', phase: 'mm' as const },
@@ -190,7 +211,7 @@ export function CircularProgress({
             strokeDasharray={circumference}
             strokeDashoffset={cycleOffset}
             style={{
-              transition: isCycleReset ? 'none' : 'stroke-dashoffset 0.1s linear',
+              transition: isCycleBoundary ? 'none' : 'stroke-dashoffset 0.1s linear',
             }}
           />
         </svg>

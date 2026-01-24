@@ -15,8 +15,15 @@ export type PracticeToolId = 'om-coach' | 'racing-mind' | 'posture-training'
 // Aum Coach specific metrics
 export interface OmCoachMetrics {
   completedCycles: number
-  averageAlignmentScore: number
+  averageAlignmentScore: number // Legacy: now stores coherence score
   vocalizationSeconds: number
+  // Enhanced metrics (v2) - for adaptive algorithm
+  sessionMedianFrequency?: number // User's natural pitch this session
+  avgPitchStabilityScore?: number // 0-100
+  avgAmplitudeSmoothnessScore?: number // 0-100
+  avgVoicingContinuityScore?: number // 0-100
+  rawPitchVarianceCents?: number // Raw variance for threshold adaptation
+  rawAmplitudeCV?: number // Raw CV for threshold adaptation
 }
 
 // Racing Mind specific metrics (self-assessment + eye tracking)

@@ -41,8 +41,8 @@ export const TIMING_CONFIGS: Record<
   longbreath: { breathe: 12000, ah: 6000, oo: 6000, mm: 12000 }, // 36s total
 }
 
-// First breathe multiplier for gentle introduction
-export const FIRST_BREATHE_MULTIPLIER = 1.5
+// First breathe multiplier - set to 1.0 (was 1.5, removed to prevent exhaling before Ah)
+export const FIRST_BREATHE_MULTIPLIER = 1.0
 
 // Number of practice cycles before scored session
 export const PRACTICE_CYCLES = 3
@@ -65,13 +65,38 @@ export function getFirstCycleDuration(mode: TimingMode): number {
   return firstBreathe + config.ah + config.oo + config.mm
 }
 
-// Session duration options
+// Session duration options (legacy - prefer cycle count)
 export type SessionDuration = 5 | 10 | 15
 
-// Calculate scored cycles for duration and timing mode
+// Cycle count options
+export type CycleCount = 8 | 12 | 16 | 20
+
+// Calculate scored cycles for duration and timing mode (legacy)
 export function getSessionCycles(duration: SessionDuration, mode: TimingMode): number {
   const cycleDuration = getCycleDuration(mode)
   return Math.floor((duration * 60 * 1000) / cycleDuration)
+}
+
+/**
+ * Calculate total session time from cycle count and mode
+ * Includes 3 practice cycles
+ */
+export function getSessionTimeMs(cycleCount: CycleCount, mode: TimingMode): number {
+  const cycleDuration = getCycleDuration(mode)
+  const practiceTime = cycleDuration * PRACTICE_CYCLES
+  const scoredTime = cycleDuration * cycleCount
+  return practiceTime + scoredTime
+}
+
+/**
+ * Format session time for display (e.g., "5:42")
+ */
+export function formatSessionTime(cycleCount: CycleCount, mode: TimingMode): string {
+  const totalMs = getSessionTimeMs(cycleCount, mode)
+  const totalSeconds = Math.round(totalMs / 1000)
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`
 }
 
 // Legacy exports for backwards compatibility
@@ -118,6 +143,8 @@ export interface GuidedCycleState {
   currentPhase: CyclePhase
   phaseProgress: number // 0-1 within current phase
   cycleProgress: number // 0-1 within current cycle
+  totalProgress: number // Continuous progress across cycles (never resets, use % 1 for display)
+  isFirstCycle: boolean // True during first practice cycle (extended breathe)
 
   // Practice phase (3 cycles, not scored)
   isPractice: boolean
@@ -148,9 +175,18 @@ export interface UseGuidedOmCycleOptions {
   onScoredSessionStart?: () => void
 }
 
+export interface StartSessionOptions {
+  mode?: TimingMode
+  // Either provide duration (legacy) or cycleCount (new)
+  duration?: SessionDuration
+  cycleCount?: CycleCount
+}
+
 export interface UseGuidedOmCycleResult {
   state: GuidedCycleState
-  startSession: (duration: SessionDuration, mode?: TimingMode) => void
+  startSession: (options: StartSessionOptions) => void
+  // Legacy overload for backwards compatibility
+  startSessionLegacy: (duration: SessionDuration, mode?: TimingMode) => void
   stopSession: () => void
   recordSample: (phoneme: Phoneme, pitch: PitchData, coherence?: CoherenceData) => void
   getExpectedPhoneme: () => Phoneme | null
@@ -168,6 +204,8 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
     currentPhase: 'breathe',
     phaseProgress: 0,
     cycleProgress: 0,
+    totalProgress: 0,
+    isFirstCycle: true,
     isPractice: true,
     practiceCycleNumber: 1,
     practiceTotalCycles: PRACTICE_CYCLES,
@@ -442,11 +480,16 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
         }
       }
 
+      // Calculate continuous total progress (never resets, always increases)
+      const totalProgress = absoluteCycle - 1 + cycleProgress
+
       return {
         ...prev,
         currentPhase: phase,
         phaseProgress,
         cycleProgress,
+        totalProgress,
+        isFirstCycle: absoluteCycle === 1,
         isPractice: stillInPractice,
         practiceCycleNumber,
         currentCycle: stillInPractice ? 1 : scoredCycleNumber,
@@ -469,12 +512,29 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
   ])
 
   /**
-   * Start a guided session
+   * Start a guided session (new API with options)
    */
   const startSession = useCallback(
-    (duration: SessionDuration, mode: TimingMode = 'traditional') => {
-      const totalCycles = getSessionCycles(duration, mode)
-      const totalSessionMs = duration * 60 * 1000
+    (options: StartSessionOptions) => {
+      const mode = options.mode ?? 'traditional'
+
+      // Determine cycle count - prefer explicit cycleCount, fallback to duration-based calculation
+      let totalCycles: number
+      let totalSessionMs: number
+
+      if (options.cycleCount !== undefined) {
+        // New cycle-based approach
+        totalCycles = options.cycleCount
+        totalSessionMs = getSessionTimeMs(options.cycleCount, mode)
+      } else if (options.duration !== undefined) {
+        // Legacy duration-based approach
+        totalCycles = getSessionCycles(options.duration, mode)
+        totalSessionMs = options.duration * 60 * 1000
+      } else {
+        // Default to 12 cycles if nothing specified
+        totalCycles = 12
+        totalSessionMs = getSessionTimeMs(12, mode)
+      }
 
       const now = performance.now()
       practiceStartRef.current = now
@@ -516,6 +576,8 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
         currentPhase: 'breathe',
         phaseProgress: 0,
         cycleProgress: 0,
+        totalProgress: 0,
+        isFirstCycle: true,
         isPractice: true,
         practiceCycleNumber: 1,
         practiceTotalCycles: PRACTICE_CYCLES,
@@ -524,7 +586,7 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
         totalCycles,
         elapsedMs: 0,
         totalSessionMs,
-        sessionDurationMin: duration,
+        sessionDurationMin: options.duration ?? 5,
         // Legacy (deprecated)
         isGetReady: false,
         getReadyProgress: 0,
@@ -533,6 +595,16 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
       animationFrameRef.current = requestAnimationFrame(updateTimed)
     },
     [updateTimed]
+  )
+
+  /**
+   * Legacy start session API for backwards compatibility
+   */
+  const startSessionLegacy = useCallback(
+    (duration: SessionDuration, mode: TimingMode = 'traditional') => {
+      startSession({ duration, mode })
+    },
+    [startSession]
   )
 
   /**
@@ -639,6 +711,7 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
   return {
     state,
     startSession,
+    startSessionLegacy,
     stopSession,
     recordSample,
     getExpectedPhoneme,
@@ -653,7 +726,7 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
 export function getPhaseLabel(phase: CyclePhase): string {
   switch (phase) {
     case 'breathe':
-      return 'Breathe'
+      return 'Breathe In'
     case 'ah':
       return 'Ah'
     case 'oo':

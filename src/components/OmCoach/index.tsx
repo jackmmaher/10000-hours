@@ -24,12 +24,14 @@ import { usePitchDetection } from '../../hooks/usePitchDetection'
 import { useFormantDetection } from '../../hooks/useFormantDetection'
 import { usePhonemeCalibration } from '../../hooks/usePhonemeCalibration'
 import { useVocalCoherence } from '../../hooks/useVocalCoherence'
+import { useAdaptiveBaseline } from '../../hooks/useAdaptiveBaseline'
 import { useOmSession, type OmSessionResult } from '../../hooks/useOmSession'
 import {
   useGuidedOmCycle,
-  type SessionDuration,
   type TimingMode,
+  type CycleCount,
   type CycleQuality,
+  getSessionTimeMs,
 } from '../../hooks/useGuidedOmCycle'
 import type { CoherenceMetrics } from './OmCoachResults'
 import { OmCoachSetup } from './OmCoachSetup'
@@ -72,7 +74,7 @@ export function OmCoach({ onClose }: OmCoachProps) {
   const [showPaywall, setShowPaywall] = useState(false)
   const [showLowHoursWarning, setShowLowHoursWarning] = useState(false)
   const [pendingSession, setPendingSession] = useState<{
-    duration: SessionDuration
+    cycleCount: CycleCount
     mode: TimingMode
   } | null>(null)
 
@@ -82,6 +84,11 @@ export function OmCoach({ onClose }: OmCoachProps) {
 
   // Cumulative coherence tracking during session
   const coherenceSamplesRef = useRef<number[]>([])
+  const pitchStabilitySamplesRef = useRef<number[]>([])
+  const amplitudeSmoothnessSamplesRef = useRef<number[]>([])
+  const voicingContinuitySamplesRef = useRef<number[]>([])
+  const pitchVarianceSamplesRef = useRef<number[]>([])
+  const amplitudeCVSamplesRef = useRef<number[]>([])
 
   // Audio hooks
   const audioCapture = useOmAudioCapture()
@@ -91,9 +98,21 @@ export function OmCoach({ onClose }: OmCoachProps) {
   const formantDetection = useFormantDetection()
   const phonemeCalibration = usePhonemeCalibration()
 
-  // Vocal coherence tracking (replaces alignment scoring)
-  const vocalCoherence = useVocalCoherence()
+  // Store calibration profile in state so we can pass it to coherence
+  const [calibrationProfile, setCalibrationProfile] = useState(phonemeCalibration.profile)
+
+  // Load adaptive baseline from session history
+  const { baseline: adaptiveBaseline, stats: historicalStats } = useAdaptiveBaseline()
+
+  // Vocal coherence tracking - now calibration and history aware
+  const vocalCoherence = useVocalCoherence({
+    calibration: calibrationProfile,
+    adaptiveBaseline: adaptiveBaseline,
+  })
   const omSession = useOmSession()
+
+  // Track previous phase for detecting transitions (initialized after guidedCycle hook)
+  const prevPhaseRef = useRef<string>('breathe')
 
   // Load calibration on mount and apply to formant detection
   // Using refs to store stable function references to avoid unnecessary effect runs
@@ -109,6 +128,7 @@ export function OmCoach({ onClose }: OmCoachProps) {
     const profile = loadCalibrationRef.current()
     if (profile) {
       setCalibrationRef.current(profile)
+      setCalibrationProfile(profile)
     }
   }, [])
 
@@ -134,6 +154,16 @@ export function OmCoach({ onClose }: OmCoachProps) {
     onCycleComplete: handleCycleComplete,
     onSessionComplete: handleSessionComplete,
   })
+
+  // Detect phase transitions and notify coherence hook
+  // This enables smooth transitions without penalizing the user
+  useEffect(() => {
+    const currentPhase = guidedCycle.state.currentPhase
+    if (currentPhase !== prevPhaseRef.current) {
+      vocalCoherence.notifyPhaseTransition(currentPhase)
+      prevPhaseRef.current = currentPhase
+    }
+  }, [guidedCycle.state.currentPhase, vocalCoherence])
 
   // Animation frame ref for audio processing loop
   const animationFrameRef = useRef<number | null>(null)
@@ -181,10 +211,20 @@ export function OmCoach({ onClose }: OmCoachProps) {
             vocalCoherence.getCoherenceData()
           )
 
-          // Track coherence samples for session average
+          // Track coherence samples for session average and adaptive algorithm
           const coherenceData = vocalCoherence.getCoherenceData()
           if (coherenceData.score > 0) {
             coherenceSamplesRef.current.push(coherenceData.score)
+            pitchStabilitySamplesRef.current.push(coherenceData.pitchStabilityScore)
+            amplitudeSmoothnessSamplesRef.current.push(coherenceData.amplitudeSmoothnessScore)
+            voicingContinuitySamplesRef.current.push(coherenceData.voicingContinuityScore)
+            // Only track raw values when they're meaningful (non-zero)
+            if (coherenceData.rawPitchVarianceCents > 0) {
+              pitchVarianceSamplesRef.current.push(coherenceData.rawPitchVarianceCents)
+            }
+            if (coherenceData.rawAmplitudeCV > 0) {
+              amplitudeCVSamplesRef.current.push(coherenceData.rawAmplitudeCV)
+            }
           }
         }
       } else {
@@ -217,7 +257,7 @@ export function OmCoach({ onClose }: OmCoachProps) {
    * Called after hour bank checks pass
    */
   const startSessionInternal = useCallback(
-    async (duration: SessionDuration, mode: TimingMode) => {
+    async (cycleCount: CycleCount, mode: TimingMode) => {
       setIsStarting(true)
       setError(null)
 
@@ -227,12 +267,18 @@ export function OmCoach({ onClose }: OmCoachProps) {
         setIsAudioActive(true)
 
         // Start session timing and deduct hours at START
-        // Convert duration (minutes) to seconds for hour bank deduction
-        const durationSeconds = duration * 60
+        // Calculate total time from cycle count
+        const totalTimeMs = getSessionTimeMs(cycleCount, mode)
+        const durationSeconds = Math.round(totalTimeMs / 1000)
         await omSession.startSession(durationSeconds)
 
         // Initialize tracking
         coherenceSamplesRef.current = []
+        pitchStabilitySamplesRef.current = []
+        amplitudeSmoothnessSamplesRef.current = []
+        voicingContinuitySamplesRef.current = []
+        pitchVarianceSamplesRef.current = []
+        amplitudeCVSamplesRef.current = []
         lockedCyclesRef.current = 0
         totalCyclesRef.current = 0
         setCoherenceMetrics(null)
@@ -242,8 +288,8 @@ export function OmCoach({ onClose }: OmCoachProps) {
         formantDetection.reset()
         vocalCoherence.reset()
 
-        // Start guided cycle session with timing mode
-        guidedCycle.startSession(duration, mode)
+        // Start guided cycle session with cycle count
+        guidedCycle.startSession({ cycleCount, mode })
 
         // Start audio processing loop
         isProcessingRef.current = true
@@ -272,7 +318,7 @@ export function OmCoach({ onClose }: OmCoachProps) {
    * Handle begin button - checks hour bank before starting
    */
   const handleBegin = useCallback(
-    (duration: SessionDuration, mode: TimingMode) => {
+    (cycleCount: CycleCount, mode: TimingMode) => {
       // Check if user has hours available
       if (!canMeditate) {
         setShowPaywall(true)
@@ -281,13 +327,13 @@ export function OmCoach({ onClose }: OmCoachProps) {
 
       // Check if critically low (< 30 min) - show warning before proceeding
       if (isCriticallyLow) {
-        setPendingSession({ duration, mode })
+        setPendingSession({ cycleCount, mode })
         setShowLowHoursWarning(true)
         return
       }
 
       // Proceed with session
-      startSessionInternal(duration, mode)
+      startSessionInternal(cycleCount, mode)
     },
     [canMeditate, isCriticallyLow, startSessionInternal]
   )
@@ -317,17 +363,31 @@ export function OmCoach({ onClose }: OmCoachProps) {
     // Stop audio capture
     audioCapture.stopCapture()
 
-    // Calculate average coherence score from samples
-    const samples = coherenceSamplesRef.current
-    const averageCoherence =
-      samples.length > 0 ? Math.round(samples.reduce((a, b) => a + b, 0) / samples.length) : 0
+    // Helper to calculate average
+    const calcAvg = (arr: number[]) =>
+      arr.length > 0 ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0
+    const calcMedian = (arr: number[]) => {
+      if (arr.length === 0) return 0
+      const sorted = [...arr].sort((a, b) => a - b)
+      const mid = Math.floor(sorted.length / 2)
+      return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
+    }
 
-    // Store coherence metrics for results
+    // Calculate average scores from tracked samples
+    const averageCoherence = calcAvg(coherenceSamplesRef.current)
+    const avgPitchStability = calcAvg(pitchStabilitySamplesRef.current)
+    const avgAmplitudeSmoothness = calcAvg(amplitudeSmoothnessSamplesRef.current)
+    const avgVoicingContinuity = calcAvg(voicingContinuitySamplesRef.current)
+    // Use median for raw values to reduce outlier impact
+    const medianPitchVariance = calcMedian(pitchVarianceSamplesRef.current)
+    const medianAmplitudeCV = calcMedian(amplitudeCVSamplesRef.current)
+
+    // Store coherence metrics for results display
     setCoherenceMetrics({
       averageCoherenceScore: averageCoherence,
-      pitchStabilityScore: finalCoherence.pitchStabilityScore,
-      amplitudeSmoothnessScore: finalCoherence.amplitudeSmoothnessScore,
-      voicingContinuityScore: finalCoherence.voicingContinuityScore,
+      pitchStabilityScore: avgPitchStability,
+      amplitudeSmoothnessScore: avgAmplitudeSmoothness,
+      voicingContinuityScore: avgVoicingContinuity,
       sessionMedianFrequency: finalCoherence.sessionMedianFrequency,
     })
 
@@ -335,14 +395,20 @@ export function OmCoach({ onClose }: OmCoachProps) {
     const completedCycles = guidedState.currentCycle - 1 // Subtract 1 since current cycle wasn't completed
 
     // Estimate vocalization ratio from voicing continuity
-    const vocalizationRatio = finalCoherence.voicingContinuityScore / 100
+    const vocalizationRatio = avgVoicingContinuity / 100
 
-    // End session and save to database
-    // Note: averageAlignmentScore is kept for backwards compatibility
+    // End session and save to database with enhanced metrics
     const result = await omSession.endSession({
       completedCycles: Math.max(completedCycles, 0),
-      averageAlignmentScore: averageCoherence, // Store coherence as alignment for compatibility
+      averageAlignmentScore: averageCoherence, // Legacy compatibility
       vocalizationRatio: vocalizationRatio,
+      // Enhanced metrics for adaptive algorithm
+      sessionMedianFrequency: finalCoherence.sessionMedianFrequency ?? undefined,
+      avgPitchStabilityScore: avgPitchStability,
+      avgAmplitudeSmoothnessScore: avgAmplitudeSmoothness,
+      avgVoicingContinuityScore: avgVoicingContinuity,
+      rawPitchVarianceCents: medianPitchVariance,
+      rawAmplitudeCV: medianAmplitudeCV,
     })
 
     if (result) {
@@ -438,10 +504,11 @@ export function OmCoach({ onClose }: OmCoachProps) {
    * Handle calibration completion
    */
   const handleCalibrationComplete = useCallback(() => {
-    // Apply the new calibration profile to formant detection
+    // Apply the new calibration profile to formant detection and coherence
     const profile = phonemeCalibration.profile
     if (profile) {
       formantDetection.setCalibration(profile)
+      setCalibrationProfile(profile) // Also update coherence
     }
 
     // Stop audio capture (will restart when session begins)
@@ -607,6 +674,15 @@ export function OmCoach({ onClose }: OmCoachProps) {
               lockedCycles={lockedCyclesRef.current}
               totalCycles={totalCyclesRef.current}
               coherenceMetrics={coherenceMetrics}
+              historicalStats={
+                historicalStats
+                  ? {
+                      sessionCount: historicalStats.sessionCount,
+                      avgCoherence: historicalStats.avgCoherence,
+                      improvementPercent: historicalStats.improvementPercent,
+                    }
+                  : null
+              }
               onClose={onClose}
               onPracticeAgain={handlePracticeAgain}
               onMeditateNow={handleMeditateNow}
@@ -624,7 +700,7 @@ export function OmCoach({ onClose }: OmCoachProps) {
           onContinue={() => {
             setShowLowHoursWarning(false)
             if (pendingSession) {
-              startSessionInternal(pendingSession.duration, pendingSession.mode)
+              startSessionInternal(pendingSession.cycleCount, pendingSession.mode)
               setPendingSession(null)
             }
           }}

@@ -23,12 +23,20 @@ export interface CoherenceMetrics {
   sessionMedianFrequency: number | null
 }
 
+// Historical stats for progress comparison
+export interface HistoricalComparison {
+  sessionCount: number
+  avgCoherence: number
+  improvementPercent: number | null
+}
+
 interface OmCoachResultsProps {
   durationSeconds: number
   metrics: OmCoachMetrics
   lockedCycles?: number
   totalCycles?: number
   coherenceMetrics?: CoherenceMetrics | null
+  historicalStats?: HistoricalComparison | null
   onClose: () => void
   onPracticeAgain: () => void
   onMeditateNow?: () => void
@@ -137,6 +145,7 @@ export function OmCoachResults({
   lockedCycles = 0,
   totalCycles = 0,
   coherenceMetrics,
+  historicalStats,
   onClose,
   onPracticeAgain,
   onMeditateNow,
@@ -150,6 +159,10 @@ export function OmCoachResults({
 
   // Calculate lock rate
   const lockRate = totalCycles > 0 ? Math.round((lockedCycles / totalCycles) * 100) : 0
+
+  // Calculate comparison to historical average
+  const hasHistory = historicalStats && historicalStats.sessionCount >= 3
+  const comparedToAvg = hasHistory ? mainScore - historicalStats.avgCoherence : null
 
   // Get contextual label for the settled score
   const getSettledLabel = useCallback(() => {
@@ -239,7 +252,23 @@ export function OmCoachResults({
                 <p className="text-xs text-ink/50 mt-0.5">Stability of your practice</p>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-serif text-ink">{Math.round(mainScore)}%</p>
+                <div className="flex items-baseline justify-end gap-2">
+                  <p className="text-2xl font-serif text-ink">{Math.round(mainScore)}%</p>
+                  {comparedToAvg !== null && (
+                    <span
+                      className={`text-sm font-medium ${
+                        comparedToAvg > 0
+                          ? 'text-success-text'
+                          : comparedToAvg < 0
+                            ? 'text-ink/50'
+                            : 'text-ink/40'
+                      }`}
+                    >
+                      {comparedToAvg > 0 ? '+' : ''}
+                      {comparedToAvg}%
+                    </span>
+                  )}
+                </div>
                 <span
                   className={`text-xs px-2 py-0.5 rounded-full ${
                     feedback.color === 'success'
@@ -249,7 +278,11 @@ export function OmCoachResults({
                         : 'bg-ink/5 text-ink/50'
                   }`}
                 >
-                  {feedback.label}
+                  {comparedToAvg !== null && comparedToAvg > 5
+                    ? 'Better than usual!'
+                    : comparedToAvg !== null && comparedToAvg < -5
+                      ? 'Below your average'
+                      : feedback.label}
                 </span>
               </div>
             </div>
