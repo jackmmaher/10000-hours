@@ -132,8 +132,7 @@ export function RacingMindSummary({
             </svg>
           </div>
 
-          <h1 className="font-serif text-2xl text-ink mb-2">Practice Complete</h1>
-          <p className="text-sm text-ink/60 text-center mb-6">Session saved to your practice log</p>
+          <h1 className="font-serif text-2xl text-ink mb-6">Practice Complete</h1>
 
           {/* Mind State Assessment - Always visible at top */}
           <div className="w-full max-w-sm bg-elevated rounded-xl p-5 mb-4 shadow-sm">
@@ -222,28 +221,6 @@ export function RacingMindSummary({
             )}
           </AnimatePresence>
 
-          {/* Nudge text - Shows after metrics */}
-          <AnimatePresence>
-            {postScore !== null && (
-              <motion.div
-                className="w-full max-w-sm mb-6"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.4, ease: 'easeOut', delay: 0.5 }}
-              >
-                <p className="text-xs text-ink/50 text-center">
-                  Next session: eyes soft, center of the orb, let it lead.
-                </p>
-                {/* Calibration hint - Shows if tracking was used but user was NOT calibrated */}
-                {trackingMetrics && !isCalibrated && (
-                  <p className="text-xs text-ink/40 text-center mt-2 italic">
-                    Calibrate before your next session for more accurate tracking
-                  </p>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
           {/* Duration stat - Shows when no tracking metrics available */}
           {!trackingMetrics && (
             <div className="w-full max-w-sm bg-elevated rounded-xl p-4 mb-4 shadow-sm">
@@ -254,16 +231,41 @@ export function RacingMindSummary({
             </div>
           )}
 
-          {/* Action buttons - scrolls with content, extra padding for footer */}
-          <div className="w-full max-w-sm space-y-3 pb-24">
-            {onMeditateNow && (
-              <button
-                onClick={onMeditateNow}
-                className="w-full h-12 bg-accent hover:bg-accent-hover text-white font-medium rounded-xl transition-colors"
+          {/* Bridge CTA - Same motion, eyes closed */}
+          <AnimatePresence>
+            {postScore !== null && onMeditateNow && (
+              <motion.div
+                className="w-full max-w-sm bg-accent/5 border border-accent/20 rounded-xl p-5 mb-4"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: 'easeOut', delay: 0.45 }}
               >
-                Meditate Now
-              </button>
+                <h3 className="font-serif text-lg text-ink text-center mb-2">
+                  Same Motion. Eyes Closed.
+                </h3>
+                <p className="text-sm text-ink/70 text-center leading-relaxed mb-4">
+                  Your brain responds the same way—whether you see the orb or imagine it. Close your
+                  eyes. Picture it drifting slowly. The stillness is yours to keep.
+                </p>
+                <button
+                  onClick={onMeditateNow}
+                  className="w-full h-12 bg-accent hover:bg-accent-hover text-white font-medium rounded-xl transition-colors"
+                >
+                  Begin Meditation
+                </button>
+              </motion.div>
             )}
+          </AnimatePresence>
+
+          {/* Calibration hint - Shows if tracking was used but user was NOT calibrated */}
+          {postScore !== null && trackingMetrics && !isCalibrated && (
+            <p className="w-full max-w-sm text-xs text-ink/40 text-center mb-4 italic">
+              Calibrate before your next session for more accurate tracking
+            </p>
+          )}
+
+          {/* Secondary actions */}
+          <div className="w-full max-w-sm space-y-3 pb-24">
             <button
               onClick={onPracticeAgain}
               className="w-full h-12 bg-[var(--button-secondary-bg)] hover:bg-[var(--bg-deep)] text-[var(--button-secondary-text)] font-medium rounded-xl transition-colors border border-[var(--border)]"
