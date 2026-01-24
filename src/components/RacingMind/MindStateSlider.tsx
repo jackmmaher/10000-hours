@@ -18,7 +18,7 @@ interface MindStateSliderProps {
   value: number | null
   onChange: (value: number) => void
   /** Scale type determines labels and framing */
-  scaleType: 'racing' | 'calm'
+  scaleType: 'racing' | 'calm' | 'settled'
   /** Use light text colors for dark backgrounds */
   variant?: 'light' | 'dark'
 }
@@ -37,6 +37,13 @@ const SCALE_CONFIG = {
     highLabel: 'Still mind',
     lowDescription: 'Slightly settled',
     highDescription: 'Deep stillness',
+  },
+  settled: {
+    question: 'How settled do you feel?',
+    lowLabel: 'A little settled',
+    highLabel: 'Deeply grounded',
+    lowDescription: 'Slightly calmer',
+    highDescription: 'Body and mind at rest',
   },
 }
 
@@ -62,11 +69,17 @@ export function MindStateSlider({
       if (value <= 5) return 'Moderate mental chatter'
       if (value <= 7) return 'Active, persistent thoughts'
       return 'Intense mental activity'
-    } else {
+    } else if (scaleType === 'calm') {
       if (value <= 3) return 'Beginning to settle'
       if (value <= 5) return 'Noticeably calmer'
       if (value <= 7) return 'Significantly settled'
       return 'Deep stillness achieved'
+    } else {
+      // settled
+      if (value <= 3) return 'Starting to ground'
+      if (value <= 5) return 'Noticeably more present'
+      if (value <= 7) return 'Settled and centered'
+      return 'Deeply grounded'
     }
   }
 
@@ -88,7 +101,9 @@ export function MindStateSlider({
         {value === null
           ? scaleType === 'racing'
             ? 'Be honest with yourself'
-            : "Notice where you've landed"
+            : scaleType === 'calm'
+              ? "Notice where you've landed"
+              : 'Notice your breath'
           : getValueDescription()}
       </p>
 

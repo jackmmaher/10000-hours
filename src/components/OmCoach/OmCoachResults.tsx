@@ -6,9 +6,13 @@
  * - Displays stability, smoothness, and continuity scores
  * - Shows session median frequency (informational only)
  * - Provides actionable suggestions based on performance
+ * - Bridge CTA to meditation with neuroscience framing
  */
 
+import { useState, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import type { OmCoachMetrics } from '../../lib/db/types'
+import { MindStateSlider } from '../RacingMind/MindStateSlider'
 
 // Coherence data from session
 export interface CoherenceMetrics {
@@ -137,6 +141,8 @@ export function OmCoachResults({
   onPracticeAgain,
   onMeditateNow,
 }: OmCoachResultsProps) {
+  const [postScore, setPostScore] = useState<number | null>(null)
+
   // Use coherence score if available, otherwise fall back to alignment score
   const mainScore = coherenceMetrics?.averageCoherenceScore ?? metrics.averageAlignmentScore
   const feedback = getScoreLabel(mainScore)
@@ -144,6 +150,17 @@ export function OmCoachResults({
 
   // Calculate lock rate
   const lockRate = totalCycles > 0 ? Math.round((lockedCycles / totalCycles) * 100) : 0
+
+  // Get contextual label for the settled score
+  const getSettledLabel = useCallback(() => {
+    if (postScore === null) return null
+    if (postScore <= 3) return 'Starting to ground'
+    if (postScore <= 5) return 'Noticeably more present'
+    if (postScore <= 7) return 'Settled and centered'
+    return 'Deeply grounded'
+  }, [postScore])
+
+  const settledLabel = getSettledLabel()
 
   return (
     <div className="h-full overflow-y-auto">
@@ -160,8 +177,29 @@ export function OmCoachResults({
           </svg>
         </div>
 
-        <h1 className="font-serif text-2xl text-ink mb-2">Practice Complete</h1>
-        <p className="text-sm text-ink/60 text-center mb-6">Session saved to your practice log</p>
+        <h1 className="font-serif text-2xl text-ink mb-6">Practice Complete</h1>
+
+        {/* Post-session assessment */}
+        <div className="w-full max-w-sm bg-elevated rounded-xl p-5 mb-4 shadow-sm">
+          <MindStateSlider value={postScore} onChange={setPostScore} scaleType="settled" />
+        </div>
+
+        {/* Settled celebration - Animated when post score is selected */}
+        <AnimatePresence>
+          {settledLabel && (
+            <motion.div
+              className="w-full max-w-sm bg-elevated rounded-xl p-5 mb-4 shadow-sm"
+              initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+              animate={{ opacity: 1, height: 'auto', marginBottom: 16 }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+            >
+              <div className="text-center">
+                <p className="text-lg font-serif text-ink mb-1">{settledLabel}</p>
+                <p className="text-xs text-ink/50">The resonance is still with you.</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Session Stats Card */}
         <div className="w-full max-w-sm bg-elevated rounded-xl p-5 mb-4 shadow-sm">
@@ -313,22 +351,40 @@ export function OmCoachResults({
           </div>
         )}
 
-        {/* Actions */}
+        {/* Bridge CTA - The vibration continues */}
+        <AnimatePresence>
+          {postScore !== null && onMeditateNow && (
+            <motion.div
+              className="w-full max-w-sm bg-accent/5 border border-accent/20 rounded-xl p-5 mb-4"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: 'easeOut', delay: 0.15 }}
+            >
+              <h3 className="font-serif text-lg text-ink text-center mb-2">
+                The Vibration Continues.
+              </h3>
+              <p className="text-sm text-ink/70 text-center leading-relaxed mb-4">
+                Your nervous system just shifted. Extended exhale activated your parasympathetic
+                response. Close your eyes. Let the resonance settle into silence.
+              </p>
+              <button
+                onClick={onMeditateNow}
+                className="w-full h-12 bg-accent hover:bg-accent-hover text-white font-medium rounded-xl transition-colors"
+              >
+                Begin Meditation
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Secondary actions */}
         <div className="w-full max-w-sm space-y-3 mt-auto">
           <button
             onClick={onPracticeAgain}
-            className="w-full h-12 bg-accent hover:bg-accent-hover text-white font-medium rounded-xl transition-colors"
+            className="w-full h-12 bg-[var(--button-secondary-bg)] hover:bg-[var(--bg-deep)] text-[var(--button-secondary-text)] font-medium rounded-xl transition-colors border border-[var(--border)]"
           >
             Practice Again
           </button>
-          {onMeditateNow && (
-            <button
-              onClick={onMeditateNow}
-              className="w-full h-12 bg-[var(--button-secondary-bg)] hover:bg-[var(--bg-deep)] text-[var(--button-secondary-text)] font-medium rounded-xl transition-colors border border-[var(--border)]"
-            >
-              Meditate Now
-            </button>
-          )}
           <button
             onClick={onClose}
             className="w-full h-12 text-ink/70 hover:text-ink font-medium transition-colors"
