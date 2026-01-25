@@ -289,28 +289,26 @@ export function RacingMindPractice({
       storedMetricsRef.current = calculateMetrics(gazeHistory, orbHistory)
     }
 
-    // Stop eye tracking
-    if (isTracking) {
-      await stopEyeTracking()
-    }
+    // ALWAYS stop eye tracking - even if isTracking is false, camera may be initializing
+    // This releases the camera before showing the outro/complete overlay
+    await stopEyeTracking()
 
     // Transition to outro
     outroStartTimeRef.current = performance.now()
     setSessionPhase('outro')
   }, [isTracking, stopEyeTracking, gazeHistory, getOrbHistory, calculateMetrics])
 
-  // Handle cancel
-  const handleCancel = useCallback(() => {
+  // Handle cancel (during intro phase only - before session formally starts)
+  const handleCancel = useCallback(async () => {
     if (hasEndedRef.current) return
     hasEndedRef.current = true
 
-    // Stop eye tracking
-    if (isTracking) {
-      stopEyeTracking()
-    }
+    // ALWAYS stop eye tracking - camera may be initializing even if isTracking is false
+    // Must await to ensure camera is released before navigation
+    await stopEyeTracking()
 
     onCancel()
-  }, [onCancel, isTracking, stopEyeTracking])
+  }, [onCancel, stopEyeTracking])
 
   // Handle "See Results" from complete overlay
   const handleSeeResults = useCallback(() => {
@@ -347,8 +345,9 @@ export function RacingMindPractice({
         amplitudeScale={amplitudeScale}
       />
 
-      {/* Cancel button - only during intro and active phases */}
-      {(sessionPhase === 'intro' || sessionPhase === 'active') && (
+      {/* Cancel button - only during intro phase (before session formally starts) */}
+      {/* During active phase, only End button is shown to avoid confusion */}
+      {sessionPhase === 'intro' && (
         <button
           onClick={handleCancel}
           className="absolute left-4 px-3 py-1.5 text-caption font-medium text-white/50 hover:text-white/80 hover:bg-white/10 rounded-lg transition-all duration-150 ease-out z-10"
