@@ -10,7 +10,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useNavigationStore } from '../stores/useNavigationStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSwipe } from '../hooks/useSwipe'
-import { getInsights, deleteInsight, markInsightAsShared, Insight } from '../lib/db'
+import { getInsights, markInsightAsShared, Insight } from '../lib/db'
 import { getMyPearls, deletePearl, Pearl } from '../lib/pearls'
 import { SharePearl } from './SharePearl'
 
@@ -31,7 +31,7 @@ function formatInsightDate(date: Date): string {
     return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
-      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
     })
   }
 }
@@ -59,9 +59,11 @@ export function Insights() {
       try {
         // Always load insights
         const insightsData = await getInsights()
-        setInsights(insightsData.sort((a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        ))
+        setInsights(
+          insightsData.sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )
+        )
 
         // Load pearls if authenticated
         if (isAuthenticated && user) {
@@ -77,21 +79,6 @@ export function Insights() {
     loadAll()
   }, [isAuthenticated, user])
 
-  // Handle insight delete (called from SharePearl)
-  const handleDeleteInsight = useCallback(async () => {
-    if (!selectedInsight || deletingId) return
-    setDeletingId(selectedInsight.id)
-    try {
-      await deleteInsight(selectedInsight.id)
-      setInsights(prev => prev.filter(i => i.id !== selectedInsight.id))
-      setSelectedInsight(null)
-    } catch (err) {
-      console.error('Failed to delete insight:', err)
-    } finally {
-      setDeletingId(null)
-    }
-  }, [selectedInsight, deletingId])
-
   // Handle pearl delete - show confirmation first
   const handleDeletePearlClick = useCallback((pearlId: string) => {
     setPendingDeleteId(pearlId)
@@ -105,7 +92,7 @@ export function Insights() {
     setDeletingId(pendingDeleteId)
     try {
       await deletePearl(pendingDeleteId, user.id)
-      setMyPearls(prev => prev.filter(p => p.id !== pendingDeleteId))
+      setMyPearls((prev) => prev.filter((p) => p.id !== pendingDeleteId))
       // Refresh profile to update karma/saves counts
       refreshProfile()
     } catch (err) {
@@ -117,34 +104,39 @@ export function Insights() {
   }, [user, pendingDeleteId, deletingId, refreshProfile])
 
   // Handle successful share
-  const handleShareSuccess = useCallback(async (pearlId: string) => {
-    if (selectedInsight) {
-      // Mark insight as shared
-      await markInsightAsShared(selectedInsight.id, pearlId)
-      // Update local state
-      setInsights(prev => prev.map(i =>
-        i.id === selectedInsight.id ? { ...i, sharedPearlId: pearlId } : i
-      ))
-    }
-    setSelectedInsight(null)
-    // Switch to pearls tab to show the new pearl
-    setActiveTab('pearls')
-    // Reload pearls and refresh profile stats
-    if (user) {
-      const pearls = await getMyPearls(user.id)
-      setMyPearls(pearls)
-      refreshProfile()
-    }
-  }, [selectedInsight, user, refreshProfile])
+  const handleShareSuccess = useCallback(
+    async (pearlId: string) => {
+      if (selectedInsight) {
+        // Mark insight as shared
+        await markInsightAsShared(selectedInsight.id, pearlId)
+        // Update local state
+        setInsights((prev) =>
+          prev.map((i) => (i.id === selectedInsight.id ? { ...i, sharedPearlId: pearlId } : i))
+        )
+      }
+      setSelectedInsight(null)
+      // Switch to pearls tab to show the new pearl
+      setActiveTab('pearls')
+      // Reload pearls and refresh profile stats
+      if (user) {
+        const pearls = await getMyPearls(user.id)
+        setMyPearls(pearls)
+        refreshProfile()
+      }
+    },
+    [selectedInsight, user, refreshProfile]
+  )
 
   // Reload data (for pull-to-refresh)
   const reloadData = useCallback(async () => {
     setIsLoading(true)
     try {
       const insightsData = await getInsights()
-      setInsights(insightsData.sort((a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      ))
+      setInsights(
+        insightsData.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+      )
       if (isAuthenticated && user) {
         const pearlsData = await getMyPearls(user.id)
         setMyPearls(pearlsData)
@@ -158,14 +150,11 @@ export function Insights() {
 
   // Swipe: down to refresh, right to go to stats
   const swipeHandlers = useSwipe({
-    onSwipeDown: reloadData
+    onSwipeDown: reloadData,
   })
 
   return (
-    <div
-      className="h-full bg-cream overflow-y-auto"
-      {...swipeHandlers}
-    >
+    <div className="h-full bg-cream overflow-y-auto" {...swipeHandlers}>
       <div className="px-6 py-8 max-w-lg mx-auto">
         {/* Back to timer */}
         <button
@@ -173,15 +162,18 @@ export function Insights() {
           className="flex items-center text-sm text-ink/40 mb-6 hover:text-ink/60 transition-colors active:scale-[0.98]"
         >
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M19 9l-7 7-7-7"
+            />
           </svg>
           Timer
         </button>
 
         {/* Header */}
-        <h1 className="font-serif text-2xl text-indigo-deep mb-6">
-          Insights
-        </h1>
+        <h1 className="font-serif text-2xl text-indigo-deep mb-6">Insights</h1>
 
         {/* Tabs */}
         <div className="flex gap-1 p-1 bg-cream-dark/40 rounded-lg mb-6">
@@ -194,9 +186,7 @@ export function Insights() {
             }`}
           >
             Notes
-            <span className="ml-1.5 text-xs text-ink/40">
-              {insights.length}
-            </span>
+            <span className="ml-1.5 text-xs text-ink/40">{insights.length}</span>
           </button>
           <button
             onClick={() => setActiveTab('pearls')}
@@ -207,9 +197,7 @@ export function Insights() {
             }`}
           >
             My Pearls
-            <span className="ml-1.5 text-xs text-ink/40">
-              {myPearls.length}
-            </span>
+            <span className="ml-1.5 text-xs text-ink/40">{myPearls.length}</span>
           </button>
         </div>
 
@@ -225,12 +213,8 @@ export function Insights() {
           <>
             {insights.length === 0 ? (
               <div className="text-center py-16">
-                <p className="font-serif text-lg text-ink/50 mb-2">
-                  No insights yet
-                </p>
-                <p className="text-sm text-ink/30">
-                  After meditation, capture your thoughts
-                </p>
+                <p className="font-serif text-lg text-ink/50 mb-2">No insights yet</p>
+                <p className="text-sm text-ink/30">After meditation, capture your thoughts</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -267,48 +251,53 @@ export function Insights() {
           <>
             {!isAuthenticated ? (
               <div className="text-center py-16">
-                <p className="font-serif text-lg text-ink/50 mb-2">
-                  Sign in to view your pearls
-                </p>
-                <p className="text-sm text-ink/30">
-                  Share wisdom with the community
-                </p>
+                <p className="font-serif text-lg text-ink/50 mb-2">Sign in to view your pearls</p>
+                <p className="text-sm text-ink/30">Share wisdom with the community</p>
               </div>
             ) : myPearls.length === 0 ? (
               <div className="text-center py-16">
-                <p className="font-serif text-lg text-ink/50 mb-2">
-                  No pearls shared yet
-                </p>
-                <p className="text-sm text-ink/30">
-                  Tap a note to share your wisdom
-                </p>
+                <p className="font-serif text-lg text-ink/50 mb-2">No pearls shared yet</p>
+                <p className="text-sm text-ink/30">Tap a note to share your wisdom</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {myPearls.map((pearl) => (
-                  <div
-                    key={pearl.id}
-                    className="bg-cream-dark/30 rounded-xl p-4"
-                  >
-                    <p className="text-xs text-ink/30 mb-2">
-                      {formatPearlDate(pearl.createdAt)}
-                    </p>
-                    <p className="text-ink/80 leading-relaxed mb-3">
-                      {pearl.text}
-                    </p>
+                  <div key={pearl.id} className="bg-cream-dark/30 rounded-xl p-4">
+                    <p className="text-xs text-ink/30 mb-2">{formatPearlDate(pearl.createdAt)}</p>
+                    <p className="text-ink/80 leading-relaxed mb-3">{pearl.text}</p>
                     {/* Stats */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4 text-sm">
                         <span className="flex items-center gap-1 text-ink/50">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 15l7-7 7 7" />
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1.5}
+                              d="M5 15l7-7 7 7"
+                            />
                           </svg>
                           <span className="tabular-nums">{pearl.upvotes}</span>
                           <span className="text-ink/30">karma</span>
                         </span>
                         <span className="flex items-center gap-1 text-ink/50">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1.5}
+                              d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                            />
                           </svg>
                           <span className="tabular-nums">{pearl.saves}</span>
                           <span className="text-ink/30">saves</span>
@@ -336,7 +325,12 @@ export function Insights() {
             className="py-3 text-sm text-ink/40 hover:text-ink/60 transition-colors flex items-center active:scale-[0.98]"
           >
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
             Progress
           </button>
@@ -346,7 +340,12 @@ export function Insights() {
           >
             Community
             <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </button>
           <button
@@ -366,7 +365,6 @@ export function Insights() {
           isAlreadyShared={!!selectedInsight.sharedPearlId}
           onClose={() => setSelectedInsight(null)}
           onSuccess={handleShareSuccess}
-          onDelete={handleDeleteInsight}
         />
       )}
 

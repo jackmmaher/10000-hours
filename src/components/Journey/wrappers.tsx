@@ -131,7 +131,6 @@ export function SharePearlWrapper({
     isAlreadyShared?: boolean
     onClose: () => void
     onSuccess: (pearlId: string) => void
-    onDelete: () => void
   }> | null>(null)
 
   useEffect(() => {
@@ -157,15 +156,6 @@ export function SharePearlWrapper({
           console.error('Failed to mark insight as shared:', err)
         }
         useNavigationStore.getState().incrementSavedContentVersion()
-        onComplete()
-      }}
-      onDelete={async () => {
-        try {
-          const { deleteInsight } = await import('../../lib/db')
-          await deleteInsight(insightId)
-        } catch (err) {
-          console.error('Failed to delete insight:', err)
-        }
         onComplete()
       }}
     />

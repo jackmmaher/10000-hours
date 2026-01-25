@@ -326,21 +326,21 @@ function InsightCard({
           )}
         </CardBody>
 
-        {/* Footer - Distill action */}
-        {!isEditing && (
+        {/* Footer - Create Pearl action */}
+        {!isEditing && !isConfirmingDelete && (
           <div className="px-4 pt-2 pb-4 border-t border-ink/5 flex items-center justify-between">
             {hasSharedPearl ? (
-              <span className="text-xs text-ink/40 italic">Wisdom shared</span>
+              <span className="text-xs text-accent/70 italic">Pearl in Explore</span>
             ) : (
               <>
                 <span className="text-xs text-ink-soft">
-                  {insight.hasDraft ? 'Pearl in progress' : 'Capture'}
+                  {insight.hasDraft ? 'Draft in progress' : 'Share in Explore'}
                 </span>
                 <button
                   onClick={() => onCreatePearl?.(insight, insight.session)}
                   className="text-sm text-accent hover:text-accent-hover transition-colors font-medium"
                 >
-                  {insight.hasDraft ? 'Continue' : 'Distill'} →
+                  {insight.hasDraft ? 'Continue' : 'Create Pearl'} →
                 </button>
               </>
             )}
