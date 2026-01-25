@@ -12,7 +12,9 @@ import {
   getInsightsWithContent,
   getSessionByUuid,
   updateInsight,
-  getPearlDraft
+  deleteInsight,
+  getPearlDraft,
+  deletePearlDraft,
 } from '../lib/db'
 import { Card, CardBody, AccentBar } from './Card'
 
@@ -44,7 +46,7 @@ function formatInsightDate(date: Date): string {
     return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
-      year: now.getFullYear() !== date.getFullYear() ? 'numeric' : undefined
+      year: now.getFullYear() !== date.getFullYear() ? 'numeric' : undefined,
     })
   }
 }
@@ -53,7 +55,7 @@ function formatTime(date: Date): string {
   return date.toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
-    hour12: true
+    hour12: true,
   })
 }
 
@@ -71,14 +73,12 @@ export function InsightStream({ onCreatePearl, refreshKey }: InsightStreamProps)
         // Load sessions and draft status for each insight
         const withDetails = await Promise.all(
           rawInsights.map(async (insight) => {
-            const session = insight.sessionId
-              ? await getSessionByUuid(insight.sessionId)
-              : null
+            const session = insight.sessionId ? await getSessionByUuid(insight.sessionId) : null
             const draft = await getPearlDraft(insight.id)
             return {
               ...insight,
               session: session || null,
-              hasDraft: !!draft
+              hasDraft: !!draft,
             }
           })
         )
@@ -98,13 +98,19 @@ export function InsightStream({ onCreatePearl, refreshKey }: InsightStreamProps)
   const handleUpdateInsight = useCallback(async (insightId: string, newText: string) => {
     await updateInsight(insightId, { rawText: newText })
     // Update local state
-    setInsights(prev =>
-      prev.map(i =>
-        i.id === insightId
-          ? { ...i, rawText: newText, updatedAt: new Date() }
-          : i
-      )
+    setInsights((prev) =>
+      prev.map((i) => (i.id === insightId ? { ...i, rawText: newText, updatedAt: new Date() } : i))
     )
+  }, [])
+
+  // Handle insight deletion
+  const handleDeleteInsight = useCallback(async (insightId: string) => {
+    // Delete any associated pearl draft first
+    await deletePearlDraft(insightId)
+    // Delete the insight
+    await deleteInsight(insightId)
+    // Update local state
+    setInsights((prev) => prev.filter((i) => i.id !== insightId))
   }, [])
 
   if (isLoading) {
@@ -121,19 +127,11 @@ export function InsightStream({ onCreatePearl, refreshKey }: InsightStreamProps)
         {/* Voice wave visualization hint */}
         <div className="flex items-center justify-center gap-1 mb-5">
           {[0.3, 0.6, 1, 0.8, 0.5, 0.9, 0.4, 0.7, 0.5].map((h, i) => (
-            <div
-              key={i}
-              className="w-1 bg-ink/10 rounded-full"
-              style={{ height: `${h * 24}px` }}
-            />
+            <div key={i} className="w-1 bg-ink/10 rounded-full" style={{ height: `${h * 24}px` }} />
           ))}
         </div>
-        <p className="text-ink/50 text-sm mb-1">
-          No insights captured yet
-        </p>
-        <p className="text-ink/30 text-xs">
-          After meditating, speak your thoughts aloud
-        </p>
+        <p className="text-ink/50 text-sm mb-1">No insights captured yet</p>
+        <p className="text-ink/30 text-xs">After meditating, speak your thoughts aloud</p>
       </div>
     )
   }
@@ -145,6 +143,7 @@ export function InsightStream({ onCreatePearl, refreshKey }: InsightStreamProps)
           key={insight.id}
           insight={insight}
           onUpdate={handleUpdateInsight}
+          onDelete={handleDeleteInsight}
           onCreatePearl={onCreatePearl}
         />
       ))}
@@ -156,15 +155,19 @@ export function InsightStream({ onCreatePearl, refreshKey }: InsightStreamProps)
 function InsightCard({
   insight,
   onUpdate,
-  onCreatePearl
+  onDelete,
+  onCreatePearl,
 }: {
   insight: InsightWithSession
   onUpdate: (id: string, text: string) => Promise<void>
+  onDelete: (id: string) => Promise<void>
   onCreatePearl?: (insight: Insight, session: Session | null) => void
 }) {
   const [isEditing, setIsEditing] = useState(false)
   const [editText, setEditText] = useState(insight.rawText)
   const [isSaving, setIsSaving] = useState(false)
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const hasSharedPearl = !!insight.sharedPearlId
   const insightDate = new Date(insight.createdAt)
@@ -189,6 +192,16 @@ function InsightCard({
     setIsEditing(false)
   }
 
+  const handleDelete = async () => {
+    setIsDeleting(true)
+    try {
+      await onDelete(insight.id)
+    } finally {
+      setIsDeleting(false)
+      setIsConfirmingDelete(false)
+    }
+  }
+
   return (
     <Card variant="default" className="flex">
       {/* Left accent bar */}
@@ -203,12 +216,10 @@ function InsightCard({
             <span className="font-medium">{formatInsightDate(insightDate)}</span>
             <span className="text-ink/30">·</span>
             <span>{formatTime(insightDate)}</span>
-            {insight.updatedAt && (
-              <span className="italic text-ink/40">· edited</span>
-            )}
+            {insight.updatedAt && <span className="italic text-ink/40">· edited</span>}
           </div>
 
-          {/* Status badges */}
+          {/* Status badges and actions */}
           <div className="flex items-center gap-2">
             {insight.hasDraft && !hasSharedPearl && (
               <span className="text-[10px] text-amber-700/80 bg-amber-500/15 px-2 py-0.5 rounded-full font-medium">
@@ -220,8 +231,55 @@ function InsightCard({
                 Shared
               </span>
             )}
+            {/* Delete button - only show when not editing */}
+            {!isEditing && !isConfirmingDelete && (
+              <button
+                onClick={() => setIsConfirmingDelete(true)}
+                className="p-1 text-ink/30 hover:text-red-500/70 transition-colors"
+                aria-label="Delete insight"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
+
+        {/* Delete confirmation */}
+        {isConfirmingDelete && (
+          <div className="mx-4 mb-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+            <p className="text-sm text-red-600/90 mb-2">
+              Delete this insight?
+              {hasSharedPearl && (
+                <span className="block text-xs text-ink/50 mt-1">
+                  The shared pearl will remain in the community.
+                </span>
+              )}
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setIsConfirmingDelete(false)}
+                className="px-3 py-1.5 text-xs text-ink-soft hover:text-ink transition-colors"
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="px-3 py-1.5 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Body */}
         <CardBody compact>
@@ -250,17 +308,17 @@ function InsightCard({
               </div>
             </div>
           ) : (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="w-full text-left group"
-            >
-              <p className="text-ink text-[15px] leading-relaxed font-serif">
-                "{insight.rawText}"
-              </p>
+            <button onClick={() => setIsEditing(true)} className="w-full text-left group">
+              <p className="text-ink text-[15px] leading-relaxed font-serif">"{insight.rawText}"</p>
               {/* Edit hint */}
               <div className="flex items-center gap-1 mt-2 text-ink/30 group-hover:text-ink-soft transition-colors">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                  />
                 </svg>
                 <span className="text-xs">Edit</span>
               </div>
@@ -272,9 +330,7 @@ function InsightCard({
         {!isEditing && (
           <div className="px-4 pt-2 pb-4 border-t border-ink/5 flex items-center justify-between">
             {hasSharedPearl ? (
-              <span className="text-xs text-ink/40 italic">
-                Wisdom shared
-              </span>
+              <span className="text-xs text-ink/40 italic">Wisdom shared</span>
             ) : (
               <>
                 <span className="text-xs text-ink-soft">
