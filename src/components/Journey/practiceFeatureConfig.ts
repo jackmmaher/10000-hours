@@ -25,7 +25,7 @@ export interface PracticeFeatureConfig {
   description: string
   status: FeatureStatus
   /** For active features, defines what action to take on press */
-  action?: 'open-lock-modal' | 'navigate-om-coach' | 'navigate-racing-mind'
+  action?: 'open-lock-modal' | 'navigate-om-coach' | 'navigate-racing-mind' | 'navigate-posture'
   /** Orb color configuration */
   orbColors: OrbColors
   /** CTA button text (for active features) */
@@ -110,12 +110,13 @@ export const PRACTICE_FEATURES: PracticeFeatureConfig[] = [
   {
     id: 'perfect-posture',
     title: 'Perfect Posture',
-    description: 'Sore knees? Dead legs? Align once, sit pain-free for hours.',
-    status: 'coming-soon',
+    description: 'AirPods detect when you slouch. Gentle haptic reminders keep you aligned.',
+    status: 'active',
+    action: 'navigate-posture',
     orbColors: FEATURE_ORB_COLORS['perfect-posture'],
-    ctaText: 'Coming Soon',
+    ctaText: 'Begin Practice',
     categoryLabel: 'PRACTICE TOOL',
-    teaserFeatures: ['Camera-guided alignment', 'Two-view calibration', 'Haptic posture training'],
+    teaserFeatures: ['AirPods motion tracking', 'Haptic posture reminders', 'Session statistics'],
   },
 ]
 

@@ -348,13 +348,13 @@ export function PracticeHeroCard({ feature, lockSettings, onPress }: PracticeHer
           </div>
         )}
 
-        {/* Feature pills - shown for ALL cards */}
+        {/* Feature pills - shown for ALL cards in tiered layout */}
         {feature.teaserFeatures && feature.teaserFeatures.length > 0 && (
-          <div className="flex flex-wrap justify-center gap-2 mb-5">
+          <div className="flex flex-wrap justify-center gap-1.5 mb-5 max-w-[260px] mx-auto">
             {feature.teaserFeatures.slice(0, 3).map((teaser, i) => (
               <span
                 key={i}
-                className="text-[10px] px-2.5 py-1 rounded-full"
+                className="text-[9px] px-2 py-0.5 rounded-full whitespace-nowrap"
                 style={{
                   background: `${feature.orbColors.primary}10`,
                   color: feature.orbColors.primary,

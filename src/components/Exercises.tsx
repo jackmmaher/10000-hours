@@ -82,6 +82,9 @@ export function Exercises() {
       case 'navigate-racing-mind':
         setView('racing-mind')
         break
+      case 'navigate-posture':
+        setView('posture')
+        break
     }
   }
 
