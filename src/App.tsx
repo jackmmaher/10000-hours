@@ -17,6 +17,7 @@ import { Timer } from './components/Timer'
 import { Calendar } from './components/Calendar'
 import { Settings } from './components/Settings'
 import { Profile } from './components/Profile'
+import { Exercises } from './components/Exercises'
 import { Insights } from './components/Insights'
 import { PearlsFeed } from './components/PearlsFeed'
 import { SavedPearls } from './components/SavedPearls'
@@ -282,6 +283,7 @@ function AppContent() {
         {view === 'timer' && <Timer />}
         {view === 'journey' && <Journey />}
         {view === 'progress' && <Progress />}
+        {view === 'exercises' && <Exercises />}
         {view === 'calendar' && (
           <Calendar refreshKey={calendarRefreshKey} onEditSession={handleEditSession} />
         )}

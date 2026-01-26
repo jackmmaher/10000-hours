@@ -13,7 +13,7 @@ import { useTrialStore } from '../stores/useTrialStore'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 
 type NavItem = {
-  view: 'timer' | 'journey' | 'explore' | 'progress' | 'profile'
+  view: 'timer' | 'journey' | 'explore' | 'progress' | 'exercises'
   label: string
   description: string // Accessibility context for screen readers
   icon: JSX.Element
@@ -84,16 +84,16 @@ const rightNavItems: NavItem[] = [
     ),
   },
   {
-    view: 'profile',
-    label: 'Profile',
-    description: 'where you personalize',
+    view: 'exercises',
+    label: 'Exercises',
+    description: 'where you prepare',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth={1.5}
-          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+          d="M4 12h1m14 0h1m-8-4v8m-4-4h8M6 8v8m12-8v8"
         />
       </svg>
     ),
@@ -120,8 +120,7 @@ export function Navigation() {
     // Legacy view mappings for backwards compatibility during transition
     (item.view === 'progress' && view === 'calendar') ||
     (item.view === 'explore' && (view === 'pearls' || view === 'saved-pearls')) ||
-    (item.view === 'journey' && view === 'insights') ||
-    (item.view === 'profile' && view === 'settings')
+    (item.view === 'journey' && view === 'insights')
 
   // Render a standard nav button
   const renderNavButton = (item: NavItem) => {
@@ -216,7 +215,7 @@ export function Navigation() {
                 </button>
               </div>
 
-              {/* Right group: Progress, Profile */}
+              {/* Right group: Progress, Exercises */}
               <div className="flex flex-1">{rightNavItems.map(renderNavButton)}</div>
             </div>
           </div>
