@@ -27,15 +27,21 @@ import { JourneySavedContent } from '../JourneySavedContent'
 import { JourneyMyPearls } from '../JourneyMyPearls'
 import { LockSetupFlow } from '../LockSetupFlow'
 import { LockComingSoonModal } from '../LockComingSoonModal'
-import { JourneyPractice } from './JourneyPractice'
+import { WellbeingCard } from '../WellbeingCard'
 import { useMeditationLock } from '../../hooks/useMeditationLock'
 import {
   getPlannedSessionsForWeek,
   getNextPlannedSession,
   relinkOrphanedPlans,
+  getWellbeingDimensions,
+  getWellbeingSettings,
+  getLatestCheckIns,
   PlannedSession,
   Session,
   Insight,
+  WellbeingDimension,
+  WellbeingCheckIn,
+  WellbeingSettings,
 } from '../../lib/db'
 import { dateHasSession, getSessionsForDate } from '../../lib/calculations'
 import { getMondayOfWeek } from './utils'
@@ -76,6 +82,9 @@ export function Journey() {
   const [showLockSetupFlow, setShowLockSetupFlow] = useState(false)
   const [showLockComingSoon, setShowLockComingSoon] = useState(false)
   const meditationLock = useMeditationLock()
+  const [dimensions, setDimensions] = useState<WellbeingDimension[]>([])
+  const [latestCheckIns, setLatestCheckIns] = useState<Map<string, WellbeingCheckIn>>(new Map())
+  const [wellbeingSettings, setWellbeingSettings] = useState<WellbeingSettings | null>(null)
 
   // Calculate total hours for creator badge
   const totalHours = useMemo(() => {
@@ -106,6 +115,15 @@ export function Journey() {
       setInsightStreamKey((k) => k + 1)
       // Refresh saved content (meditations and pearls tabs)
       incrementSavedContentVersion()
+      // Refresh wellbeing data
+      const [dims, wbSettings] = await Promise.all([
+        getWellbeingDimensions(),
+        getWellbeingSettings(),
+      ])
+      setDimensions(dims)
+      setWellbeingSettings(wbSettings)
+      const checkIns = await getLatestCheckIns()
+      setLatestCheckIns(checkIns)
       await new Promise((resolve) => setTimeout(resolve, 500))
     },
   })
@@ -121,13 +139,23 @@ export function Journey() {
     onSwipeRight: () => setView('timer'),
   })
 
-  // Load planned sessions for the current week
+  // Load planned sessions for the current week and wellbeing data
   useEffect(() => {
     const loadWeekPlans = async () => {
       await relinkOrphanedPlans(sessions)
       const monday = getMondayOfWeek()
       const plans = await getPlannedSessionsForWeek(monday.getTime())
       setWeekPlans(plans)
+
+      // Load wellbeing data
+      const [dims, wbSettings] = await Promise.all([
+        getWellbeingDimensions(),
+        getWellbeingSettings(),
+      ])
+      setDimensions(dims)
+      setWellbeingSettings(wbSettings)
+      const checkIns = await getLatestCheckIns()
+      setLatestCheckIns(checkIns)
     }
     loadWeekPlans()
   }, [sessions, plansRefreshKey])
@@ -352,13 +380,15 @@ export function Journey() {
           />
         )}
 
-        {/* Practice Section - Always visible at bottom */}
-        <JourneyPractice
-          onOpenLockModal={() => setShowLockSetupFlow(true)}
-          onOpenLockComingSoon={() => setShowLockComingSoon(true)}
-          onNavigateOmCoach={() => setView('om-coach')}
-          onNavigateRacingMind={() => setView('racing-mind')}
-        />
+        {/* Wellbeing Tracking - Moved from Profile */}
+        <div className="mt-8">
+          <WellbeingCard
+            dimensions={dimensions}
+            latestCheckIns={latestCheckIns}
+            settings={wellbeingSettings}
+            onRefresh={refreshAllPlanData}
+          />
+        </div>
       </div>
 
       {/* Modals */}
