@@ -172,9 +172,29 @@ export function useEyeTracking(maxHistorySize = 1800): UseEyeTrackingResult {
       webgazer.clearGazeListener()
 
       // End WebGazer completely to release the camera
-      // This is the only way to actually stop the camera indicator
       // Check isBeginCalledRef to handle cancellation during initialization
       if (isInitializedRef.current || isBeginCalledRef.current) {
+        // CRITICAL: Explicitly stop all camera media tracks BEFORE calling webgazer.end()
+        // WebGazer.end() doesn't always properly release the camera, leaving it recording
+        // We must manually stop the MediaStream tracks to turn off the camera indicator
+        try {
+          // WebGazer creates a video element with id 'webgazerVideoFeed'
+          const videoElement = document.getElementById(
+            'webgazerVideoFeed'
+          ) as HTMLVideoElement | null
+          if (videoElement?.srcObject) {
+            const mediaStream = videoElement.srcObject as MediaStream
+            mediaStream.getTracks().forEach((track) => {
+              track.stop()
+              console.debug('[useEyeTracking] Stopped track:', track.kind)
+            })
+            videoElement.srcObject = null
+          }
+        } catch (mediaError) {
+          console.warn('[useEyeTracking] Error stopping media tracks:', mediaError)
+        }
+
+        // Now call webgazer.end() to clean up the rest
         webgazer.end()
         isInitializedRef.current = false
         isBeginCalledRef.current = false
@@ -202,6 +222,15 @@ export function useEyeTracking(maxHistorySize = 1800): UseEyeTrackingResult {
       if (isInitializedRef.current || isBeginCalledRef.current) {
         console.debug('[useEyeTracking] Cleanup - ending WebGazer')
         try {
+          // CRITICAL: Explicitly stop all camera media tracks first
+          const videoElement = document.getElementById(
+            'webgazerVideoFeed'
+          ) as HTMLVideoElement | null
+          if (videoElement?.srcObject) {
+            const mediaStream = videoElement.srcObject as MediaStream
+            mediaStream.getTracks().forEach((track) => track.stop())
+            videoElement.srcObject = null
+          }
           webgazer.end()
           isInitializedRef.current = false
           isBeginCalledRef.current = false
