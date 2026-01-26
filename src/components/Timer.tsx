@@ -12,6 +12,7 @@ import { useSwipe } from '../hooks/useSwipe'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 import { useAudioFeedback } from '../hooks/useAudioFeedback'
 import { useTodaysPlan } from '../hooks/useTodaysPlan'
+import { useTodayCommitment } from '../hooks/useTodayCommitment'
 import { UnifiedTime } from './UnifiedTime'
 import { GooeyOrb } from './GooeyOrb'
 import { Paywall } from './Paywall'
@@ -72,6 +73,7 @@ export function Timer() {
     cancelTrial,
   } = useTrialStore()
   const { plan: todaysPlan, goalSeconds, enforceGoal, markComplete } = useTodaysPlan()
+  const commitment = useTodayCommitment()
 
   // Modal for trial completion
   const [showTrialComplete, setShowTrialComplete] = useState(false)
@@ -310,6 +312,7 @@ export function Timer() {
         // Normal mode: persist session to DB
         await stopTimer()
         await refreshBalance()
+        await commitment.refresh()
 
         // Check if this was a Focus Lock session
         // Focus Lock: triggers when the native lock is actively enforcing (iOS with Screen Time)
@@ -375,6 +378,7 @@ export function Timer() {
     lockSettings,
     completeLockSession,
     markComplete,
+    commitment,
   ])
 
   // ============================================
@@ -659,6 +663,61 @@ export function Timer() {
             )}
           </motion.div>
         )}
+      </AnimatePresence>
+
+      {/* Commitment Mode Banner - shows today's requirement when active */}
+      <AnimatePresence>
+        {phase === 'resting' &&
+          commitment.isActive &&
+          commitment.isRequired &&
+          !commitment.isCompleted &&
+          !(todaysPlan && enforceGoal) && (
+            <motion.div
+              key="commitment-banner"
+              className="absolute top-[18vh] z-10 text-center px-6"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
+                style={{
+                  background: commitment.isWithinWindow
+                    ? 'color-mix(in oklab, var(--accent) 15%, transparent)'
+                    : 'color-mix(in oklab, var(--warning, #f59e0b) 15%, transparent)',
+                  border: `1px solid ${
+                    commitment.isWithinWindow
+                      ? 'color-mix(in oklab, var(--accent) 30%, transparent)'
+                      : 'color-mix(in oklab, var(--warning, #f59e0b) 30%, transparent)'
+                  }`,
+                }}
+              >
+                <span
+                  className="text-sm"
+                  style={{
+                    color: commitment.isWithinWindow ? 'var(--accent)' : 'var(--warning, #f59e0b)',
+                  }}
+                >
+                  Day {commitment.currentDay} · {commitment.minimumMinutes}+ min
+                </span>
+                <span
+                  className="text-xs px-2 py-0.5 rounded-full"
+                  style={{
+                    background: commitment.isWithinWindow
+                      ? 'var(--accent)'
+                      : 'var(--warning, #f59e0b)',
+                    color: 'var(--on-accent)',
+                  }}
+                >
+                  {commitment.isWithinWindow ? 'commitment' : 'outside window'}
+                </span>
+              </div>
+              <p className="text-xs mt-2 opacity-60" style={{ color: 'var(--text-secondary)' }}>
+                {commitment.windowDescription}
+              </p>
+            </motion.div>
+          )}
       </AnimatePresence>
 
       {/* Timer Display - z-10 to stay above theater layers */}
