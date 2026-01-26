@@ -1,8 +1,9 @@
 /**
  * Screen 10: Stakes
  *
- * Show penalty/bonus math visualization
- * "I understand" confirmation required
+ * Clear presentation of risk/reward:
+ * - Show up = Safe (with chance of bonus)
+ * - Skip = Penalty (guaranteed loss)
  */
 
 import { motion } from 'framer-motion'
@@ -38,7 +39,7 @@ export function StakesScreen({ formState, updateForm, onNext, onBack }: ScreenPr
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        The stakes
+        How it works
       </motion.h1>
 
       {/* Subtitle */}
@@ -49,96 +50,100 @@ export function StakesScreen({ formState, updateForm, onNext, onBack }: ScreenPr
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
       >
-        Your hour bank is on the line. Here's how it works.
+        Simple rules with real stakes from your hour bank.
       </motion.p>
 
-      {/* Complete a session - rewards */}
+      {/* SHOW UP = SAFE */}
       <motion.div
         className="p-5 rounded-2xl mb-4"
         style={{
           background: 'color-mix(in oklab, var(--success, #22c55e) 10%, transparent)',
-          border: '1px solid color-mix(in oklab, var(--success, #22c55e) 30%, transparent)',
+          border: '2px solid color-mix(in oklab, var(--success, #22c55e) 40%, transparent)',
         }}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <div className="flex items-center gap-3 mb-4">
-          <div className="text-2xl">✓</div>
-          <div>
-            <p className="text-base font-medium" style={{ color: 'var(--text-primary)' }}>
-              Complete a session
-            </p>
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-              {formState.minimumSessionMinutes}+ minutes within your window
-            </p>
+        <div className="text-center mb-4">
+          <div
+            className="inline-flex items-center justify-center w-12 h-12 rounded-full mb-3"
+            style={{ background: 'color-mix(in oklab, var(--success, #22c55e) 20%, transparent)' }}
+          >
+            <span className="text-2xl">✓</span>
           </div>
+          <p className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+            Show up = You're safe
+          </p>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+            Complete {formState.minimumSessionMinutes}+ min in your window
+          </p>
         </div>
 
-        <div className="space-y-3 pl-9">
-          <div className="flex justify-between items-center">
-            <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-              ~{bonusPercent}% chance of bonus
+        <div
+          className="p-3 rounded-xl"
+          style={{ background: 'color-mix(in oklab, var(--success, #22c55e) 8%, transparent)' }}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+              Worst case
             </span>
-            <span className="text-sm font-medium" style={{ color: 'var(--success, #22c55e)' }}>
-              +{BONUS_MIN_MINUTES}-{BONUS_MAX_MINUTES} min
-            </span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-              ~25% "so close!" (no penalty)
-            </span>
-            <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
-              0 min
+            <span className="text-sm font-bold" style={{ color: 'var(--success, #22c55e)' }}>
+              0 min lost
             </span>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-              Rest of completions
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+              ~{bonusPercent}% chance
             </span>
-            <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
-              0 min
+            <span className="text-sm font-bold" style={{ color: 'var(--success, #22c55e)' }}>
+              +{BONUS_MIN_MINUTES}-{BONUS_MAX_MINUTES} min bonus
             </span>
           </div>
         </div>
       </motion.div>
 
-      {/* Miss a session - penalties */}
+      {/* SKIP = PENALTY */}
       <motion.div
         className="p-5 rounded-2xl mb-6"
         style={{
           background: 'color-mix(in oklab, var(--danger, #ef4444) 10%, transparent)',
-          border: '1px solid color-mix(in oklab, var(--danger, #ef4444) 30%, transparent)',
+          border: '2px solid color-mix(in oklab, var(--danger, #ef4444) 40%, transparent)',
         }}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.25 }}
       >
-        <div className="flex items-center gap-3 mb-4">
-          <div className="text-2xl">✗</div>
-          <div>
-            <p className="text-base font-medium" style={{ color: 'var(--text-primary)' }}>
-              Miss a required session
-            </p>
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-              No grace periods remaining
-            </p>
+        <div className="text-center mb-4">
+          <div
+            className="inline-flex items-center justify-center w-12 h-12 rounded-full mb-3"
+            style={{ background: 'color-mix(in oklab, var(--danger, #ef4444) 20%, transparent)' }}
+          >
+            <span className="text-2xl">✗</span>
           </div>
+          <p className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+            Skip = Penalty
+          </p>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+            Miss a required day (no grace periods left)
+          </p>
         </div>
 
-        <div className="pl-9">
-          <div className="flex justify-between items-center">
-            <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-              Penalty deducted
+        <div
+          className="p-3 rounded-xl"
+          style={{ background: 'color-mix(in oklab, var(--danger, #ef4444) 8%, transparent)' }}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+              Guaranteed loss
             </span>
-            <span className="text-sm font-medium" style={{ color: 'var(--danger, #ef4444)' }}>
+            <span className="text-sm font-bold" style={{ color: 'var(--danger, #ef4444)' }}>
               -{PENALTY_MIN_MINUTES}-{PENALTY_MAX_MINUTES} min
             </span>
           </div>
         </div>
       </motion.div>
 
-      {/* Break-even explanation */}
+      {/* Key insight callout */}
       <motion.div
         className="p-4 rounded-xl mb-6"
         style={{
@@ -149,13 +154,34 @@ export function StakesScreen({ formState, updateForm, onNext, onBack }: ScreenPr
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
-        <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
-          THE MATH
-        </p>
         <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
-          Complete ~90% of your sessions and you'll break even. The bonuses are real — but so are
-          the penalties. The house has a slight edge, but <strong>you gain the habit</strong>.
+          <strong>The key:</strong> Just show up. When you meditate, you can never lose time. You
+          might win bonus minutes, but you'll never be penalized for completing a session.
         </p>
+      </motion.div>
+
+      {/* Grace periods note */}
+      <motion.div
+        className="flex items-start gap-3 mb-6"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+      >
+        <div
+          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+          style={{ background: 'var(--bg-elevated)' }}
+        >
+          <span className="text-sm">🛡️</span>
+        </div>
+        <div>
+          <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+            Grace periods protect you
+          </p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            You'll get 3 free passes per month for life's surprises. Use them wisely — they don't
+            roll over.
+          </p>
+        </div>
       </motion.div>
 
       {/* Acknowledgment checkbox */}
@@ -170,7 +196,7 @@ export function StakesScreen({ formState, updateForm, onNext, onBack }: ScreenPr
         }}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35 }}
+        transition={{ delay: 0.4 }}
       >
         <div
           className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0"
@@ -197,7 +223,7 @@ export function StakesScreen({ formState, updateForm, onNext, onBack }: ScreenPr
           )}
         </div>
         <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-          I understand and accept the stakes
+          I understand the rules
         </span>
       </motion.button>
 

@@ -298,7 +298,14 @@ export function CommitmentSetupFlow({ onComplete, onClose }: CommitmentSetupFlow
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'var(--bg-base)' }}>
+    <div
+      className="fixed inset-0 z-50 flex flex-col"
+      style={{ background: 'var(--bg-base)' }}
+      // Stop all touch events from propagating to parent (Exercises.tsx swipe handlers)
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
+      onTouchEnd={(e) => e.stopPropagation()}
+    >
       {/* Phase-based progress indicator */}
       <div className="pt-6 pb-4 px-6 safe-area-top">
         <div className="flex justify-center items-center gap-1.5">
