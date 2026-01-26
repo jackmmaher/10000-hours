@@ -440,6 +440,12 @@ export type CommitmentScheduleType = 'daily' | 'weekday' | 'custom' | 'flexible'
 export type CommitmentWindowType = 'anytime' | 'morning' | 'specific'
 export type CommitmentEndBehavior = 'auto-renew' | 'extend-adjust' | 'cool-off'
 
+// Obstacle with coping response for commitment mode
+export interface CommitmentObstacle {
+  obstacle: string
+  copingResponse: string
+}
+
 // Main commitment settings (singleton, id: 1)
 export interface CommitmentSettings {
   id: 1
@@ -447,6 +453,14 @@ export interface CommitmentSettings {
   commitmentStartDate: number
   commitmentEndDate: number
   commitmentDuration: 30 | 60 | 90
+
+  // Identity & Motivation
+  identityStatement: string | null
+  whyItMatters: string | null
+
+  // Anchor (habit stacking)
+  anchorRoutine: string | null
+  anchorLocation: string | null
 
   // Schedule
   scheduleType: CommitmentScheduleType
@@ -458,6 +472,20 @@ export interface CommitmentSettings {
   windowEndHour?: number
   windowEndMinute?: number
   minimumSessionMinutes: number // Required duration
+  minimumFallbackMinutes: number // "Hard day" minimum
+
+  // Obstacles & coping responses
+  obstacles: CommitmentObstacle[]
+
+  // Accountability
+  accountabilityEnabled: boolean
+  accountabilityPhone: string | null
+  accountabilityMethod: AccountabilityMethod
+  notifyOnCompletion: boolean
+  notifyOnSkip: boolean
+
+  // Celebration
+  celebrationRitual: string | null
 
   // Forgiveness
   gracePeriodCount: number // Total (3 per 30 days)
@@ -466,15 +494,27 @@ export interface CommitmentSettings {
   // End behavior
   endBehavior: CommitmentEndBehavior
 
+  // Reminders
+  reminderEnabled: boolean
+  reminderMinutesBefore: number // Minutes before window start
+  reminderStyle: 'simple' | 'motivational' | 'custom'
+  customReminderMessage: string | null
+
   // RNG (for deterministic rewards)
   rngSeed: number
   rngSequenceIndex: number
 
-  // Analytics (internal, not shown as "streak")
+  // Streak tracking
+  currentStreakDays: number
+  longestStreakDays: number
+
+  // Analytics
   totalSessionsCompleted: number
   totalSessionsMissed: number
   totalBonusMinutesEarned: number
   totalPenaltyMinutesDeducted: number
+  totalFallbackSessions: number // Hard day sessions
+  completionsByDayOfWeek: number[] // [Sun...Sat]
   lastSessionDate: number | null
 }
 

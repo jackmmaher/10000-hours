@@ -33,6 +33,10 @@ export interface TodayCommitmentState {
   totalDays: number
   /** Grace periods remaining */
   gracePeriodsRemaining: number
+  /** Current streak days */
+  streakDays: number
+  /** Celebration ritual text */
+  celebrationRitual: string | null
   /** Loading state */
   isLoading: boolean
   /** Refresh from database */
@@ -50,6 +54,8 @@ export function useTodayCommitment(): TodayCommitmentState {
     currentDay: 1,
     totalDays: 30,
     gracePeriodsRemaining: 0,
+    streakDays: 0,
+    celebrationRitual: null,
   })
   const [isLoading, setIsLoading] = useState(true)
 
@@ -93,6 +99,8 @@ export function useTodayCommitment(): TodayCommitmentState {
         currentDay,
         totalDays: settings.commitmentDuration,
         gracePeriodsRemaining: graceRemaining,
+        streakDays: settings.currentStreakDays || 0,
+        celebrationRitual: settings.celebrationRitual || null,
       })
     } catch (error) {
       console.error('[useTodayCommitment] Failed to load:', error)

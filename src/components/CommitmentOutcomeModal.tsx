@@ -18,6 +18,8 @@ interface CommitmentOutcomeModalProps {
   isOpen: boolean
   onClose: () => void
   result: CommitmentSessionResult | null
+  celebrationRitual?: string | null
+  streakDays?: number
 }
 
 // Confetti particle component
@@ -136,7 +138,13 @@ function SlotReveal({
   )
 }
 
-export function CommitmentOutcomeModal({ isOpen, onClose, result }: CommitmentOutcomeModalProps) {
+export function CommitmentOutcomeModal({
+  isOpen,
+  onClose,
+  result,
+  celebrationRitual,
+  streakDays,
+}: CommitmentOutcomeModalProps) {
   const haptic = useTapFeedback()
   const [phase, setPhase] = useState<'spinning' | 'slowing' | 'revealed'>('spinning')
 
@@ -293,6 +301,42 @@ export function CommitmentOutcomeModal({ isOpen, onClose, result }: CommitmentOu
                   You were so close to a bonus!
                   <br />
                   <span style={{ color: 'var(--text-muted)' }}>Keep showing up.</span>
+                </p>
+              </motion.div>
+            )}
+
+            {/* Streak counter */}
+            {phase === 'revealed' && streakDays !== undefined && streakDays > 0 && (
+              <motion.div
+                className="flex items-center justify-center gap-2 mb-4"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 }}
+              >
+                <span className="text-lg">🔥</span>
+                <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                  {streakDays} day{streakDays !== 1 ? 's' : ''} straight
+                </span>
+              </motion.div>
+            )}
+
+            {/* Celebration ritual */}
+            {phase === 'revealed' && celebrationRitual && (
+              <motion.div
+                className="p-3 rounded-xl mb-6"
+                style={{
+                  background: 'color-mix(in oklab, var(--accent) 8%, transparent)',
+                  border: '1px solid color-mix(in oklab, var(--accent) 20%, transparent)',
+                }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
+                  Your celebration ritual:
+                </p>
+                <p className="text-sm font-medium" style={{ color: 'var(--accent)' }}>
+                  {celebrationRitual}
                 </p>
               </motion.div>
             )}

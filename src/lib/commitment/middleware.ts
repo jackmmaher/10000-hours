@@ -17,9 +17,10 @@ import {
   getCommitmentDayLog,
 } from '../db/commitmentSettings'
 import { addBonusHours } from '../hourBank'
+import { sendAccountabilityMessage } from '../accountability'
 import { createCommitmentRNG } from './rng'
 import { calculateSessionCompletion, type SessionOutcome } from './outcomes'
-import { isDayRequired, isWithinWindow, getStartOfDay } from './schedule'
+import { isDayRequired, isWithinWindow, getStartOfDay, getDayOfWeek } from './schedule'
 
 /**
  * Result of processing a commitment session
@@ -132,13 +133,47 @@ export async function processCommitmentSession(
     await addBonusHours(bonusHours, source, sessionUuid)
   }
 
-  // Update settings with new RNG index and analytics
+  // Calculate new streak
+  const wasConsecutive = settings.lastSessionDate
+    ? sessionDate - settings.lastSessionDate <= 24 * 60 * 60 * 1000
+    : true
+  const newStreakDays = wasConsecutive ? settings.currentStreakDays + 1 : 1
+  const newLongestStreak = Math.max(settings.longestStreakDays, newStreakDays)
+
+  // Update day-of-week completion tracking
+  const dayOfWeek = getDayOfWeek(sessionStartTime)
+  const newCompletionsByDay = [...(settings.completionsByDayOfWeek || [0, 0, 0, 0, 0, 0, 0])]
+  newCompletionsByDay[dayOfWeek] = (newCompletionsByDay[dayOfWeek] || 0) + 1
+
+  // Update settings with new RNG index, streak, and analytics
   await updateCommitmentSettings({
     rngSequenceIndex: rng.currentIndex,
     totalSessionsCompleted: settings.totalSessionsCompleted + 1,
     totalBonusMinutesEarned: settings.totalBonusMinutesEarned + Math.max(0, outcome.minutesChange),
     lastSessionDate: sessionDate,
+    currentStreakDays: newStreakDays,
+    longestStreakDays: newLongestStreak,
+    completionsByDayOfWeek: newCompletionsByDay,
   })
+
+  // Send accountability message if enabled
+  if (
+    settings.accountabilityEnabled &&
+    settings.notifyOnCompletion &&
+    settings.accountabilityPhone
+  ) {
+    try {
+      await sendAccountabilityMessage({
+        type: 'completion',
+        phone: settings.accountabilityPhone,
+        method: settings.accountabilityMethod || 'sms',
+        durationMinutes: Math.round(durationSeconds / 60),
+        userName: 'User',
+      })
+    } catch (err) {
+      console.warn('[Commitment] Failed to send accountability message:', err)
+    }
+  }
 
   return {
     isCommitmentActive: true,

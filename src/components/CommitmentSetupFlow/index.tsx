@@ -183,6 +183,14 @@ export function CommitmentSetupFlow({ onComplete, onClose }: CommitmentSetupFlow
       commitmentEndDate: endDate,
       commitmentDuration: formState.commitmentDuration,
 
+      // Identity & Motivation
+      identityStatement: formState.identityStatement || null,
+      whyItMatters: formState.whyItMatters || null,
+
+      // Anchor (habit stacking)
+      anchorRoutine: formState.anchorRoutine || null,
+      anchorLocation: formState.anchorLocation || null,
+
       // Schedule
       scheduleType: formState.scheduleType,
       customDays: formState.scheduleType === 'custom' ? formState.customDays : undefined,
@@ -194,6 +202,20 @@ export function CommitmentSetupFlow({ onComplete, onClose }: CommitmentSetupFlow
       windowEndHour: formState.windowType === 'specific' ? formState.windowEndHour : undefined,
       windowEndMinute: formState.windowType === 'specific' ? formState.windowEndMinute : undefined,
       minimumSessionMinutes: formState.minimumSessionMinutes,
+      minimumFallbackMinutes: formState.minimumFallbackMinutes,
+
+      // Obstacles with coping responses
+      obstacles: formState.obstacles,
+
+      // Accountability
+      accountabilityEnabled: formState.accountabilityEnabled,
+      accountabilityPhone: formState.accountabilityPhone || null,
+      accountabilityMethod: formState.accountabilityMethod,
+      notifyOnCompletion: formState.notifyOnCompletion,
+      notifyOnSkip: formState.notifyOnSkip,
+
+      // Celebration
+      celebrationRitual: formState.celebrationRitual || null,
 
       // Forgiveness
       gracePeriodCount: gracePeriods,
@@ -202,15 +224,27 @@ export function CommitmentSetupFlow({ onComplete, onClose }: CommitmentSetupFlow
       // End behavior
       endBehavior: formState.endBehavior,
 
+      // Reminders (enable by default if window is set)
+      reminderEnabled: formState.windowType !== 'anytime',
+      reminderMinutesBefore: 10,
+      reminderStyle: 'simple',
+      customReminderMessage: null,
+
       // RNG
       rngSeed: generateCommitmentSeed(startDate),
       rngSequenceIndex: 0,
+
+      // Reset streak tracking
+      currentStreakDays: 0,
+      longestStreakDays: 0,
 
       // Reset analytics
       totalSessionsCompleted: 0,
       totalSessionsMissed: 0,
       totalBonusMinutesEarned: 0,
       totalPenaltyMinutesDeducted: 0,
+      totalFallbackSessions: 0,
+      completionsByDayOfWeek: [0, 0, 0, 0, 0, 0, 0],
       lastSessionDate: null,
     })
 

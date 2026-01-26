@@ -24,6 +24,14 @@ export function getDefaultCommitmentSettings(): CommitmentSettings {
     commitmentEndDate: 0,
     commitmentDuration: 30,
 
+    // Identity & Motivation
+    identityStatement: null,
+    whyItMatters: null,
+
+    // Anchor (habit stacking)
+    anchorRoutine: null,
+    anchorLocation: null,
+
     // Schedule
     scheduleType: 'daily',
     customDays: undefined,
@@ -34,6 +42,20 @@ export function getDefaultCommitmentSettings(): CommitmentSettings {
     windowEndHour: undefined,
     windowEndMinute: undefined,
     minimumSessionMinutes: 10,
+    minimumFallbackMinutes: 2,
+
+    // Obstacles
+    obstacles: [],
+
+    // Accountability
+    accountabilityEnabled: false,
+    accountabilityPhone: null,
+    accountabilityMethod: 'sms',
+    notifyOnCompletion: true,
+    notifyOnSkip: false,
+
+    // Celebration
+    celebrationRitual: null,
 
     // Forgiveness (3 per 30 days)
     gracePeriodCount: 3,
@@ -42,15 +64,27 @@ export function getDefaultCommitmentSettings(): CommitmentSettings {
     // End behavior
     endBehavior: 'auto-renew',
 
+    // Reminders
+    reminderEnabled: false,
+    reminderMinutesBefore: 10,
+    reminderStyle: 'simple',
+    customReminderMessage: null,
+
     // RNG (for deterministic rewards)
     rngSeed: 0,
     rngSequenceIndex: 0,
+
+    // Streak tracking
+    currentStreakDays: 0,
+    longestStreakDays: 0,
 
     // Analytics
     totalSessionsCompleted: 0,
     totalSessionsMissed: 0,
     totalBonusMinutesEarned: 0,
     totalPenaltyMinutesDeducted: 0,
+    totalFallbackSessions: 0,
+    completionsByDayOfWeek: [0, 0, 0, 0, 0, 0, 0],
     lastSessionDate: null,
   }
 }

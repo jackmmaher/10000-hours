@@ -841,6 +841,8 @@ export function Timer() {
           clearCommitmentOutcome()
         }}
         result={lastCommitmentOutcome}
+        celebrationRitual={commitment.celebrationRitual}
+        streakDays={commitment.streakDays}
       />
 
       {/* Commitment missed sessions alert */}

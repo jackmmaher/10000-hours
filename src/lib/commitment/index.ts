@@ -75,3 +75,14 @@ export {
   type MissedDayResult,
   type MidnightCheckResult,
 } from './midnightCheck'
+
+// Reminders service
+export {
+  scheduleCommitmentReminder,
+  scheduleWindowClosingReminder,
+  cancelCommitmentReminders,
+  refreshCommitmentReminders,
+  setRemindersEnabled,
+  updateReminderSettings,
+  COMMITMENT_NOTIFICATION_IDS,
+} from './reminders'
