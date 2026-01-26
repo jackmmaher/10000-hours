@@ -430,3 +430,72 @@ export interface MeditationLockSettings {
   streakDays: number
   completionsByDayOfWeek: number[] // [Sun...Sat] — which days are hardest
 }
+
+// ============================================================================
+// Commitment Mode Types
+// ============================================================================
+
+// Schedule types for commitment mode
+export type CommitmentScheduleType = 'daily' | 'weekday' | 'custom' | 'flexible'
+export type CommitmentWindowType = 'anytime' | 'morning' | 'specific'
+export type CommitmentEndBehavior = 'auto-renew' | 'extend-adjust' | 'cool-off'
+
+// Main commitment settings (singleton, id: 1)
+export interface CommitmentSettings {
+  id: 1
+  isActive: boolean
+  commitmentStartDate: number
+  commitmentEndDate: number
+  commitmentDuration: 30 | 60 | 90
+
+  // Schedule
+  scheduleType: CommitmentScheduleType
+  customDays?: boolean[] // [Sun..Sat]
+  flexibleTarget?: number // sessions/week
+  windowType: CommitmentWindowType
+  windowStartHour?: number
+  windowStartMinute?: number
+  windowEndHour?: number
+  windowEndMinute?: number
+  minimumSessionMinutes: number // Required duration
+
+  // Forgiveness
+  gracePeriodCount: number // Total (3 per 30 days)
+  gracePeriodUsed: number
+
+  // End behavior
+  endBehavior: CommitmentEndBehavior
+
+  // RNG (for deterministic rewards)
+  rngSeed: number
+  rngSequenceIndex: number
+
+  // Analytics (internal, not shown as "streak")
+  totalSessionsCompleted: number
+  totalSessionsMissed: number
+  totalBonusMinutesEarned: number
+  totalPenaltyMinutesDeducted: number
+  lastSessionDate: number | null
+}
+
+// Day-by-day log for commitment tracking
+export interface CommitmentDayLog {
+  id?: number
+  date: number // Start of day timestamp
+  outcome: 'completed' | 'missed' | 'grace' | 'not-required'
+  sessionUuid?: string
+  minutesAdjustment: number
+  adjustmentType: 'bonus' | 'penalty' | 'mystery' | 'near-miss' | 'none'
+  wasNearMiss: boolean
+}
+
+// History of past commitments
+export interface CommitmentHistory {
+  id?: number
+  startDate: number
+  endDate: number
+  duration: 30 | 60 | 90
+  completionRate: number
+  netMinutesChange: number
+  endReason: 'completed' | 'emergency-exit'
+}

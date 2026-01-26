@@ -11,7 +11,12 @@
 
 import { ORB_COLORS } from '../../lib/animations'
 
-export type FeatureId = 'meditation-lock' | 'aum-coach' | 'racing-mind' | 'perfect-posture'
+export type FeatureId =
+  | 'meditation-lock'
+  | 'aum-coach'
+  | 'racing-mind'
+  | 'perfect-posture'
+  | 'commitment'
 export type FeatureStatus = 'active' | 'coming-soon'
 
 export interface OrbColors {
@@ -25,7 +30,12 @@ export interface PracticeFeatureConfig {
   description: string
   status: FeatureStatus
   /** For active features, defines what action to take on press */
-  action?: 'open-lock-modal' | 'navigate-om-coach' | 'navigate-racing-mind' | 'navigate-posture'
+  action?:
+    | 'open-lock-modal'
+    | 'navigate-om-coach'
+    | 'navigate-racing-mind'
+    | 'navigate-posture'
+    | 'open-commitment-modal'
   /** Orb color configuration */
   orbColors: OrbColors
   /** CTA button text (for active features) */
@@ -62,6 +72,10 @@ export const FEATURE_ORB_COLORS: Record<FeatureId, OrbColors> = {
   'perfect-posture': {
     primary: '#F97316', // Coral/orange - body warmth
     secondary: '#C2410C', // Terracotta - earthy grounding
+  },
+  commitment: {
+    primary: '#8B5CF6', // Violet - stakes, accountability
+    secondary: '#6D28D9', // Deep purple - commitment, intention
   },
 }
 
@@ -117,6 +131,18 @@ export const PRACTICE_FEATURES: PracticeFeatureConfig[] = [
     ctaText: 'Begin Practice',
     categoryLabel: 'PRACTICE TOOL',
     teaserFeatures: ['AirPods motion tracking', 'Haptic posture reminders', 'Session statistics'],
+  },
+  {
+    id: 'commitment',
+    title: 'Commitment',
+    description:
+      'Lock into 30-90 day meditation commitments with financial stakes from your hour bank.',
+    status: 'active',
+    action: 'open-commitment-modal',
+    orbColors: FEATURE_ORB_COLORS['commitment'],
+    ctaText: 'Start Commitment',
+    categoryLabel: 'HABIT FORMATION',
+    teaserFeatures: ['Casino-style rewards', 'Grace periods built-in', 'Emergency exit available'],
   },
 ]
 

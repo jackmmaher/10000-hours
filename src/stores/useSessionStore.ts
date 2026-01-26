@@ -17,6 +17,12 @@ import {
 } from '../lib/db'
 import { consumeHours } from '../lib/hourBank'
 import {
+  processCommitmentSession,
+  processMidnightCheck,
+  type CommitmentSessionResult,
+  type MidnightCheckResult,
+} from '../lib/commitment'
+import {
   generateMilestones,
   checkSessionMilestone,
   checkWeeklyFirst,
@@ -63,6 +69,12 @@ interface SessionState {
   // Plan refresh trigger (timestamp updated when plans change)
   lastPlanChange: number
 
+  // Commitment mode outcome (for UI display after session)
+  lastCommitmentOutcome: CommitmentSessionResult | null
+
+  // Missed sessions detected on app launch
+  lastMidnightCheckResult: MidnightCheckResult | null
+
   // Actions
   hydrate: () => Promise<void>
   triggerPlanChange: () => void
@@ -75,6 +87,8 @@ interface SessionState {
   createInsightReminder: (sessionId: string) => Promise<void>
   completeSession: () => void
   resetGoalCompleted: () => void
+  clearCommitmentOutcome: () => void
+  clearMidnightCheckResult: () => void
   // Dev-only: Override total seconds for testing milestone modals
   devSetTotalSeconds: (seconds: number) => void
 }
@@ -95,6 +109,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   lastSessionUuid: null,
   lastSourceTemplateId: null,
   lastPlanChange: 0,
+  lastCommitmentOutcome: null,
+  lastMidnightCheckResult: null,
 
   triggerPlanChange: () => {
     set({ lastPlanChange: Date.now() })
@@ -162,6 +178,17 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       goalCompleted: goalCompleted || false,
       isLoading: false,
     })
+
+    // Run commitment midnight check to detect/process missed sessions
+    // This runs on app launch to apply penalties for any missed days
+    try {
+      const midnightResult = await processMidnightCheck()
+      if (midnightResult.missedDays.length > 0) {
+        set({ lastMidnightCheckResult: midnightResult })
+      }
+    } catch (err) {
+      console.warn('Failed to run commitment midnight check:', err)
+    }
   },
 
   startPreparing: () => {
@@ -213,6 +240,18 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       await consumeHours(durationSeconds)
     } catch (err) {
       console.warn('Failed to consume hours:', err)
+    }
+
+    // Process commitment mode (if active)
+    let commitmentOutcome: CommitmentSessionResult | null = null
+    try {
+      commitmentOutcome = await processCommitmentSession(
+        sessionUuid,
+        durationSeconds,
+        sessionStartTime
+      )
+    } catch (err) {
+      console.warn('Failed to process commitment session:', err)
     }
 
     // Silent session-plan linking: auto-link to a time-matched plan for this day
@@ -347,6 +386,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         justReachedEnlightenment: true,
         goalCompleted: true, // Mark goal as completed immediately
         justAchievedMilestone: achievedMilestone,
+        lastCommitmentOutcome: commitmentOutcome,
       })
     } else {
       set({
@@ -359,6 +399,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         sessions: newSessions,
         totalSeconds: newTotalSeconds,
         justAchievedMilestone: achievedMilestone,
+        lastCommitmentOutcome: commitmentOutcome,
       })
     }
   },
@@ -402,12 +443,21 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       lastSessionDuration: null,
       lastSessionUuid: null,
       lastSourceTemplateId: null,
+      lastCommitmentOutcome: null,
       // Note: justAchievedMilestone preserved for Progress tab indicator
     })
   },
 
   resetGoalCompleted: () => {
     set({ goalCompleted: false })
+  },
+
+  clearCommitmentOutcome: () => {
+    set({ lastCommitmentOutcome: null })
+  },
+
+  clearMidnightCheckResult: () => {
+    set({ lastMidnightCheckResult: null })
   },
 
   // Dev-only: Override total seconds for testing milestone modals

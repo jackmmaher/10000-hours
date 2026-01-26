@@ -25,6 +25,8 @@ import { trackHideTimeToggle } from '../lib/analytics'
 import { exportData } from '../lib/export'
 import { LockSetupFlow } from './LockSetupFlow'
 import { LockComingSoonModal } from './LockComingSoonModal'
+import { CommitmentStatus } from './CommitmentStatus'
+import { CommitmentEmergencyExit } from './CommitmentEmergencyExit'
 
 interface SettingsProps {
   onBack: () => void
@@ -58,6 +60,8 @@ export function Settings({
   const [showLockComingSoon, setShowLockComingSoon] = useState(false)
   const [showDisplaySettings, setShowDisplaySettings] = useState(false)
   const [showNotificationSettings, setShowNotificationSettings] = useState(false)
+  const [showEmergencyExit, setShowEmergencyExit] = useState(false)
+  const [commitmentStatusKey, setCommitmentStatusKey] = useState(0)
 
   // Pull-to-refresh
   const {
@@ -480,6 +484,19 @@ export function Settings({
           )}
         </div>
 
+        {/* Commitment Mode */}
+        <div className="mb-8">
+          <p className="font-serif text-sm text-ink/50 tracking-wide mb-4">Commitment Mode</p>
+          <CommitmentStatus
+            key={commitmentStatusKey}
+            compact
+            onViewDetails={() => {
+              haptic.light()
+              setShowEmergencyExit(true)
+            }}
+          />
+        </div>
+
         {/* Data */}
         <div className="mb-8">
           <p className="font-serif text-sm text-ink/50 tracking-wide mb-4">Your Data</p>
@@ -544,6 +561,17 @@ export function Settings({
           onClose={() => setShowLockSetupFlow(false)}
         />
       )}
+
+      {/* Commitment Emergency Exit modal */}
+      <CommitmentEmergencyExit
+        isOpen={showEmergencyExit}
+        onClose={() => setShowEmergencyExit(false)}
+        onComplete={() => {
+          setShowEmergencyExit(false)
+          // Refresh commitment status to reflect deactivation
+          setCommitmentStatusKey((k) => k + 1)
+        }}
+      />
     </div>
   )
 }

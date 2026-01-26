@@ -266,6 +266,126 @@ export async function getPurchaseHistory(): Promise<
   return hourBank?.purchases || []
 }
 
+// ============================================================================
+// Commitment Mode Integration
+// ============================================================================
+
+/**
+ * Add bonus hours from commitment rewards
+ * These are "free" hours added to the user's bank as a reward.
+ *
+ * @param hours - Number of hours to add (positive)
+ * @param source - Source of the bonus ('commitment-bonus' or 'commitment-mystery')
+ * @param referenceId - Session UUID or other reference for tracking
+ */
+export async function addBonusHours(
+  hours: number,
+  source: 'commitment-bonus' | 'commitment-mystery',
+  referenceId: string
+): Promise<void> {
+  // Validate input
+  if (!Number.isFinite(hours) || hours <= 0) {
+    console.warn('[hourBank] Invalid bonus hours:', hours)
+    return
+  }
+
+  let hourBank = await db.hourBank.get(1)
+
+  if (!hourBank) {
+    // Create initial hour bank with bonus
+    hourBank = {
+      id: 1,
+      totalPurchasedHours: INITIAL_FREE_HOURS + hours,
+      totalConsumedHours: 0,
+      availableHours: INITIAL_FREE_HOURS + hours,
+      isLifetime: false,
+      lastPurchaseAt: null,
+      purchases: [
+        {
+          productId: source,
+          transactionId: referenceId,
+          hours,
+          purchasedAt: Date.now(),
+        },
+      ],
+    }
+    await db.hourBank.add(hourBank)
+  } else {
+    // Lifetime users still get bonus tracking (for stats), but it doesn't affect their balance
+    const newPurchases = [
+      ...(hourBank.purchases || []),
+      {
+        productId: source,
+        transactionId: referenceId,
+        hours,
+        purchasedAt: Date.now(),
+      },
+    ]
+
+    // Add to purchased hours (bonus is like free purchased hours)
+    const newTotalPurchased = hourBank.totalPurchasedHours + hours
+    const newAvailable = hourBank.isLifetime
+      ? hourBank.availableHours // Lifetime users keep their display value
+      : Math.max(0, newTotalPurchased - hourBank.totalConsumedHours)
+
+    await db.hourBank.update(1, {
+      totalPurchasedHours: newTotalPurchased,
+      availableHours: newAvailable,
+      purchases: newPurchases,
+    })
+  }
+}
+
+/**
+ * Consume hours as a penalty for missed commitment sessions
+ * This deducts from the user's available hours.
+ *
+ * @param hours - Number of hours to deduct (positive value, will be consumed)
+ * @returns The actual hours consumed (may be 0 for lifetime users)
+ */
+export async function consumeCommitmentPenalty(hours: number): Promise<number> {
+  // Validate input
+  if (!Number.isFinite(hours) || hours <= 0) {
+    console.warn('[hourBank] Invalid penalty hours:', hours)
+    return 0
+  }
+
+  const balance = await getHourBalance()
+
+  // Lifetime users don't have penalties deducted (unlimited)
+  // But we still track it for analytics purposes
+  if (balance.isLifetime) {
+    return 0
+  }
+
+  let hourBank = await db.hourBank.get(1)
+  if (!hourBank) {
+    // Create hour bank if it doesn't exist (edge case)
+    hourBank = {
+      id: 1,
+      totalPurchasedHours: INITIAL_FREE_HOURS,
+      totalConsumedHours: 0,
+      availableHours: INITIAL_FREE_HOURS,
+      isLifetime: false,
+      lastPurchaseAt: null,
+      purchases: [],
+    }
+    await db.hourBank.add(hourBank)
+  }
+
+  // Calculate new consumed hours (penalty increases consumed)
+  const newConsumed = hourBank.totalConsumedHours + hours
+  const newAvailable = Math.max(0, hourBank.totalPurchasedHours - newConsumed)
+
+  // Update the hour bank
+  await db.hourBank.update(1, {
+    totalConsumedHours: newConsumed,
+    availableHours: newAvailable,
+  })
+
+  return hours
+}
+
 /**
  * Format hours for display
  * @param hours - Number of hours

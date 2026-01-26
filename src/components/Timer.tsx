@@ -19,6 +19,8 @@ import { LowHoursWarning } from './LowHoursWarning'
 import { DurationPicker } from './DurationPicker'
 import { TrialCompleteModal } from './TrialCompleteModal'
 import { LockCelebrationModal } from './LockCelebrationModal'
+import { CommitmentOutcomeModal } from './CommitmentOutcomeModal'
+import { CommitmentMissedAlert } from './CommitmentMissedAlert'
 import { useMeditationLock } from '../hooks/useMeditationLock'
 import { sendAccountabilityMessage } from '../lib/accountability'
 
@@ -51,6 +53,10 @@ export function Timer() {
     justAchievedMilestone,
     justReachedEnlightenment,
     acknowledgeEnlightenment,
+    lastCommitmentOutcome,
+    clearCommitmentOutcome,
+    lastMidnightCheckResult,
+    clearMidnightCheckResult,
   } = useSessionStore()
 
   const { setView, triggerPostSessionFlow, setIsSettling } = useNavigationStore()
@@ -84,6 +90,7 @@ export function Timer() {
     durationSeconds: number
     isFallback: boolean
   } | null>(null)
+  const [showCommitmentOutcome, setShowCommitmentOutcome] = useState(false)
 
   // Modal states
   const [showPaywall, setShowPaywall] = useState(false)
@@ -412,6 +419,20 @@ export function Timer() {
     triggerPostSessionFlow,
     completeSession,
   ])
+
+  // ============================================
+  // COMMITMENT OUTCOME MODAL
+  // ============================================
+  // Show commitment outcome modal when session counted toward commitment
+  useEffect(() => {
+    if (lastCommitmentOutcome?.sessionCounted && lastCommitmentOutcome?.outcome) {
+      // Delay to let other post-session UI settle first
+      const timer = setTimeout(() => {
+        setShowCommitmentOutcome(true)
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [lastCommitmentOutcome])
 
   // ============================================
   // ELAPSED TIME TICKER
@@ -751,6 +772,22 @@ export function Timer() {
         celebrationRitual={lockSettings?.celebrationRitual ?? null}
         nextUnlockWindow={nextUnlockWindow}
         isFallback={lockSessionResult?.isFallback ?? false}
+      />
+
+      {/* Commitment outcome modal */}
+      <CommitmentOutcomeModal
+        isOpen={showCommitmentOutcome}
+        onClose={() => {
+          setShowCommitmentOutcome(false)
+          clearCommitmentOutcome()
+        }}
+        result={lastCommitmentOutcome}
+      />
+
+      {/* Commitment missed sessions alert */}
+      <CommitmentMissedAlert
+        result={lastMidnightCheckResult}
+        onDismiss={clearMidnightCheckResult}
       />
     </div>
   )

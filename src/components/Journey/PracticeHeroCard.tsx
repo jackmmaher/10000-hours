@@ -149,6 +149,25 @@ function LotusPostureIcon({
   )
 }
 
+/**
+ * Commitment icon - Target/goal with checkmark
+ * Represents commitment, stakes, and achievement
+ */
+function CommitmentIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg className={className} style={style} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      {/* Outer ring */}
+      <circle cx="12" cy="12" r="10" strokeWidth={1.5} opacity={0.4} />
+      {/* Middle ring */}
+      <circle cx="12" cy="12" r="6" strokeWidth={1.5} opacity={0.6} />
+      {/* Inner bullseye */}
+      <circle cx="12" cy="12" r="2.5" strokeWidth={1.5} />
+      {/* Center dot */}
+      <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
 function FeatureIcon({
   featureId,
   className,
@@ -167,6 +186,8 @@ function FeatureIcon({
       return <SettlingMindIcon className={className} style={style} />
     case 'perfect-posture':
       return <LotusPostureIcon className={className} style={style} />
+    case 'commitment':
+      return <CommitmentIcon className={className} style={style} />
     default:
       return null
   }

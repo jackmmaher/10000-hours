@@ -29,6 +29,12 @@ export type {
   RepeatRule,
   RepeatFrequency,
   UserAffinities,
+  CommitmentScheduleType,
+  CommitmentWindowType,
+  CommitmentEndBehavior,
+  CommitmentSettings,
+  CommitmentDayLog,
+  CommitmentHistory,
 } from './types'
 
 // Schema and db instance
@@ -173,3 +179,19 @@ export {
 
 // User Affinities (Adaptive Recommendations)
 export { getUserAffinities, saveUserAffinities, resetUserAffinities } from './affinities'
+
+// Commitment Mode
+export {
+  getDefaultCommitmentSettings,
+  getCommitmentSettings,
+  updateCommitmentSettings,
+  getCommitmentDayLog,
+  getCommitmentDayLogs,
+  addCommitmentDayLog,
+  getCompletedSessionCount,
+  getCommitmentHistory,
+  archiveCommitment,
+  getLastCommitment,
+  resetCommitmentSettings,
+  clearCommitmentDayLogs,
+} from './commitmentSettings'

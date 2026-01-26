@@ -28,6 +28,9 @@ interface JourneyPracticeProps {
   onOpenLockComingSoon: () => void
   onNavigateOmCoach: () => void
   onNavigateRacingMind: () => void
+  onNavigatePosture?: () => void
+  /** Called to open Commitment Mode setup flow */
+  onOpenCommitmentModal?: () => void
 }
 
 export function JourneyPractice({
@@ -35,6 +38,8 @@ export function JourneyPractice({
   onOpenLockComingSoon,
   onNavigateOmCoach,
   onNavigateRacingMind,
+  onNavigatePosture,
+  onOpenCommitmentModal,
 }: JourneyPracticeProps) {
   const meditationLock = useMeditationLock()
 
@@ -57,6 +62,12 @@ export function JourneyPractice({
         break
       case 'navigate-racing-mind':
         onNavigateRacingMind()
+        break
+      case 'navigate-posture':
+        onNavigatePosture?.()
+        break
+      case 'open-commitment-modal':
+        onOpenCommitmentModal?.()
         break
     }
   }

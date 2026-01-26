@@ -25,6 +25,9 @@ import type {
   UserAffinities,
   HourBank,
   MeditationLockSettings,
+  CommitmentSettings,
+  CommitmentDayLog,
+  CommitmentHistory,
 } from './types'
 
 export class MeditationDB extends Dexie {
@@ -47,6 +50,9 @@ export class MeditationDB extends Dexie {
   userAffinities!: Table<UserAffinities>
   hourBank!: Table<HourBank>
   meditationLockSettings!: Table<MeditationLockSettings>
+  commitmentSettings!: Table<CommitmentSettings>
+  commitmentDayLogs!: Table<CommitmentDayLog>
+  commitmentHistory!: Table<CommitmentHistory>
 
   constructor() {
     super('10000hours')
@@ -333,6 +339,32 @@ export class MeditationDB extends Dexie {
       userAffinities: 'id',
       hourBank: 'id',
       meditationLockSettings: 'id',
+    })
+
+    // v17: Add commitment mode tables for habit formation with financial stakes
+    this.version(17).stores({
+      sessions: '++id, uuid, startTime, endTime',
+      appState: 'id',
+      profile: 'id',
+      settings: 'id',
+      insights: 'id, sessionId, createdAt, sharedPearlId',
+      plannedSessions: '++id, date, createdAt, linkedSessionUuid, courseId, repeatRuleId',
+      courseProgress: 'id, courseId, status',
+      savedTemplates: 'id, templateId, savedAt',
+      pearlDrafts: 'id, insightId, updatedAt',
+      templateDrafts: 'id, updatedAt',
+      userPreferences: 'id',
+      wellbeingDimensions: 'id, name, createdAt',
+      wellbeingCheckIns: 'id, dimensionId, createdAt',
+      wellbeingSettings: 'id',
+      notifications: 'id, type, createdAt, readAt',
+      repeatRules: '++id, createdAt',
+      userAffinities: 'id',
+      hourBank: 'id',
+      meditationLockSettings: 'id',
+      commitmentSettings: 'id', // Singleton table for commitment settings
+      commitmentDayLogs: '++id, date', // Day-by-day outcome tracking
+      commitmentHistory: '++id, startDate', // Archive of past commitments
     })
   }
 }

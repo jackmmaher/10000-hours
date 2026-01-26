@@ -28,6 +28,7 @@ import {
 } from './Journey/practiceFeatureConfig'
 import { LockSetupFlow } from './LockSetupFlow'
 import { LockComingSoonModal } from './LockComingSoonModal'
+import { CommitmentSetupFlow } from './CommitmentSetupFlow'
 import { useState } from 'react'
 
 export function Exercises() {
@@ -37,6 +38,7 @@ export function Exercises() {
 
   const [showLockSetupFlow, setShowLockSetupFlow] = useState(false)
   const [showLockComingSoon, setShowLockComingSoon] = useState(false)
+  const [showCommitmentSetupFlow, setShowCommitmentSetupFlow] = useState(false)
 
   // Pull-to-refresh
   const {
@@ -84,6 +86,9 @@ export function Exercises() {
         break
       case 'navigate-posture':
         setView('posture')
+        break
+      case 'open-commitment-modal':
+        setShowCommitmentSetupFlow(true)
         break
     }
   }
@@ -205,6 +210,15 @@ export function Exercises() {
             meditationLock.refreshStatus?.()
           }}
           onClose={() => setShowLockSetupFlow(false)}
+        />
+      )}
+
+      {showCommitmentSetupFlow && (
+        <CommitmentSetupFlow
+          onComplete={() => {
+            setShowCommitmentSetupFlow(false)
+          }}
+          onClose={() => setShowCommitmentSetupFlow(false)}
         />
       )}
     </div>
