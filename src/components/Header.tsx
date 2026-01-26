@@ -16,6 +16,7 @@ import { useTapFeedback } from '../hooks/useTapFeedback'
 import { VoiceBadgeWithHours } from './VoiceBadge'
 import { NotificationBell } from './NotificationBell'
 import { NotificationCenter } from './NotificationCenter'
+import { ProfileSheet } from './ProfileSheet'
 
 interface HeaderProps {
   onNavigateToSettings: () => void
@@ -31,6 +32,7 @@ export function Header({ onNavigateToSettings }: HeaderProps) {
 
   const [showNotifications, setShowNotifications] = useState(false)
   const [notificationRefreshKey, setNotificationRefreshKey] = useState(0)
+  const [showProfileSheet, setShowProfileSheet] = useState(false)
 
   // Hide during active meditation phases (with smooth fade)
   // Check both regular timer and trial timer phases
@@ -48,6 +50,13 @@ export function Header({ onNavigateToSettings }: HeaderProps) {
       setNotificationRefreshKey((k) => k + 1)
     }
   }, [isTimerActive, showNotifications])
+
+  // BUG FIX 1b: Close profile sheet when timer becomes active
+  useEffect(() => {
+    if (isTimerActive && showProfileSheet) {
+      setShowProfileSheet(false)
+    }
+  }, [isTimerActive, showProfileSheet])
 
   // Navigation is disabled during settling window (4s after meditation ends)
   const isNavigationLocked = isSettling
@@ -73,6 +82,12 @@ export function Header({ onNavigateToSettings }: HeaderProps) {
   const handleNotificationsClose = () => {
     setShowNotifications(false)
     setNotificationRefreshKey((k) => k + 1)
+  }
+
+  const handleProfileClick = () => {
+    if (isNavigationLocked) return
+    haptic.light()
+    setShowProfileSheet(true)
   }
 
   return (
@@ -135,6 +150,21 @@ export function Header({ onNavigateToSettings }: HeaderProps) {
                   disabled={isNavigationLocked}
                 />
                 <button
+                  onClick={handleProfileClick}
+                  disabled={isNavigationLocked}
+                  className={`p-2 text-ink/40 hover:text-ink/60 transition-colors touch-manipulation ${isNavigationLocked ? 'cursor-not-allowed' : 'active:scale-[0.95]'}`}
+                  aria-label="Profile"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                </button>
+                <button
                   onClick={handleSettingsClick}
                   disabled={isNavigationLocked}
                   className={`p-2 text-ink/40 hover:text-ink/60 transition-colors touch-manipulation ${isNavigationLocked ? 'cursor-not-allowed' : 'active:scale-[0.95]'}`}
@@ -169,6 +199,9 @@ export function Header({ onNavigateToSettings }: HeaderProps) {
           navigateToInsightCapture(sessionId)
         }}
       />
+
+      {/* Profile Sheet */}
+      <ProfileSheet isOpen={showProfileSheet} onClose={() => setShowProfileSheet(false)} />
     </>
   )
 }

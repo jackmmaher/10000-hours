@@ -15,6 +15,7 @@ export type AppView =
   | 'explore' // Community discovery - pearls + sessions + courses
   | 'progress' // Milestones, stats, insight-driven history
   | 'profile' // User identity, preferences, wellbeing tracking
+  | 'exercises' // Practice tools hub - aum coach, racing mind, etc.
   | 'settings' // Sub-page: Theme, display options, legal
   | 'store' // In-app purchases: hour packs
   | 'privacy' // Privacy policy page
