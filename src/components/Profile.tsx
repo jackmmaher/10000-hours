@@ -30,7 +30,7 @@ import {
   WellbeingCheckIn,
   WellbeingSettings,
 } from '../lib/db'
-import { GOAL_PRESETS } from '../lib/milestones'
+// Practice Goal moved to Progress.tsx
 import { VoiceBadge } from './VoiceBadge'
 import { WellbeingCard } from './WellbeingCard'
 import { ReciprocityCard } from './ReciprocityCard'
@@ -85,10 +85,6 @@ export function Profile() {
   const [reciprocityData, setReciprocityData] = useState<ReciprocityData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [showPreferences, setShowPreferences] = useState(false)
-  const [showGoalSettings, setShowGoalSettings] = useState(false)
-
-  // Calculate current hours for goal setting UI
-  const currentHours = sessions.reduce((sum, s) => sum + s.durationSeconds, 0) / 3600
 
   // Load data
   const loadData = useCallback(async () => {
@@ -160,13 +156,6 @@ export function Profile() {
     haptic.light()
     await updateUserPreferences({ [key]: value })
     setPreferences((prev) => (prev ? { ...prev, [key]: value } : null))
-  }
-
-  // Update practice goal
-  const handleGoalChange = async (goal: number | undefined) => {
-    haptic.light()
-    await updateUserPreferences({ practiceGoalHours: goal })
-    setPreferences((prev) => (prev ? { ...prev, practiceGoalHours: goal } : null))
   }
 
   // Format practicing since date
@@ -425,101 +414,6 @@ export function Profile() {
                   ))}
                 </div>
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* Practice Goal */}
-        <div className="mb-6">
-          <button
-            onClick={() => {
-              haptic.light()
-              setShowGoalSettings(!showGoalSettings)
-            }}
-            className="w-full flex items-center justify-between p-4 bg-elevated shadow-sm
-              rounded-xl hover:shadow-md transition-all touch-manipulation cursor-pointer"
-          >
-            <div className="text-left">
-              <p className="text-sm font-medium text-ink">Practice Goal</p>
-              <p className="text-xs text-ink/40 mt-0.5">
-                {preferences?.practiceGoalHours
-                  ? `${preferences.practiceGoalHours} hours`
-                  : 'No limit — milestones continue forever'}
-              </p>
-            </div>
-            <svg
-              className={`w-5 h-5 text-ink/30 transition-transform ${showGoalSettings ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </button>
-
-          {showGoalSettings && (
-            <div className="mt-3 p-4 bg-cream-warm rounded-xl space-y-4">
-              {/* Current progress indicator */}
-              <p className="text-xs text-center text-ink/50">
-                Your practice: {Math.floor(currentHours)} hours
-              </p>
-
-              {/* No limit option */}
-              <button
-                onClick={() => handleGoalChange(undefined)}
-                className={`w-full p-3 rounded-lg text-left transition-colors touch-manipulation cursor-pointer ${
-                  !preferences?.practiceGoalHours
-                    ? 'bg-moss text-cream'
-                    : 'bg-cream text-ink/60 hover:bg-cream-deep'
-                }`}
-              >
-                <p className="text-sm font-medium">No limit</p>
-                <p className="text-xs mt-0.5 opacity-70">
-                  Milestones appear as you progress, forever
-                </p>
-              </button>
-
-              {/* Goal presets */}
-              <div>
-                <p className="text-xs text-ink/40 mb-2">Set a destination</p>
-                <div className="flex flex-wrap gap-2">
-                  {GOAL_PRESETS.map((goal) => {
-                    const isSelected = preferences?.practiceGoalHours === goal
-                    const isAchieved = goal <= currentHours
-                    const isDisabled = isAchieved && !isSelected
-
-                    return (
-                      <button
-                        key={goal}
-                        onClick={() => !isDisabled && handleGoalChange(goal)}
-                        disabled={isDisabled}
-                        aria-label={`Set goal to ${goal} hours${isAchieved ? ' (already achieved)' : ''}`}
-                        className={`px-3 py-1.5 text-xs rounded-lg transition-colors touch-manipulation ${
-                          isSelected
-                            ? 'bg-moss text-cream'
-                            : isDisabled
-                              ? 'bg-cream-deep/50 text-ink/30 cursor-not-allowed'
-                              : 'bg-cream text-ink/60 hover:bg-cream-deep cursor-pointer'
-                        }`}
-                        style={{ opacity: isDisabled ? 0.5 : 1 }}
-                      >
-                        {goal.toLocaleString()}h{isAchieved && !isSelected && ' ✓'}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Explainer text */}
-              <p className="text-xs text-center text-ink/40">
-                Setting a destination helps celebrate your progress. When you arrive, you can extend
-                further.
-              </p>
             </div>
           )}
         </div>

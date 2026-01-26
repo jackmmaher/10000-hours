@@ -12,7 +12,7 @@
  * Design principle: Insights over data dumps
  */
 
-import { useMemo, useState, useRef, useEffect } from 'react'
+import React, { useMemo, useState, useRef, useEffect } from 'react'
 import { useSessionStore } from '../stores/useSessionStore'
 import { useNavigationStore } from '../stores/useNavigationStore'
 import { useSwipe } from '../hooks/useSwipe'
@@ -81,13 +81,23 @@ export function Progress() {
   const [preferences, setPreferences] = useState<UserPreferences | null>(null)
   const [showGoalSettings, setShowGoalSettings] = useState(false)
 
-  // Handle navigation intent to open Voice modal (e.g., from Profile)
+  // Handle navigation intent to open Voice modal (e.g., from Header)
+  // Uses a ref to track intent so it persists across voice loading
+  const shouldOpenVoiceModalRef = React.useRef(false)
+
   useEffect(() => {
-    if (openVoiceModal && voice) {
-      setShowVoiceModal(true)
+    if (openVoiceModal) {
+      shouldOpenVoiceModalRef.current = true
       clearVoiceModalIntent()
     }
-  }, [openVoiceModal, voice, clearVoiceModalIntent])
+  }, [openVoiceModal, clearVoiceModalIntent])
+
+  useEffect(() => {
+    if (shouldOpenVoiceModalRef.current && voice) {
+      setShowVoiceModal(true)
+      shouldOpenVoiceModalRef.current = false
+    }
+  }, [voice])
 
   useEffect(() => {
     async function loadData() {
