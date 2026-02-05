@@ -22,6 +22,7 @@ import { useTapFeedback } from '../hooks/useTapFeedback'
 import { useAudioFeedback } from '../hooks/useAudioFeedback'
 import { useMeditationLock } from '../hooks/useMeditationLock'
 import { trackHideTimeToggle } from '../lib/analytics'
+import type { ClockFace } from '../lib/db/types'
 import { exportData } from '../lib/export'
 import { LockSetupFlow } from './LockSetupFlow'
 import { LockComingSoonModal } from './LockComingSoonModal'
@@ -42,8 +43,8 @@ export function Settings({
   onNavigateToTerms,
 }: SettingsProps) {
   const {
-    hideTimeDisplay,
-    setHideTimeDisplay,
+    clockFace,
+    setClockFace,
     themeMode,
     setThemeMode,
     audioFeedbackEnabled,
@@ -73,10 +74,9 @@ export function Settings({
     onRefresh: refreshProfile,
   })
 
-  const handleHideTimeToggle = async () => {
-    const newValue = !hideTimeDisplay
-    await setHideTimeDisplay(newValue)
-    trackHideTimeToggle(newValue)
+  const handleClockFaceChange = async (face: ClockFace) => {
+    await setClockFace(face)
+    trackHideTimeToggle(face === 'orb')
   }
 
   return (
@@ -234,37 +234,48 @@ export function Settings({
 
           {showDisplaySettings && (
             <div className="space-y-0">
-              {/* Hide Time Display - with custom organic toggle */}
-              <button
-                onClick={() => {
-                  haptic.light()
-                  handleHideTimeToggle()
-                }}
-                className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform touch-manipulation"
-              >
-                <div className="text-left">
-                  <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
-                    Hide time display
-                  </p>
-                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                    Meditate without watching numbers (orb mode)
-                  </p>
+              {/* Clock Face Selector */}
+              <div className="py-4">
+                <p className="text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
+                  Timer display
+                </p>
+                <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>
+                  Choose how your cumulative time appears
+                </p>
+                <div className="flex gap-2">
+                  {[
+                    { id: 'numbers' as ClockFace, label: 'Numbers', desc: 'Digital time' },
+                    { id: 'orb' as ClockFace, label: 'Orb', desc: 'Living orb' },
+                    { id: 'swiss' as ClockFace, label: 'Swiss', desc: 'Analog dial' },
+                  ].map((option) => {
+                    const isActive = clockFace === option.id
+                    return (
+                      <button
+                        key={option.id}
+                        onClick={() => {
+                          haptic.light()
+                          handleClockFaceChange(option.id)
+                        }}
+                        className={`
+                          flex-1 py-3 rounded-xl text-center transition-all duration-200 touch-manipulation active:scale-[0.97]
+                          ${isActive ? 'bg-moss text-cream' : 'bg-cream-warm text-ink hover:bg-cream-deep'}
+                        `}
+                      >
+                        <p
+                          className={`text-sm font-medium ${isActive ? 'text-cream' : 'text-ink/80'}`}
+                        >
+                          {option.label}
+                        </p>
+                        <p
+                          className={`text-xs mt-0.5 ${isActive ? 'text-cream/70' : 'text-ink/40'}`}
+                        >
+                          {option.desc}
+                        </p>
+                      </button>
+                    )
+                  })}
                 </div>
-                {/* Custom organic toggle - theme aware */}
-                <div
-                  className="relative w-12 h-7 rounded-full transition-colors duration-300"
-                  style={{ background: hideTimeDisplay ? 'var(--toggle-on)' : 'var(--toggle-off)' }}
-                >
-                  <div
-                    className={`
-                      absolute top-1 w-5 h-5 rounded-full shadow-sm
-                      transition-transform duration-300
-                      ${hideTimeDisplay ? 'translate-x-6' : 'translate-x-1'}
-                    `}
-                    style={{ background: 'var(--toggle-thumb)' }}
-                  />
-                </div>
-              </button>
+              </div>
 
               {/* Audio Feedback */}
               <button

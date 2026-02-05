@@ -18,6 +18,7 @@ vi.mock('../db', () => ({
   getSettings: vi.fn().mockResolvedValue({
     id: 1,
     hideTimeDisplay: false,
+    clockFace: 'numbers',
     skipInsightCapture: false,
     themeMode: 'auto',
     audioFeedbackEnabled: false,
@@ -42,6 +43,7 @@ describe('generateAttributionNotification', () => {
     vi.mocked(getSettings).mockResolvedValueOnce({
       id: 1,
       hideTimeDisplay: false,
+      clockFace: 'numbers',
       skipInsightCapture: false,
       themeMode: 'auto',
       audioFeedbackEnabled: false,
@@ -70,6 +72,7 @@ describe('generateAttributionNotification', () => {
     vi.mocked(getSettings).mockResolvedValueOnce({
       id: 1,
       hideTimeDisplay: false,
+      clockFace: 'numbers',
       skipInsightCapture: false,
       themeMode: 'auto',
       audioFeedbackEnabled: false,

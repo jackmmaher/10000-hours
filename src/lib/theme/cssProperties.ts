@@ -120,6 +120,13 @@ export function themeToCSSProperties(tokens: ThemeTokens): Record<string, string
 
     '--seasonal-accent': tokens.seasonalAccent,
 
+    // Swiss Clock
+    '--clock-face-bg': tokens.clockFaceBg,
+    '--clock-hand': tokens.clockHand,
+    '--clock-marker': tokens.clockMarker,
+    '--clock-accent': tokens.clockAccent,
+    '--clock-number': tokens.clockNumber,
+
     // Timer theater mode
     '--theater-center': tokens.theaterCenter,
     '--theater-edge': tokens.theaterEdge,

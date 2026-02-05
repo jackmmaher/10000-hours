@@ -89,6 +89,9 @@ export interface UserProfile {
 // Theme modes - simple light/dark/auto
 export type ThemeMode = 'auto' | 'light' | 'dark'
 
+// Clock face display options
+export type ClockFace = 'numbers' | 'orb' | 'swiss'
+
 // Legacy types kept for migration - will be removed after all users migrate
 type LegacyThemeMode =
   | 'neutral-auto'
@@ -106,7 +109,8 @@ export type TimeOverride = 'morning' | 'daytime' | 'evening' | 'night'
 
 export interface UserSettings {
   id: 1
-  hideTimeDisplay: boolean
+  hideTimeDisplay: boolean // Legacy: migrated to clockFace
+  clockFace: ClockFace // Which timer display to use
   skipInsightCapture: boolean // Skip post-session insight recording prompt
   themeMode: ThemeModeWithLegacy // Uses legacy type for migration compatibility
   audioFeedbackEnabled: boolean // Play subtle sounds on complete/milestone

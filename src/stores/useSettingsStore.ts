@@ -7,12 +7,14 @@
  */
 
 import { create } from 'zustand'
-import { getSettings, updateSettings, ThemeMode } from '../lib/db'
+import { getSettings, updateSettings } from '../lib/db'
+import type { ThemeMode, ClockFace } from '../lib/db/types'
 import { NotificationPreferences, DEFAULT_NOTIFICATION_PREFERENCES } from '../lib/notifications'
 
 interface SettingsState {
   // State
-  hideTimeDisplay: boolean
+  hideTimeDisplay: boolean // Legacy: derived from clockFace for backward compat
+  clockFace: ClockFace
   themeMode: ThemeMode
   audioFeedbackEnabled: boolean
   notificationPreferences: NotificationPreferences
@@ -20,6 +22,7 @@ interface SettingsState {
 
   // Actions
   hydrate: () => Promise<void>
+  setClockFace: (value: ClockFace) => Promise<void>
   setHideTimeDisplay: (value: boolean) => Promise<void>
   setThemeMode: (value: ThemeMode) => Promise<void>
   setAudioFeedbackEnabled: (value: boolean) => Promise<void>
@@ -29,6 +32,7 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>((set, get) => ({
   // Initial state
   hideTimeDisplay: false,
+  clockFace: 'numbers',
   themeMode: 'auto',
   audioFeedbackEnabled: false,
   notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES,
@@ -36,18 +40,27 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
   hydrate: async () => {
     const settings = await getSettings()
+    const clockFace = settings.clockFace || (settings.hideTimeDisplay ? 'orb' : 'numbers')
     set({
-      hideTimeDisplay: settings.hideTimeDisplay,
-      themeMode: settings.themeMode as ThemeMode, // Cast handles legacy migration
+      hideTimeDisplay: clockFace === 'orb',
+      clockFace,
+      themeMode: settings.themeMode as ThemeMode,
       audioFeedbackEnabled: settings.audioFeedbackEnabled,
       notificationPreferences: settings.notificationPreferences ?? DEFAULT_NOTIFICATION_PREFERENCES,
       isLoading: false,
     })
   },
 
+  setClockFace: async (value) => {
+    const hideTimeDisplay = value === 'orb'
+    await updateSettings({ clockFace: value, hideTimeDisplay })
+    set({ clockFace: value, hideTimeDisplay })
+  },
+
   setHideTimeDisplay: async (value) => {
-    await updateSettings({ hideTimeDisplay: value })
-    set({ hideTimeDisplay: value })
+    const clockFace = value ? 'orb' : 'numbers'
+    await updateSettings({ hideTimeDisplay: value, clockFace })
+    set({ hideTimeDisplay: value, clockFace })
   },
 
   setThemeMode: async (value) => {

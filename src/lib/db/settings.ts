@@ -15,6 +15,7 @@ export async function getSettings(): Promise<UserSettings> {
     settings = {
       id: 1,
       hideTimeDisplay: false,
+      clockFace: 'numbers',
       skipInsightCapture: false,
       themeMode: 'auto',
       audioFeedbackEnabled: false,
@@ -57,6 +58,11 @@ export async function getSettings(): Promise<UserSettings> {
   // Backfill notificationPreferences for existing users
   if (!settings.notificationPreferences) {
     settings.notificationPreferences = DEFAULT_NOTIFICATION_PREFERENCES
+    await db.settings.put(settings)
+  }
+  // Migrate hideTimeDisplay → clockFace for existing users
+  if (!settings.clockFace) {
+    settings.clockFace = settings.hideTimeDisplay ? 'orb' : 'numbers'
     await db.settings.put(settings)
   }
   return settings

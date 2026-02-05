@@ -12,6 +12,7 @@ export type {
   Achievement,
   UserProfile,
   ThemeMode,
+  ClockFace,
   Season,
   SeasonOverride,
   TimeOverride,

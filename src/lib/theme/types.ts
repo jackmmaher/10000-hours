@@ -107,6 +107,13 @@ export interface ThemeTokens {
   voiceNewText: string
   voiceNewDot: string
 
+  // === SWISS CLOCK (Analog timer) ===
+  clockFaceBg: string // Dial background
+  clockHand: string // Hour and minute hands
+  clockMarker: string // Tick markers
+  clockAccent: string // Second hand + accent
+  clockNumber: string // Hour numbers
+
   // === TIMER THEATER MODE ===
   theaterCenter: string // Dimmed background
   theaterEdge: string // Dark vignette edges

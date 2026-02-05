@@ -118,6 +118,7 @@ vi.mock('../../stores/useNavigationStore', () => ({
 vi.mock('../../stores/useSettingsStore', () => ({
   useSettingsStore: () => ({
     hideTimeDisplay: false,
+    clockFace: 'numbers',
   }),
 }))
 

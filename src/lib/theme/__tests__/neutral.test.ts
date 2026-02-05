@@ -108,6 +108,11 @@ const ALL_TOKEN_KEYS: (keyof ThemeTokens)[] = [
   'voiceNewBg',
   'voiceNewText',
   'voiceNewDot',
+  'clockFaceBg',
+  'clockHand',
+  'clockMarker',
+  'clockAccent',
+  'clockNumber',
   'isDark',
   'seasonalAccent',
 ]

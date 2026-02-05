@@ -114,6 +114,13 @@ export const NEUTRAL_LIGHT: ThemeTokens = {
   voiceNewText: '#737373',
   voiceNewDot: '#D6D3D1',
 
+  // Swiss Clock - warm cream dial, dark hands, Hermès orange accent
+  clockFaceBg: '#FFFFFF',
+  clockHand: '#1a1a1a',
+  clockMarker: '#1a1a1a',
+  clockAccent: '#EA6512', // Hermès orange (replaces red second hand)
+  clockNumber: '#1a1a1a',
+
   // Timer theater mode (cinematic focus)
   theaterCenter: '#D8D4CE', // Dimmed cream (background)
   theaterEdge: '#A8A49E', // Warm shadow (edge vignette)
@@ -240,6 +247,13 @@ export const NEUTRAL_DARK: ThemeTokens = {
   voiceNewBg: '#292524',
   voiceNewText: '#78716C',
   voiceNewDot: '#57534E',
+
+  // Swiss Clock - warm charcoal dial, light hands, boosted orange accent
+  clockFaceBg: '#1a1a1a',
+  clockHand: '#FAFAF9',
+  clockMarker: '#FAFAF9',
+  clockAccent: '#F07020', // Boosted Hermès orange for dark mode
+  clockNumber: '#FAFAF9',
 
   // Timer theater mode (cinematic focus)
   theaterCenter: '#0C0A09', // Deep charcoal (background)

@@ -15,6 +15,7 @@ import { useTodaysPlan } from '../hooks/useTodaysPlan'
 import { useTodayCommitment } from '../hooks/useTodayCommitment'
 import { UnifiedTime } from './UnifiedTime'
 import { GooeyOrb } from './GooeyOrb'
+import { SwissClock } from './SwissClock'
 import { Paywall } from './Paywall'
 import { LowHoursWarning } from './LowHoursWarning'
 import { DurationPicker } from './DurationPicker'
@@ -61,7 +62,7 @@ export function Timer() {
   } = useSessionStore()
 
   const { setView, triggerPostSessionFlow, setIsSettling } = useNavigationStore()
-  const { hideTimeDisplay } = useSettingsStore()
+  const { clockFace } = useSettingsStore()
   const { canMeditate, refreshBalance, isLowHours, isCriticallyLow, available } = useHourBankStore()
   const {
     isTrialActive,
@@ -722,8 +723,10 @@ export function Timer() {
 
       {/* Timer Display - z-10 to stay above theater layers */}
       <div className="relative z-10">
-        {hideTimeDisplay ? (
+        {clockFace === 'orb' ? (
           <GooeyOrb phase={phase} />
+        ) : clockFace === 'swiss' ? (
+          <SwissClock totalSeconds={liveTotal} phase={phase} breathing={breathing} />
         ) : (
           <UnifiedTime
             totalSeconds={liveTotal}
