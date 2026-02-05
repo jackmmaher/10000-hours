@@ -36,12 +36,15 @@ import { ZenMessage } from './components/ZenMessage'
 import { PWAInstallPrompt } from './components/PWAInstallPrompt'
 import { ToastContainer } from './components/Toast'
 import { ReviewPrompt } from './components/ReviewPrompt'
+import { CommitmentShield } from './components/CommitmentShield'
+import { useCommitmentShield } from './hooks/useCommitmentShield'
 import { Store } from './components/Store'
 import { PrivacyPolicy } from './components/PrivacyPolicy'
 import { TermsOfService } from './components/TermsOfService'
 import { OmCoach } from './components/OmCoach'
 import { RacingMind } from './components/RacingMind'
 import { Posture } from './components/Posture'
+import { ResonanceAnchor } from './components/ResonanceAnchor'
 import type { Session } from './lib/db'
 import { shouldPromptForReview } from './lib/nativeReview'
 
@@ -71,6 +74,9 @@ function AppContent() {
   const settingsStore = useSettingsStore()
   const authStore = useAuthStore()
   const hourBankStore = useHourBankStore()
+
+  // Commitment shield (soft lock)
+  const commitmentShield = useCommitmentShield()
 
   // Initialize voice tracking - notifications handled centrally below
   const { voice } = useVoice()
@@ -319,6 +325,7 @@ function AppContent() {
         {view === 'om-coach' && <OmCoach onClose={() => setView('timer')} />}
         {view === 'racing-mind' && <RacingMind onClose={() => setView('timer')} />}
         {view === 'posture' && <Posture onClose={() => setView('exercises')} />}
+        {view === 'resonance-anchor' && <ResonanceAnchor onClose={() => setView('timer')} />}
 
         {/* Session edit modal */}
         {editingSession && (
@@ -332,6 +339,11 @@ function AppContent() {
 
         {/* Toast notifications */}
         <ToastContainer />
+
+        {/* Commitment Shield - soft lock overlay above all views but below settings */}
+        {commitmentShield.shouldShow && (
+          <CommitmentShield commitment={commitmentShield.commitment} />
+        )}
 
         {/* Global insight capture modal - appears on any tab after leaving timer */}
         {showInsightModal && pendingInsightSessionId && (

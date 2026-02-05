@@ -37,6 +37,14 @@ export interface TodayCommitmentState {
   streakDays: number
   /** Celebration ritual text */
   celebrationRitual: string | null
+  /** Anchor routine text (habit stacking) */
+  anchorRoutine: string | null
+  /** Obstacles with coping responses */
+  obstacles: Array<{ obstacle: string; copingResponse: string }>
+  /** Minimum fallback session minutes ("hard day" minimum) */
+  minimumFallbackMinutes: number
+  /** Identity statement from setup */
+  identityStatement: string | null
   /** Loading state */
   isLoading: boolean
   /** Refresh from database */
@@ -56,6 +64,10 @@ export function useTodayCommitment(): TodayCommitmentState {
     gracePeriodsRemaining: 0,
     streakDays: 0,
     celebrationRitual: null,
+    anchorRoutine: null,
+    obstacles: [],
+    minimumFallbackMinutes: 2,
+    identityStatement: null,
   })
   const [isLoading, setIsLoading] = useState(true)
 
@@ -77,9 +89,9 @@ export function useTodayCommitment(): TodayCommitmentState {
       // Check if within window
       const withinWindow = isWithinWindow(now, settings)
 
-      // Check if already completed
+      // Check if already completed (or grace period used)
       const todayLog = await getCommitmentDayLog(today)
-      const completed = todayLog?.outcome === 'completed'
+      const completed = todayLog?.outcome === 'completed' || todayLog?.outcome === 'grace'
 
       // Calculate current day number
       const startDay = getStartOfDay(settings.commitmentStartDate)
@@ -101,6 +113,10 @@ export function useTodayCommitment(): TodayCommitmentState {
         gracePeriodsRemaining: graceRemaining,
         streakDays: settings.currentStreakDays || 0,
         celebrationRitual: settings.celebrationRitual || null,
+        anchorRoutine: settings.anchorRoutine || null,
+        obstacles: settings.obstacles || [],
+        minimumFallbackMinutes: settings.minimumFallbackMinutes || 2,
+        identityStatement: settings.identityStatement || null,
       })
     } catch (error) {
       console.error('[useTodayCommitment] Failed to load:', error)

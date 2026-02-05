@@ -36,6 +36,7 @@
 
 import { useCallback, useRef } from 'react'
 import { useSettingsStore } from '../stores/useSettingsStore'
+import { playInterstellarTick } from '../lib/audio/interstellarTick'
 
 type AudioCue = 'complete' | 'milestone' | 'tick'
 
@@ -46,6 +47,7 @@ const HOLDING_VOLUME_RATIO = 0.015 // 1.5% of peak - barely audible presence
 
 export function useAudioFeedback() {
   const audioFeedbackEnabled = useSettingsStore((s) => s.audioFeedbackEnabled)
+  const swissClockTickEnabled = useSettingsStore((s) => s.swissClockTickEnabled)
   const audioContextRef = useRef<AudioContext | null>(null)
 
   // Lazy-init AudioContext on first use (browser requirement)
@@ -193,6 +195,27 @@ export function useAudioFeedback() {
     []
   )
 
+  /**
+   * Play the Interstellar-inspired tick for the Swiss clock face.
+   * Checks both audioFeedbackEnabled and swissClockTickEnabled.
+   */
+  const interstellarTick = useCallback(async () => {
+    if (!audioFeedbackEnabled || !swissClockTickEnabled) return
+
+    const ctx = getAudioContext()
+    if (!ctx) return
+
+    if (ctx.state === 'suspended') {
+      try {
+        await ctx.resume()
+      } catch {
+        return
+      }
+    }
+
+    playInterstellarTick(ctx)
+  }, [audioFeedbackEnabled, swissClockTickEnabled, getAudioContext])
+
   const play = useCallback(
     async (cue: AudioCue, holdingDurationMs?: number) => {
       if (!audioFeedbackEnabled) return
@@ -262,6 +285,8 @@ export function useAudioFeedback() {
     complete: (holdingDurationMs?: number) => play('complete', holdingDurationMs),
     milestone: () => play('milestone'),
     tick: () => play('tick'),
+    /** Play Interstellar-inspired tick for Swiss clock face */
+    interstellarTick,
     play,
   }
 }

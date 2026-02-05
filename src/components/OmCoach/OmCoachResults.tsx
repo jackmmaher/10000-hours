@@ -309,7 +309,7 @@ export function OmCoachResults({
               />
             </div>
 
-            {/* Session median frequency with therapeutic context */}
+            {/* Session median frequency — informational */}
             {coherenceMetrics.sessionMedianFrequency && (
               <div className="text-center mb-4 py-2">
                 <div className="text-sm text-ink/70">
@@ -321,7 +321,7 @@ export function OmCoachResults({
                 {coherenceMetrics.sessionMedianFrequency >= 100 &&
                   coherenceMetrics.sessionMedianFrequency <= 160 && (
                     <div className="text-xs text-success-text mt-1">
-                      In the therapeutic range from steady, relaxed chanting
+                      Typical range for relaxed humming
                     </div>
                   )}
               </div>
@@ -397,8 +397,8 @@ export function OmCoachResults({
                 The Vibration Continues.
               </h3>
               <p className="text-sm text-ink/70 text-center leading-relaxed mb-4">
-                Your nervous system just shifted. Extended exhale activated your parasympathetic
-                response. Close your eyes. Let the resonance settle into silence.
+                Extended exhalation supports parasympathetic activation. Close your eyes. Let the
+                resonance settle into silence.
               </p>
               <button
                 onClick={onMeditateNow}

@@ -17,6 +17,7 @@ interface SettingsState {
   clockFace: ClockFace
   themeMode: ThemeMode
   audioFeedbackEnabled: boolean
+  swissClockTickEnabled: boolean
   notificationPreferences: NotificationPreferences
   isLoading: boolean
 
@@ -26,6 +27,7 @@ interface SettingsState {
   setHideTimeDisplay: (value: boolean) => Promise<void>
   setThemeMode: (value: ThemeMode) => Promise<void>
   setAudioFeedbackEnabled: (value: boolean) => Promise<void>
+  setSwissClockTickEnabled: (value: boolean) => Promise<void>
   setNotificationPreferences: (prefs: Partial<NotificationPreferences>) => Promise<void>
 }
 
@@ -35,6 +37,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   clockFace: 'numbers',
   themeMode: 'auto',
   audioFeedbackEnabled: false,
+  swissClockTickEnabled: true,
   notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES,
   isLoading: true,
 
@@ -46,6 +49,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       clockFace,
       themeMode: settings.themeMode as ThemeMode,
       audioFeedbackEnabled: settings.audioFeedbackEnabled,
+      swissClockTickEnabled: settings.swissClockTickEnabled ?? true,
       notificationPreferences: settings.notificationPreferences ?? DEFAULT_NOTIFICATION_PREFERENCES,
       isLoading: false,
     })
@@ -71,6 +75,11 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   setAudioFeedbackEnabled: async (value) => {
     await updateSettings({ audioFeedbackEnabled: value })
     set({ audioFeedbackEnabled: value })
+  },
+
+  setSwissClockTickEnabled: async (value) => {
+    await updateSettings({ swissClockTickEnabled: value })
+    set({ swissClockTickEnabled: value })
   },
 
   setNotificationPreferences: async (prefs) => {

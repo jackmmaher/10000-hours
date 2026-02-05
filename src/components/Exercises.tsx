@@ -87,6 +87,9 @@ export function Exercises() {
       case 'navigate-posture':
         setView('posture')
         break
+      case 'navigate-resonance-anchor':
+        setView('resonance-anchor')
+        break
       case 'open-commitment-modal':
         setShowCommitmentSetupFlow(true)
         break

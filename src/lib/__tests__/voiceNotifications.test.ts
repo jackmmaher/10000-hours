@@ -20,6 +20,7 @@ const mockSettings = (overrides: Partial<UserSettings> = {}): UserSettings => ({
   skipInsightCapture: false,
   themeMode: 'auto',
   audioFeedbackEnabled: false,
+  swissClockTickEnabled: true,
   notificationPreferences: {
     milestoneEnabled: true,
     attributionEnabled: true,
@@ -40,6 +41,7 @@ vi.mock('../db', () => ({
     skipInsightCapture: false,
     themeMode: 'auto',
     audioFeedbackEnabled: false,
+    swissClockTickEnabled: true,
     notificationPreferences: {
       milestoneEnabled: true,
       attributionEnabled: true,

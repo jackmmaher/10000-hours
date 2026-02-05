@@ -18,9 +18,13 @@ import {
 } from '../db/commitmentSettings'
 import { addBonusHours } from '../hourBank'
 import { sendAccountabilityMessage } from '../accountability'
+import { getUserPreferences } from '../db/preferences'
 import { createCommitmentRNG } from './rng'
 import { calculateSessionCompletion, type SessionOutcome } from './outcomes'
 import { isDayRequired, isWithinWindow, getStartOfDay, getDayOfWeek } from './schedule'
+
+/** Pre-window buffer in milliseconds (60 minutes before window start still counts) */
+const PRE_WINDOW_BUFFER_MS = 60 * 60 * 1000
 
 /**
  * Result of processing a commitment session
@@ -77,7 +81,22 @@ export async function processCommitmentSession(
   const dayRequired = isDayRequired(sessionStartTime, settings)
 
   // Check if session was within allowed window
-  const withinWindow = isWithinWindow(sessionStartTime, settings)
+  // Also allow sessions completed within 60 minutes before window start (pre-window buffer)
+  let withinWindow = isWithinWindow(sessionStartTime, settings)
+  if (!withinWindow && settings.windowType !== 'anytime') {
+    // Check if session end time (start + duration) falls within window
+    const sessionEndTime = sessionStartTime + durationSeconds * 1000
+    if (isWithinWindow(sessionEndTime, settings)) {
+      withinWindow = true
+    }
+    // Check pre-window buffer: if session started within 60 min before window opens
+    if (!withinWindow) {
+      const bufferStartTime = sessionStartTime + PRE_WINDOW_BUFFER_MS
+      if (isWithinWindow(bufferStartTime, settings)) {
+        withinWindow = true
+      }
+    }
+  }
 
   // Check minimum duration (convert to minutes)
   const durationMinutes = durationSeconds / 60
@@ -163,12 +182,14 @@ export async function processCommitmentSession(
     settings.accountabilityPhone
   ) {
     try {
+      const userPrefs = await getUserPreferences()
+      const userName = userPrefs.displayName || 'User'
       await sendAccountabilityMessage({
         type: 'completion',
         phone: settings.accountabilityPhone,
         method: settings.accountabilityMethod || 'sms',
         durationMinutes: Math.round(durationSeconds / 60),
-        userName: 'User',
+        userName,
       })
     } catch (err) {
       console.warn('[Commitment] Failed to send accountability message:', err)
@@ -233,7 +254,7 @@ export async function getTodayCommitmentStatus(): Promise<{
  *
  * @returns true if grace period was used successfully
  */
-export async function useGracePeriod(): Promise<boolean> {
+export async function consumeGracePeriod(): Promise<boolean> {
   const settings = await getCommitmentSettings()
 
   if (!settings.isActive) {

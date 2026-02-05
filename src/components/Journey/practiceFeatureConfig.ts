@@ -15,6 +15,7 @@ export type FeatureId =
   | 'meditation-lock'
   | 'aum-coach'
   | 'racing-mind'
+  | 'resonance-anchor'
   | 'perfect-posture'
   | 'commitment'
 export type FeatureStatus = 'active' | 'coming-soon'
@@ -34,6 +35,7 @@ export interface PracticeFeatureConfig {
     | 'open-lock-modal'
     | 'navigate-om-coach'
     | 'navigate-racing-mind'
+    | 'navigate-resonance-anchor'
     | 'navigate-posture'
     | 'open-commitment-modal'
   /** Orb color configuration */
@@ -68,6 +70,10 @@ export const FEATURE_ORB_COLORS: Record<FeatureId, OrbColors> = {
   'racing-mind': {
     primary: '#22D3EE', // Cyan - electric clarity
     secondary: '#0891B2', // Deep teal - settling into calm
+  },
+  'resonance-anchor': {
+    primary: '#4B0082', // Indigo - deep resonance
+    secondary: '#00CED1', // Cyan - locked-in state
   },
   'perfect-posture': {
     primary: '#F97316', // Coral/orange - body warmth
@@ -120,6 +126,21 @@ export const PRACTICE_FEATURES: PracticeFeatureConfig[] = [
     ctaText: 'Begin Practice',
     categoryLabel: 'PRACTICE TOOL',
     teaserFeatures: ['Hypnotic visual focus', 'Blue light calming', 'Pre-meditation primer'],
+  },
+  {
+    id: 'resonance-anchor',
+    title: 'Resonance Anchor',
+    description: 'Find your center through sound and vibration',
+    status: 'active',
+    action: 'navigate-resonance-anchor',
+    orbColors: FEATURE_ORB_COLORS['resonance-anchor'],
+    ctaText: 'Begin Practice',
+    categoryLabel: 'PRACTICE TOOL',
+    teaserFeatures: [
+      'Disguised breath training',
+      'Haptic resonance feedback',
+      'Articulatory suppression',
+    ],
   },
   {
     id: 'perfect-posture',

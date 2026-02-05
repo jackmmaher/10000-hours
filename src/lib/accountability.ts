@@ -58,7 +58,29 @@ export function getWhatsAppUrl(phone: string, message: string): string {
 }
 
 /**
+ * Generate an SMS URL for direct messaging
+ */
+export function getSmsUrl(phone: string, message: string): string {
+  const encodedMessage = encodeURIComponent(message)
+  return `sms:${phone}?body=${encodedMessage}`
+}
+
+/**
+ * Generate a mailto URL as fallback
+ */
+export function getMailtoUrl(message: string): string {
+  const encodedMessage = encodeURIComponent(message)
+  const subject = encodeURIComponent('Still Hours Accountability')
+  return `mailto:?subject=${subject}&body=${encodedMessage}`
+}
+
+/**
  * Send an accountability message via the specified method
+ *
+ * Priority chain for web:
+ * 1. navigator.share (Web Share API)
+ * 2. WhatsApp URL scheme / SMS URL scheme
+ * 3. mailto: fallback
  */
 export async function sendAccountabilityMessage(
   params: SendMessageParams
@@ -77,7 +99,6 @@ export async function sendAccountabilityMessage(
       const url = getWhatsAppUrl(phone, message)
 
       if (Capacitor.isNativePlatform()) {
-        // Use App.openUrl on native
         await Share.share({
           text: message,
           url: undefined,
@@ -87,14 +108,47 @@ export async function sendAccountabilityMessage(
         // On web, try to open WhatsApp URL
         window.open(url, '_blank')
       }
+    } else if (method === 'sms') {
+      if (Capacitor.isNativePlatform()) {
+        // Use native share sheet on native platforms
+        await Share.share({
+          text: message,
+          url: undefined,
+          dialogTitle: 'Send accountability message',
+        })
+      } else {
+        // Web: try navigator.share first, then SMS URL, then mailto fallback
+        if (typeof navigator !== 'undefined' && navigator.share) {
+          try {
+            await navigator.share({ text: message })
+          } catch {
+            // User cancelled or share failed - try SMS URL
+            window.open(getSmsUrl(phone, message), '_self')
+          }
+        } else {
+          // No Web Share API - try SMS URL scheme directly
+          window.open(getSmsUrl(phone, message), '_self')
+        }
+      }
     } else {
-      // Use native share sheet for SMS
-      // User still manually taps "Send" in their messaging app
-      await Share.share({
-        text: message,
-        url: undefined,
-        dialogTitle: 'Send accountability message',
-      })
+      // 'choose' method - use native share sheet or Web Share API
+      if (Capacitor.isNativePlatform()) {
+        await Share.share({
+          text: message,
+          url: undefined,
+          dialogTitle: 'Send accountability message',
+        })
+      } else if (typeof navigator !== 'undefined' && navigator.share) {
+        try {
+          await navigator.share({ text: message })
+        } catch {
+          // Fallback to mailto
+          window.open(getMailtoUrl(message), '_self')
+        }
+      } else {
+        // Final fallback: mailto
+        window.open(getMailtoUrl(message), '_self')
+      }
     }
 
     return { success: true }

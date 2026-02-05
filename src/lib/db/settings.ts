@@ -19,6 +19,7 @@ export async function getSettings(): Promise<UserSettings> {
       skipInsightCapture: false,
       themeMode: 'auto',
       audioFeedbackEnabled: false,
+      swissClockTickEnabled: true,
       notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES,
     }
     await db.settings.put(settings)
@@ -53,6 +54,11 @@ export async function getSettings(): Promise<UserSettings> {
   // Backfill audioFeedbackEnabled for existing users
   if (settings.audioFeedbackEnabled === undefined) {
     settings.audioFeedbackEnabled = false
+    await db.settings.put(settings)
+  }
+  // Backfill swissClockTickEnabled for existing users
+  if (settings.swissClockTickEnabled === undefined) {
+    settings.swissClockTickEnabled = true
     await db.settings.put(settings)
   }
   // Backfill notificationPreferences for existing users

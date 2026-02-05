@@ -9,10 +9,10 @@
  * - Session recording with vocal coherence scoring
  *
  * Scientific foundation:
- * - Sustained humming increases nasal NO 15-20x
- * - Aum chanting shows fMRI patterns matching vagus nerve stimulation
+ * - Sustained humming increases nasal NO ~15x (Weitzberg & Lundberg 2002)
+ * - Aum chanting shows fMRI patterns similar to vagus nerve stimulation (Kalyani et al. 2011, n=12 pilot)
  * - Extended exhalation improves HRV (target: 16-20s cycles)
- * - Vowel shapes matter: Ah (chest), Uu (vagus), Mm (nitric oxide)
+ * - Vowel shapes: Ah (open tract), Uu (narrowed tract), Mm (nasal resonance / NO boost)
  * - Optimal frequency emerges naturally through correct technique
  */
 

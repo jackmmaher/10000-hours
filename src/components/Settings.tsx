@@ -49,6 +49,8 @@ export function Settings({
     setThemeMode,
     audioFeedbackEnabled,
     setAudioFeedbackEnabled,
+    swissClockTickEnabled,
+    setSwissClockTickEnabled,
     notificationPreferences,
     setNotificationPreferences,
   } = useSettingsStore()
@@ -315,6 +317,46 @@ export function Settings({
                   />
                 </div>
               </button>
+
+              {/* Clock tick toggle - only when Swiss dial + audio enabled */}
+              {clockFace === 'swiss' && audioFeedbackEnabled && (
+                <button
+                  onClick={() => {
+                    haptic.light()
+                    const newValue = !swissClockTickEnabled
+                    setSwissClockTickEnabled(newValue)
+                    // Preview tick sound when enabling
+                    if (newValue) {
+                      audio.interstellarTick()
+                    }
+                  }}
+                  className="w-full flex items-center justify-between py-4 active:scale-[0.99] transition-transform touch-manipulation"
+                >
+                  <div className="text-left">
+                    <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                      Clock tick
+                    </p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                      Subtle tick on Swiss dial
+                    </p>
+                  </div>
+                  <div
+                    className="relative w-12 h-7 rounded-full transition-colors duration-300"
+                    style={{
+                      background: swissClockTickEnabled ? 'var(--toggle-on)' : 'var(--toggle-off)',
+                    }}
+                  >
+                    <div
+                      className={`
+                        absolute top-1 w-5 h-5 rounded-full shadow-sm
+                        transition-transform duration-300
+                        ${swissClockTickEnabled ? 'translate-x-6' : 'translate-x-1'}
+                      `}
+                      style={{ background: 'var(--toggle-thumb)' }}
+                    />
+                  </div>
+                </button>
+              )}
             </div>
           )}
         </div>

@@ -22,6 +22,7 @@ interface SwissClockProps {
   totalSeconds: number
   phase: ClockPhase
   breathing: boolean
+  tickPulse?: boolean
   className?: string
 }
 
@@ -74,7 +75,13 @@ const HOUR_POSITIONS = Array.from({ length: 12 }, (_, i) => {
   return { position, x, y }
 })
 
-export function SwissClock({ totalSeconds, phase, breathing, className = '' }: SwissClockProps) {
+export function SwissClock({
+  totalSeconds,
+  phase,
+  breathing,
+  tickPulse,
+  className = '',
+}: SwissClockProps) {
   // Decompose total seconds into H:M:S
   const hours = Math.floor(totalSeconds / 3600)
   const minutes = Math.floor((totalSeconds % 3600) / 60)
@@ -155,6 +162,20 @@ export function SwissClock({ totalSeconds, phase, breathing, className = '' }: S
       cascadeTimeoutRefs.current.forEach((timeout) => clearTimeout(timeout))
     }
   }, [hours]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ============================================
+  // TICK PULSE ANIMATION
+  // ============================================
+  const [capRadius, setCapRadius] = useState(12)
+
+  useEffect(() => {
+    if (!tickPulse || phase !== 'active') return
+
+    // Pulse the second hand cap radius briefly
+    setCapRadius(13.5)
+    const timer = setTimeout(() => setCapRadius(12), 150)
+    return () => clearTimeout(timer)
+  }, [totalSeconds, tickPulse, phase])
 
   // Subtle opacity during transitions (matches GooeyOrb pattern)
   const isTransitioning = phase === 'pending' || phase === 'settling'
@@ -285,12 +306,13 @@ export function SwissClock({ totalSeconds, phase, breathing, className = '' }: S
               strokeWidth={SECOND_HAND_WIDTH}
               strokeLinecap="round"
             />
-            {/* Circle cap */}
+            {/* Circle cap — pulses subtly on each tick */}
             <circle
               cx={CENTER}
               cy={CENTER - SECOND_HAND_LENGTH + 15}
-              r={12}
+              r={capRadius}
               fill="var(--clock-accent)"
+              style={{ transition: 'r 0.15s ease-out' }}
             />
           </g>
 

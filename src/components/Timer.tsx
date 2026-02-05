@@ -25,6 +25,7 @@ import { CommitmentOutcomeModal } from './CommitmentOutcomeModal'
 import { CommitmentMissedAlert } from './CommitmentMissedAlert'
 import { useMeditationLock } from '../hooks/useMeditationLock'
 import { sendAccountabilityMessage } from '../lib/accountability'
+import { getUserPreferences } from '../lib/db/preferences'
 
 /** Duration (ms) for the settling window after a session ends — local state resets and DB persist happen after this delay. */
 const SETTLING_DURATION_MS = 4000
@@ -74,7 +75,7 @@ export function Timer() {
   } = useSessionStore()
 
   const { setView, triggerPostSessionFlow, setIsSettling } = useNavigationStore()
-  const { clockFace } = useSettingsStore()
+  const { clockFace, swissClockTickEnabled, audioFeedbackEnabled } = useSettingsStore()
   const { canMeditate, refreshBalance, isLowHours, isCriticallyLow, available } = useHourBankStore()
   const {
     isTrialActive,
@@ -134,6 +135,8 @@ export function Timer() {
   const intervalRef = useRef<number | null>(null)
   // Ref to prevent double-triggering auto-end
   const hasAutoEndedRef = useRef(false)
+  // Ref to detect second-boundary crossings for tick sound
+  const prevElapsedRef = useRef(0)
 
   // ============================================
   // HAPTICS & AUDIO
@@ -352,12 +355,14 @@ export function Timer() {
             lockSettings.notifyOnCompletion &&
             lockSettings.accountabilityPhone
           ) {
+            const userPrefs = await getUserPreferences()
+            const displayName = userPrefs.displayName || 'User'
             await sendAccountabilityMessage({
               type: 'completion',
               phone: lockSettings.accountabilityPhone,
               method: lockSettings.accountabilityMethod || 'sms',
               durationMinutes: Math.round(finalDuration / 60),
-              userName: 'User', // Default name for accountability messages
+              userName: displayName,
             })
           }
 
@@ -482,6 +487,21 @@ export function Timer() {
       }
     }
   }, [phase, sessionStart])
+
+  // ============================================
+  // SWISS CLOCK TICK SOUND
+  // ============================================
+  useEffect(() => {
+    if (
+      phase === 'active' &&
+      clockFace === 'swiss' &&
+      swissClockTickEnabled &&
+      sessionElapsed > prevElapsedRef.current
+    ) {
+      audio.interstellarTick()
+    }
+    prevElapsedRef.current = sessionElapsed
+  }, [sessionElapsed, phase, clockFace, swissClockTickEnabled, audio])
 
   // ============================================
   // GOAL ENFORCEMENT (AUTO-END)
@@ -738,7 +758,12 @@ export function Timer() {
         {clockFace === 'orb' ? (
           <GooeyOrb phase={phase} />
         ) : clockFace === 'swiss' ? (
-          <SwissClock totalSeconds={liveTotal} phase={phase} breathing={breathing} />
+          <SwissClock
+            totalSeconds={liveTotal}
+            phase={phase}
+            breathing={breathing}
+            tickPulse={swissClockTickEnabled && audioFeedbackEnabled}
+          />
         ) : (
           <UnifiedTime
             totalSeconds={liveTotal}

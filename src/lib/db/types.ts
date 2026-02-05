@@ -10,7 +10,7 @@ import type { NotificationPreferences } from '../notifications'
 export type SessionType = 'meditation' | 'practice'
 
 // Practice tool identifiers
-export type PracticeToolId = 'om-coach' | 'racing-mind' | 'posture-training'
+export type PracticeToolId = 'om-coach' | 'racing-mind' | 'posture-training' | 'resonance-anchor'
 
 // Aum Coach specific metrics
 export interface OmCoachMetrics {
@@ -24,6 +24,17 @@ export interface OmCoachMetrics {
   avgVoicingContinuityScore?: number // 0-100
   rawPitchVarianceCents?: number // Raw variance for threshold adaptation
   rawAmplitudeCV?: number // Raw CV for threshold adaptation
+}
+
+// Resonance Anchor specific metrics (breath training via humming)
+export interface ResonanceAnchorMetrics {
+  // Self-assessment scores (1-10 scale)
+  preSessionScore?: number
+  postSessionScore?: number
+  // Practice metrics
+  totalHummingSeconds?: number // Time spent humming during exhale phases
+  averageStability?: number // 0-100 hum steadiness score
+  cyclesCompleted?: number // Number of full breath cycles
 }
 
 // Racing Mind specific metrics (self-assessment + eye tracking)
@@ -56,6 +67,8 @@ export interface Session {
   omCoachMetrics?: OmCoachMetrics
   // Racing Mind specific metrics (when practiceToolId === 'racing-mind')
   racingMindMetrics?: RacingMindMetrics
+  // Resonance Anchor specific metrics (when practiceToolId === 'resonance-anchor')
+  resonanceAnchorMetrics?: ResonanceAnchorMetrics
 }
 
 export interface AppState {
@@ -114,6 +127,7 @@ export interface UserSettings {
   skipInsightCapture: boolean // Skip post-session insight recording prompt
   themeMode: ThemeModeWithLegacy // Uses legacy type for migration compatibility
   audioFeedbackEnabled: boolean // Play subtle sounds on complete/milestone
+  swissClockTickEnabled: boolean // Play per-second tick on Swiss dial
   notificationPreferences: NotificationPreferences // In-app notification settings
   // Breath pacing settings (opt-in)
   breathPacingEnabled?: boolean

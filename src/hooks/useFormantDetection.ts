@@ -13,9 +13,9 @@
  * | Mm    | ~250 Hz     | Very low      | High spectral flatness (nasal)  |
  *
  * Scientific foundation:
- * - "Ah" opens chest/solar plexus, triggers relaxation
- * - "Uu" stimulates vagus nerve (runs next to vocal cords)
- * - "Mm" produces 15x nitric oxide, amygdala deactivation
+ * - "Ah" produces an open vocal tract shape
+ * - "Uu" narrows the vocal tract
+ * - "Mm" (humming) boosts nasal NO ~15x; amygdala deactivation observed during full Om chant (Kalyani et al. 2011, n=12)
  */
 
 import { useRef, useCallback, useEffect } from 'react'
@@ -166,7 +166,7 @@ function classifyPhoneme(
 
     // Log calibration values periodically (only in development)
     if (process.env.NODE_ENV === 'development' && classifyDebugCounter % 60 === 0) {
-      console.log(
+      console.debug(
         '[Formant Classify] Calibration:',
         'ahRatio:',
         calibration.ahRatio.toFixed(2),
@@ -459,7 +459,7 @@ export function useFormantDetection(
       if (process.env.NODE_ENV === 'development') {
         debugCounterRef.current++
         if (debugCounterRef.current % 30 === 0) {
-          console.log(
+          console.debug(
             '[Formant] low:',
             lowEnergy.toFixed(3),
             'mid:',

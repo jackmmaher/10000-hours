@@ -9,8 +9,8 @@
  * - Adaptive clarity threshold that adjusts to signal quality
  * - No more HOLD_DURATION ghost readings
  *
- * Scientific note: ~130 Hz is optimal for nasal nitric oxide production
- * (peer-reviewed evidence supports 15-20x increase during humming at this frequency)
+ * Scientific note: ~130 Hz is associated with peak nasal nitric oxide production
+ * (Weitzberg & Lundberg 2002: ~15x increase during humming)
  */
 
 import { useRef, useCallback, useEffect } from 'react'
@@ -21,8 +21,8 @@ import {
   ADAPTIVE_CLARITY_CONFIG,
 } from '../utils/audioProcessing'
 
-// Target pitch for optimal nitric oxide production
-export const OPTIMAL_NO_FREQUENCY = 130 // Hz
+// Reference frequency for scoring — not a required target
+export const REFERENCE_FREQUENCY = 130 // Hz
 
 // Default tolerance in cents (generous for beginners)
 export const DEFAULT_TOLERANCE_CENTS = 50
@@ -86,7 +86,7 @@ export function centsToFrequencyRatio(cents: number): number {
 
 export function usePitchDetection(options: UsePitchDetectionOptions = {}): UsePitchDetectionResult {
   const {
-    targetFrequency: initialTarget = OPTIMAL_NO_FREQUENCY,
+    targetFrequency: initialTarget = REFERENCE_FREQUENCY,
     toleranceCents = DEFAULT_TOLERANCE_CENTS,
     clarityThreshold = BASE_CLARITY_THRESHOLD,
     useMedianFilter = true,

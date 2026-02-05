@@ -2,13 +2,13 @@
  * FrequencyScale - Gradient frequency scale for Aum Coach
  *
  * Features:
- * - Gradient color based on proximity to 130 Hz target
+ * - Gradient color based on proximity to 110-150 Hz range
  * - Accuracy percentage display
  * - Glow effect intensifies near target
  * - Theme-aware colors
  */
 
-import { OPTIMAL_NO_FREQUENCY } from '../../hooks/usePitchDetection'
+import { REFERENCE_FREQUENCY } from '../../hooks/usePitchDetection'
 
 interface FrequencyScaleProps {
   frequency: number | null
@@ -18,19 +18,35 @@ interface FrequencyScaleProps {
 // Frequency range
 const FREQ_MIN = 100
 const FREQ_MAX = 160
-const TARGET = OPTIMAL_NO_FREQUENCY // 130 Hz
+const TARGET = REFERENCE_FREQUENCY // 130 Hz
 
 // Markers
 const MARKERS = [100, 115, 130, 145, 160]
 
 /**
- * Calculate accuracy percentage based on distance from target
- * 130 Hz = 100%, 100 Hz or 160 Hz = 0%
+ * Calculate accuracy percentage with a broad plateau around the reference.
+ * 110-150 Hz scores 90%+; tapers toward 0% at 80 Hz and 180 Hz.
  */
 function calculateAccuracy(frequency: number): number {
-  const distance = Math.abs(frequency - TARGET)
-  const maxDistance = 30 // 30 Hz from target = 0%
-  return Math.max(0, Math.round(100 - (distance / maxDistance) * 100))
+  const PLATEAU_LOW = 110
+  const PLATEAU_HIGH = 150
+  if (frequency >= PLATEAU_LOW && frequency <= PLATEAU_HIGH) {
+    // Within the plateau: 90-100% based on distance from center (130 Hz)
+    const halfWidth = (PLATEAU_HIGH - PLATEAU_LOW) / 2
+    const center = (PLATEAU_HIGH + PLATEAU_LOW) / 2
+    const distance = Math.abs(frequency - center)
+    return Math.round(100 - (distance / halfWidth) * 10) // 100% at center, 90% at edges
+  }
+  // Outside the plateau: taper from 90% down to 0%
+  if (frequency < PLATEAU_LOW) {
+    const distance = PLATEAU_LOW - frequency
+    const maxDistance = 30 // 30 Hz below plateau = 0%
+    return Math.max(0, Math.round(90 - (distance / maxDistance) * 90))
+  }
+  // frequency > PLATEAU_HIGH
+  const distance = frequency - PLATEAU_HIGH
+  const maxDistance = 30 // 30 Hz above plateau = 0%
+  return Math.max(0, Math.round(90 - (distance / maxDistance) * 90))
 }
 
 /**
@@ -187,8 +203,8 @@ export function FrequencyScale({
         )}
       </div>
 
-      {/* Target hint */}
-      <p className="text-[10px] text-ink/30 text-center mt-1">Target: {TARGET} Hz</p>
+      {/* Frequency reference */}
+      <p className="text-[10px] text-ink/30 text-center mt-1">Reference: {TARGET} Hz</p>
     </div>
   )
 }

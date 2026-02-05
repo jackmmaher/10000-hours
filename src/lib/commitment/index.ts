@@ -63,7 +63,7 @@ export {
 export {
   processCommitmentSession,
   getTodayCommitmentStatus,
-  useGracePeriod,
+  consumeGracePeriod,
   type CommitmentSessionResult,
 } from './middleware'
 
@@ -75,6 +75,9 @@ export {
   type MissedDayResult,
   type MidnightCheckResult,
 } from './midnightCheck'
+
+// Streak milestones
+export { getStreakMilestone } from './milestones'
 
 // Reminders service
 export {

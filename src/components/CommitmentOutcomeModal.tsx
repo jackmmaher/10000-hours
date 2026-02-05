@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 import type { CommitmentSessionResult } from '../lib/commitment/middleware'
 import { formatOutcomeForDisplay } from '../lib/commitment/outcomes'
+import { getStreakMilestone } from '../lib/commitment/milestones'
 
 interface CommitmentOutcomeModalProps {
   isOpen: boolean
@@ -158,8 +159,11 @@ export function CommitmentOutcomeModal({
       const revealTimer = setTimeout(() => {
         setPhase('revealed')
 
-        // Haptic feedback based on outcome
-        if (result.outcome?.type === 'bonus' || result.outcome?.type === 'mystery') {
+        // Haptic feedback based on outcome or milestone
+        const currentMilestone = streakDays !== undefined ? getStreakMilestone(streakDays) : null
+        if (currentMilestone) {
+          haptic.success()
+        } else if (result.outcome?.type === 'bonus' || result.outcome?.type === 'mystery') {
           haptic.success()
         } else if (result.outcome?.type === 'near-miss') {
           haptic.medium()
@@ -173,7 +177,10 @@ export function CommitmentOutcomeModal({
         clearTimeout(revealTimer)
       }
     }
-  }, [isOpen, result, haptic])
+  }, [isOpen, result, haptic, streakDays])
+
+  // Check for streak milestone
+  const milestone = streakDays !== undefined ? getStreakMilestone(streakDays) : null
 
   const handleContinue = useCallback(() => {
     haptic.light()
@@ -205,9 +212,9 @@ export function CommitmentOutcomeModal({
           onTouchMove={handleTouchEvent}
           onTouchEnd={handleTouchEvent}
         >
-          {/* Confetti for bonus outcomes */}
-          {phase === 'revealed' && displayInfo.showConfetti && (
-            <ConfettiBurst color={displayInfo.color as 'gold' | 'purple'} />
+          {/* Confetti for bonus outcomes or milestone streaks */}
+          {phase === 'revealed' && (displayInfo.showConfetti || milestone) && (
+            <ConfettiBurst color={milestone ? 'gold' : (displayInfo.color as 'gold' | 'purple')} />
           )}
 
           <motion.div
@@ -317,6 +324,27 @@ export function CommitmentOutcomeModal({
                 <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                   {streakDays} day{streakDays !== 1 ? 's' : ''} straight
                 </span>
+              </motion.div>
+            )}
+
+            {/* Streak milestone */}
+            {phase === 'revealed' && milestone && (
+              <motion.div
+                className="p-3 rounded-xl mb-4"
+                style={{
+                  background: 'color-mix(in oklab, var(--warning, #eab308) 10%, transparent)',
+                  border: '1px solid color-mix(in oklab, var(--warning, #eab308) 25%, transparent)',
+                }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <p className="text-lg font-bold mb-1" style={{ color: 'var(--warning, #eab308)' }}>
+                  {milestone.title}
+                </p>
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                  {milestone.message}
+                </p>
               </motion.div>
             )}
 

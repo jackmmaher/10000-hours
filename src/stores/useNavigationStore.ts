@@ -23,6 +23,7 @@ export type AppView =
   | 'om-coach' // Practice tool: Aum chanting biofeedback
   | 'racing-mind' // Practice tool: Visual meditation primer
   | 'posture' // Practice tool: AirPods posture correction
+  | 'resonance-anchor' // Practice tool: Disguised breath training
   // Legacy views (still accessible via internal links)
   | 'calendar' // -> accessed from progress
   | 'insights' // -> accessed from journey

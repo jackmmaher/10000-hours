@@ -146,10 +146,10 @@ export function OmCoachSetup({
           {showDetails && (
             <div className="mt-3 p-3 bg-base rounded-lg">
               <p className="text-xs text-ink/70 leading-relaxed">
-                Sustained humming increases nasal nitric oxide production 15-20x. Extended
-                exhalation activates the parasympathetic nervous system. The A-U-M sequence
-                naturally emerges at the optimal frequency through correct technique - focus on
-                steady breath support rather than hitting a specific pitch.
+                Sustained humming increases nasal nitric oxide production ~15x (Weitzberg & Lundberg
+                2002). Extended exhalation activates the parasympathetic nervous system. The A-U-M
+                sequence naturally emerges at the optimal frequency through correct technique -
+                focus on steady breath support rather than hitting a specific pitch.
               </p>
             </div>
           )}

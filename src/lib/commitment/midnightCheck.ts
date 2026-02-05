@@ -18,6 +18,7 @@ import {
 } from '../db/commitmentSettings'
 import { consumeCommitmentPenalty } from '../hourBank'
 import { sendAccountabilityMessage } from '../accountability'
+import { getUserPreferences } from '../db/preferences'
 import { createCommitmentRNG } from './rng'
 import { calculateMissedPenalty, type MissedPenalty } from './outcomes'
 import { isDayRequired, getStartOfDay, addDays } from './schedule'
@@ -152,11 +153,13 @@ export async function processMidnightCheck(): Promise<MidnightCheckResult> {
     // Send accountability message for misses if enabled
     if (settings.accountabilityEnabled && settings.notifyOnSkip && settings.accountabilityPhone) {
       try {
+        const userPrefs = await getUserPreferences()
+        const userName = userPrefs.displayName || 'User'
         await sendAccountabilityMessage({
           type: 'skip',
           phone: settings.accountabilityPhone,
           method: settings.accountabilityMethod || 'sms',
-          userName: 'User',
+          userName,
         })
       } catch (err) {
         console.warn('[Commitment] Failed to send accountability skip message:', err)
