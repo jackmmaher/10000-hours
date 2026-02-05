@@ -63,6 +63,14 @@ interface HourBankState {
   devSetHourBank: (purchased: number, consumed: number) => Promise<void>
 }
 
+/** Compute low-hours warning flags from available hours */
+function computeHourWarnings(availableHours: number) {
+  return {
+    isLowHours: availableHours > 0 && availableHours < 1, // < 1 hour
+    isCriticallyLow: availableHours > 0 && availableHours < 0.5, // < 30 min
+  }
+}
+
 export const useHourBankStore = create<HourBankState>((set, get) => ({
   // Initial state
   totalPurchased: INITIAL_FREE_HOURS,
@@ -96,9 +104,7 @@ export const useHourBankStore = create<HourBankState>((set, get) => ({
       const canStart = await canStartSession()
       const purchases = await getPurchaseHistory()
 
-      // Calculate low hours flags (1 hour = 1.0, 30 min = 0.5)
-      const isLowHours = balance.available > 0 && balance.available < 1
-      const isCriticallyLow = balance.available > 0 && balance.available < 0.5
+      const { isLowHours, isCriticallyLow } = computeHourWarnings(balance.available)
 
       set({
         totalPurchased: balance.totalPurchased,
@@ -126,9 +132,7 @@ export const useHourBankStore = create<HourBankState>((set, get) => ({
       const canStart = await canStartSession()
       const purchases = await getPurchaseHistory()
 
-      // Calculate low hours flags (1 hour = 1.0, 30 min = 0.5)
-      const isLowHours = balance.available > 0 && balance.available < 1
-      const isCriticallyLow = balance.available > 0 && balance.available < 0.5
+      const { isLowHours, isCriticallyLow } = computeHourWarnings(balance.available)
 
       set({
         totalPurchased: balance.totalPurchased,
@@ -277,8 +281,7 @@ export const useHourBankStore = create<HourBankState>((set, get) => ({
     const { db } = await import('../lib/db/schema')
     const available = Math.max(0, purchased - consumed)
     const deficit = Math.max(0, consumed - purchased)
-    const isLowHours = available > 0 && available < 1
-    const isCriticallyLow = available > 0 && available < 0.5
+    const { isLowHours, isCriticallyLow } = computeHourWarnings(available)
 
     // Update database
     const hourBank = await db.hourBank.get(1)

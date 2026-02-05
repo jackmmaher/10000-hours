@@ -44,6 +44,36 @@ interface AuthState {
   clearError: () => void
 }
 
+/**
+ * Transforms a raw Supabase profile row (snake_case) into the app's
+ * internal UserProfile format (camelCase), defaulting counters to 0.
+ */
+function transformSupabaseProfile(profile: {
+  id: string
+  tier: 'free' | 'premium'
+  total_karma?: number
+  total_saves?: number
+  total_completions_received?: number
+  karma_given?: number
+  saves_made?: number
+  completions_performed?: number
+  pearls_created?: number
+  created_at: string
+}): UserProfile {
+  return {
+    id: profile.id,
+    tier: profile.tier,
+    totalKarma: profile.total_karma || 0,
+    totalSaves: profile.total_saves || 0,
+    totalCompletionsReceived: profile.total_completions_received || 0,
+    karmaGiven: profile.karma_given || 0,
+    savesMade: profile.saves_made || 0,
+    completionsPerformed: profile.completions_performed || 0,
+    pearlsCreated: profile.pearls_created || 0,
+    createdAt: profile.created_at,
+  }
+}
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   profile: null,
@@ -82,20 +112,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({
           user: session.user,
           session,
-          profile: profile
-            ? {
-                id: profile.id,
-                tier: profile.tier,
-                totalKarma: profile.total_karma || 0,
-                totalSaves: profile.total_saves || 0,
-                totalCompletionsReceived: profile.total_completions_received || 0,
-                karmaGiven: profile.karma_given || 0,
-                savesMade: profile.saves_made || 0,
-                completionsPerformed: profile.completions_performed || 0,
-                pearlsCreated: profile.pearls_created || 0,
-                createdAt: profile.created_at,
-              }
-            : null,
+          profile: profile ? transformSupabaseProfile(profile) : null,
           isAuthenticated: true,
           isLoading: false,
         })
@@ -115,20 +132,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           set({
             user: session.user,
             session,
-            profile: profile
-              ? {
-                  id: profile.id,
-                  tier: profile.tier,
-                  totalKarma: profile.total_karma || 0,
-                  totalSaves: profile.total_saves || 0,
-                  totalCompletionsReceived: profile.total_completions_received || 0,
-                  karmaGiven: profile.karma_given || 0,
-                  savesMade: profile.saves_made || 0,
-                  completionsPerformed: profile.completions_performed || 0,
-                  pearlsCreated: profile.pearls_created || 0,
-                  createdAt: profile.created_at,
-                }
-              : null,
+            profile: profile ? transformSupabaseProfile(profile) : null,
             isAuthenticated: true,
           })
         } else if (event === 'SIGNED_OUT') {
@@ -235,20 +239,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         .single()
 
       if (profile) {
-        set({
-          profile: {
-            id: profile.id,
-            tier: profile.tier,
-            totalKarma: profile.total_karma || 0,
-            totalSaves: profile.total_saves || 0,
-            totalCompletionsReceived: profile.total_completions_received || 0,
-            karmaGiven: profile.karma_given || 0,
-            savesMade: profile.saves_made || 0,
-            completionsPerformed: profile.completions_performed || 0,
-            pearlsCreated: profile.pearls_created || 0,
-            createdAt: profile.created_at,
-          },
-        })
+        set({ profile: transformSupabaseProfile(profile) })
       }
     } catch (err) {
       console.error('Profile refresh error:', err)

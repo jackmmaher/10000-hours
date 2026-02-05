@@ -107,9 +107,17 @@ function AppContent() {
   }, [hydrate, settingsStore, authStore, hourBankStore])
 
   // Trigger welcome cutscene on first load (after hydration)
+  // Only shows if user hasn't seen it in the last 24 hours (persisted via localStorage)
   useEffect(() => {
     if (!isLoading && !settingsStore.isLoading && !showOnboarding && !welcomeCutsceneShown) {
-      triggerWelcomeCutscene()
+      const lastShown = localStorage.getItem('lastWelcomeShown')
+      const twentyFourHours = 24 * 60 * 60 * 1000
+      if (lastShown && Date.now() - Number(lastShown) < twentyFourHours) {
+        // Seen recently - skip cutscene but mark as shown for this session
+        dismissWelcomeCutscene()
+      } else {
+        triggerWelcomeCutscene()
+      }
     }
   }, [
     isLoading,
@@ -117,6 +125,7 @@ function AppContent() {
     showOnboarding,
     welcomeCutsceneShown,
     triggerWelcomeCutscene,
+    dismissWelcomeCutscene,
   ])
 
   // Voice growth notification check (singleton - only runs here)
@@ -256,14 +265,17 @@ function AppContent() {
     )
   }
 
-  // Welcome cutscene - shows on every app launch
+  // Welcome cutscene - shows on first launch or after 24+ hours away
   if (showWelcomeCutscene) {
     return (
       <NeutralThemeProvider>
         <ZenMessage
           isEnlightened={false}
           goalCompleted={goalCompleted}
-          onComplete={dismissWelcomeCutscene}
+          onComplete={() => {
+            localStorage.setItem('lastWelcomeShown', Date.now().toString())
+            dismissWelcomeCutscene()
+          }}
           variant="welcome"
         />
       </NeutralThemeProvider>
@@ -279,7 +291,7 @@ function AppContent() {
     <NeutralThemeProvider>
       <div className="h-full">
         {/* Top header - hidden during fullscreen experiences (Aum Coach practice) */}
-        {!isFullscreen && <Header onNavigateToSettings={() => setView('settings')} />}
+        {!isFullscreen && <Header />}
 
         {view === 'timer' && <Timer />}
         {view === 'journey' && <Journey />}

@@ -42,6 +42,7 @@ export function AchievementGallery() {
   }, [justAchievedMilestone])
 
   // Load achievements and user goal from database
+  // Reload only when sessions change (not every second during active timer)
   useEffect(() => {
     async function loadData() {
       const [loaded, prefs] = await Promise.all([getAchievements(), getUserPreferences()])
@@ -50,7 +51,7 @@ export function AchievementGallery() {
       setIsLoading(false)
     }
     loadData()
-  }, [totalSeconds])
+  }, [sessions.length])
 
   // Get current milestone progress with user's goal
   const milestone = useMemo(

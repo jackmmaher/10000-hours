@@ -187,7 +187,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         set({ lastMidnightCheckResult: midnightResult })
       }
     } catch (err) {
-      console.warn('Failed to run commitment midnight check:', err)
+      console.error('[SessionStore] Failed to run commitment midnight check:', err)
     }
   },
 
@@ -198,7 +198,9 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   startTimer: () => {
     const sessionStartTime = Date.now()
     // Persist to IndexedDB for crash recovery
-    saveSessionInProgress(sessionStartTime)
+    saveSessionInProgress(sessionStartTime).catch((err) => {
+      console.error('[SessionStore] Failed to save session backup:', err)
+    })
     set({
       timerPhase: 'running',
       startedAt: performance.now(),
@@ -239,7 +241,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     try {
       await consumeHours(durationSeconds)
     } catch (err) {
-      console.warn('Failed to consume hours:', err)
+      console.error('[SessionStore] Failed to consume hours:', err)
     }
 
     // Process commitment mode (if active)
@@ -251,7 +253,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         sessionStartTime
       )
     } catch (err) {
-      console.warn('Failed to process commitment session:', err)
+      console.error('[SessionStore] Failed to process commitment session:', err)
     }
 
     // Silent session-plan linking: auto-link to a time-matched plan for this day
@@ -272,7 +274,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
           await recordTemplateCompletion(linkedPlan.sourceTemplateId, user.id, sessionUuid)
         }
       } catch (err) {
-        console.warn('Failed to record template completion:', err)
+        console.error('[SessionStore] Failed to record template completion:', err)
       }
     }
 
@@ -300,7 +302,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       // Update affinities based on feedback
       await updateAffinities(completedSession, template, feedbackScore)
     } catch (err) {
-      console.warn('Failed to update recommendation affinities:', err)
+      console.error('[SessionStore] Failed to update recommendation affinities:', err)
     }
 
     const newTotalSeconds = totalSeconds + durationSeconds
@@ -361,7 +363,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
           await addNotification(notification)
         }
       } catch (err) {
-        console.warn('Failed to create milestone notification:', err)
+        console.error('[SessionStore] Failed to create milestone notification:', err)
       }
     }
 
@@ -433,7 +435,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       }
       await addNotification(notification)
     } catch (err) {
-      console.warn('Failed to create insight reminder:', err)
+      console.error('[SessionStore] Failed to create insight reminder:', err)
     }
   },
 

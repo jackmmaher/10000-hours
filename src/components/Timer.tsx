@@ -26,6 +26,18 @@ import { CommitmentMissedAlert } from './CommitmentMissedAlert'
 import { useMeditationLock } from '../hooks/useMeditationLock'
 import { sendAccountabilityMessage } from '../lib/accountability'
 
+/** Duration (ms) for the settling window after a session ends — local state resets and DB persist happen after this delay. */
+const SETTLING_DURATION_MS = 4000
+
+/** Delay (ms) before showing the Focus Lock celebration modal, synced with the audio chime decay phase. */
+const LOCK_CELEBRATION_DELAY_MS = 4500
+
+/** Delay (ms) before triggering the post-session flow (journal prompt, milestone acknowledgment). */
+const POST_SESSION_FLOW_DELAY_MS = 800
+
+/** Delay (ms) before showing the commitment outcome modal, letting other post-session UI settle first. */
+const COMMITMENT_OUTCOME_DELAY_MS = 500
+
 /**
  * Timer - The Unified Experience
  *
@@ -356,12 +368,12 @@ export function Timer() {
           // This syncs with the audio chime decay phase for a cohesive ceremony
           setTimeout(() => {
             setShowLockCelebration(true)
-          }, 4500)
+          }, LOCK_CELEBRATION_DELAY_MS)
         }
       }
 
       setIsSettling(false) // UNLOCK: Allow navigation again
-    }, 4000)
+    }, SETTLING_DURATION_MS)
   }, [
     phase,
     haptic,
@@ -409,7 +421,7 @@ export function Timer() {
           lastSourceTemplateId || undefined
         )
         completeSession()
-      }, 800)
+      }, POST_SESSION_FLOW_DELAY_MS)
 
       return () => clearTimeout(timer)
     }
@@ -434,7 +446,7 @@ export function Timer() {
       // Delay to let other post-session UI settle first
       const timer = setTimeout(() => {
         setShowCommitmentOutcome(true)
-      }, 500)
+      }, COMMITMENT_OUTCOME_DELAY_MS)
       return () => clearTimeout(timer)
     }
   }, [lastCommitmentOutcome])
