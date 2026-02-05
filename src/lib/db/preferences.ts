@@ -22,5 +22,7 @@ export async function getUserPreferences(): Promise<UserPreferences> {
 export async function updateUserPreferences(
   updates: Partial<Omit<UserPreferences, 'id'>>
 ): Promise<void> {
-  await db.userPreferences.update(1, { ...updates, updatedAt: Date.now() })
+  const existing = await db.userPreferences.get(1)
+  const merged = { ...existing, ...updates, id: 1 as const, updatedAt: Date.now() }
+  await db.userPreferences.put(merged)
 }

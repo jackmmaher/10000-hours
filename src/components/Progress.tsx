@@ -133,7 +133,11 @@ export function Progress() {
   const handleGoalChange = async (goal: number | undefined) => {
     haptic.light()
     await updateUserPreferences({ practiceGoalHours: goal })
-    setPreferences((prev) => (prev ? { ...prev, practiceGoalHours: goal } : null))
+    setPreferences((prev) =>
+      prev
+        ? { ...prev, practiceGoalHours: goal }
+        : { id: 1, updatedAt: Date.now(), practiceGoalHours: goal }
+    )
   }
 
   // Compute insights

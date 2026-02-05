@@ -10,7 +10,7 @@
  * Uses Meyda for spectral centroid and flatness analysis to classify
  * the three phonemes of Aum chanting:
  * - "A" (Ah): Open vowel with high spectral centroid (1500-2500 Hz)
- * - "U" (Oo): Closed vowel with low spectral centroid (500-1000 Hz)
+ * - "U" (Uu): Closed vowel with low spectral centroid (500-1000 Hz)
  * - "M" (Mm): Nasal hum with very low centroid + high spectral flatness
  *
  * Includes debounce to prevent rapid false transitions (150-200ms).
@@ -380,7 +380,7 @@ export function getPhonemeLabel(phoneme: Phoneme): string {
     case 'A':
       return 'Ah'
     case 'U':
-      return 'Oo'
+      return 'Uu'
     case 'M':
       return 'Mm'
     case 'silence':

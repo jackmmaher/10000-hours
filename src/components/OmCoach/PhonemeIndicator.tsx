@@ -2,7 +2,7 @@
  * PhonemeIndicator - Real-time phoneme feedback during Aum practice
  *
  * Shows detected phoneme vs expected phoneme with visual feedback:
- * - Three segments: Ah | Oo | Mm
+ * - Three segments: Ah | Uu | Mm
  * - Current detected phoneme is highlighted
  * - Green glow when matches expected phase
  * - Amber when close (adjacent phoneme)
@@ -57,7 +57,7 @@ function getLabel(p: 'A' | 'U' | 'M'): string {
     case 'A':
       return 'Ah'
     case 'U':
-      return 'Oo'
+      return 'Uu'
     case 'M':
       return 'Mm'
   }

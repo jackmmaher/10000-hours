@@ -21,7 +21,7 @@ interface PhaseGuideProps {
 // Phase configuration
 const VOCAL_PHASES: { key: 'ah' | 'oo' | 'mm'; label: string }[] = [
   { key: 'ah', label: 'Ah' },
-  { key: 'oo', label: 'Oo' },
+  { key: 'oo', label: 'Uu' },
   { key: 'mm', label: 'Mm' },
 ]
 

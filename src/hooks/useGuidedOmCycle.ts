@@ -10,9 +10,9 @@
  *    - Cycles labeled "Cycle 1 of N"
  *
  * Supports three timing modes (all use 2:1:1:2 ratio):
- * - Traditional: 18s cycle (Breathe 6s, Ah 3s, Oo 3s, Mm 6s)
- * - Extended: 24s cycle (Breathe 8s, Ah 4s, Oo 4s, Mm 8s)
- * - Long Breath: 36s cycle (Breathe 12s, Ah 6s, Oo 6s, Mm 12s)
+ * - Traditional: 18s cycle (Breathe 6s, Ah 3s, Uu 3s, Mm 6s)
+ * - Extended: 24s cycle (Breathe 8s, Ah 4s, Uu 4s, Mm 8s)
+ * - Long Breath: 36s cycle (Breathe 12s, Ah 6s, Uu 6s, Mm 12s)
  *
  * Circle progress is always clockwise, continuous flow.
  */
@@ -525,7 +525,10 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
       if (options.cycleCount !== undefined) {
         // New cycle-based approach
         totalCycles = options.cycleCount
-        totalSessionMs = getSessionTimeMs(options.cycleCount, mode)
+        // totalSessionMs is the SCORED duration only (not including practice).
+        // The completion check compares scoredElapsed (time since practice ended)
+        // against this value, so it must exclude practice time.
+        totalSessionMs = getCycleDuration(mode) * options.cycleCount
       } else if (options.duration !== undefined) {
         // Legacy duration-based approach
         totalCycles = getSessionCycles(options.duration, mode)
@@ -533,7 +536,7 @@ export function useGuidedOmCycle(options: UseGuidedOmCycleOptions = {}): UseGuid
       } else {
         // Default to 12 cycles if nothing specified
         totalCycles = 12
-        totalSessionMs = getSessionTimeMs(12, mode)
+        totalSessionMs = getCycleDuration(mode) * 12
       }
 
       const now = performance.now()
@@ -730,7 +733,7 @@ export function getPhaseLabel(phase: CyclePhase): string {
     case 'ah':
       return 'Ah'
     case 'oo':
-      return 'Oo'
+      return 'Uu'
     case 'mm':
       return 'Mm'
   }

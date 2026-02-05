@@ -12,7 +12,7 @@
  * - Sustained humming increases nasal NO 15-20x
  * - Aum chanting shows fMRI patterns matching vagus nerve stimulation
  * - Extended exhalation improves HRV (target: 16-20s cycles)
- * - Vowel shapes matter: Ah (chest), Oo (vagus), Mm (nitric oxide)
+ * - Vowel shapes matter: Ah (chest), Uu (vagus), Mm (nitric oxide)
  * - Optimal frequency emerges naturally through correct technique
  */
 

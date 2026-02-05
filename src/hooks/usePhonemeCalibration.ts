@@ -1,14 +1,14 @@
 /**
  * usePhonemeCalibration - One-time voice calibration for phoneme detection
  *
- * Guides user through 15-second calibration (5s each for Ah, Oo, Mm).
+ * Guides user through 15-second calibration (5s each for Ah, Uu, Mm).
  * Stores calibration profile in localStorage for persistence.
  *
  * Enhanced with MFCC baseline capture for hybrid classification.
  *
  * The calibration captures:
  * - Upper/lower frequency ratio for "Ah" (user's voice)
- * - Upper/lower frequency ratio for "Oo" (user's voice)
+ * - Upper/lower frequency ratio for "Uu" (user's voice)
  * - Spectral flatness baseline for "Mm" (nasal resonance)
  * - MFCC mean/variance for each phoneme (personalized detection)
  * - Background noise floor
@@ -465,7 +465,7 @@ export function usePhonemeCalibration(): UsePhonemeCalibrationResult {
           ooMfccSamplesRef.current = [...samples.mfccSamples]
           if (process.env.NODE_ENV === 'development') {
             console.log(
-              '[Calibration] Oo ratios collected:',
+              '[Calibration] Uu ratios collected:',
               ooRatiosRef.current.length,
               'MFCC samples:',
               ooMfccSamplesRef.current.length
@@ -576,7 +576,7 @@ export function usePhonemeCalibration(): UsePhonemeCalibrationResult {
           // Warn if calibration values are too similar
           if (separation < 0.3) {
             console.warn(
-              '[Calibration] WARNING: Ah and Oo ratios are very similar (' +
+              '[Calibration] WARNING: Ah and Uu ratios are very similar (' +
                 separation.toFixed(2) +
                 '). Detection may be unreliable. Try making vowel shapes more distinct during calibration.'
             )
@@ -792,7 +792,7 @@ export function getCalibrationInstruction(phase: CalibrationPhase): {
       }
     case 'oo':
       return {
-        title: 'Say "Oooo"',
+        title: 'Say "Uuuu"',
         instruction: 'Round your lips',
       }
     case 'mm':

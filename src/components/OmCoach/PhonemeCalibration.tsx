@@ -3,7 +3,7 @@
  *
  * A simple 3-step flow (~15 seconds total):
  * 1. "Say 'Ahhh' at your comfortable pitch" (5 seconds)
- * 2. "Now round to 'Oooo'" (5 seconds)
+ * 2. "Now round to 'Uuuu'" (5 seconds)
  * 3. "Close to 'Mmmm'" (5 seconds)
  *
  * Shows progress bar and large phoneme label for each phase.
@@ -33,7 +33,7 @@ function getPhaseSymbol(phase: CalibrationPhase): string {
     case 'ah':
       return 'Ah'
     case 'oo':
-      return 'Oo'
+      return 'Uu'
     case 'mm':
       return 'Mm'
     case 'complete':
@@ -256,7 +256,7 @@ export function PhonemeCalibration({ state, onCancel, onComplete }: PhonemeCalib
                       {isComplete ? '✓' : isCurrent ? samplesCollected : i + 1}
                     </div>
                     <span className={`text-xs mt-1 ${isCurrent ? 'text-ink' : 'text-ink/40'}`}>
-                      {p === 'ah' ? 'Ah' : p === 'oo' ? 'Oo' : 'Mm'}
+                      {p === 'ah' ? 'Ah' : p === 'oo' ? 'Uu' : 'Mm'}
                     </span>
                   </div>
                 )

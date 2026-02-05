@@ -9,12 +9,12 @@
  * | Vowel | F1 Range    | F2 Range      | Detection Strategy              |
  * |-------|-------------|---------------|--------------------------------|
  * | Ah    | 700-800 Hz  | 1100-1200 Hz  | High energy in upper bands      |
- * | Oo    | 300-450 Hz  | 800-900 Hz    | Energy concentrated in lower    |
+ * | Uu    | 300-450 Hz  | 800-900 Hz    | Energy concentrated in lower    |
  * | Mm    | ~250 Hz     | Very low      | High spectral flatness (nasal)  |
  *
  * Scientific foundation:
  * - "Ah" opens chest/solar plexus, triggers relaxation
- * - "Oo" stimulates vagus nerve (runs next to vocal cords)
+ * - "Uu" stimulates vagus nerve (runs next to vocal cords)
  * - "Mm" produces 15x nitric oxide, amygdala deactivation
  */
 
@@ -33,7 +33,7 @@ export interface CalibrationProfile {
   id: string
   createdAt: number
   ahRatio: number // Upper/lower energy ratio for Ah
-  ooRatio: number // Upper/lower energy ratio for Oo
+  ooRatio: number // Upper/lower energy ratio for Uu
   mmFlatness: number // Baseline flatness for Mm
   noiseFloor: number // Background noise level
   // MFCC baselines (optional - for enhanced detection)
@@ -43,8 +43,8 @@ export interface CalibrationProfile {
 }
 
 export interface FormantData {
-  lowBandEnergy: number // 250-500 Hz (F1 for Oo/Mm)
-  midBandEnergy: number // 500-900 Hz (F1 for Ah, F2 for Oo)
+  lowBandEnergy: number // 250-500 Hz (F1 for Uu/Mm)
+  midBandEnergy: number // 500-900 Hz (F1 for Ah, F2 for Uu)
   highBandEnergy: number // 900-1400 Hz (F2 for Ah)
   spectralFlatness: number // From Meyda
   upperLowerRatio: number // Formant ratio for classification
@@ -71,8 +71,8 @@ export interface UseFormantDetectionResult {
 
 // Frequency band definitions (Hz)
 const BANDS = {
-  low: { min: 250, max: 500 }, // F1 for Oo/Mm
-  mid: { min: 500, max: 900 }, // F1 for Ah, F2 for Oo
+  low: { min: 250, max: 500 }, // F1 for Uu/Mm
+  mid: { min: 500, max: 900 }, // F1 for Ah, F2 for Uu
   high: { min: 900, max: 1400 }, // F2 for Ah
 }
 
@@ -80,7 +80,7 @@ const BANDS = {
 const DEFAULT_THRESHOLDS = {
   mmFlatnessMin: 0.25, // M has high flatness (nasal resonance)
   ahRatioMin: 1.3, // Ah has more energy in upper bands
-  ooRatioMax: 1.2, // Oo has energy in lower bands
+  ooRatioMax: 1.2, // Uu has energy in lower bands
 }
 
 // Default RMS threshold for silence detection (used when no calibration)
@@ -179,7 +179,7 @@ function classifyPhoneme(
         'flatness:',
         flatness.toFixed(3),
         '| Order:',
-        ahIsHigher ? 'Ah>Oo' : 'Oo>Ah'
+        ahIsHigher ? 'Ah>Uu' : 'Uu>Ah'
       )
     }
 
@@ -540,7 +540,7 @@ export function getPhonemeLabel(phoneme: Phoneme): string {
     case 'A':
       return 'Ah'
     case 'U':
-      return 'Oo'
+      return 'Uu'
     case 'M':
       return 'Mm'
     case 'silence':

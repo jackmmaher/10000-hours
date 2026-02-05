@@ -7,9 +7,11 @@
  * - Smooth crossfade transitions between phase labels
  * - Ring fills continuously clockwise through entire cycle
  * - Breathe marker at 12 o'clock position
+ * - Uses its own rAF loop for smooth, frame-accurate arc animation
+ *   independent of React re-render timing
  */
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import type { CyclePhase, TimingMode } from '../../hooks/useGuidedOmCycle'
 import {
   getPhaseLabel,
@@ -66,20 +68,90 @@ export function CircularProgress({
   const radius = (size - strokeWidth) / 2 - 8
   const markerRadius = radius + 28 // Position markers well outside the ring
 
-  // Use totalProgress % 1 for display - this NEVER reverses because totalProgress
-  // continuously increases (0 → 1 → 2 → 3...). The modulo gives us 0-1 range
-  // that wraps seamlessly without any backward animation.
   const isBreathing = currentPhase === 'breathe'
-  const displayProgress = totalProgress % 1
+
+  // SVG constants
+  const circumference = 2 * Math.PI * radius
+
+  // --- Frame-accurate arc animation via rAF ---
+  // Instead of relying on React re-renders to update the arc (which can be
+  // batched/delayed), we interpolate between totalProgress snapshots and
+  // update the SVG element directly every frame for perfectly smooth motion.
+  const circleRef = useRef<SVGCircleElement>(null)
+  const lastTotalProgressRef = useRef(totalProgress)
+  const lastUpdateTimeRef = useRef(performance.now())
+  const progressRateRef = useRef(0) // progress units per ms
+  const animFrameRef = useRef<number | null>(null)
+
+  // Update our interpolation state whenever React delivers a new totalProgress
+  useEffect(() => {
+    const now = performance.now()
+    const dt = now - lastUpdateTimeRef.current
+    const dp = totalProgress - lastTotalProgressRef.current
+
+    // Compute the rate of progress change (units/ms) for interpolation.
+    // Only update rate when we have a meaningful time delta and forward progress.
+    if (dt > 0 && dp > 0 && dp < 0.5) {
+      progressRateRef.current = dp / dt
+    }
+
+    lastTotalProgressRef.current = totalProgress
+    lastUpdateTimeRef.current = now
+  }, [totalProgress])
+
+  // The rAF loop: runs every frame and directly sets strokeDashoffset on the SVG
+  const animateArc = useCallback(() => {
+    const circle = circleRef.current
+    if (!circle) {
+      animFrameRef.current = requestAnimationFrame(animateArc)
+      return
+    }
+
+    const now = performance.now()
+    const elapsed = now - lastUpdateTimeRef.current
+    const rate = progressRateRef.current
+
+    // If we haven't received a React update in over 200ms, the session
+    // is likely paused or stopped. Don't interpolate further.
+    const lastProgress = lastTotalProgressRef.current
+    let interpolated: number
+    if (elapsed > 200 || rate <= 0) {
+      interpolated = lastProgress
+    } else {
+      // Interpolate forward from last known totalProgress at the measured rate.
+      interpolated = lastProgress + rate * elapsed
+
+      // Clamp interpolation to prevent overshooting past the next integer
+      // boundary (which would visually jump backward when modulo wraps).
+      const nextBoundary = Math.floor(lastProgress) + 1
+      if (interpolated >= nextBoundary && lastProgress < nextBoundary) {
+        // Clamp to just before boundary -- the next React update will
+        // provide the true post-boundary value
+        interpolated = nextBoundary - 0.001
+      }
+    }
+
+    const displayProgress = interpolated % 1
+    const offset = circumference * (1 - displayProgress)
+    circle.setAttribute('stroke-dashoffset', String(offset))
+
+    animFrameRef.current = requestAnimationFrame(animateArc)
+  }, [circumference])
+
+  // Start/stop the rAF loop
+  useEffect(() => {
+    animFrameRef.current = requestAnimationFrame(animateArc)
+    return () => {
+      if (animFrameRef.current !== null) {
+        cancelAnimationFrame(animFrameRef.current)
+      }
+    }
+  }, [animateArc])
 
   // Track previous phase for crossfade
   const [displayPhase, setDisplayPhase] = useState(currentPhase)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const prevPhaseRef = useRef(currentPhase)
-
-  // Track previous totalProgress to detect cycle boundaries (for transition handling)
-  const prevTotalProgressRef = useRef(totalProgress)
-  const [isCycleBoundary, setIsCycleBoundary] = useState(false)
 
   // Handle phase transitions with crossfade
   useEffect(() => {
@@ -97,33 +169,6 @@ export function CircularProgress({
     }
   }, [currentPhase])
 
-  // Detect cycle boundary crossings (when totalProgress crosses integer boundaries)
-  // We use this to briefly disable transitions for perfectly smooth wrapping
-  useEffect(() => {
-    const prevProgress = prevTotalProgressRef.current
-    const currProgress = totalProgress
-
-    // Check if we crossed an integer boundary (e.g., 0.95 → 1.05 means crossing 1.0)
-    const prevFloor = Math.floor(prevProgress)
-    const currFloor = Math.floor(currProgress)
-
-    if (currFloor > prevFloor && currProgress > 0) {
-      setIsCycleBoundary(true)
-      // Re-enable transition after the wrap completes
-      const timer = setTimeout(() => {
-        setIsCycleBoundary(false)
-      }, 50)
-      prevTotalProgressRef.current = currProgress
-      return () => clearTimeout(timer)
-    }
-
-    prevTotalProgressRef.current = currProgress
-  }, [totalProgress])
-
-  // Calculate SVG arc path
-  const circumference = 2 * Math.PI * radius
-  const cycleOffset = circumference * (1 - displayProgress)
-
   // Get phase boundary positions (dynamic based on first cycle's extended breathe)
   const phasePositions = getPhasePositions(timingMode, isFirstCycle)
 
@@ -138,7 +183,7 @@ export function CircularProgress({
   const markers = [
     { pos: 0, label: 'In', phase: 'breathe' as const }, // Short for "Breathe In"
     { pos: phasePositions[0], label: 'Ah', phase: 'ah' as const },
-    { pos: phasePositions[1], label: 'Oo', phase: 'oo' as const },
+    { pos: phasePositions[1], label: 'Uu', phase: 'oo' as const },
     { pos: phasePositions[2], label: 'Mm', phase: 'mm' as const },
   ]
 
@@ -199,8 +244,11 @@ export function CircularProgress({
             strokeWidth={strokeWidth}
           />
 
-          {/* Cycle progress ring - the hero element */}
+          {/* Cycle progress ring - the hero element
+              stroke-dashoffset is updated directly by the rAF loop (not React),
+              so we set the initial value here and let the loop take over. */}
           <circle
+            ref={circleRef}
             cx={center}
             cy={center}
             r={radius}
@@ -209,10 +257,7 @@ export function CircularProgress({
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeDasharray={circumference}
-            strokeDashoffset={cycleOffset}
-            style={{
-              transition: isCycleBoundary ? 'none' : 'stroke-dashoffset 0.1s linear',
-            }}
+            strokeDashoffset={circumference}
           />
         </svg>
 

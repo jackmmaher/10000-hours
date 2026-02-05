@@ -114,7 +114,7 @@ export function OmCoachSetup({
               <div className="w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <span className="text-[10px] font-semibold text-accent">1</span>
               </div>
-              <p className="text-sm text-ink">Follow the phases: Breathe In → Ah → Oo → Mm</p>
+              <p className="text-sm text-ink">Follow the phases: Breathe In → Ah → Uu → Mm</p>
             </div>
 
             <div className="flex gap-3">
