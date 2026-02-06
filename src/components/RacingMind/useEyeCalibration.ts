@@ -2,7 +2,7 @@
  * useEyeCalibration - Eye tracking calibration state and WebGazer integration
  *
  * Manages:
- * - 9-point calibration grid
+ * - 5-point calibration grid
  * - WebGazer training via click events
  * - Validation accuracy measurement
  * - Calibration profile persistence
@@ -15,6 +15,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import webgazer from 'webgazer'
+import { stopWebGazerCamera } from '../../lib/stopWebGazerCamera'
 
 export interface CalibrationPoint {
   id: number
@@ -60,6 +61,8 @@ interface UseEyeCalibrationResult {
   existingProfile: CalibrationProfile | null
   isWebGazerReady: boolean
   error: string | null
+  /** Current validation target position (percentage), null when not showing a target */
+  currentValidationTarget: { x: number; y: number } | null
 
   // Actions
   startCalibration: () => Promise<boolean>
@@ -74,17 +77,14 @@ interface UseEyeCalibrationResult {
 // Storage key for calibration profile
 const STORAGE_KEY = 'racing-mind-eye-calibration'
 
-// 9-point grid positions (percentage of screen)
+// 5-point calibration positions (percentage of screen)
+// Center first (natural gaze start), then 4 corners for Ridge regression coverage
 const CALIBRATION_GRID: Array<{ x: number; y: number }> = [
-  { x: 15, y: 15 }, // Top-left
-  { x: 50, y: 15 }, // Top-center
-  { x: 85, y: 15 }, // Top-right
-  { x: 15, y: 50 }, // Middle-left
-  { x: 50, y: 50 }, // Center
-  { x: 85, y: 50 }, // Middle-right
-  { x: 15, y: 85 }, // Bottom-left
-  { x: 50, y: 85 }, // Bottom-center
-  { x: 85, y: 85 }, // Bottom-right
+  { x: 50, y: 50 }, // Center (first — establishes baseline)
+  { x: 20, y: 20 }, // Top-left
+  { x: 80, y: 20 }, // Top-right
+  { x: 20, y: 80 }, // Bottom-left
+  { x: 80, y: 80 }, // Bottom-right
 ]
 
 // Validation points (different from calibration for honest testing)
@@ -133,8 +133,10 @@ function saveProfile(profile: CalibrationProfile): void {
  */
 export function isProfileStale(profile: CalibrationProfile | null): boolean {
   if (!profile) return true
-  const sevenDays = 7 * 24 * 60 * 60 * 1000
-  return Date.now() - profile.lastUsedAt > sevenDays
+  // Use createdAt (not lastUsedAt) — model quality degrades from creation time,
+  // not last use. 14 days balances accuracy with re-calibration friction.
+  const fourteenDays = 14 * 24 * 60 * 60 * 1000
+  return Date.now() - profile.createdAt > fourteenDays
 }
 
 /**
@@ -156,6 +158,11 @@ export function useEyeCalibration(): UseEyeCalibrationResult {
   const [existingProfile, setExistingProfile] = useState<CalibrationProfile | null>(null)
   const [isWebGazerReady, setIsWebGazerReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const [currentValidationTarget, setCurrentValidationTarget] = useState<{
+    x: number
+    y: number
+  } | null>(null)
 
   const webgazerInitializedRef = useRef(false)
   const webgazerBeginCalledRef = useRef(false) // Track if begin() was called (even if not complete)
@@ -272,7 +279,9 @@ export function useEyeCalibration(): UseEyeCalibrationResult {
       // WebGazer uses click events to correlate eye position with screen position
       webgazer.recordScreenPosition(screenX, screenY, 'click')
 
-      console.log(`[EyeCalibration] Point ${pointId + 1}/9 calibrated at (${screenX}, ${screenY})`)
+      console.log(
+        `[EyeCalibration] Point ${pointId + 1}/${calibrationPoints.length} calibrated at (${screenX}, ${screenY})`
+      )
 
       // Update point status
       setCalibrationPoints((prev) =>
@@ -287,66 +296,51 @@ export function useEyeCalibration(): UseEyeCalibrationResult {
       if (pointId < calibrationPoints.length - 1) {
         setCurrentPointIndex(pointId + 1)
       } else {
-        // All points calibrated - skip validation, go directly to complete
-        // (Validation runs silently without showing targets, producing meaningless data)
-        // Instead, estimate accuracy from calibration data
-        const estimatedAccuracy = 100 // Assume good calibration if all points were tapped
-        setValidationResult({
-          success: true,
-          averageError: estimatedAccuracy,
-          maxError: estimatedAccuracy,
-          pointsTested: calibrationPoints.length,
-        })
-
-        // Save calibration profile to localStorage
-        // (Must do inline since state updates are batched and completeCalibration
-        // depends on validationResult which won't be updated yet)
-        const profile: CalibrationProfile = {
-          id: generateId(),
-          createdAt: Date.now(),
-          lastUsedAt: Date.now(),
-          accuracy: estimatedAccuracy,
-          pointsCalibrated: calibrationPoints.length,
-          deviceInfo: {
-            screenWidth: window.innerWidth,
-            screenHeight: window.innerHeight,
-            userAgent: navigator.userAgent,
-          },
-        }
-        saveProfile(profile)
-        setExistingProfile(profile)
-        console.log('[EyeCalibration] Calibration complete, profile saved')
-
-        setPhase('complete')
+        // All points calibrated — move to validation with visible targets
+        setPhase('validating')
       }
     },
     [phase, currentPointIndex, calibrationPoints]
   )
 
   /**
-   * Run validation to check calibration accuracy
+   * Run validation to check calibration accuracy.
+   * Shows each validation target on screen for 1.5s while collecting gaze data,
+   * then compares predicted gaze to actual target position.
    */
   const runValidation = useCallback(async (): Promise<ValidationResult> => {
-    console.log('[EyeCalibration] Running validation...')
+    console.log('[EyeCalibration] Running validation with visible targets...')
 
     const errors: number[] = []
+    const DWELL_TIME_MS = 1500 // Time to show each target and collect gaze
+    const SETTLE_TIME_MS = 300 // Brief pause before collecting to let gaze settle
 
     for (const point of VALIDATION_POINTS) {
       const targetX = (point.x / 100) * window.innerWidth
       const targetY = (point.y / 100) * window.innerHeight
 
-      // Wait for gaze data to settle
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      // Show the target dot on screen
+      setCurrentValidationTarget({ x: point.x, y: point.y })
 
-      // Get recent gaze predictions
-      const recentGaze = gazeDataRef.current.slice(-10)
+      // Clear recent gaze data so we only measure gaze while target is visible
+      gazeDataRef.current = []
+
+      // Wait for gaze to settle on the new target
+      await new Promise((resolve) => setTimeout(resolve, SETTLE_TIME_MS))
+
+      // Clear again after settle to only get steady-state gaze
+      gazeDataRef.current = []
+
+      // Collect gaze data for the dwell period
+      await new Promise((resolve) => setTimeout(resolve, DWELL_TIME_MS - SETTLE_TIME_MS))
+
+      // Get gaze predictions collected during dwell
+      const recentGaze = gazeDataRef.current.slice(-30) // ~1s at 30fps
 
       if (recentGaze.length > 0) {
-        // Calculate average gaze position
         const avgX = recentGaze.reduce((sum, g) => sum + g.x, 0) / recentGaze.length
         const avgY = recentGaze.reduce((sum, g) => sum + g.y, 0) / recentGaze.length
 
-        // Calculate error (distance from target)
         const error = Math.sqrt(Math.pow(avgX - targetX, 2) + Math.pow(avgY - targetY, 2))
         errors.push(error)
 
@@ -355,6 +349,9 @@ export function useEyeCalibration(): UseEyeCalibrationResult {
         )
       }
     }
+
+    // Clear the target after all validation points are tested
+    setCurrentValidationTarget(null)
 
     const result: ValidationResult = {
       success: errors.length > 0 && errors.every((e) => e < ACCURACY_ACCEPTABLE),
@@ -401,6 +398,7 @@ export function useEyeCalibration(): UseEyeCalibrationResult {
     setCalibrationPoints([])
     setCurrentPointIndex(0)
     setValidationResult(null)
+    setCurrentValidationTarget(null)
     setError(null)
     gazeDataRef.current = []
 
@@ -418,6 +416,8 @@ export function useEyeCalibration(): UseEyeCalibrationResult {
     // Stop WebGazer if it was started (check both refs for mid-init cancellation)
     if (webgazerInitializedRef.current || webgazerBeginCalledRef.current) {
       try {
+        // Explicitly stop camera tracks BEFORE webgazer.end() to ensure camera indicator turns off
+        stopWebGazerCamera()
         webgazer.end()
         webgazerInitializedRef.current = false
         webgazerBeginCalledRef.current = false
@@ -434,6 +434,8 @@ export function useEyeCalibration(): UseEyeCalibrationResult {
       // Check both refs to handle cancellation during initialization window
       if (webgazerInitializedRef.current || webgazerBeginCalledRef.current) {
         try {
+          // Explicitly stop camera tracks BEFORE webgazer.end() to ensure camera indicator turns off
+          stopWebGazerCamera()
           webgazer.end()
           webgazerInitializedRef.current = false
           webgazerBeginCalledRef.current = false
@@ -452,6 +454,7 @@ export function useEyeCalibration(): UseEyeCalibrationResult {
     existingProfile,
     isWebGazerReady,
     error,
+    currentValidationTarget,
     startCalibration,
     handlePointTap,
     runValidation,

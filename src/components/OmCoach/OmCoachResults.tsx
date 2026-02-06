@@ -9,7 +9,7 @@
  * - Bridge CTA to meditation with neuroscience framing
  */
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { OmCoachMetrics } from '../../lib/db/types'
 import { MindStateSlider } from '../RacingMind/MindStateSlider'
@@ -151,6 +151,13 @@ export function OmCoachResults({
   onMeditateNow,
 }: OmCoachResultsProps) {
   const [postScore, setPostScore] = useState<number | null>(null)
+  const [showStats, setShowStats] = useState(false)
+
+  // Delay stats reveal — don't blast numbers immediately after silence
+  useEffect(() => {
+    const timer = setTimeout(() => setShowStats(true), 3000)
+    return () => clearTimeout(timer)
+  }, [])
 
   // Use coherence score if available, otherwise fall back to alignment score
   const mainScore = coherenceMetrics?.averageCoherenceScore ?? metrics.averageAlignmentScore
@@ -178,19 +185,11 @@ export function OmCoachResults({
   return (
     <div className="h-full overflow-y-auto">
       <div className="flex flex-col items-center min-h-full px-6 py-6">
-        {/* Completion message */}
-        <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-4">
-          <svg
-            className="w-8 h-8 text-accent"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
+        {/* Gentle completion — no checkmark, just space */}
+        <div className="h-4" />
 
-        <h1 className="font-serif text-2xl text-ink mb-6">Practice Complete</h1>
+        <h1 className="font-serif text-2xl text-ink mb-2">How do you feel?</h1>
+        <p className="text-xs text-ink/40 mb-6">Take a moment before looking at the numbers.</p>
 
         {/* Post-session assessment */}
         <div className="w-full max-w-sm bg-elevated rounded-xl p-5 mb-4 shadow-sm">
@@ -214,8 +213,13 @@ export function OmCoachResults({
           )}
         </AnimatePresence>
 
-        {/* Session Stats Card */}
-        <div className="w-full max-w-sm bg-elevated rounded-xl p-5 mb-4 shadow-sm">
+        {/* Session Stats Card — fades in after brief pause */}
+        <motion.div
+          className="w-full max-w-sm bg-elevated rounded-xl p-5 mb-4 shadow-sm"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: showStats ? 1 : 0, y: showStats ? 0 : 8 }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+        >
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-xs text-ink/50 mb-1">Duration</p>
@@ -240,15 +244,20 @@ export function OmCoachResults({
               </div>
             )}
           </div>
-        </div>
+        </motion.div>
 
-        {/* Vocal Coherence Card */}
+        {/* Technique Card */}
         {hasCoherenceData && coherenceMetrics && (
-          <div className="w-full max-w-sm bg-elevated rounded-xl p-5 mb-4 shadow-sm">
+          <motion.div
+            className="w-full max-w-sm bg-elevated rounded-xl p-5 mb-4 shadow-sm"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: showStats ? 1 : 0, y: showStats ? 0 : 8 }}
+            transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
+          >
             {/* Header with score */}
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 className="text-sm font-medium text-ink">Vocal Coherence</h3>
+                <h3 className="text-sm font-medium text-ink">Technique</h3>
                 <p className="text-xs text-ink/50 mt-0.5">Stability of your practice</p>
               </div>
               <div className="text-right">
@@ -293,19 +302,19 @@ export function OmCoachResults({
                 label="Stability"
                 sublabel="Pitch steadiness"
                 percent={coherenceMetrics.pitchStabilityScore}
-                weight={50}
-              />
-              <ComponentBar
-                label="Smoothness"
-                sublabel="Even volume"
-                percent={coherenceMetrics.amplitudeSmoothnessScore}
-                weight={30}
+                weight={60}
               />
               <ComponentBar
                 label="Continuity"
                 sublabel="Sustained voicing"
                 percent={coherenceMetrics.voicingContinuityScore}
-                weight={20}
+                weight={30}
+              />
+              <ComponentBar
+                label="Smoothness"
+                sublabel="Even volume"
+                percent={coherenceMetrics.amplitudeSmoothnessScore}
+                weight={10}
               />
             </div>
 
@@ -347,16 +356,16 @@ export function OmCoachResults({
               </summary>
               <div className="mt-3 pt-3 border-t border-border-subtle text-xs text-ink/50 space-y-2">
                 <p>
-                  <strong className="text-ink/70">Stability (50%):</strong> How steady your pitch
+                  <strong className="text-ink/70">Stability (60%):</strong> How steady your pitch
                   stays within each phase. Low variance = high score.
                 </p>
                 <p>
-                  <strong className="text-ink/70">Smoothness (30%):</strong> How even your volume
-                  stays. No breathy drops or sudden surges.
+                  <strong className="text-ink/70">Continuity (30%):</strong> How much of the time
+                  you're actively voicing vs. silence or breaks.
                 </p>
                 <p>
-                  <strong className="text-ink/70">Continuity (20%):</strong> How much of the time
-                  you're actively voicing vs. silence or breaks.
+                  <strong className="text-ink/70">Smoothness (10%):</strong> How even your volume
+                  stays. Low weight because microphone compression can inflate this.
                 </p>
                 <p>
                   <strong className="text-ink/70">Locked cycle:</strong> 70%+ coherence. Your
@@ -364,7 +373,7 @@ export function OmCoachResults({
                 </p>
               </div>
             </details>
-          </div>
+          </motion.div>
         )}
 
         {/* Fallback for old sessions without coherence data */}

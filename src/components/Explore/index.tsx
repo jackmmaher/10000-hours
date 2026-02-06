@@ -237,23 +237,67 @@ export function Explore() {
 
   const handlePearlVote = async (pearlId: string, shouldVote: boolean) => {
     if (!user) return
-    if (shouldVote) {
-      await votePearl(pearlId, user.id)
-    } else {
-      await unvotePearl(pearlId, user.id)
+
+    // Optimistic update
+    setPearls((prev) =>
+      prev.map((p) =>
+        p.id === pearlId
+          ? { ...p, hasVoted: shouldVote, upvotes: p.upvotes + (shouldVote ? 1 : -1) }
+          : p
+      )
+    )
+
+    try {
+      if (shouldVote) {
+        await votePearl(pearlId, user.id)
+      } else {
+        await unvotePearl(pearlId, user.id)
+      }
+      refreshProfile()
+    } catch (err) {
+      // Rollback on error
+      setPearls((prev) =>
+        prev.map((p) =>
+          p.id === pearlId
+            ? { ...p, hasVoted: !shouldVote, upvotes: p.upvotes + (shouldVote ? -1 : 1) }
+            : p
+        )
+      )
+      throw err
     }
-    refreshProfile()
   }
 
   const handlePearlSave = async (pearlId: string, shouldSave: boolean) => {
     if (!user) return
-    if (shouldSave) {
-      await savePearl(pearlId, user.id)
-    } else {
-      await unsavePearl(pearlId, user.id)
+
+    // Optimistic update
+    setPearls((prev) =>
+      prev.map((p) =>
+        p.id === pearlId
+          ? { ...p, hasSaved: shouldSave, saves: (p.saves || 0) + (shouldSave ? 1 : -1) }
+          : p
+      )
+    )
+
+    try {
+      if (shouldSave) {
+        await savePearl(pearlId, user.id)
+      } else {
+        await unsavePearl(pearlId, user.id)
+      }
+      refreshProfile()
+      useNavigationStore.getState().incrementSavedContentVersion()
+    } catch (err) {
+      // Rollback on error
+      setPearls((prev) =>
+        prev.map((p) =>
+          p.id === pearlId
+            ? { ...p, hasSaved: !shouldSave, saves: (p.saves || 0) + (shouldSave ? -1 : 1) }
+            : p
+        )
+      )
+      throw err
     }
-    refreshProfile()
-    useNavigationStore.getState().incrementSavedContentVersion()
   }
 
   const handleSessionVote = useCallback(
@@ -356,7 +400,7 @@ export function Explore() {
 
   const swipeHandlers = useSwipe({
     onSwipeDown: () => {
-      if (scrollRef.current && scrollRef.current.scrollTop > 50) {
+      if (scrollRef.current && scrollRef.current.scrollTop < 50) {
         setView('timer')
       }
     },

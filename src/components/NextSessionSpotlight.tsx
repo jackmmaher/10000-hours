@@ -9,10 +9,11 @@
  * This is display-only - planning is handled by the parent via onPlanClick.
  */
 
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { PlannedSession } from '../lib/db'
 import { useNavigationStore } from '../stores/useNavigationStore'
 import { ORB_COLORS, ANIMATION_BREATHE_DURATION } from '../lib/animations'
+import { getPlanStreakStats, PlanStreakStats } from '../lib/planStreaks'
 
 interface NextSessionSpotlightProps {
   plannedSession: PlannedSession | null
@@ -21,6 +22,12 @@ interface NextSessionSpotlightProps {
 
 export function NextSessionSpotlight({ plannedSession, onPlanClick }: NextSessionSpotlightProps) {
   const { setView } = useNavigationStore()
+  const [streakStats, setStreakStats] = useState<PlanStreakStats | null>(null)
+  useEffect(() => {
+    getPlanStreakStats()
+      .then(setStreakStats)
+      .catch(() => {})
+  }, [plannedSession])
 
   // Check if session is scheduled for today
   const isToday = useMemo(() => {
@@ -128,6 +135,14 @@ export function NextSessionSpotlight({ plannedSession, onPlanClick }: NextSessio
               )}
               {plannedSession.pose && <span>{plannedSession.pose}</span>}
             </div>
+
+            {/* Plan streak */}
+            {streakStats && streakStats.currentStreak > 0 && (
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                Plan streak: {streakStats.currentStreak} day
+                {streakStats.currentStreak !== 1 ? 's' : ''}
+              </p>
+            )}
 
             {/* Notes preview */}
             {plannedSession.notes && (

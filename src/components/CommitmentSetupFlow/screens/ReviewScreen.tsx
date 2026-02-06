@@ -1,5 +1,5 @@
 /**
- * Screen 12: Review & Launch
+ * Screen 11: Review & Launch
  *
  * Full summary of commitment settings
  * End behavior selection
@@ -233,9 +233,8 @@ export function ReviewScreen({ formState, updateForm, onNext, onBack }: ScreenPr
         transition={{ delay: 0.3 }}
       >
         <p className="text-sm text-center" style={{ color: 'var(--text-primary)' }}>
-          By activating, I commit to practicing meditation for{' '}
-          <strong>{formState.commitmentDuration} days</strong>. I understand that missing sessions
-          will cost me time from my hour bank.
+          I'm committing to <strong>{formState.commitmentDuration} days</strong> of practice. One
+          session at a time, I'm building something real.
         </p>
       </motion.div>
 

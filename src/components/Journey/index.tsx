@@ -25,10 +25,7 @@ import { InsightStream } from '../InsightStream'
 import { Calendar } from '../Calendar'
 import { JourneySavedContent } from '../JourneySavedContent'
 import { JourneyMyPearls } from '../JourneyMyPearls'
-import { LockSetupFlow } from '../LockSetupFlow'
-import { LockComingSoonModal } from '../LockComingSoonModal'
 import { WellbeingCard } from '../WellbeingCard'
-import { useMeditationLock } from '../../hooks/useMeditationLock'
 import {
   getPlannedSessionsForWeek,
   getNextPlannedSession,
@@ -52,6 +49,7 @@ import {
   SharePearlWrapper,
   TemplateEditorWrapper,
 } from './wrappers'
+import { ExerciseActivity } from '../ExerciseActivity'
 import type { SessionTemplate } from '../../lib/types'
 
 type JourneySubTab = 'sessions' | 'saved' | 'pearls'
@@ -79,9 +77,6 @@ export function Journey() {
   const [showTemplateEditor, setShowTemplateEditor] = useState(false)
   const [nextPlannedSession, setNextPlannedSession] = useState<PlannedSession | null>(null)
   const [templateToPlan, setTemplateToPlan] = useState<SessionTemplate | null>(null)
-  const [showLockSetupFlow, setShowLockSetupFlow] = useState(false)
-  const [showLockComingSoon, setShowLockComingSoon] = useState(false)
-  const meditationLock = useMeditationLock()
   const [dimensions, setDimensions] = useState<WellbeingDimension[]>([])
   const [latestCheckIns, setLatestCheckIns] = useState<Map<string, WellbeingCheckIn>>(new Map())
   const [wellbeingSettings, setWellbeingSettings] = useState<WellbeingSettings | null>(null)
@@ -345,6 +340,9 @@ export function Journey() {
           />
         </div>
 
+        {/* Recent Exercise Activity */}
+        <ExerciseActivity />
+
         {/* Sub-tabs */}
         <div ref={subTabsRef} className="flex gap-1 mb-6 bg-cream-deep rounded-lg p-1">
           <TabButton active={subTab === 'sessions'} onClick={() => setSubTab('sessions')}>
@@ -443,27 +441,6 @@ export function Journey() {
             incrementSavedContentVersion()
           }}
           creatorHours={totalHours}
-        />
-      )}
-
-      {/* Lock Coming Soon modal - shows before setup when Screen Time isn't ready */}
-      <LockComingSoonModal
-        isOpen={showLockComingSoon}
-        onClose={() => setShowLockComingSoon(false)}
-        onContinueSetup={() => {
-          setShowLockComingSoon(false)
-          setShowLockSetupFlow(true)
-        }}
-      />
-
-      {showLockSetupFlow && (
-        <LockSetupFlow
-          onComplete={() => {
-            setShowLockSetupFlow(false)
-            // Refresh meditation lock status after setup completes
-            meditationLock.refreshStatus?.()
-          }}
-          onClose={() => setShowLockSetupFlow(false)}
         />
       )}
     </div>

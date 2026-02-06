@@ -153,3 +153,63 @@ export async function createRepeatRuleWithSessions(
 
   return rule
 }
+
+/**
+ * Extends repeat rule sessions when the latest generated session
+ * is less than 1 week from now. Called on app launch.
+ */
+export async function extendRepeatRuleSessions(weeksAhead: number = 4): Promise<void> {
+  const rules = await getAllRepeatRules()
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+  const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+
+  for (const rule of rules) {
+    // Skip rules with past end dates
+    if (rule.endDate && rule.endDate < now.getTime()) continue
+
+    // Find the latest generated session for this rule
+    const existingSessions = await db.plannedSessions
+      .where('repeatRuleId')
+      .equals(rule.id!)
+      .sortBy('date')
+
+    if (existingSessions.length === 0) continue
+
+    const latestSession = existingSessions[existingSessions.length - 1]
+    const latestDate = new Date(latestSession.date)
+
+    // If latest session is more than 1 week away, no need to extend
+    if (latestDate > oneWeekFromNow) continue
+
+    // Generate new sessions starting from day after latest
+    const startDate = new Date(latestDate)
+    startDate.setDate(startDate.getDate() + 1)
+
+    const endDate = rule.endDate
+      ? new Date(Math.min(rule.endDate, now.getTime() + weeksAhead * 7 * 24 * 60 * 60 * 1000))
+      : new Date(now.getTime() + weeksAhead * 7 * 24 * 60 * 60 * 1000)
+
+    if (startDate >= endDate) continue
+
+    const dates = getRepeatDates(rule.frequency, rule.customDays, startDate, endDate)
+    const newSessions = dates.map((date) => ({
+      date: date.getTime(),
+      plannedTime: rule.plannedTime,
+      duration: rule.duration,
+      title: rule.title,
+      pose: rule.pose,
+      discipline: rule.discipline,
+      notes: rule.notes,
+      createdAt: Date.now(),
+      completed: false,
+      sourceTemplateId: rule.sourceTemplateId,
+      attachedPearlId: rule.attachedPearlId,
+      repeatRuleId: rule.id!,
+    }))
+
+    if (newSessions.length > 0) {
+      await saveGeneratedSessions(newSessions)
+    }
+  }
+}

@@ -105,10 +105,10 @@ export function RacingMindSetup({ onBegin, onCalibrate, isLoading }: RacingMindS
           {showDetails && (
             <div className="mt-3 p-3 bg-base rounded-lg">
               <p className="text-xs text-ink/70 leading-relaxed">
-                Horizontal eye movements deactivate the amygdala, reducing the stress response (de
-                Voogd et al. 2018). The gentle oscillation aligns with cardiac coherence rhythms,
-                promoting parasympathetic activation (Lehrer & Gevirtz 2014). This "soft
-                fascination" state is a validated restorative attention pattern.
+                Research shows horizontal eye movements can reduce the brain's stress response (de
+                Voogd et al. 2018). The gentle oscillation rhythm aligns with patterns that promote
+                calm and parasympathetic activation (Lehrer & Gevirtz 2014). This creates a "soft
+                fascination" state — a validated pattern for restoring attention.
               </p>
             </div>
           )}
@@ -132,68 +132,76 @@ export function RacingMindSetup({ onBegin, onCalibrate, isLoading }: RacingMindS
         {/* Duration picker - 10 min hero, 5 & 15 min secondary */}
         <div className="mb-6">
           <p className="text-xs text-ink/50 mb-3 text-center uppercase tracking-wide">Duration</p>
-          <div className="flex items-center justify-center gap-3">
+          <div className="flex items-end justify-center gap-3">
             {/* 5 min - secondary option */}
-            <button
-              onClick={() => setSelectedDuration(5)}
-              className={`w-16 h-16 rounded-xl transition-all ${
-                selectedDuration === 5
-                  ? 'bg-accent text-white'
-                  : 'bg-elevated text-ink hover:bg-elevated/80'
-              }`}
-            >
-              <div className="text-lg font-semibold">5</div>
-              <div
-                className={`text-[10px] ${
-                  selectedDuration === 5 ? 'text-white/70' : 'text-ink/50'
+            <div className="flex flex-col items-center">
+              <button
+                onClick={() => setSelectedDuration(5)}
+                className={`w-16 h-16 rounded-xl transition-all ${
+                  selectedDuration === 5
+                    ? 'bg-accent text-white'
+                    : 'bg-elevated text-ink hover:bg-elevated/80'
                 }`}
               >
-                min
-              </div>
-            </button>
+                <div className="text-lg font-semibold">5</div>
+                <div
+                  className={`text-[10px] ${
+                    selectedDuration === 5 ? 'text-white/70' : 'text-ink/50'
+                  }`}
+                >
+                  min
+                </div>
+              </button>
+              <span className="text-[9px] text-ink/40 mt-1.5">Quick reset</span>
+            </div>
 
             {/* 10 min - HERO option */}
-            <button
-              onClick={() => setSelectedDuration(10)}
-              className={`w-24 h-24 rounded-2xl transition-all relative ${
-                selectedDuration === 10
-                  ? 'bg-accent text-white shadow-lg shadow-accent/30'
-                  : 'bg-elevated text-ink hover:bg-elevated/80 ring-1 ring-accent/20'
-              }`}
-            >
-              <div className="text-2xl font-semibold">10</div>
-              <div
-                className={`text-xs ${selectedDuration === 10 ? 'text-white/70' : 'text-ink/50'}`}
-              >
-                min
-              </div>
-              <div
-                className={`absolute -bottom-3 left-1/2 -translate-x-1/2 text-[10px] font-medium px-2.5 py-0.5 rounded-full whitespace-nowrap ${
-                  selectedDuration === 10 ? 'bg-white text-accent' : 'bg-accent text-white'
+            <div className="flex flex-col items-center">
+              <button
+                onClick={() => setSelectedDuration(10)}
+                className={`w-24 h-24 rounded-2xl transition-all relative ${
+                  selectedDuration === 10
+                    ? 'bg-accent text-white shadow-lg shadow-accent/30'
+                    : 'bg-elevated text-ink hover:bg-elevated/80 ring-1 ring-accent/20'
                 }`}
               >
-                Enhanced
-              </div>
-            </button>
+                <div className="text-2xl font-semibold">10</div>
+                <div
+                  className={`text-xs ${selectedDuration === 10 ? 'text-white/70' : 'text-ink/50'}`}
+                >
+                  min
+                </div>
+                <div
+                  className={`absolute -bottom-3 left-1/2 -translate-x-1/2 text-[10px] font-medium px-2.5 py-0.5 rounded-full whitespace-nowrap ${
+                    selectedDuration === 10 ? 'bg-white text-accent' : 'bg-accent text-white'
+                  }`}
+                >
+                  Enhanced
+                </div>
+              </button>
+            </div>
 
             {/* 15 min - secondary option */}
-            <button
-              onClick={() => setSelectedDuration(15)}
-              className={`w-16 h-16 rounded-xl transition-all ${
-                selectedDuration === 15
-                  ? 'bg-accent text-white'
-                  : 'bg-elevated text-ink hover:bg-elevated/80'
-              }`}
-            >
-              <div className="text-lg font-semibold">15</div>
-              <div
-                className={`text-[10px] ${
-                  selectedDuration === 15 ? 'text-white/70' : 'text-ink/50'
+            <div className="flex flex-col items-center">
+              <button
+                onClick={() => setSelectedDuration(15)}
+                className={`w-16 h-16 rounded-xl transition-all ${
+                  selectedDuration === 15
+                    ? 'bg-accent text-white'
+                    : 'bg-elevated text-ink hover:bg-elevated/80'
                 }`}
               >
-                min
-              </div>
-            </button>
+                <div className="text-lg font-semibold">15</div>
+                <div
+                  className={`text-[10px] ${
+                    selectedDuration === 15 ? 'text-white/70' : 'text-ink/50'
+                  }`}
+                >
+                  min
+                </div>
+              </button>
+              <span className="text-[9px] text-ink/40 mt-1.5">Deep practice</span>
+            </div>
           </div>
         </div>
 

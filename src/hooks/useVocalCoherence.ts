@@ -27,9 +27,12 @@ const WINDOW_SIZE = 8
 const MIN_VOICED_SAMPLES = 2
 
 // Weights for coherence calculation
-const PITCH_STABILITY_WEIGHT = 0.5
-const AMPLITUDE_SMOOTHNESS_WEIGHT = 0.3
-const VOICING_CONTINUITY_WEIGHT = 0.2
+// Amplitude weight reduced because DynamicsCompressor (4:1 ratio) upstream
+// flattens RMS variation before the analyser, inflating smoothness scores.
+// Voicing continuity weight increased as a more meaningful meditation proxy.
+const PITCH_STABILITY_WEIGHT = 0.6
+const AMPLITUDE_SMOOTHNESS_WEIGHT = 0.1
+const VOICING_CONTINUITY_WEIGHT = 0.3
 
 // Default thresholds (used when no calibration/history available)
 const DEFAULT_NOISE_FLOOR = 0.003

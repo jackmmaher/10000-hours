@@ -3,16 +3,17 @@
  *
  * Flow:
  * 1. Phone Positioning - Setup instructions
- * 2. Calibration Grid - 9-point tap calibration
+ * 2. Calibration Grid - 5-point tap calibration
  * 3. Validation Check - Accuracy verification
  * 4. Complete or retry
  */
 
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEyeCalibration, type CalibrationPhase } from '../useEyeCalibration'
 import { PhonePositioning } from './PhonePositioning'
 import { CalibrationGrid } from './CalibrationGrid'
+import { ValidationCheck } from './ValidationCheck'
 
 interface EyeCalibrationProps {
   onComplete: () => void
@@ -24,12 +25,19 @@ export function EyeCalibration({ onComplete, onSkip }: EyeCalibrationProps) {
     phase,
     calibrationPoints,
     currentPointIndex,
+    validationResult,
+    currentValidationTarget,
     error,
     startCalibration,
     handlePointTap,
+    runValidation,
+    completeCalibration,
+    resetCalibration,
     skipCalibration,
     setPhase,
   } = useEyeCalibration()
+
+  const validationStartedRef = useRef(false)
 
   // Start in positioning phase
   useEffect(() => {
@@ -38,9 +46,16 @@ export function EyeCalibration({ onComplete, onSkip }: EyeCalibrationProps) {
     }
   }, [phase, setPhase])
 
-  // Note: Validation phase has been removed - we now skip directly to complete
-  // after all calibration points are tapped, since validation runs silently
-  // without showing targets to the user
+  // Trigger validation when phase transitions to 'validating'
+  useEffect(() => {
+    if (phase === 'validating' && !validationStartedRef.current) {
+      validationStartedRef.current = true
+      runValidation()
+    }
+    if (phase !== 'validating') {
+      validationStartedRef.current = false
+    }
+  }, [phase, runValidation])
 
   // Handle completion
   useEffect(() => {
@@ -74,6 +89,18 @@ export function EyeCalibration({ onComplete, onSkip }: EyeCalibrationProps) {
             points={calibrationPoints}
             currentIndex={currentPointIndex}
             onPointTap={handlePointTap}
+          />
+        )
+
+      case 'validating':
+        return (
+          <ValidationCheck
+            result={validationResult}
+            isValidating={!validationResult}
+            currentTarget={currentValidationTarget}
+            onAccept={completeCalibration}
+            onRetry={resetCalibration}
+            onSkip={handleSkip}
           />
         )
 

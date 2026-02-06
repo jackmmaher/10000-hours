@@ -1,15 +1,18 @@
 /**
  * ValidationCheck - Calibration accuracy verification screen
  *
- * Shows results of calibration validation and lets user proceed or retry.
+ * During validation: shows target dots for the user to look at.
+ * After validation: shows results and lets user proceed or retry.
  */
 
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import type { ValidationResult } from '../useEyeCalibration'
 
 interface ValidationCheckProps {
   result: ValidationResult | null
   isValidating: boolean
+  /** Current validation target position (percentage), null between targets */
+  currentTarget: { x: number; y: number } | null
   onAccept: () => void
   onRetry: () => void
   onSkip: () => void
@@ -18,20 +21,60 @@ interface ValidationCheckProps {
 export function ValidationCheck({
   result,
   isValidating,
+  currentTarget,
   onAccept,
   onRetry,
   onSkip,
 }: ValidationCheckProps) {
   if (isValidating) {
     return (
-      <div className="h-full flex flex-col items-center justify-center bg-base px-6">
-        <motion.div
-          className="w-16 h-16 rounded-full border-4 border-accent/20 border-t-accent"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-        />
-        <p className="text-sm text-ink/60 mt-6">Checking accuracy...</p>
-        <p className="text-xs text-ink/40 mt-2">Look at the center of the screen</p>
+      <div className="h-full relative bg-[#0A0A12]">
+        {/* Instruction text */}
+        <div className="absolute top-8 left-0 right-0 z-10 text-center">
+          <p className="text-sm text-white/70">Look at the dot</p>
+          <p className="text-xs text-white/40 mt-1">Checking calibration accuracy...</p>
+        </div>
+
+        {/* Validation target dot */}
+        <AnimatePresence mode="wait">
+          {currentTarget && (
+            <motion.div
+              key={`${currentTarget.x}-${currentTarget.y}`}
+              className="absolute w-10 h-10 -translate-x-1/2 -translate-y-1/2"
+              style={{
+                left: `${currentTarget.x}%`,
+                top: `${currentTarget.y}%`,
+              }}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {/* Outer pulse ring */}
+              <motion.div
+                className="absolute inset-0 rounded-full"
+                style={{ backgroundColor: 'rgba(234, 179, 8, 0.2)' }}
+                animate={{
+                  scale: [1, 1.6, 1],
+                  opacity: [0.3, 0, 0.3],
+                }}
+                transition={{
+                  duration: 1.2,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+              />
+              {/* Inner dot - amber/gold to distinguish from blue calibration dots */}
+              <div
+                className="absolute inset-1 rounded-full"
+                style={{
+                  backgroundColor: '#EAB308',
+                  boxShadow: '0 0 16px 4px rgba(234, 179, 8, 0.5)',
+                }}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     )
   }

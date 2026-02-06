@@ -14,10 +14,16 @@
  * - summary: session results
  */
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
+import { v4 as uuidv4 } from 'uuid'
 import { useNavigationStore } from '../../stores/useNavigationStore'
+import { useSessionStore } from '../../stores/useSessionStore'
+import { useHourBankStore } from '../../stores/useHourBankStore'
 import { usePosture, type PostureSessionStats } from '../../hooks/usePosture'
 import { useCameraPosture, type PostureTimelineEntry } from '../../hooks/useCameraPosture'
+import { addSession } from '../../lib/db/sessions'
+import { db } from '../../lib/db/schema'
+import type { Session } from '../../lib/db/types'
 import { PostureSetup, type PostureMode } from './PostureSetup'
 import { PostureCalibration } from './PostureCalibration'
 import { PosturePractice } from './PosturePractice'
@@ -25,6 +31,10 @@ import { PostureSummary } from './PostureSummary'
 import { CameraPositioningGuide } from './CameraPositioningGuide'
 import { CameraCalibration } from './CameraCalibration'
 import { CameraPosturePractice } from './CameraPosturePractice'
+import { Paywall } from '../Paywall'
+import { LowHoursWarning } from '../LowHoursWarning'
+
+const APP_STATE_KEY = 'primary'
 
 export type PosturePhase =
   | 'setup'
@@ -40,11 +50,22 @@ interface PostureProps {
 
 export function Posture({ onClose }: PostureProps) {
   const setFullscreen = useNavigationStore((s) => s.setFullscreen)
+  const hydrateSessions = useSessionStore((s) => s.hydrate)
+  const { canMeditate, isCriticallyLow, available } = useHourBankStore()
+  const consumeSessionHours = useHourBankStore((s) => s.consumeSessionHours)
 
   const [phase, setPhase] = useState<PosturePhase>('setup')
   const [sessionStats, setSessionStats] = useState<PostureSessionStats | null>(null)
   const [mode, setMode] = useState<PostureMode>('airpods')
   const [selectedDuration, setSelectedDuration] = useState(10)
+
+  // Session tracking refs
+  const sessionUuidRef = useRef('')
+  const wallClockStartRef = useRef(0)
+
+  // Paywall
+  const [showPaywall, setShowPaywall] = useState(false)
+  const [showLowHoursWarning, setShowLowHoursWarning] = useState(false)
 
   // Camera-specific summary data
   const [shoulderSymmetryScore, setShoulderSymmetryScore] = useState<number | undefined>()
@@ -111,29 +132,112 @@ export function Posture({ onClose }: PostureProps) {
 
   // --- Shared handlers ---
 
-  const handleBegin = useCallback(async () => {
+  /**
+   * Internal: start the session after hour bank checks pass
+   */
+  const startSessionInternal = useCallback(async () => {
+    // Initialize session tracking
+    sessionUuidRef.current = uuidv4()
+    wallClockStartRef.current = Date.now()
+
+    // Consume hours upfront
+    const durationSeconds = selectedDuration * 60
+    try {
+      await consumeSessionHours(durationSeconds)
+    } catch (err) {
+      console.error('[Posture] Failed to consume hours:', err)
+    }
+
+    // Mark session in progress for crash recovery
+    try {
+      const appState = await db.appState.get(APP_STATE_KEY)
+      if (appState) {
+        await db.appState.update(APP_STATE_KEY, {
+          sessionInProgress: true,
+          sessionStartTime: wallClockStartRef.current,
+        })
+      }
+    } catch (err) {
+      console.error('[Posture] Failed to mark session in progress:', err)
+    }
+
     if (mode === 'airpods') {
       await handleAirPodsBegin()
     } else {
       await handleCameraBegin()
     }
-  }, [mode, handleAirPodsBegin, handleCameraBegin])
+  }, [mode, selectedDuration, consumeSessionHours, handleAirPodsBegin, handleCameraBegin])
 
-  const handleEndSession = useCallback(() => {
+  const handleBegin = useCallback(async () => {
+    if (!canMeditate) {
+      setShowPaywall(true)
+      return
+    }
+    if (isCriticallyLow) {
+      setShowLowHoursWarning(true)
+      return
+    }
+    await startSessionInternal()
+  }, [canMeditate, isCriticallyLow, startSessionInternal])
+
+  const handleEndSession = useCallback(async () => {
+    let stats: PostureSessionStats
+    let symmetryScore: number | undefined
+
     if (mode === 'airpods') {
-      const stats = posture.getSessionStats()
+      stats = posture.getSessionStats()
       setSessionStats(stats)
       posture.stopTracking()
     } else {
-      const stats = cameraPosture.getSessionStats()
+      stats = cameraPosture.getSessionStats()
       setSessionStats(stats)
-      setShoulderSymmetryScore(cameraPosture.scores?.shoulderSymmetry)
+      symmetryScore = cameraPosture.scores?.shoulderSymmetry
+      setShoulderSymmetryScore(symmetryScore)
       setPostureTimeline(cameraPosture.getTimeline())
       cameraPosture.stopTracking()
       cameraPosture.stopCamera()
     }
+
+    // Save session to database
+    const wallClockEnd = Date.now()
+    const durationSeconds = Math.round(stats.totalSeconds)
+
+    if (durationSeconds >= 1) {
+      const session: Omit<Session, 'id'> = {
+        uuid: sessionUuidRef.current,
+        startTime: wallClockStartRef.current,
+        endTime: wallClockEnd,
+        durationSeconds,
+        sessionType: 'practice',
+        practiceToolId: 'posture-training',
+        postureMetrics: {
+          goodPosturePercent: Math.round(stats.goodPosturePercent),
+          correctionCount: stats.correctionCount,
+          source: mode === 'camera' ? 'camera' : 'airpods',
+          shoulderSymmetryScore: symmetryScore != null ? Math.round(symmetryScore) : undefined,
+        },
+      }
+
+      try {
+        await addSession(session)
+
+        // Clear session-in-progress flag
+        const appState = await db.appState.get(APP_STATE_KEY)
+        if (appState) {
+          await db.appState.update(APP_STATE_KEY, {
+            sessionInProgress: false,
+            sessionStartTime: undefined,
+          })
+        }
+
+        await hydrateSessions()
+      } catch (err) {
+        console.error('[Posture] Failed to save session:', err)
+      }
+    }
+
     setPhase('summary')
-  }, [mode, posture, cameraPosture])
+  }, [mode, posture, cameraPosture, hydrateSessions])
 
   const handleCancel = useCallback(() => {
     if (mode === 'airpods') {
@@ -142,6 +246,17 @@ export function Posture({ onClose }: PostureProps) {
       cameraPosture.stopTracking()
       cameraPosture.stopCamera()
     }
+
+    // Clear session-in-progress flag
+    db.appState.get(APP_STATE_KEY).then((appState) => {
+      if (appState) {
+        db.appState.update(APP_STATE_KEY, {
+          sessionInProgress: false,
+          sessionStartTime: undefined,
+        })
+      }
+    })
+
     setPhase('setup')
   }, [mode, posture, cameraPosture])
 
@@ -275,6 +390,24 @@ export function Posture({ onClose }: PostureProps) {
           />
         )}
       </div>
+
+      {/* Paywall */}
+      <Paywall isOpen={showPaywall} onClose={() => setShowPaywall(false)} />
+
+      {/* Low hours warning */}
+      <LowHoursWarning
+        isOpen={showLowHoursWarning}
+        onClose={() => setShowLowHoursWarning(false)}
+        onContinue={() => {
+          setShowLowHoursWarning(false)
+          startSessionInternal()
+        }}
+        onTopUp={() => {
+          setShowLowHoursWarning(false)
+          setShowPaywall(true)
+        }}
+        availableHours={available}
+      />
     </div>
   )
 }

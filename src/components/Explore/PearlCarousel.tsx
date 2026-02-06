@@ -31,7 +31,7 @@ export function PearlCarousel({
   if (pearls.length === 0) return null
 
   return (
-    <section className="mb-12">
+    <section className="mb-12" role="region" aria-label={title} aria-roledescription="carousel">
       {/* Section header - respects page padding */}
       <div className="px-6">
         <SectionHeader title={title} onSeeAll={onSeeAll} />

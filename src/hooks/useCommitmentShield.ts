@@ -37,8 +37,10 @@ export function useCommitmentShield(): CommitmentShieldResult {
   const timerIsActive = timerPhase === 'running' || timerPhase === 'preparing'
 
   // Determine if shield should show
+  // Shield is hidden when commitment is paused
   const shouldShow =
     commitment.isActive &&
+    !commitment.isPaused &&
     commitment.isRequired &&
     !commitment.isCompleted &&
     commitment.isWithinWindow &&

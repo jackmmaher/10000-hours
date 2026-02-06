@@ -5,26 +5,18 @@
  * Uses Card variant="subtle" for lighter visual weight.
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardHeader, CardBody, CardEngagement, PearlOrb } from '../Card'
 import { useTapFeedback } from '../../hooks/useTapFeedback'
 import { useToast } from '../../stores/useErrorStore'
 import type { Pearl } from '../../lib/pearls'
 import type { ExploreInteractionProps } from './types'
+import { calculateFallbackVoice } from '../../lib/voiceUtils'
 
 interface CompactPearlCardProps extends ExploreInteractionProps {
   pearl: Pearl
   onVote: (id: string, hasVoted: boolean) => Promise<void>
   onSave: (id: string, hasSaved: boolean) => Promise<void>
-}
-
-/**
- * Fallback Voice score when creatorVoiceScore unavailable
- */
-function calculateFallbackVoice(karma: number, saves: number): number {
-  const karmaScore = Math.min(Math.sqrt(karma) * 3, 30)
-  const savesScore = Math.min(Math.sqrt(saves) * 4, 30)
-  return Math.round(karmaScore + savesScore)
 }
 
 export function CompactPearlCard({
@@ -43,6 +35,13 @@ export function CompactPearlCard({
   const [localSaves, setLocalSaves] = useState(pearl.saves || 0)
   const haptic = useTapFeedback()
   const toast = useToast()
+
+  useEffect(() => {
+    if (pearl.hasVoted !== undefined) setLocalVoted(pearl.hasVoted)
+    if (pearl.hasSaved !== undefined) setLocalSaved(pearl.hasSaved)
+    setLocalUpvotes(pearl.upvotes)
+    setLocalSaves(pearl.saves || 0)
+  }, [pearl.hasVoted, pearl.hasSaved, pearl.upvotes, pearl.saves])
 
   // Check if this is the user's own content
   const isOwnContent = !!(currentUserId && pearl.userId === currentUserId)

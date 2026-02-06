@@ -9,7 +9,7 @@
  *
  * Scientific foundation:
  * - Visual tracking suppresses Default Mode Network (rumination)
- * - Horizontal eye movements deactivate amygdala (de Voogd et al. 2018)
+ * - Horizontal eye movements can reduce amygdala stress response (de Voogd et al. 2018)
  * - "Soft fascination" is a validated restorative attention state
  */
 
@@ -30,6 +30,27 @@ import { isProfileStale, type CalibrationProfile } from './useEyeCalibration'
 
 // Storage key for calibration profile (same as in useEyeCalibration)
 const CALIBRATION_STORAGE_KEY = 'racing-mind-eye-calibration'
+
+// Simple localStorage counter for completed racing-mind sessions
+const SESSION_COUNT_KEY = 'racing-mind-session-count'
+
+function getSessionCount(): number {
+  try {
+    return parseInt(localStorage.getItem(SESSION_COUNT_KEY) ?? '0', 10) || 0
+  } catch {
+    return 0
+  }
+}
+
+function incrementSessionCount(): number {
+  const next = getSessionCount() + 1
+  try {
+    localStorage.setItem(SESSION_COUNT_KEY, String(next))
+  } catch {
+    // Ignore storage errors
+  }
+  return next
+}
 
 export type SessionDuration = 5 | 10 | 15
 
@@ -60,6 +81,9 @@ export function RacingMind({ onClose }: RacingMindProps) {
 
   // Eye tracking metrics (populated after session if tracking was enabled)
   const [trackingMetrics, setTrackingMetrics] = useState<TrackingMetrics | null>(null)
+
+  // Session count for milestone messages
+  const [sessionNumber, setSessionNumber] = useState(0)
 
   // Paywall modal states
   const [showPaywall, setShowPaywall] = useState(false)
@@ -176,6 +200,9 @@ export function RacingMind({ onClose }: RacingMindProps) {
       if (practiceTrackingMetrics) {
         setTrackingMetrics(practiceTrackingMetrics)
       }
+
+      // Increment and capture session count
+      setSessionNumber(incrementSessionCount())
 
       // Go directly to unified results/summary
       setPhase('results')
@@ -302,6 +329,7 @@ export function RacingMind({ onClose }: RacingMindProps) {
             preSessionScore={preSessionScore}
             trackingMetrics={trackingMetrics}
             isCalibrated={isCalibrated}
+            sessionNumber={sessionNumber}
             onClose={onClose}
             onPracticeAgain={handlePracticeAgain}
             onMeditateNow={handleMeditateNow}

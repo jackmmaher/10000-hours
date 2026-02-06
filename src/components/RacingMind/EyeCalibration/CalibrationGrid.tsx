@@ -1,5 +1,5 @@
 /**
- * CalibrationGrid - 9-point calibration screen
+ * CalibrationGrid - 5-point calibration screen
  *
  * Displays all calibration points and guides user through tapping each one.
  * WebGazer learns the correlation between eye position and screen location.

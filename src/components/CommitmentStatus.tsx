@@ -2,17 +2,19 @@
  * CommitmentStatus - Progress widget for active commitments
  *
  * Shows commitment progress in Journey or Settings:
- * - "Day X of Y" (progress, NOT streak)
+ * - Day X of Y with progress bar
+ * - Consistency score
+ * - Current streak
  * - Grace periods remaining
- * - Net minutes earned/lost
- * - End date
+ * - Average presence rating (if data exists)
  *
  * Designed to be embedded in cards or sections.
  */
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { getCommitmentSettings } from '../lib/db/commitmentSettings'
+import { getCommitmentSettings, getCommitmentDayLogs } from '../lib/db/commitmentSettings'
+import { calculateConsistencyScore } from '../lib/commitment/outcomes'
 import type { CommitmentSettings } from '../lib/db/types'
 
 interface CommitmentStatusProps {
@@ -39,36 +41,9 @@ function getCurrentDayNumber(settings: CommitmentSettings): number {
   return Math.max(1, Math.min(daysSinceStart + 1, settings.commitmentDuration))
 }
 
-/**
- * Format end date as "Mar 15, 2024"
- */
-function formatEndDate(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
-
-/**
- * Calculate days remaining
- */
-function getDaysRemaining(settings: CommitmentSettings): number {
-  const startOfDay = (timestamp: number) => {
-    const d = new Date(timestamp)
-    d.setHours(0, 0, 0, 0)
-    return d.getTime()
-  }
-
-  const today = startOfDay(Date.now())
-  const end = startOfDay(settings.commitmentEndDate)
-  const remaining = Math.ceil((end - today) / (24 * 60 * 60 * 1000))
-
-  return Math.max(0, remaining)
-}
-
 export function CommitmentStatus({ compact = false, onViewDetails }: CommitmentStatusProps) {
   const [settings, setSettings] = useState<CommitmentSettings | null>(null)
+  const [consistencyScore, setConsistencyScore] = useState(1)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -76,6 +51,20 @@ export function CommitmentStatus({ compact = false, onViewDetails }: CommitmentS
       try {
         const s = await getCommitmentSettings()
         setSettings(s)
+
+        if (s.isActive) {
+          // Calculate consistency from day logs
+          const logs = await getCommitmentDayLogs(s.commitmentStartDate, s.commitmentEndDate)
+          const requiredLogs = logs.filter(
+            (l) => l.outcome === 'completed' || l.outcome === 'missed' || l.outcome === 'grace'
+          )
+          const completedLogs = logs.filter((l) => l.outcome === 'completed')
+          const score = calculateConsistencyScore(
+            completedLogs.length,
+            Math.max(requiredLogs.length, 1)
+          )
+          setConsistencyScore(score)
+        }
       } catch {
         // Silently handle - not active
       } finally {
@@ -91,10 +80,9 @@ export function CommitmentStatus({ compact = false, onViewDetails }: CommitmentS
   }
 
   const currentDay = getCurrentDayNumber(settings)
-  const daysRemaining = getDaysRemaining(settings)
   const gracePeriodRemaining = settings.gracePeriodCount - settings.gracePeriodUsed
-  const netMinutes = settings.totalBonusMinutesEarned - settings.totalPenaltyMinutesDeducted
   const progressPercent = (currentDay / settings.commitmentDuration) * 100
+  const consistencyPercent = Math.round(consistencyScore * 100)
 
   const handlePress = () => {
     if (onViewDetails) {
@@ -152,14 +140,14 @@ export function CommitmentStatus({ compact = false, onViewDetails }: CommitmentS
                 Day {currentDay} of {settings.commitmentDuration}
               </p>
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                {daysRemaining} days remaining
+                {consistencyPercent}% consistent
               </p>
             </div>
           </div>
 
           {/* Quick stats */}
           <div className="flex items-center gap-2">
-            {gracePeriodRemaining > 0 && (
+            {settings.currentStreakDays > 0 && (
               <span
                 className="text-xs px-2 py-1 rounded-full"
                 style={{
@@ -167,18 +155,7 @@ export function CommitmentStatus({ compact = false, onViewDetails }: CommitmentS
                   color: 'var(--accent)',
                 }}
               >
-                {gracePeriodRemaining} grace
-              </span>
-            )}
-            {netMinutes !== 0 && (
-              <span
-                className="text-xs font-medium"
-                style={{
-                  color: netMinutes > 0 ? 'var(--success, #22c55e)' : 'var(--danger, #ef4444)',
-                }}
-              >
-                {netMinutes > 0 ? '+' : ''}
-                {netMinutes}m
+                {settings.currentStreakDays}d streak
               </span>
             )}
             <svg
@@ -249,7 +226,29 @@ export function CommitmentStatus({ compact = false, onViewDetails }: CommitmentS
       </div>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-3 gap-3 mb-4">
+      <div
+        className={`grid gap-3 mb-4 ${settings.averagePresenceRating != null ? 'grid-cols-4' : 'grid-cols-3'}`}
+      >
+        {/* Consistency */}
+        <div className="p-3 rounded-xl text-center" style={{ background: 'var(--bg-base)' }}>
+          <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+            {consistencyPercent}%
+          </p>
+          <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
+            Consistency
+          </p>
+        </div>
+
+        {/* Current streak */}
+        <div className="p-3 rounded-xl text-center" style={{ background: 'var(--bg-base)' }}>
+          <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+            {settings.currentStreakDays}
+          </p>
+          <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
+            Streak
+          </p>
+        </div>
+
         {/* Grace periods */}
         <div className="p-3 rounded-xl text-center" style={{ background: 'var(--bg-base)' }}>
           <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
@@ -260,56 +259,27 @@ export function CommitmentStatus({ compact = false, onViewDetails }: CommitmentS
           </p>
         </div>
 
-        {/* Net minutes */}
-        <div className="p-3 rounded-xl text-center" style={{ background: 'var(--bg-base)' }}>
-          <p
-            className="text-lg font-bold"
-            style={{
-              color:
-                netMinutes > 0
-                  ? 'var(--success, #22c55e)'
-                  : netMinutes < 0
-                    ? 'var(--danger, #ef4444)'
-                    : 'var(--text-primary)',
-            }}
-          >
-            {netMinutes > 0 ? '+' : ''}
-            {netMinutes}
-          </p>
-          <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
-            Net Mins
-          </p>
-        </div>
-
-        {/* Days remaining */}
-        <div className="p-3 rounded-xl text-center" style={{ background: 'var(--bg-base)' }}>
-          <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
-            {daysRemaining}
-          </p>
-          <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
-            Days Left
-          </p>
-        </div>
-      </div>
-
-      {/* End date footer */}
-      <div
-        className="flex items-center justify-between pt-3 border-t"
-        style={{ borderColor: 'var(--border-subtle)' }}
-      >
-        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-          Commitment ends
-        </span>
-        <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
-          {formatEndDate(settings.commitmentEndDate)}
-        </span>
+        {/* Average presence - only show if data exists */}
+        {settings.averagePresenceRating != null && (
+          <div className="p-3 rounded-xl text-center" style={{ background: 'var(--bg-base)' }}>
+            <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+              {settings.averagePresenceRating.toFixed(1)}
+            </p>
+            <p
+              className="text-[10px] uppercase tracking-wide"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              Presence
+            </p>
+          </div>
+        )}
       </div>
 
       {/* View details button */}
       {onViewDetails && (
         <button
           onClick={handlePress}
-          className="w-full mt-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:opacity-90 active:scale-[0.99]"
+          className="w-full py-2.5 rounded-xl text-sm font-medium transition-all hover:opacity-90 active:scale-[0.99]"
           style={{
             background: 'color-mix(in oklab, var(--accent) 10%, transparent)',
             color: 'var(--accent)',

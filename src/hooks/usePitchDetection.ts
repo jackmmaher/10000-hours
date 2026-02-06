@@ -152,8 +152,9 @@ export function usePitchDetection(options: UsePitchDetectionOptions = {}): UsePi
       const target = targetFrequencyRef.current
       const now = performance.now()
 
-      // Track clarity for adaptive threshold
-      if (useAdaptiveThreshold) {
+      // Track clarity for adaptive threshold — only when voice is present
+      // to prevent silence from drifting the threshold downward over long sessions
+      if (useAdaptiveThreshold && rawFrequency > 0 && clarity > 0.3) {
         clarityTrackerRef.current.push(clarity)
         currentThresholdRef.current = clarityTrackerRef.current.calculateThreshold()
       }

@@ -31,12 +31,13 @@ export function IntentGrid({ selectedIntent, onIntentSelect }: IntentGridProps) 
   const haptic = useTapFeedback()
 
   return (
-    <div className="grid grid-cols-4 gap-2">
+    <div className="grid grid-cols-4 gap-2" role="group" aria-label="Filter by intent">
       {INTENT_OPTIONS.map((intent) => {
         const isSelected = selectedIntent === intent
         return (
           <button
             key={intent}
+            aria-pressed={isSelected}
             onClick={() => {
               haptic.light()
               onIntentSelect(isSelected ? null : intent)

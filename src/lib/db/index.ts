@@ -36,6 +36,8 @@ export type {
   CommitmentSettings,
   CommitmentDayLog,
   CommitmentHistory,
+  BreathPacerMetrics,
+  PostureMetrics,
 } from './types'
 
 // Schema and db instance

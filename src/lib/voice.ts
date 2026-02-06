@@ -22,10 +22,11 @@
 // to prevent gaming any single factor.
 //
 // PRACTICE COMPONENT (30%):
-//   Measures depth and consistency of personal practice
+//   Measures depth, consistency, and exercise engagement
 //   - Hours: log10(hours + 1) × 10 [caps around 40 at 10,000 hrs]
 //   - Depth: avg_session_minutes / 20 [20min = 1.0, 40min = 2.0]
 //   - Consistency: sessions_per_week_avg × 1.5 [daily = 10.5]
+//   - Exercise Engagement: sqrt(sessions) × 2 + tools_used × 2 + sessions/week × 1.5
 //   Practice = normalized to 0-30
 //
 // CONTRIBUTION COMPONENT (20%):
@@ -60,6 +61,11 @@ export interface VoiceInputs {
   avgSessionMinutes: number
   sessionsPerWeekAvg: number // Rolling 4-week average
 
+  // Exercise engagement signals
+  exerciseSessions: number // Total exercise sessions completed
+  exerciseToolsUsed: number // Distinct exercise tools used (breadth, 0-4)
+  exerciseSessionsPerWeek: number // Rolling 4-week average
+
   // Contribution signals
   pearlsShared: number
   meditationsCreated: number
@@ -90,6 +96,7 @@ export interface VoiceScore {
     hours: { value: number; score: number; max: number }
     depth: { value: number; score: number; max: number }
     consistency: { value: number; score: number; max: number }
+    exerciseEngagement: { value: number; score: number; max: number }
     // Contribution
     pearlsShared: { value: number; score: number; max: number }
     meditationsCreated: { value: number; score: number; max: number }
@@ -132,9 +139,20 @@ export function calculateVoice(inputs: VoiceInputs): VoiceScore {
   const consistencyScore = Math.min(consistencyRaw, 15)
   const consistencyMax = 15
 
+  // Exercise engagement: active use of practice tools
+  // Rewards breadth (using multiple tools) and volume (total sessions)
+  // sqrt(sessions) * 2 gives ~6.3 at 10 sessions, ~14.1 at 50 sessions
+  // Plus breadth bonus: each distinct tool used adds 2 points (max 4 tools = 8)
+  const exerciseVolumeRaw = Math.sqrt(inputs.exerciseSessions) * 2
+  const exerciseBreadthRaw = inputs.exerciseToolsUsed * 2
+  const exerciseConsistencyRaw = inputs.exerciseSessionsPerWeek * 1.5
+  const exerciseRaw = exerciseVolumeRaw + exerciseBreadthRaw + exerciseConsistencyRaw
+  const exerciseScore = Math.min(exerciseRaw, 20)
+  const exerciseMax = 20
+
   // Combine practice factors (normalize to 0-30)
-  const practiceTotal = hoursScore + depthScore + consistencyScore
-  const practiceMax = hoursMax + depthMax + consistencyMax // 75
+  const practiceTotal = hoursScore + depthScore + consistencyScore + exerciseScore
+  const practiceMax = hoursMax + depthMax + consistencyMax + exerciseMax // 95
   const practice = (practiceTotal / practiceMax) * 30
 
   // ============================================
@@ -235,6 +253,11 @@ export function calculateVoice(inputs: VoiceInputs): VoiceScore {
         value: inputs.sessionsPerWeekAvg,
         score: Math.round(consistencyScore * 10) / 10,
         max: consistencyMax,
+      },
+      exerciseEngagement: {
+        value: inputs.exerciseSessions,
+        score: Math.round(exerciseScore * 10) / 10,
+        max: exerciseMax,
       },
       // Contribution
       pearlsShared: {

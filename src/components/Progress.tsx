@@ -34,6 +34,7 @@ import {
   Insight,
   UserPreferences,
 } from '../lib/db'
+import { getPlanStreakStats, PlanStreakStats } from '../lib/planStreaks'
 import { GOAL_PRESETS } from '../lib/milestones'
 import {
   getPracticeShape,
@@ -53,6 +54,7 @@ import { SuggestedForYou } from './SuggestedForYou'
 import { SuggestedActions } from './SuggestedActions'
 import { VoiceDetailModal } from './VoiceDetailModal'
 import { StruggleAlert } from './StruggleAlert'
+import { ExerciseProgress } from './ExerciseProgress'
 
 export function Progress() {
   const { sessions, totalSeconds, justAchievedMilestone, clearMilestoneCelebration } =
@@ -80,6 +82,7 @@ export function Progress() {
   const [showVoiceModal, setShowVoiceModal] = useState(false)
   const [preferences, setPreferences] = useState<UserPreferences | null>(null)
   const [showGoalSettings, setShowGoalSettings] = useState(false)
+  const [planStreakStats, setPlanStreakStats] = useState<PlanStreakStats | null>(null)
 
   // Handle navigation intent to open Voice modal (e.g., from Header)
   // Uses a ref to track intent so it persists across voice loading
@@ -102,18 +105,20 @@ export function Progress() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [plans, templates, courses, insightData, prefs] = await Promise.all([
+        const [plans, templates, courses, insightData, prefs, streakData] = await Promise.all([
           getAllPlannedSessions(),
           getSavedTemplates(),
           getAllCourseProgress(),
           getInsightsWithContent(),
           getUserPreferences(),
+          getPlanStreakStats(),
         ])
         setPlannedSessions(plans)
         setSavedTemplates(templates)
         setCourseProgress(courses)
         setInsights(insightData)
         setPreferences(prefs)
+        setPlanStreakStats(streakData)
       } catch (err) {
         console.error('Failed to load progress data:', err)
       } finally {
@@ -167,18 +172,20 @@ export function Progress() {
   } = usePullToRefresh({
     onRefresh: async () => {
       // Reload data
-      const [plans, templates, courses, insightData, prefs] = await Promise.all([
+      const [plans, templates, courses, insightData, prefs, streakRefresh] = await Promise.all([
         getAllPlannedSessions(),
         getSavedTemplates(),
         getAllCourseProgress(),
         getInsightsWithContent(),
         getUserPreferences(),
+        getPlanStreakStats(),
       ])
       setPlannedSessions(plans)
       setSavedTemplates(templates)
       setCourseProgress(courses)
       setInsights(insightData)
       setPreferences(prefs)
+      setPlanStreakStats(streakRefresh)
     },
   })
 
@@ -417,10 +424,23 @@ export function Progress() {
             {/* ============================================ */}
             <CommitmentCard stats={commitmentStats} totalSessions={sessionCount} />
 
+            {/* ========================================= = */}
+            {/* SECTION 5.5: Plan Adherence */}
+            {/* ========================================= = */}
+            {planStreakStats && plannedSessions.length > 0 && (
+              <PlanAdherenceCard stats={planStreakStats} />
+            )}
+
             {/* ============================================ */}
             {/* SECTION 6: Growth Trajectory */}
             {/* ============================================ */}
             <GrowthBars trajectory={growthTrajectory} totalSessions={sessionCount} />
+
+            {/* ============================================ */}
+            {/* SECTION 6.5: Exercise Practice */}
+            {/* Per-module exercise analytics with progress tracking */}
+            {/* ============================================ */}
+            <ExerciseProgress />
 
             {/* ============================================ */}
             {/* SECTION 7: Suggested For You */}
@@ -445,6 +465,52 @@ export function Progress() {
       {showVoiceModal && voice && (
         <VoiceDetailModal voice={voice} onClose={() => setShowVoiceModal(false)} />
       )}
+    </div>
+  )
+}
+
+/**
+ * Plan Adherence Card - shows streak and compliance stats
+ */
+function PlanAdherenceCard({ stats }: { stats: PlanStreakStats }) {
+  return (
+    <div className="mb-10">
+      <p className="font-serif text-sm text-ink/50 tracking-wide mb-5">Plan Adherence</p>
+      <div className="bg-cream-deep rounded-xl p-5">
+        {/* Current streak */}
+        <div className="flex items-baseline justify-between mb-3">
+          <span className="text-sm text-ink/50">Current streak</span>
+          <span className="text-sm text-ink tabular-nums">
+            {stats.currentStreak} day{stats.currentStreak !== 1 ? 's' : ''}
+          </span>
+        </div>
+
+        {/* Longest streak */}
+        <div className="flex items-baseline justify-between mb-3">
+          <span className="text-sm text-ink/50">Longest streak</span>
+          <span className="text-sm text-ink tabular-nums">
+            {stats.longestStreak} day{stats.longestStreak !== 1 ? 's' : ''}
+          </span>
+        </div>
+
+        {/* This week */}
+        <div className="flex items-baseline justify-between mb-3">
+          <span className="text-sm text-ink/50">This week</span>
+          <span className="text-sm text-ink tabular-nums">
+            {stats.thisWeekCompleted} / {stats.thisWeekTotal}
+          </span>
+        </div>
+
+        {/* This month */}
+        <div className="flex items-baseline justify-between">
+          <span className="text-sm text-ink/50">This month</span>
+          <span
+            className={`text-sm tabular-nums ${stats.thisMonthRate >= 70 ? 'text-moss' : 'text-ink'}`}
+          >
+            {stats.thisMonthRate}%
+          </span>
+        </div>
+      </div>
     </div>
   )
 }

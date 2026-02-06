@@ -201,84 +201,18 @@ export function AccountabilityScreen({ formState, updateForm, onNext, onBack }: 
             </div>
           </div>
 
-          {/* What to notify */}
-          <div>
-            <p className="text-sm font-medium mb-3" style={{ color: 'var(--text-primary)' }}>
-              Notify them about
+          {/* Notification info */}
+          <div
+            className="p-3 rounded-xl"
+            style={{
+              background: 'color-mix(in oklab, var(--accent) 8%, transparent)',
+              border: '1px solid var(--border-subtle)',
+            }}
+          >
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+              They'll get a message when you complete a session — sharing your wins, not your
+              misses.
             </p>
-            <div className="space-y-2">
-              <button
-                onClick={() => {
-                  haptic.light()
-                  updateForm({ notifyOnCompletion: true, notifyOnSkip: false })
-                }}
-                className="w-full p-3 rounded-xl text-left transition-all duration-150 flex items-center gap-3"
-                style={{
-                  background:
-                    formState.notifyOnCompletion && !formState.notifyOnSkip
-                      ? 'color-mix(in oklab, var(--accent) 10%, transparent)'
-                      : 'var(--bg-elevated)',
-                  border: `1px solid ${formState.notifyOnCompletion && !formState.notifyOnSkip ? 'var(--accent)' : 'var(--border-subtle)'}`,
-                }}
-              >
-                <div
-                  className="w-4 h-4 rounded-full flex items-center justify-center"
-                  style={{
-                    border: `2px solid ${formState.notifyOnCompletion && !formState.notifyOnSkip ? 'var(--accent)' : 'var(--border-subtle)'}`,
-                    background:
-                      formState.notifyOnCompletion && !formState.notifyOnSkip
-                        ? 'var(--accent)'
-                        : 'transparent',
-                  }}
-                >
-                  {formState.notifyOnCompletion && !formState.notifyOnSkip && (
-                    <div
-                      className="w-1.5 h-1.5 rounded-full"
-                      style={{ background: 'var(--text-on-accent)' }}
-                    />
-                  )}
-                </div>
-                <span className="text-sm" style={{ color: 'var(--text-primary)' }}>
-                  Completions only
-                </span>
-              </button>
-
-              <button
-                onClick={() => {
-                  haptic.light()
-                  updateForm({ notifyOnCompletion: true, notifyOnSkip: true })
-                }}
-                className="w-full p-3 rounded-xl text-left transition-all duration-150 flex items-center gap-3"
-                style={{
-                  background:
-                    formState.notifyOnCompletion && formState.notifyOnSkip
-                      ? 'color-mix(in oklab, var(--accent) 10%, transparent)'
-                      : 'var(--bg-elevated)',
-                  border: `1px solid ${formState.notifyOnCompletion && formState.notifyOnSkip ? 'var(--accent)' : 'var(--border-subtle)'}`,
-                }}
-              >
-                <div
-                  className="w-4 h-4 rounded-full flex items-center justify-center"
-                  style={{
-                    border: `2px solid ${formState.notifyOnCompletion && formState.notifyOnSkip ? 'var(--accent)' : 'var(--border-subtle)'}`,
-                    background:
-                      formState.notifyOnCompletion && formState.notifyOnSkip
-                        ? 'var(--accent)'
-                        : 'transparent',
-                  }}
-                >
-                  {formState.notifyOnCompletion && formState.notifyOnSkip && (
-                    <div
-                      className="w-1.5 h-1.5 rounded-full"
-                      style={{ background: 'var(--text-on-accent)' }}
-                    />
-                  )}
-                </div>
-                <span className="text-sm" style={{ color: 'var(--text-primary)' }}>
-                  Completions + misses
-                </span>
-              </button>
-            </div>
           </div>
         </div>
       )}

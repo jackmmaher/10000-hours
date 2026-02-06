@@ -2,10 +2,17 @@
  * Tests for Accountability Message Service
  *
  * Tests the service that sends accountability messages via SMS or WhatsApp
- * when a meditation lock session is completed or skipped.
+ * when a commitment session is completed.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+// Mock Capacitor Core (native platform detection)
+vi.mock('@capacitor/core', () => ({
+  Capacitor: {
+    isNativePlatform: vi.fn().mockReturnValue(true),
+  },
+}))
 
 // Mock Capacitor Share
 vi.mock('@capacitor/share', () => ({
@@ -17,7 +24,6 @@ vi.mock('@capacitor/share', () => ({
 
 import {
   formatCompletionMessage,
-  formatSkipMessage,
   sendAccountabilityMessage,
   getWhatsAppUrl,
 } from '../accountability'
@@ -32,40 +38,26 @@ describe('accountability', () => {
     it('should format completion message with user name and duration', () => {
       const message = formatCompletionMessage('Jack', 10)
       expect(message).toContain('Jack')
-      expect(message).toContain('10 minute')
-      expect(message).toContain('Still Hours')
+      expect(message).toContain('10-minute')
+      expect(message).toContain('meditation')
       expect(message).toContain('stillhours.app/share')
     })
 
-    it('should use singular minute for 1 minute', () => {
-      const message = formatCompletionMessage('Alex', 1)
-      expect(message).toContain('1 minute')
-      expect(message).not.toContain('1 minutes')
+    it('should include day number when provided', () => {
+      const message = formatCompletionMessage('Jack', 20, 14)
+      expect(message).toContain('Jack just finished a 20-minute meditation.')
+      expect(message).toContain('Day 14 of their commitment.')
     })
 
-    it('should use plural minutes for multiple minutes', () => {
+    it('should omit day info when no day number is provided', () => {
       const message = formatCompletionMessage('Alex', 15)
-      expect(message).toContain('15 minute')
+      expect(message).not.toContain('Day')
+      expect(message).toContain('Alex just finished a 15-minute meditation.')
     })
 
-    it('should include checkmark emoji', () => {
-      const message = formatCompletionMessage('Jack', 10)
-      expect(message).toContain('✓')
-    })
-  })
-
-  describe('formatSkipMessage', () => {
-    it('should format skip message with user name', () => {
-      const message = formatSkipMessage('Jack')
-      expect(message).toContain('Jack')
-      expect(message).toContain('emergency skip')
-      expect(message).toContain('Still Hours')
-      expect(message).toContain('stillhours.app/share')
-    })
-
-    it('should include warning emoji', () => {
-      const message = formatSkipMessage('Jack')
-      expect(message).toContain('⚠️')
+    it('should handle 1-minute duration', () => {
+      const message = formatCompletionMessage('Alex', 1)
+      expect(message).toContain('1-minute')
     })
   })
 
@@ -91,7 +83,6 @@ describe('accountability', () => {
       vi.mocked(Share.share).mockResolvedValue({ activityType: 'sms' })
 
       await sendAccountabilityMessage({
-        type: 'completion',
         phone: '+1234567890',
         method: 'sms',
         durationMinutes: 10,
@@ -109,7 +100,6 @@ describe('accountability', () => {
       vi.mocked(Share.share).mockResolvedValue({ activityType: 'sms' })
 
       await sendAccountabilityMessage({
-        type: 'completion',
         phone: '+1234567890',
         method: 'sms',
         durationMinutes: 15,
@@ -118,24 +108,25 @@ describe('accountability', () => {
 
       expect(Share.share).toHaveBeenCalledWith(
         expect.objectContaining({
-          text: expect.stringContaining('15 minute'),
+          text: expect.stringContaining('15-minute'),
         })
       )
     })
 
-    it('should format skip message differently', async () => {
+    it('should include day number when provided', async () => {
       vi.mocked(Share.share).mockResolvedValue({ activityType: 'sms' })
 
       await sendAccountabilityMessage({
-        type: 'skip',
         phone: '+1234567890',
         method: 'sms',
+        durationMinutes: 10,
         userName: 'Jack',
+        dayNumber: 14,
       })
 
       expect(Share.share).toHaveBeenCalledWith(
         expect.objectContaining({
-          text: expect.stringContaining('emergency skip'),
+          text: expect.stringContaining('Day 14'),
         })
       )
     })
@@ -144,7 +135,6 @@ describe('accountability', () => {
       vi.mocked(Share.share).mockResolvedValue({ activityType: 'sms' })
 
       const result = await sendAccountabilityMessage({
-        type: 'completion',
         phone: '+1234567890',
         method: 'sms',
         durationMinutes: 10,
@@ -158,7 +148,6 @@ describe('accountability', () => {
       vi.mocked(Share.share).mockRejectedValue(new Error('Share failed'))
 
       const result = await sendAccountabilityMessage({
-        type: 'completion',
         phone: '+1234567890',
         method: 'sms',
         durationMinutes: 10,

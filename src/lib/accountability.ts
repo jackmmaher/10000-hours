@@ -2,11 +2,10 @@
  * Accountability Message Service
  *
  * Handles sending accountability messages via SMS or WhatsApp
- * when a meditation lock session is completed or skipped.
+ * when a commitment session is completed.
  *
- * Message format (branded for virality):
- * - Completion: "{userName} completed his {duration} minute Still Hours meditation today ✓\n\nstillhours.app/share"
- * - Skip: "{userName} used an emergency skip on Still Hours today ⚠️\n\nstillhours.app/share"
+ * Message format:
+ * - Completion: "{name} just finished a {duration}-minute meditation. Day {day} of their commitment.\n\nstillhours.app/share"
  *
  * Implementation:
  * - SMS uses native share sheet (user still taps "Send")
@@ -18,15 +17,14 @@ import { Capacitor } from '@capacitor/core'
 
 const SHARE_URL = 'stillhours.app/share'
 
-export type AccountabilityMessageType = 'completion' | 'skip'
 export type AccountabilityMethod = 'sms' | 'whatsapp' | 'choose'
 
 interface SendMessageParams {
-  type: AccountabilityMessageType
   phone: string
   method: AccountabilityMethod
-  durationMinutes?: number
+  durationMinutes: number
   userName: string
+  dayNumber?: number
 }
 
 interface SendMessageResult {
@@ -35,18 +33,15 @@ interface SendMessageResult {
 }
 
 /**
- * Format the completion message with user name and duration
+ * Format the completion message with user name, duration, and day number
  */
-export function formatCompletionMessage(userName: string, durationMinutes: number): string {
-  const minuteWord = durationMinutes === 1 ? 'minute' : 'minute'
-  return `${userName} completed his ${durationMinutes} ${minuteWord} Still Hours meditation today ✓\n\n${SHARE_URL}`
-}
-
-/**
- * Format the skip message with user name
- */
-export function formatSkipMessage(userName: string): string {
-  return `${userName} used an emergency skip on Still Hours today ⚠️\n\n${SHARE_URL}`
+export function formatCompletionMessage(
+  userName: string,
+  durationMinutes: number,
+  dayNumber?: number
+): string {
+  const dayInfo = dayNumber ? ` Day ${dayNumber} of their commitment.` : ''
+  return `${userName} just finished a ${durationMinutes}-minute meditation.${dayInfo}\n\n${SHARE_URL}`
 }
 
 /**
@@ -85,13 +80,9 @@ export function getMailtoUrl(message: string): string {
 export async function sendAccountabilityMessage(
   params: SendMessageParams
 ): Promise<SendMessageResult> {
-  const { type, phone, method, durationMinutes, userName } = params
+  const { phone, method, durationMinutes, userName, dayNumber } = params
 
-  // Format the message based on type
-  const message =
-    type === 'completion' && durationMinutes !== undefined
-      ? formatCompletionMessage(userName, durationMinutes)
-      : formatSkipMessage(userName)
+  const message = formatCompletionMessage(userName, durationMinutes, dayNumber)
 
   try {
     if (method === 'whatsapp') {

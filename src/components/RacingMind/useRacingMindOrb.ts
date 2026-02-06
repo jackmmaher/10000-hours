@@ -16,7 +16,7 @@
  */
 
 import { useEffect, useRef, useCallback } from 'react'
-import { Application, Graphics, Filter } from 'pixi.js'
+import { Application, Sprite, Texture, Filter } from 'pixi.js'
 import { GlowFilter } from 'pixi-filters'
 import { SimplexNoise } from '../../lib/noise/SimplexNoise'
 import {
@@ -32,6 +32,45 @@ import {
  */
 function hexToNumber(hex: string): number {
   return parseInt(hex.replace('#', ''), 16)
+}
+
+/**
+ * Parse hex color to RGB components
+ */
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const n = hexToNumber(hex)
+  return { r: (n >> 16) & 0xff, g: (n >> 8) & 0xff, b: n & 0xff }
+}
+
+/**
+ * Create orb texture using offscreen canvas with a true radial gradient.
+ * Single draw call replaces 24 overlapping Graphics.circle() calls.
+ */
+function createOrbTexture(radius: number, colorHex: string): Texture {
+  const canvas = document.createElement('canvas')
+  const size = (radius + 2) * 2 // +2 for anti-aliasing margin
+  canvas.width = size
+  canvas.height = size
+
+  const ctx = canvas.getContext('2d')!
+  const cx = size / 2
+  const { r, g, b } = hexToRgb(colorHex)
+
+  const gradient = ctx.createRadialGradient(cx, cx, 0, cx, cx, radius)
+  // Match the quadratic falloff of the original concentric rings
+  gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 1)`)
+  gradient.addColorStop(0.3, `rgba(${r}, ${g}, ${b}, 1)`)
+  gradient.addColorStop(0.7, `rgba(${r}, ${g}, ${b}, 0.8)`)
+  gradient.addColorStop(0.85, `rgba(${r}, ${g}, ${b}, 0.5)`)
+  gradient.addColorStop(0.95, `rgba(${r}, ${g}, ${b}, 0.2)`)
+  gradient.addColorStop(1.0, `rgba(${r}, ${g}, ${b}, 0)`)
+
+  ctx.fillStyle = gradient
+  ctx.beginPath()
+  ctx.arc(cx, cx, radius, 0, Math.PI * 2)
+  ctx.fill()
+
+  return Texture.from(canvas)
 }
 
 interface UseRacingMindOrbOptions {
@@ -55,7 +94,8 @@ export function useRacingMindOrb({
   amplitudeScale: _amplitudeScale = 1,
 }: UseRacingMindOrbOptions) {
   const appRef = useRef<Application | null>(null)
-  const orbRef = useRef<Graphics | null>(null)
+  const orbRef = useRef<Sprite | null>(null)
+  const orbTextureRef = useRef<Texture | null>(null)
   const glowFilterRef = useRef<GlowFilter | null>(null)
   const noiseRef = useRef<SimplexNoise>(new SimplexNoise())
   const startTimeRef = useRef<number>(0)
@@ -115,32 +155,16 @@ export function useRacingMindOrb({
     container.appendChild(app.canvas)
     appRef.current = app
 
-    // Create orb graphics with smooth radial gradient for "soft gaze" effect
-    // Many concentric circles create imperceptible transitions
-    const orb = new Graphics()
-    const radius = ANIMATION_PARAMS.orbRadius
-    const orbColor = hexToNumber(RACING_MIND_COLORS.orb)
+    // Create orb sprite with radial gradient texture (single draw call)
+    const texture = createOrbTexture(ANIMATION_PARAMS.orbRadius, RACING_MIND_COLORS.orb)
+    orbTextureRef.current = texture
 
-    // Smooth radial gradient using 24 concentric rings
-    // Drawn from outside-in so inner circles overlay outer ones
-    const ringCount = 24
-    for (let i = ringCount; i >= 0; i--) {
-      const t = i / ringCount // 1.0 (outer) to 0.0 (center)
-      const ringRadius = radius * (0.3 + t * 0.7) // 30% to 100% of radius
-
-      // Quadratic falloff for natural soft edge (steeper near edge, flatter in core)
-      // alpha = 1 at center, fades smoothly to ~0.05 at edge
-      const alpha = Math.pow(1 - t, 2) * 0.95 + 0.05
-
-      orb.circle(0, 0, ringRadius)
-      orb.fill({ color: orbColor, alpha })
-    }
-
+    const orb = new Sprite(texture)
+    orb.anchor.set(0.5, 0.5) // Center anchor for x/y positioning
     orb.x = width / 2
     orb.y = height / 2
 
     // Enable sub-pixel rendering for smoother animation
-    // (prevents orb from snapping to integer pixel positions)
     orb.roundPixels = false
 
     app.stage.addChild(orb)
@@ -299,6 +323,10 @@ export function useRacingMindOrb({
   const cleanup = useCallback(() => {
     stopAnimation()
 
+    if (orbTextureRef.current) {
+      orbTextureRef.current.destroy(true)
+      orbTextureRef.current = null
+    }
     if (appRef.current) {
       appRef.current.destroy(true, { children: true, texture: true })
       appRef.current = null

@@ -175,8 +175,8 @@ export async function getPearls(
   if (filter === 'top') {
     query = query.order('upvotes', { ascending: false })
   } else if (filter === 'rising') {
-    // Rising = recent + some engagement
-    query = query.order('created_at', { ascending: false })
+    // Rising = recent engagement (sort by upvotes, then recency)
+    query = query.order('upvotes', { ascending: false }).order('created_at', { ascending: false })
   } else {
     query = query.order('created_at', { ascending: false })
   }
@@ -207,7 +207,7 @@ export async function getPearls(
  */
 export async function votePearl(pearlId: string, userId: string): Promise<boolean> {
   if (!isSupabaseConfigured() || !supabase) {
-    return false
+    throw new Error('Supabase not configured')
   }
 
   const { error } = await supabase.from('pearl_votes').insert({
@@ -221,7 +221,7 @@ export async function votePearl(pearlId: string, userId: string): Promise<boolea
       return true // Already voted, that's fine
     }
     console.error('Vote error:', error)
-    return false
+    throw new Error('Vote failed')
   }
 
   return true
@@ -232,7 +232,7 @@ export async function votePearl(pearlId: string, userId: string): Promise<boolea
  */
 export async function unvotePearl(pearlId: string, userId: string): Promise<boolean> {
   if (!isSupabaseConfigured() || !supabase) {
-    return false
+    throw new Error('Supabase not configured')
   }
 
   const { error } = await supabase
@@ -243,7 +243,7 @@ export async function unvotePearl(pearlId: string, userId: string): Promise<bool
 
   if (error) {
     console.error('Unvote error:', error)
-    return false
+    throw new Error('Unvote failed')
   }
 
   return true
@@ -255,7 +255,7 @@ export async function unvotePearl(pearlId: string, userId: string): Promise<bool
  */
 export async function savePearl(pearlId: string, userId: string): Promise<boolean> {
   if (!isSupabaseConfigured() || !supabase) {
-    return false
+    throw new Error('Supabase not configured')
   }
 
   // First, fetch the pearl text to preserve a copy
@@ -267,7 +267,7 @@ export async function savePearl(pearlId: string, userId: string): Promise<boolea
 
   if (fetchError || !pearl) {
     console.error('Failed to fetch pearl for save:', fetchError)
-    return false
+    throw new Error('Save failed - could not fetch pearl')
   }
 
   const { error } = await supabase.from('pearl_saves').insert({
@@ -281,7 +281,7 @@ export async function savePearl(pearlId: string, userId: string): Promise<boolea
       return true // Already saved
     }
     console.error('Save error:', error)
-    return false
+    throw new Error('Save failed')
   }
 
   return true
@@ -292,7 +292,7 @@ export async function savePearl(pearlId: string, userId: string): Promise<boolea
  */
 export async function unsavePearl(pearlId: string, userId: string): Promise<boolean> {
   if (!isSupabaseConfigured() || !supabase) {
-    return false
+    throw new Error('Supabase not configured')
   }
 
   const { error } = await supabase
@@ -303,7 +303,7 @@ export async function unsavePearl(pearlId: string, userId: string): Promise<bool
 
   if (error) {
     console.error('Unsave error:', error)
-    return false
+    throw new Error('Unsave failed')
   }
 
   return true
@@ -461,11 +461,15 @@ export async function updatePearl(
     throw new Error('Pearl text must be 280 characters or less')
   }
 
+  // Re-detect intent tags from updated text
+  const intentTags = detectIntentTags(newText)
+
   const { error } = await supabase
     .from('pearls')
     .update({
       text: newText,
       edited_at: new Date().toISOString(),
+      intent_tags: intentTags.length > 0 ? intentTags : null,
     })
     .eq('id', pearlId)
     .eq('user_id', userId) // RLS ensures user can only update own pearls

@@ -15,51 +15,10 @@
 import { ANIMATION_BREATHE_DURATION } from '../../lib/animations'
 import { useTapFeedback } from '../../hooks/useTapFeedback'
 import type { PracticeFeatureConfig } from './practiceFeatureConfig'
-import type { MeditationLockSettings } from '../../lib/db/types'
 
 interface PracticeHeroCardProps {
   feature: PracticeFeatureConfig
-  lockSettings?: MeditationLockSettings | null
   onPress: () => void
-}
-
-function formatLockSchedule(settings: MeditationLockSettings): {
-  timeRange: string
-  activeDays: string
-} {
-  const formatTime = (hour: number, minute: number) => {
-    const period = hour >= 12 ? 'PM' : 'AM'
-    const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour
-    return `${displayHour}:${minute.toString().padStart(2, '0')} ${period}`
-  }
-
-  const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-  const window = settings.scheduleWindows[0]
-  const timeRange = window
-    ? `${formatTime(window.startHour, window.startMinute)} - ${formatTime(window.endHour, window.endMinute)}`
-    : ''
-  const activeDays = settings.activeDays
-    .map((active, i) => (active ? DAY_NAMES[i] : null))
-    .filter(Boolean)
-    .join(' \u00B7 ')
-
-  return { timeRange, activeDays }
-}
-
-/**
- * Shield icon - Focus Mode
- */
-function ShieldIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
-  return (
-    <svg className={className} style={style} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1.5}
-        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-      />
-    </svg>
-  )
 }
 
 /**
@@ -178,8 +137,6 @@ function FeatureIcon({
   style?: React.CSSProperties
 }) {
   switch (featureId) {
-    case 'meditation-lock':
-      return <ShieldIcon className={className} style={style} />
     case 'aum-coach':
       return <SoundWaveIcon className={className} style={style} />
     case 'racing-mind':
@@ -193,12 +150,9 @@ function FeatureIcon({
   }
 }
 
-export function PracticeHeroCard({ feature, lockSettings, onPress }: PracticeHeroCardProps) {
+export function PracticeHeroCard({ feature, onPress }: PracticeHeroCardProps) {
   const haptic = useTapFeedback()
   const isActive = feature.status === 'active'
-  const isLockFeature = feature.id === 'meditation-lock'
-  const isLockConfigured =
-    isLockFeature && lockSettings?.enabled && lockSettings.scheduleWindows.length > 0
 
   const handlePress = () => {
     if (isActive) {
@@ -208,8 +162,6 @@ export function PracticeHeroCard({ feature, lockSettings, onPress }: PracticeHer
     }
     onPress()
   }
-
-  const lockSchedule = isLockConfigured ? formatLockSchedule(lockSettings!) : null
 
   // Feature-specific gradient backgrounds
   const getCardGradient = () => {
@@ -338,37 +290,6 @@ export function PracticeHeroCard({ feature, lockSettings, onPress }: PracticeHer
           {feature.description}
         </p>
 
-        {/* Dynamic status for Lock (when configured) */}
-        {isLockConfigured && lockSchedule && (
-          <div
-            className="mb-5 py-3 px-4 rounded-xl mx-auto max-w-[240px]"
-            style={{
-              background: `${feature.orbColors.primary}08`,
-              border: `1px solid ${feature.orbColors.primary}15`,
-            }}
-          >
-            <div className="flex items-center justify-center gap-2 mb-1.5">
-              <span
-                className="w-2 h-2 rounded-full animate-pulse"
-                style={{ background: 'var(--success-icon)' }}
-              />
-              <span className="text-xs font-medium" style={{ color: 'var(--success-text)' }}>
-                Active
-              </span>
-            </div>
-            <p className="text-sm text-ink/70 font-medium">{lockSchedule.timeRange}</p>
-            <p className="text-xs text-ink/50 mt-0.5">{lockSchedule.activeDays}</p>
-            {lockSettings!.streakDays > 0 && (
-              <p
-                className="text-xs font-semibold mt-2"
-                style={{ color: feature.orbColors.primary }}
-              >
-                {lockSettings!.streakDays} day streak
-              </p>
-            )}
-          </div>
-        )}
-
         {/* Feature pills - shown for ALL cards in tiered layout */}
         {feature.teaserFeatures && feature.teaserFeatures.length > 0 && (
           <div className="flex flex-wrap justify-center gap-1.5 mb-5 max-w-[260px] mx-auto">
@@ -399,7 +320,7 @@ export function PracticeHeroCard({ feature, lockSettings, onPress }: PracticeHer
               boxShadow: `0 4px 14px -3px ${feature.orbColors.primary}50`,
             }}
           >
-            {isLockConfigured ? 'Edit Focus Mode' : feature.ctaText}
+            {feature.ctaText}
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>

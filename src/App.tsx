@@ -4,13 +4,13 @@ import { useNavigationStore } from './stores/useNavigationStore'
 import { useSettingsStore } from './stores/useSettingsStore'
 import { useHourBankStore } from './stores/useHourBankStore'
 import { useVoice } from './hooks/useVoice'
-import { useLockDeepLink } from './hooks/useLockDeepLink'
 import {
   generateAttributionNotification,
   shouldCheckAttribution,
   markAttributionChecked,
 } from './lib/attribution'
 import { checkAndCreateReminders } from './lib/reminders'
+import { extendRepeatRuleSessions } from './lib/db/repeatRules'
 import { checkVoiceGrowthNotification } from './lib/voice'
 import { decayAffinities } from './lib/affinities'
 import { Timer } from './components/Timer'
@@ -44,7 +44,7 @@ import { TermsOfService } from './components/TermsOfService'
 import { OmCoach } from './components/OmCoach'
 import { RacingMind } from './components/RacingMind'
 import { Posture } from './components/Posture'
-import { ResonanceAnchor } from './components/ResonanceAnchor'
+import { BreathPacer } from './components/BreathPacer'
 import type { Session } from './lib/db'
 import { shouldPromptForReview } from './lib/nativeReview'
 
@@ -81,9 +81,6 @@ function AppContent() {
   // Initialize voice tracking - notifications handled centrally below
   const { voice } = useVoice()
   const previousVoiceScore = useRef<number | null>(null)
-
-  // Listen for deep links from MeditationLock shield
-  useLockDeepLink()
 
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [editingSession, setEditingSession] = useState<Session | null>(null)
@@ -183,11 +180,17 @@ function AppContent() {
     // Check on load (after short delay)
     const initialCheck = setTimeout(checkAndCreateReminders, 3000)
 
+    // Auto-extend repeat rule sessions on load (delayed to avoid blocking)
+    const extendTimer = setTimeout(() => {
+      extendRepeatRuleSessions().catch(console.error)
+    }, 4000)
+
     // Check periodically (every 5 minutes)
     const interval = setInterval(checkAndCreateReminders, 5 * 60 * 1000)
 
     return () => {
       clearTimeout(initialCheck)
+      clearTimeout(extendTimer)
       clearInterval(interval)
     }
   }, [])
@@ -325,7 +328,7 @@ function AppContent() {
         {view === 'om-coach' && <OmCoach onClose={() => setView('timer')} />}
         {view === 'racing-mind' && <RacingMind onClose={() => setView('timer')} />}
         {view === 'posture' && <Posture onClose={() => setView('exercises')} />}
-        {view === 'resonance-anchor' && <ResonanceAnchor onClose={() => setView('timer')} />}
+        {view === 'breath-pacer' && <BreathPacer onClose={() => setView('exercises')} />}
 
         {/* Session edit modal */}
         {editingSession && (

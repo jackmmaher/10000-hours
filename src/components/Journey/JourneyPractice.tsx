@@ -4,16 +4,11 @@
  * Displays practice features as large hero cards at the bottom of the Journey tab.
  * Layout:
  * - H2 "Practice" header
- * - Active features: Meditation Lock, Aum Coach (hero cards)
+ * - Active features: Aum Coach (hero cards)
  * - "Coming Soon" label divider
  * - Coming soon features: Racing Mind, Perfect Posture (muted hero cards)
- *
- * Focus Mode flow matches Settings:
- * - If Screen Time is authorized → opens LockSetupFlow directly
- * - If not authorized → shows LockComingSoonModal first (explains approval is pending)
  */
 
-import { useMeditationLock } from '../../hooks/useMeditationLock'
 import { PracticeHeroCard } from './PracticeHeroCard'
 import {
   getActiveFeatures,
@@ -22,10 +17,6 @@ import {
 } from './practiceFeatureConfig'
 
 interface JourneyPracticeProps {
-  /** Called when Screen Time is authorized - opens LockSetupFlow directly */
-  onOpenLockModal: () => void
-  /** Called when Screen Time is NOT authorized - shows LockComingSoonModal first */
-  onOpenLockComingSoon: () => void
   onNavigateOmCoach: () => void
   onNavigateRacingMind: () => void
   onNavigatePosture?: () => void
@@ -34,29 +25,17 @@ interface JourneyPracticeProps {
 }
 
 export function JourneyPractice({
-  onOpenLockModal,
-  onOpenLockComingSoon,
   onNavigateOmCoach,
   onNavigateRacingMind,
   onNavigatePosture,
   onOpenCommitmentModal,
 }: JourneyPracticeProps) {
-  const meditationLock = useMeditationLock()
-
   const handleFeaturePress = (feature: PracticeFeatureConfig) => {
     if (feature.status === 'coming-soon') {
       return // No action for coming soon features
     }
 
     switch (feature.action) {
-      case 'open-lock-modal':
-        // Match Settings behavior: check authorization status first
-        if (meditationLock.authorizationStatus === 'authorized') {
-          onOpenLockModal()
-        } else {
-          onOpenLockComingSoon()
-        }
-        break
       case 'navigate-om-coach':
         onNavigateOmCoach()
         break
@@ -86,7 +65,6 @@ export function JourneyPractice({
           <PracticeHeroCard
             key={feature.id}
             feature={feature}
-            lockSettings={feature.id === 'meditation-lock' ? meditationLock.settings : undefined}
             onPress={() => handleFeaturePress(feature)}
           />
         ))}

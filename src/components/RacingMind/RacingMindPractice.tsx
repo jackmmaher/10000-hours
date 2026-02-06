@@ -68,7 +68,7 @@ export function RacingMindPractice({
     isSupported: eyeTrackingSupported,
     startTracking: startEyeTracking,
     stopTracking: stopEyeTracking,
-    gazeHistory,
+    getGazeHistory,
   } = useEyeTracking()
 
   const {
@@ -203,8 +203,9 @@ export function RacingMindPractice({
 
         // Calculate and store metrics before stopping tracking
         const orbHistory = getOrbHistory()
-        if (isTracking && gazeHistory.length > 10 && orbHistory.length > 10) {
-          storedMetricsRef.current = calculateMetrics(gazeHistory, orbHistory)
+        const gaze = getGazeHistory()
+        if (isTracking && gaze.length > 10 && orbHistory.length > 10) {
+          storedMetricsRef.current = calculateMetrics(gaze, orbHistory)
         }
 
         // Stop eye tracking and release camera before outro
@@ -227,7 +228,7 @@ export function RacingMindPractice({
     getElapsedSeconds,
     isTracking,
     stopEyeTracking,
-    gazeHistory,
+    getGazeHistory,
     getOrbHistory,
     calculateMetrics,
   ])
@@ -285,8 +286,9 @@ export function RacingMindPractice({
 
     // Calculate and store metrics
     const orbHistory = getOrbHistory()
-    if (isTracking && gazeHistory.length > 10 && orbHistory.length > 10) {
-      storedMetricsRef.current = calculateMetrics(gazeHistory, orbHistory)
+    const gaze = getGazeHistory()
+    if (isTracking && gaze.length > 10 && orbHistory.length > 10) {
+      storedMetricsRef.current = calculateMetrics(gaze, orbHistory)
     }
 
     // ALWAYS stop eye tracking - even if isTracking is false, camera may be initializing
@@ -296,7 +298,7 @@ export function RacingMindPractice({
     // Transition to outro
     outroStartTimeRef.current = performance.now()
     setSessionPhase('outro')
-  }, [isTracking, stopEyeTracking, gazeHistory, getOrbHistory, calculateMetrics])
+  }, [isTracking, stopEyeTracking, getGazeHistory, getOrbHistory, calculateMetrics])
 
   // Handle cancel (during intro phase only - before session formally starts)
   const handleCancel = useCallback(async () => {

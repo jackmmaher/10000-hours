@@ -10,7 +10,7 @@
  * - complete: Saving/done (brief)
  */
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useVoiceCapture } from '../hooks/useVoiceCapture'
 import { useAudioLevel } from '../hooks/useAudioLevel'
 import { useTapFeedback } from '../hooks/useTapFeedback'
@@ -47,7 +47,7 @@ const STRETCH_SUGGESTIONS = [
   'A slow, mindful stretch may feel good.',
 ]
 
-type ModalState = 'prompt' | 'capture' | 'saving'
+type ModalState = 'prompt' | 'capture' | 'saving' | 'error'
 
 // Claude-style horizontal waveform visualizer
 function AudioWaveform({ level }: { level: number }) {
@@ -88,6 +88,8 @@ export function InsightModal({
   onRemindLater,
 }: InsightModalProps) {
   const [modalState, setModalState] = useState<ModalState>('prompt')
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const modalRef = useRef<HTMLDivElement>(null)
   const [bodyAwarenessPrompt] = useState(() => {
     const isLongSession = sessionDuration && sessionDuration >= 1800
     const prompts = isLongSession
@@ -157,7 +159,8 @@ export function InsightModal({
       onComplete()
     } catch (err) {
       console.error('Failed to save insight:', err)
-      onComplete()
+      setSaveError(err instanceof Error ? err.message : 'Failed to save insight')
+      setModalState('error')
     }
   }, [isRecording, stopCapture, sessionId, displayText, stopAnalyzing, haptic, onComplete])
 
@@ -208,6 +211,15 @@ export function InsightModal({
     },
     [sourceTemplateId, feedbackGiven, haptic, sessionId, sessionDuration]
   )
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleSkip()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    modalRef.current?.focus()
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [handleSkip])
 
   // Block swipe navigation
   const handleTouchEvent = (e: React.TouchEvent) => {
@@ -279,9 +291,14 @@ export function InsightModal({
       onTouchStart={handleTouchEvent}
       onTouchMove={handleTouchEvent}
       onTouchEnd={handleTouchEvent}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Capture insight"
     >
       <div
-        className="bg-cream rounded-t-3xl w-full max-w-lg max-h-[calc(90vh-env(safe-area-inset-top,0px))] flex flex-col shadow-xl animate-slide-up"
+        ref={modalRef}
+        tabIndex={-1}
+        className="bg-cream rounded-t-3xl w-full max-w-lg max-h-[calc(90vh-env(safe-area-inset-top,0px))] flex flex-col shadow-xl animate-slide-up outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Prompt state */}
@@ -442,6 +459,31 @@ export function InsightModal({
           <div className="p-6 pb-safe flex flex-col items-center">
             <div className="w-6 h-6 border-2 border-ink/30 border-t-ink rounded-full animate-spin" />
             <p className="text-sm text-ink/50 mt-4">Saving...</p>
+          </div>
+        )}
+
+        {modalState === 'error' && (
+          <div className="p-6 pb-safe">
+            <p className="font-serif text-lg text-ink text-center mb-2">Couldn't save insight</p>
+            <p className="text-sm text-ink/50 text-center mb-6">{saveError}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleSkip}
+                className="flex-1 py-3 rounded-xl text-sm font-medium bg-ink/5 text-ink/60 hover:bg-ink/10 transition-colors"
+              >
+                Skip
+              </button>
+              <button
+                onClick={() => {
+                  setSaveError(null)
+                  setModalState('capture')
+                  handleDone()
+                }}
+                className="flex-1 py-3 rounded-xl text-sm font-medium bg-ink text-cream hover:bg-ink/90 transition-colors"
+              >
+                Retry
+              </button>
+            </div>
           </div>
         )}
       </div>

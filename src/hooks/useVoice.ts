@@ -61,6 +61,23 @@ export function useVoice(): UseVoiceResult {
       const sessionsPerWeekAvg = recentSessions.length / 4
 
       // ============================================
+      // EXERCISE ENGAGEMENT SIGNALS (from local data)
+      // ============================================
+
+      // Exercise sessions (sessionType === 'practice')
+      const exerciseSessions = sessions.filter((s) => s.sessionType === 'practice')
+      const exerciseSessionCount = exerciseSessions.length
+
+      // Distinct exercise tools used
+      const exerciseToolsUsed = new Set(
+        exerciseSessions.map((s) => s.practiceToolId).filter(Boolean)
+      ).size
+
+      // Exercise sessions per week (rolling 4-week average)
+      const recentExerciseSessions = exerciseSessions.filter((s) => s.startTime >= fourWeeksAgo)
+      const exerciseSessionsPerWeek = recentExerciseSessions.length / 4
+
+      // ============================================
       // CONTRIBUTION SIGNALS (from Supabase)
       // ============================================
 
@@ -105,6 +122,9 @@ export function useVoice(): UseVoiceResult {
         totalSessions,
         avgSessionMinutes,
         sessionsPerWeekAvg,
+        exerciseSessions: exerciseSessionCount,
+        exerciseToolsUsed,
+        exerciseSessionsPerWeek,
         pearlsShared,
         meditationsCreated,
         karmaReceived,
@@ -164,12 +184,21 @@ export function useVoiceLocal(): VoiceScore | null {
   const recentSessions = sessions.filter((s) => s.startTime >= fourWeeksAgo)
   const sessionsPerWeekAvg = recentSessions.length / 4
 
+  // Exercise engagement (local calculation)
+  const exerciseSessions = sessions.filter((s) => s.sessionType === 'practice')
+  const exerciseToolsUsed = new Set(exerciseSessions.map((s) => s.practiceToolId).filter(Boolean))
+    .size
+  const recentExerciseSessions = exerciseSessions.filter((s) => s.startTime >= fourWeeksAgo)
+
   // Simplified inputs (without async data - practice only)
   const inputs: VoiceInputs = {
     totalHours,
     totalSessions: sessions.length,
     avgSessionMinutes,
     sessionsPerWeekAvg,
+    exerciseSessions: exerciseSessions.length,
+    exerciseToolsUsed,
+    exerciseSessionsPerWeek: recentExerciseSessions.length / 4,
     pearlsShared: 0,
     meditationsCreated: 0,
     karmaReceived: 0,

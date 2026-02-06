@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useSessionStore } from '../stores/useSessionStore'
+import { useSessionStore, type CompletedPlanInfo } from '../stores/useSessionStore'
 import { useNavigationStore } from '../stores/useNavigationStore'
 import { useSettingsStore } from '../stores/useSettingsStore'
 import { useHourBankStore } from '../stores/useHourBankStore'
@@ -20,18 +20,12 @@ import { Paywall } from './Paywall'
 import { LowHoursWarning } from './LowHoursWarning'
 import { DurationPicker } from './DurationPicker'
 import { TrialCompleteModal } from './TrialCompleteModal'
-import { LockCelebrationModal } from './LockCelebrationModal'
 import { CommitmentOutcomeModal } from './CommitmentOutcomeModal'
 import { CommitmentMissedAlert } from './CommitmentMissedAlert'
-import { useMeditationLock } from '../hooks/useMeditationLock'
-import { sendAccountabilityMessage } from '../lib/accountability'
-import { getUserPreferences } from '../lib/db/preferences'
+import { TodaysPlanCard } from './TodaysPlanCard'
 
 /** Duration (ms) for the settling window after a session ends — local state resets and DB persist happen after this delay. */
 const SETTLING_DURATION_MS = 4000
-
-/** Delay (ms) before showing the Focus Lock celebration modal, synced with the audio chime decay phase. */
-const LOCK_CELEBRATION_DELAY_MS = 4500
 
 /** Delay (ms) before triggering the post-session flow (journal prompt, milestone acknowledgment). */
 const POST_SESSION_FLOW_DELAY_MS = 800
@@ -72,6 +66,8 @@ export function Timer() {
     clearCommitmentOutcome,
     lastMidnightCheckResult,
     clearMidnightCheckResult,
+    lastCompletedPlan,
+    clearCompletedPlan,
   } = useSessionStore()
 
   const { setView, triggerPostSessionFlow, setIsSettling } = useNavigationStore()
@@ -86,32 +82,32 @@ export function Timer() {
     completeTrial,
     cancelTrial,
   } = useTrialStore()
-  const { plan: todaysPlan, goalSeconds, enforceGoal, markComplete } = useTodaysPlan()
+  const { plan: todaysPlan, goalSeconds, enforceGoal } = useTodaysPlan()
   const commitment = useTodayCommitment()
 
   // Modal for trial completion
   const [showTrialComplete, setShowTrialComplete] = useState(false)
 
-  // Meditation Lock integration
-  const {
-    lockState,
-    settings: lockSettings,
-    nextUnlockWindow,
-    completeSession: completeLockSession,
-  } = useMeditationLock()
-
-  const [showLockCelebration, setShowLockCelebration] = useState(false)
-  const [lockSessionResult, setLockSessionResult] = useState<{
-    streakDays: number
-    durationSeconds: number
-    isFallback: boolean
-  } | null>(null)
   const [showCommitmentOutcome, setShowCommitmentOutcome] = useState(false)
 
   // Modal states
   const [showPaywall, setShowPaywall] = useState(false)
   const [showLowHoursWarning, setShowLowHoursWarning] = useState(false)
   const [showDurationPicker, setShowDurationPicker] = useState(false)
+
+  // Plan completion toast
+  const [showPlanToast, setShowPlanToast] = useState(false)
+
+  useEffect(() => {
+    if (lastCompletedPlan) {
+      setShowPlanToast(true)
+      const timer = setTimeout(() => {
+        setShowPlanToast(false)
+        clearCompletedPlan()
+      }, 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [lastCompletedPlan, clearCompletedPlan])
 
   // ============================================
   // BREATH SYNCHRONIZATION
@@ -299,7 +295,7 @@ export function Timer() {
       setTrialPhase('settling')
     }
 
-    // LOCK: Prevent navigation during settling window
+    // Prevent navigation during settling window
     setIsSettling(true)
 
     // Wait for breath alignment (next exhale)
@@ -309,9 +305,6 @@ export function Timer() {
     setSecondsOpacity(0)
 
     // Complete after fade finishes
-    // Capture session duration before resetting state
-    const finalDuration = sessionElapsed
-
     setTimeout(async () => {
       // Reset local state BEFORE store update to prevent race condition
       // (zustand update could trigger re-render with stale sessionElapsed)
@@ -329,55 +322,9 @@ export function Timer() {
         await stopTimer()
         await refreshBalance()
         await commitment.refresh()
-
-        // Check if this was a Focus Lock session
-        // Focus Lock: triggers when the native lock is actively enforcing (iOS with Screen Time)
-        if (lockState?.isLockActive && lockSettings) {
-          // Determine if this is a fallback session (hard day mode)
-          // Fallback = session shorter than required but at least minimum
-          const requiredSeconds = (lockSettings.unlockDurationMinutes || 10) * 60
-          const minimumSeconds = (lockSettings.minimumFallbackMinutes || 2) * 60
-          const isFallback = finalDuration < requiredSeconds && finalDuration >= minimumSeconds
-
-          const result = await completeLockSession(finalDuration, isFallback)
-          const streakDays = result.streakDays ?? lockSettings.streakDays + 1
-
-          // Store result for celebration modal
-          setLockSessionResult({
-            streakDays,
-            durationSeconds: finalDuration,
-            isFallback,
-          })
-
-          // Send accountability message if enabled
-          if (
-            lockSettings.accountabilityEnabled &&
-            lockSettings.notifyOnCompletion &&
-            lockSettings.accountabilityPhone
-          ) {
-            const userPrefs = await getUserPreferences()
-            const displayName = userPrefs.displayName || 'User'
-            await sendAccountabilityMessage({
-              type: 'completion',
-              phone: lockSettings.accountabilityPhone,
-              method: lockSettings.accountabilityMethod || 'sms',
-              durationMinutes: Math.round(finalDuration / 60),
-              userName: displayName,
-            })
-          }
-
-          // Clear the session banner immediately
-          await markComplete()
-
-          // Delay celebration modal until "tap to meditate" has fully settled (4s fade in)
-          // This syncs with the audio chime decay phase for a cohesive ceremony
-          setTimeout(() => {
-            setShowLockCelebration(true)
-          }, LOCK_CELEBRATION_DELAY_MS)
-        }
       }
 
-      setIsSettling(false) // UNLOCK: Allow navigation again
+      setIsSettling(false) // Allow navigation again
     }, SETTLING_DURATION_MS)
   }, [
     phase,
@@ -392,10 +339,6 @@ export function Timer() {
     setTrialPhase,
     completeTrial,
     sessionElapsed,
-    lockState,
-    lockSettings,
-    completeLockSession,
-    markComplete,
     commitment,
   ])
 
@@ -447,7 +390,7 @@ export function Timer() {
   // ============================================
   // Show commitment outcome modal when session counted toward commitment
   useEffect(() => {
-    if (lastCommitmentOutcome?.sessionCounted && lastCommitmentOutcome?.outcome) {
+    if (lastCommitmentOutcome?.sessionCounted && lastCommitmentOutcome?.completionResult) {
       // Delay to let other post-session UI settle first
       const timer = setTimeout(() => {
         setShowCommitmentOutcome(true)
@@ -579,6 +522,18 @@ export function Timer() {
   }, [isTrialActive, trialPhase, phase, startSession])
 
   // ============================================
+  // PLAN TOAST HELPER
+  // ============================================
+  function formatPlanToast(info: CompletedPlanInfo): string {
+    const actualMin = Math.round(info.actualDurationSeconds / 60)
+    const prefix = info.planTitle || info.discipline || 'Plan'
+    if (info.plannedDurationMinutes) {
+      return `${prefix} completed — ${actualMin} of ${info.plannedDurationMinutes} min`
+    }
+    return `${prefix} completed — ${actualMin} min`
+  }
+
+  // ============================================
   // RENDER
   // ============================================
   return (
@@ -656,11 +611,18 @@ export function Timer() {
         }}
       />
 
-      {/* Lock Session Banner - shows when there's an enforced goal session */}
+      {/* Today's Plan Card - shows non-enforced plan info */}
+      {phase === 'resting' && todaysPlan && !enforceGoal && (
+        <div className="absolute top-[12vh] z-10 flex justify-center px-6 w-full">
+          <TodaysPlanCard plan={todaysPlan} enforceGoal={enforceGoal} />
+        </div>
+      )}
+
+      {/* Goal Session Banner - shows when there's an enforced goal session */}
       <AnimatePresence>
         {phase === 'resting' && todaysPlan && enforceGoal && (
           <motion.div
-            key="lock-session-banner"
+            key="goal-session-banner"
             className="absolute top-[18vh] z-10 text-center px-6"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -859,20 +821,6 @@ export function Timer() {
         durationMinutes={trialGoalSeconds ? Math.round(trialGoalSeconds / 60) : undefined}
       />
 
-      {/* Lock celebration modal */}
-      <LockCelebrationModal
-        isOpen={showLockCelebration}
-        onClose={() => {
-          setShowLockCelebration(false)
-          setLockSessionResult(null)
-        }}
-        streakDays={lockSessionResult?.streakDays ?? lockSettings?.streakDays ?? 1}
-        sessionDuration={lockSessionResult?.durationSeconds ?? 0}
-        celebrationRitual={lockSettings?.celebrationRitual ?? null}
-        nextUnlockWindow={nextUnlockWindow}
-        isFallback={lockSessionResult?.isFallback ?? false}
-      />
-
       {/* Commitment outcome modal */}
       <CommitmentOutcomeModal
         isOpen={showCommitmentOutcome}
@@ -882,7 +830,6 @@ export function Timer() {
         }}
         result={lastCommitmentOutcome}
         celebrationRitual={commitment.celebrationRitual}
-        streakDays={commitment.streakDays}
       />
 
       {/* Commitment missed sessions alert */}
@@ -890,6 +837,39 @@ export function Timer() {
         result={lastMidnightCheckResult}
         onDismiss={clearMidnightCheckResult}
       />
+
+      {/* Plan completion toast */}
+      {showPlanToast && lastCompletedPlan && (
+        <div
+          onClick={(e) => {
+            e.stopPropagation()
+            setShowPlanToast(false)
+            clearCompletedPlan()
+          }}
+          style={{
+            position: 'fixed',
+            bottom: '12vh',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'var(--surface-2)',
+            border: '1px solid var(--border)',
+            borderRadius: 12,
+            padding: '10px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            zIndex: 50,
+            cursor: 'pointer',
+            opacity: showPlanToast ? 1 : 0,
+            transition: 'opacity 0.3s ease',
+          }}
+        >
+          <span style={{ color: 'var(--accent)', fontSize: 16 }}>✓</span>
+          <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
+            {formatPlanToast(lastCompletedPlan)}
+          </span>
+        </div>
+      )}
     </div>
   )
 }

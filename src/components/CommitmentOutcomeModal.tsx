@@ -1,141 +1,73 @@
 /**
- * CommitmentOutcomeModal - Casino-style outcome reveal
+ * CommitmentOutcomeModal - Session completion acknowledgment
  *
- * Shows after a commitment session with suspenseful reveal:
- * - Spinning/building anticipation phase
- * - Dramatic reveal of bonus, mystery, near-miss, or standard completion
- * - Confetti for bonus outcomes
- * - "So close!" messaging for near-miss
+ * Warm, simple card shown after a commitment session:
+ * - Day X of Y (prominent, centered)
+ * - Optional 5-dot presence rating
+ * - Consistency score + streak
+ * - Contextual message (milestone or simple affirmation)
+ * - For milestones: expanded card with glow animation + gentle haptic
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 import type { CommitmentSessionResult } from '../lib/commitment/middleware'
-import { formatOutcomeForDisplay } from '../lib/commitment/outcomes'
-import { getStreakMilestone } from '../lib/commitment/milestones'
 
 interface CommitmentOutcomeModalProps {
   isOpen: boolean
   onClose: () => void
   result: CommitmentSessionResult | null
   celebrationRitual?: string | null
-  streakDays?: number
+  onPresenceRating?: (rating: number) => void
 }
 
-// Confetti particle component
-function ConfettiParticle({ color }: { color: string }) {
-  const randomX = Math.random() * 100
-  const randomDelay = Math.random() * 0.5
-  const randomDuration = 2 + Math.random() * 1
-  const randomRotation = Math.random() * 720 - 360
+const WARM_MESSAGES = [
+  'You showed up.',
+  'Your seat was waiting. You showed up.',
+  'Another day of practice.',
+  'Present.',
+]
 
-  return (
-    <motion.div
-      className="absolute w-2 h-2 rounded-sm"
-      style={{
-        left: `${randomX}%`,
-        top: -10,
-        backgroundColor: color,
-      }}
-      initial={{ y: 0, opacity: 1, rotate: 0 }}
-      animate={{
-        y: [0, 400],
-        opacity: [1, 1, 0],
-        rotate: randomRotation,
-        x: [0, (Math.random() - 0.5) * 100],
-      }}
-      transition={{
-        duration: randomDuration,
-        delay: randomDelay,
-        ease: 'easeOut',
-      }}
-    />
-  )
+function getWarmMessage(dayNumber: number): string {
+  return WARM_MESSAGES[dayNumber % WARM_MESSAGES.length]
 }
 
-// Confetti burst component
-function ConfettiBurst({ color }: { color: 'gold' | 'purple' }) {
-  const colors =
-    color === 'gold'
-      ? ['#FFD700', '#FFA500', '#FF8C00', '#FFDF00', '#F5DEB3']
-      : ['#9B59B6', '#8E44AD', '#E91E63', '#BA68C8', '#D4A5FF']
+function PresenceRating({ onRate }: { onRate: (rating: number) => void }) {
+  const [selected, setSelected] = useState<number | null>(null)
+  const haptic = useTapFeedback()
 
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {Array.from({ length: 50 }).map((_, i) => (
-        <ConfettiParticle key={i} color={colors[i % colors.length]} />
-      ))}
-    </div>
-  )
-}
-
-// Slot machine-style reveal animation
-function SlotReveal({
-  phase,
-  outcomeColor,
-}: {
-  phase: 'spinning' | 'slowing' | 'revealed'
-  outcomeColor: 'gold' | 'purple' | 'gray' | 'green'
-}) {
-  const symbols = ['?', '!', '+', '*']
-
-  const colorMap = {
-    gold: 'var(--warning, #eab308)',
-    purple: '#9B59B6',
-    gray: 'var(--text-muted)',
-    green: 'var(--success, #22c55e)',
-  }
-
-  if (phase === 'revealed') {
-    const icon =
-      outcomeColor === 'gold' || outcomeColor === 'purple'
-        ? '+'
-        : outcomeColor === 'gray'
-          ? '~'
-          : '✓'
-
-    return (
-      <motion.div
-        className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl font-bold"
-        style={{
-          background: `color-mix(in oklab, ${colorMap[outcomeColor]} 15%, transparent)`,
-          color: colorMap[outcomeColor],
-        }}
-        initial={{ scale: 1.5, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: 'spring', damping: 15, stiffness: 400 }}
-      >
-        {icon}
-      </motion.div>
-    )
+  const handleSelect = (rating: number) => {
+    haptic.light()
+    setSelected(rating)
+    onRate(rating)
   }
 
   return (
-    <motion.div
-      className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl font-bold overflow-hidden"
-      style={{
-        background: 'var(--bg-elevated)',
-        color: 'var(--text-muted)',
-      }}
-    >
-      <motion.div
-        animate={{
-          y: phase === 'spinning' ? [0, -160] : [0, -40],
-        }}
-        transition={{
-          duration: phase === 'spinning' ? 0.3 : 0.6,
-          repeat: phase === 'spinning' ? Infinity : 0,
-          ease: phase === 'spinning' ? 'linear' : 'easeOut',
-        }}
-      >
-        {symbols.map((s, i) => (
-          <div key={i} className="h-20 flex items-center justify-center">
-            {s}
-          </div>
+    <div className="flex flex-col items-center gap-2">
+      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+        How present were you?
+      </p>
+      <div className="flex gap-3">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            onClick={() => handleSelect(n)}
+            className="w-8 h-8 rounded-full transition-all active:scale-90"
+            style={{
+              background:
+                selected !== null && n <= selected ? 'var(--accent)' : 'var(--bg-elevated)',
+              border:
+                selected !== null && n <= selected
+                  ? '1.5px solid var(--accent)'
+                  : '1.5px solid var(--border-subtle)',
+              opacity: selected !== null && n > selected ? 0.4 : 1,
+            }}
+            aria-label={`${n} of 5`}
+          />
         ))}
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   )
 }
 
@@ -144,45 +76,29 @@ export function CommitmentOutcomeModal({
   onClose,
   result,
   celebrationRitual,
-  streakDays,
+  onPresenceRating,
 }: CommitmentOutcomeModalProps) {
   const haptic = useTapFeedback()
-  const [phase, setPhase] = useState<'spinning' | 'slowing' | 'revealed'>('spinning')
 
-  // Reset phase when modal opens
+  // Haptic on open
   useEffect(() => {
-    if (isOpen && result?.sessionCounted && result.outcome) {
-      setPhase('spinning')
-
-      // Suspense timing: spin for 1s, slow for 0.5s, then reveal
-      const spinTimer = setTimeout(() => setPhase('slowing'), 1000)
-      const revealTimer = setTimeout(() => {
-        setPhase('revealed')
-
-        // Haptic feedback based on outcome or milestone
-        const currentMilestone = streakDays !== undefined ? getStreakMilestone(streakDays) : null
-        if (currentMilestone) {
-          haptic.success()
-        } else if (result.outcome?.type === 'bonus' || result.outcome?.type === 'mystery') {
-          haptic.success()
-        } else if (result.outcome?.type === 'near-miss') {
-          haptic.medium()
-        } else {
-          haptic.light()
-        }
-      }, 1500)
-
-      return () => {
-        clearTimeout(spinTimer)
-        clearTimeout(revealTimer)
+    if (isOpen && result?.sessionCounted && result.completionResult) {
+      if (result.completionResult.milestone) {
+        haptic.light()
+      } else {
+        haptic.light()
       }
     }
-  }, [isOpen, result, haptic, streakDays])
+  }, [isOpen, result, haptic])
 
-  // Check for streak milestone
-  const milestone = streakDays !== undefined ? getStreakMilestone(streakDays) : null
+  const handlePresenceRating = useCallback(
+    (rating: number) => {
+      onPresenceRating?.(rating)
+    },
+    [onPresenceRating]
+  )
 
-  const handleContinue = useCallback(() => {
+  const handleDone = useCallback(() => {
     haptic.light()
     onClose()
   }, [haptic, onClose])
@@ -193,11 +109,13 @@ export function CommitmentOutcomeModal({
   }
 
   // Don't render if no result or session didn't count
-  if (!result || !result.sessionCounted || !result.outcome) {
+  if (!result || !result.sessionCounted || !result.completionResult) {
     return null
   }
 
-  const displayInfo = formatOutcomeForDisplay(result.outcome)
+  const { dayNumber, totalDays, consistencyScore, streakDays, milestone } = result.completionResult
+  const consistencyPercent = Math.round(consistencyScore * 100)
+  const isMilestone = milestone !== null
 
   return (
     <AnimatePresence>
@@ -212,153 +130,143 @@ export function CommitmentOutcomeModal({
           onTouchMove={handleTouchEvent}
           onTouchEnd={handleTouchEvent}
         >
-          {/* Confetti for bonus outcomes or milestone streaks */}
-          {phase === 'revealed' && (displayInfo.showConfetti || milestone) && (
-            <ConfettiBurst color={milestone ? 'gold' : (displayInfo.color as 'gold' | 'purple')} />
-          )}
-
           <motion.div
             className="rounded-2xl w-full max-w-sm shadow-xl p-6 text-center relative overflow-hidden"
-            style={{ backgroundColor: 'var(--bg-base)' }}
+            style={{
+              backgroundColor: 'var(--bg-base)',
+              ...(isMilestone
+                ? {
+                    boxShadow: '0 0 40px color-mix(in oklab, var(--accent) 20%, transparent)',
+                  }
+                : {}),
+            }}
             initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
+            animate={{
+              scale: 1,
+              opacity: 1,
+              ...(isMilestone
+                ? {
+                    boxShadow: [
+                      '0 0 20px color-mix(in oklab, var(--accent) 10%, transparent)',
+                      '0 0 40px color-mix(in oklab, var(--accent) 25%, transparent)',
+                      '0 0 20px color-mix(in oklab, var(--accent) 10%, transparent)',
+                    ],
+                  }
+                : {}),
+            }}
             exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            transition={{
+              type: 'spring',
+              damping: 25,
+              stiffness: 300,
+              ...(isMilestone
+                ? { boxShadow: { duration: 3, repeat: Infinity, ease: 'easeInOut' } }
+                : {}),
+            }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Slot machine reveal */}
-            <div className="flex justify-center mb-6">
-              <SlotReveal phase={phase} outcomeColor={displayInfo.color} />
-            </div>
+            {/* Day counter */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <h2
+                className="font-serif text-3xl font-bold mb-1"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                Day {dayNumber} of {totalDays}
+              </h2>
+            </motion.div>
 
-            {/* Title - shows after reveal */}
-            <AnimatePresence mode="wait">
-              {phase === 'revealed' ? (
-                <motion.div
-                  key="result"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  <h2 className="font-serif text-2xl mb-2" style={{ color: 'var(--text-primary)' }}>
-                    {displayInfo.title}
-                  </h2>
-                  <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
-                    {displayInfo.subtitle}
-                  </p>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="spinning"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  <h2 className="font-serif text-xl mb-2" style={{ color: 'var(--text-muted)' }}>
-                    Rolling...
-                  </h2>
-                  <p className="text-sm mb-6" style={{ color: 'var(--text-tertiary)' }}>
-                    Session complete!
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Minutes change display for bonus */}
-            {phase === 'revealed' && result.outcome.minutesChange > 0 && (
+            {/* Milestone message */}
+            {isMilestone && (
               <motion.div
-                className="p-3 rounded-xl mb-6"
+                className="mt-4 mb-2 p-4 rounded-xl"
                 style={{
-                  background:
-                    displayInfo.color === 'purple'
-                      ? 'color-mix(in oklab, #9B59B6 10%, transparent)'
-                      : 'color-mix(in oklab, var(--warning, #eab308) 10%, transparent)',
+                  background: 'color-mix(in oklab, var(--accent) 8%, transparent)',
+                  border: '1px solid color-mix(in oklab, var(--accent) 15%, transparent)',
                 }}
-                initial={{ opacity: 0, scale: 0.8 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2 }}
               >
                 <p
-                  className="text-2xl font-bold"
-                  style={{
-                    color: displayInfo.color === 'purple' ? '#9B59B6' : 'var(--warning, #eab308)',
-                  }}
+                  className="font-serif text-base leading-relaxed"
+                  style={{ color: 'var(--text-primary)' }}
                 >
-                  +{result.outcome.minutesChange} min
-                </p>
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  added to your hour bank
-                </p>
-              </motion.div>
-            )}
-
-            {/* Near-miss encouragement */}
-            {phase === 'revealed' && result.outcome.type === 'near-miss' && (
-              <motion.div
-                className="p-3 rounded-xl mb-6"
-                style={{
-                  background: 'var(--bg-elevated)',
-                  border: '1px dashed var(--border-subtle)',
-                }}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                  You were so close to a bonus!
-                  <br />
-                  <span style={{ color: 'var(--text-muted)' }}>Keep showing up.</span>
-                </p>
-              </motion.div>
-            )}
-
-            {/* Streak counter */}
-            {phase === 'revealed' && streakDays !== undefined && streakDays > 0 && (
-              <motion.div
-                className="flex items-center justify-center gap-2 mb-4"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.25 }}
-              >
-                <span className="text-lg">🔥</span>
-                <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                  {streakDays} day{streakDays !== 1 ? 's' : ''} straight
-                </span>
-              </motion.div>
-            )}
-
-            {/* Streak milestone */}
-            {phase === 'revealed' && milestone && (
-              <motion.div
-                className="p-3 rounded-xl mb-4"
-                style={{
-                  background: 'color-mix(in oklab, var(--warning, #eab308) 10%, transparent)',
-                  border: '1px solid color-mix(in oklab, var(--warning, #eab308) 25%, transparent)',
-                }}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                <p className="text-lg font-bold mb-1" style={{ color: 'var(--warning, #eab308)' }}>
-                  {milestone.title}
-                </p>
-                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                   {milestone.message}
                 </p>
               </motion.div>
             )}
 
+            {/* Warm message (non-milestone) */}
+            {!isMilestone && (
+              <motion.p
+                className="text-sm mt-2 mb-4"
+                style={{ color: 'var(--text-secondary)' }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.15 }}
+              >
+                {getWarmMessage(dayNumber)}
+              </motion.p>
+            )}
+
+            {/* Presence rating */}
+            <motion.div
+              className="my-5"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.25 }}
+            >
+              <PresenceRating onRate={handlePresenceRating} />
+            </motion.div>
+
+            {/* Stats row */}
+            <motion.div
+              className="flex justify-center gap-6 mb-5"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <div className="text-center">
+                <p
+                  className="text-xl font-bold tabular-nums"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  {consistencyPercent}%
+                </p>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  consistent
+                </p>
+              </div>
+              {streakDays > 0 && (
+                <div className="text-center">
+                  <p
+                    className="text-xl font-bold tabular-nums"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    {streakDays}
+                  </p>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                    day streak
+                  </p>
+                </div>
+              )}
+            </motion.div>
+
             {/* Celebration ritual */}
-            {phase === 'revealed' && celebrationRitual && (
+            {celebrationRitual && (
               <motion.div
-                className="p-3 rounded-xl mb-6"
+                className="p-3 rounded-xl mb-5"
                 style={{
-                  background: 'color-mix(in oklab, var(--accent) 8%, transparent)',
-                  border: '1px solid color-mix(in oklab, var(--accent) 20%, transparent)',
+                  background: 'color-mix(in oklab, var(--accent) 6%, transparent)',
+                  border: '1px solid color-mix(in oklab, var(--accent) 12%, transparent)',
                 }}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.35 }}
               >
                 <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
                   Your celebration ritual:
@@ -369,18 +277,23 @@ export function CommitmentOutcomeModal({
               </motion.div>
             )}
 
-            {/* Continue button - only clickable after reveal */}
-            <button
-              onClick={handleContinue}
-              disabled={phase !== 'revealed'}
-              className="w-full py-3 rounded-xl text-sm font-medium transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
-              style={{
-                backgroundColor: 'var(--accent)',
-                color: 'var(--bg-base)',
-              }}
+            {/* Done button */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
             >
-              {phase === 'revealed' ? 'Continue' : 'Wait...'}
-            </button>
+              <button
+                onClick={handleDone}
+                className="w-full py-3 rounded-xl text-sm font-medium transition-all hover:opacity-90 active:scale-[0.98]"
+                style={{
+                  backgroundColor: 'var(--accent)',
+                  color: 'var(--bg-base)',
+                }}
+              >
+                Done
+              </button>
+            </motion.div>
           </motion.div>
         </motion.div>
       )}

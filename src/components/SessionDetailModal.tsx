@@ -4,7 +4,7 @@
  * Shows full guidance notes, personalization options, and adoption flow.
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { getIntentionGradient } from '../lib/animations'
 import {
   saveTemplate as saveTemplateLocal,
@@ -301,6 +301,17 @@ export function SessionDetailModal({
     [currentUserId, session.id, session.title]
   )
 
+  const modalRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    modalRef.current?.focus()
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   // Block swipe navigation when modal is open
   const handleTouchEvent = (e: React.TouchEvent) => {
     e.stopPropagation()
@@ -313,9 +324,14 @@ export function SessionDetailModal({
       onTouchEnd={handleTouchEvent}
       onTouchMove={handleTouchEvent}
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Session details: ${session.title}`}
     >
       <div
-        className="bg-cream w-full max-w-lg max-h-[85dvh] flex flex-col shadow-xl animate-slide-up overflow-hidden rounded-t-3xl"
+        ref={modalRef}
+        tabIndex={-1}
+        className="bg-cream w-full max-w-lg max-h-[85dvh] flex flex-col shadow-xl animate-slide-up overflow-hidden rounded-t-3xl outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Gradient header */}

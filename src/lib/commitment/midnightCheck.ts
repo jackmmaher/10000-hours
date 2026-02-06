@@ -5,9 +5,10 @@
  * Should be run on app launch and periodically (e.g., when app comes to foreground).
  *
  * For each required day without a logged session:
- * - Apply penalty via consumeCommitmentPenalty()
  * - Log day as 'missed'
+ * - Break streak
  * - Update analytics
+ * - Generate contextual encouragement (no penalties)
  */
 
 import {
@@ -16,20 +17,19 @@ import {
   getCommitmentDayLog,
   addCommitmentDayLog,
 } from '../db/commitmentSettings'
-import { consumeCommitmentPenalty } from '../hourBank'
-import { sendAccountabilityMessage } from '../accountability'
-import { getUserPreferences } from '../db/preferences'
-import { createCommitmentRNG } from './rng'
-import { calculateMissedPenalty, type MissedPenalty } from './outcomes'
-import { isDayRequired, getStartOfDay, addDays } from './schedule'
-
-/**
- * Result of a missed day penalty
- */
-export interface MissedDayResult {
-  date: number
-  penalty: MissedPenalty
-}
+import {
+  isDayRequired,
+  getStartOfDay,
+  addDays,
+  getNextRequiredDate,
+  getTotalRequiredDays,
+} from './schedule'
+import {
+  calculateConsistencyScore,
+  calculateDayNumber,
+  getEncouragementMessage,
+  type MissedDayNotice,
+} from './outcomes'
 
 /**
  * Result of the midnight check
@@ -39,10 +39,10 @@ export interface MidnightCheckResult {
   isActive: boolean
   /** Number of days checked */
   daysChecked: number
-  /** Days that were missed and penalized */
-  missedDays: MissedDayResult[]
-  /** Total penalty minutes applied */
-  totalPenaltyMinutes: number
+  /** Number of missed days found */
+  missedDaysCount: number
+  /** Missed day notice with encouragement (if any days were missed) */
+  notice: MissedDayNotice | null
   /** Any errors encountered */
   errors: string[]
 }
@@ -51,9 +51,10 @@ export interface MidnightCheckResult {
  * Process all missed days since last check
  *
  * Checks each day from the last session date (or commitment start) to yesterday.
- * For each required day without a log entry, applies a penalty.
+ * For each required day without a log entry, marks it as missed.
+ * No penalties are applied — only streak reset and encouragement.
  *
- * @returns Result with details about missed days and penalties
+ * @returns Result with details about missed days and encouragement
  */
 export async function processMidnightCheck(): Promise<MidnightCheckResult> {
   const settings = await getCommitmentSettings()
@@ -61,8 +62,8 @@ export async function processMidnightCheck(): Promise<MidnightCheckResult> {
   const result: MidnightCheckResult = {
     isActive: settings.isActive,
     daysChecked: 0,
-    missedDays: [],
-    totalPenaltyMinutes: 0,
+    missedDaysCount: 0,
+    notice: null,
     errors: [],
   }
 
@@ -76,7 +77,7 @@ export async function processMidnightCheck(): Promise<MidnightCheckResult> {
     ? Math.max(settings.lastSessionDate, settings.commitmentStartDate)
     : settings.commitmentStartDate
 
-  // End at yesterday (don't penalize today yet - user still has time)
+  // End at yesterday (don't mark today as missed yet - user still has time)
   const today = getStartOfDay(Date.now())
   const yesterday = addDays(today, -1)
 
@@ -85,14 +86,9 @@ export async function processMidnightCheck(): Promise<MidnightCheckResult> {
     return result
   }
 
-  // Create RNG for penalty calculation
-  const rng = createCommitmentRNG(settings.rngSeed, settings.rngSequenceIndex)
-  let currentRngIndex = settings.rngSequenceIndex
-
   // Check each day in the range
   let checkDate = addDays(getStartOfDay(startCheck), 1) // Start from day after last session
   let totalMissed = 0
-  let totalPenalty = 0
 
   while (checkDate <= yesterday && checkDate <= settings.commitmentEndDate) {
     result.daysChecked++
@@ -103,31 +99,16 @@ export async function processMidnightCheck(): Promise<MidnightCheckResult> {
       const existingLog = await getCommitmentDayLog(checkDate)
 
       if (!existingLog) {
-        // Day was required but no session logged - it's a miss!
+        // Day was required but no session logged - it's a miss
         try {
-          // Calculate penalty
-          const penalty = calculateMissedPenalty(rng)
-          currentRngIndex = rng.currentIndex
-
-          // Apply penalty to hour bank
-          await consumeCommitmentPenalty(Math.abs(penalty.minutesChange) / 60)
-
-          // Log the missed day
           await addCommitmentDayLog({
             date: checkDate,
             outcome: 'missed',
-            minutesAdjustment: penalty.minutesChange,
-            adjustmentType: 'penalty',
-            wasNearMiss: false,
-          })
-
-          result.missedDays.push({
-            date: checkDate,
-            penalty,
+            presenceRating: null,
+            reflection: null,
           })
 
           totalMissed++
-          totalPenalty += Math.abs(penalty.minutesChange)
         } catch (error) {
           result.errors.push(
             `Failed to process missed day ${new Date(checkDate).toDateString()}: ${error}`
@@ -139,35 +120,48 @@ export async function processMidnightCheck(): Promise<MidnightCheckResult> {
     checkDate = addDays(checkDate, 1)
   }
 
-  // Update settings with new RNG index and analytics
+  // Update settings if any days were missed
   if (totalMissed > 0) {
+    const previousStreak = settings.currentStreakDays
+
     await updateCommitmentSettings({
-      rngSequenceIndex: currentRngIndex,
       totalSessionsMissed: settings.totalSessionsMissed + totalMissed,
-      totalPenaltyMinutesDeducted: settings.totalPenaltyMinutesDeducted + totalPenalty,
       lastSessionDate: yesterday, // Update to prevent re-checking these days
       // Break streak on missed days
       currentStreakDays: 0,
     })
 
-    // Send accountability message for misses if enabled
-    if (settings.accountabilityEnabled && settings.notifyOnSkip && settings.accountabilityPhone) {
-      try {
-        const userPrefs = await getUserPreferences()
-        const userName = userPrefs.displayName || 'User'
-        await sendAccountabilityMessage({
-          type: 'skip',
-          phone: settings.accountabilityPhone,
-          method: settings.accountabilityMethod || 'sms',
-          userName,
-        })
-      } catch (err) {
-        console.warn('[Commitment] Failed to send accountability skip message:', err)
-      }
+    // Calculate updated consistency score
+    const totalRequired = getTotalRequiredDays(settings)
+    const consistencyScore = calculateConsistencyScore(
+      settings.totalSessionsCompleted,
+      totalRequired
+    )
+
+    // Calculate days remaining in commitment
+    const dayNumber = calculateDayNumber(settings.commitmentStartDate, today)
+    const daysRemaining = Math.max(0, settings.commitmentDuration - dayNumber + 1)
+
+    // Get next required day
+    const nextRequired = getNextRequiredDate(settings, Date.now())
+
+    // Generate contextual encouragement
+    const encouragement = getEncouragementMessage({
+      daysMissed: totalMissed,
+      previousStreak,
+      daysRemaining,
+      consistencyScore,
+    })
+
+    result.notice = {
+      daysMissed: totalMissed,
+      consistencyScore,
+      encouragement,
+      nextRequiredDay: nextRequired ? new Date(nextRequired) : null,
     }
   }
 
-  result.totalPenaltyMinutes = totalPenalty
+  result.missedDaysCount = totalMissed
   return result
 }
 
@@ -212,7 +206,7 @@ export async function getPendingMissedDaysCount(): Promise<number> {
 }
 
 /**
- * Format missed days result for display
+ * Format midnight check result for display
  *
  * @param result - The midnight check result
  * @returns Object with display strings
@@ -222,7 +216,7 @@ export function formatMissedDaysForDisplay(result: MidnightCheckResult): {
   subtitle: string
   hasImpact: boolean
 } {
-  if (result.missedDays.length === 0) {
+  if (!result.notice || result.missedDaysCount === 0) {
     return {
       title: 'All caught up',
       subtitle: 'No missed sessions',
@@ -230,12 +224,12 @@ export function formatMissedDaysForDisplay(result: MidnightCheckResult): {
     }
   }
 
-  const dayWord = result.missedDays.length === 1 ? 'day' : 'days'
-  const totalHours = result.totalPenaltyMinutes / 60
+  const dayWord = result.missedDaysCount === 1 ? 'day' : 'days'
+  const scorePercent = Math.round(result.notice.consistencyScore * 100)
 
   return {
-    title: `${result.missedDays.length} missed ${dayWord}`,
-    subtitle: `-${result.totalPenaltyMinutes} minutes (${totalHours.toFixed(1)}h) from your bank`,
+    title: `${result.missedDaysCount} missed ${dayWord}`,
+    subtitle: result.notice.encouragement || `Consistency: ${scorePercent}%`,
     hasImpact: true,
   }
 }

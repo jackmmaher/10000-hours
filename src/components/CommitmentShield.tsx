@@ -95,20 +95,16 @@ export function CommitmentShield({ commitment }: CommitmentShieldProps) {
                 Day {commitment.currentDay} of {commitment.totalDays}
               </p>
 
-              {/* Anchor routine heading */}
-              {commitment.anchorRoutine ? (
-                <h1 className="font-serif text-2xl mb-3" style={{ color: 'var(--text-primary)' }}>
-                  After {commitment.anchorRoutine}
-                </h1>
-              ) : (
-                <h1 className="font-serif text-2xl mb-3" style={{ color: 'var(--text-primary)' }}>
-                  Time to practice
-                </h1>
-              )}
+              {/* Main heading */}
+              <h1 className="font-serif text-2xl mb-3" style={{ color: 'var(--text-primary)' }}>
+                This is your time
+              </h1>
 
-              {/* Duration requirement */}
+              {/* Anchor routine + duration */}
               <p className="text-base mb-2" style={{ color: 'var(--text-secondary)' }}>
-                {commitment.minimumMinutes} minutes to unlock your day
+                {commitment.anchorRoutine
+                  ? `${commitment.anchorRoutine} \u2192 ${commitment.minimumMinutes} minutes`
+                  : `${commitment.minimumMinutes} minutes`}
               </p>
 
               {/* Window info */}
@@ -157,11 +153,11 @@ export function CommitmentShield({ commitment }: CommitmentShieldProps) {
 
               {/* Fallback heading */}
               <h1 className="font-serif text-2xl mb-3" style={{ color: 'var(--text-primary)' }}>
-                Your minimum today
+                Hard day?
               </h1>
 
-              <p className="text-3xl font-light mb-6" style={{ color: 'var(--text-primary)' }}>
-                {commitment.minimumFallbackMinutes} minutes
+              <p className="text-lg mb-6" style={{ color: 'var(--text-secondary)' }}>
+                {commitment.minimumFallbackMinutes} minutes still counts.
               </p>
 
               {/* First obstacle + coping response */}

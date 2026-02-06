@@ -23,6 +23,7 @@ import {
   formatTotalHours,
 } from '../lib/format'
 import { getPlannedSessionsForMonth, PlannedSession } from '../lib/db'
+import { EXERCISE_TOOL_NAMES, EXERCISE_TOOL_COLORS } from '../lib/exerciseAnalytics'
 
 const DAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
 const MONTHS_SHORT = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D']
@@ -580,24 +581,88 @@ export function Calendar({
                         {selectedSessions.map((session, i) => (
                           <div
                             key={session.id || i}
-                            className="flex items-center justify-between text-sm"
+                            className="text-sm"
                             style={{ color: 'var(--text-secondary)' }}
                           >
-                            <span>{formatTime(new Date(session.startTime))}</span>
-                            <div className="flex items-center gap-3">
-                              <span className="tabular-nums">
-                                {formatDuration(session.durationSeconds)}
+                            <div className="flex items-center justify-between">
+                              <span>
+                                {formatTime(new Date(session.startTime))}
+                                {(() => {
+                                  const linkedPlan = plannedSessions.find(
+                                    (p) => p.linkedSessionUuid === session.uuid
+                                  )
+                                  const isExercise =
+                                    session.sessionType === 'practice' && session.practiceToolId
+                                  const exerciseName = isExercise
+                                    ? EXERCISE_TOOL_NAMES[session.practiceToolId!]
+                                    : null
+                                  const exerciseColor = isExercise
+                                    ? EXERCISE_TOOL_COLORS[session.practiceToolId!]
+                                    : null
+                                  return (
+                                    <span
+                                      style={{
+                                        fontSize: 10,
+                                        padding: '2px 6px',
+                                        borderRadius: 4,
+                                        fontWeight: 500,
+                                        marginLeft: 6,
+                                        background: isExercise
+                                          ? `color-mix(in srgb, ${exerciseColor} 15%, transparent)`
+                                          : linkedPlan
+                                            ? 'color-mix(in srgb, var(--accent) 15%, transparent)'
+                                            : 'var(--surface-2)',
+                                        color: isExercise
+                                          ? exerciseColor!
+                                          : linkedPlan
+                                            ? 'var(--accent)'
+                                            : 'var(--text-muted)',
+                                      }}
+                                    >
+                                      {isExercise
+                                        ? exerciseName
+                                        : linkedPlan
+                                          ? 'Planned'
+                                          : 'Spontaneous'}
+                                    </span>
+                                  )
+                                })()}
                               </span>
-                              {onEditSession && (
-                                <button
-                                  onClick={() => onEditSession(session)}
-                                  className="text-xs transition-colors"
-                                  style={{ color: 'var(--text-muted)' }}
-                                >
-                                  Edit
-                                </button>
-                              )}
+                              <div className="flex items-center gap-3">
+                                <span className="tabular-nums">
+                                  {formatDuration(session.durationSeconds)}
+                                </span>
+                                {onEditSession && (
+                                  <button
+                                    onClick={() => onEditSession(session)}
+                                    className="text-xs transition-colors"
+                                    style={{ color: 'var(--text-muted)' }}
+                                  >
+                                    Edit
+                                  </button>
+                                )}
+                              </div>
                             </div>
+                            {(() => {
+                              const linkedPlan = plannedSessions.find(
+                                (p) => p.linkedSessionUuid === session.uuid
+                              )
+                              if (!linkedPlan?.duration) return null
+                              const actualMin = Math.round(session.durationSeconds / 60)
+                              const metGoal = actualMin >= linkedPlan.duration
+                              return (
+                                <div
+                                  style={{
+                                    fontSize: 11,
+                                    marginTop: 2,
+                                    paddingLeft: 2,
+                                    color: metGoal ? 'var(--accent)' : 'var(--text-muted)',
+                                  }}
+                                >
+                                  {actualMin} min of {linkedPlan.duration} min planned
+                                </div>
+                              )
+                            })()}
                           </div>
                         ))}
                       </div>

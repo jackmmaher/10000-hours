@@ -1,7 +1,7 @@
 /**
  * Types for Commitment Setup Flow
  *
- * Form state that accumulates across the 12 screens of commitment setup.
+ * Form state that accumulates across the 11 screens of commitment setup.
  */
 
 import type {
@@ -55,18 +55,14 @@ export interface CommitmentSetupFormState {
   accountabilityPhone: string
   accountabilityMethod: AccountabilityMethod
   notifyOnCompletion: boolean
-  notifyOnSkip: boolean
 
-  // Phase 5: Safety (Screen 9 - ADAPTED)
+  // Grace periods (shown on duration screen)
   gracePeriodCount: number // 3 per 30 days
 
-  // Phase 5: Stakes (Screen 10 - NEW)
-  stakesAcknowledged: boolean
-
-  // Phase 6: Celebration (Screen 11 - KEPT from LockSetupFlow)
+  // Phase 6: Celebration (Screen 10 - KEPT from LockSetupFlow)
   celebrationRitual: string
 
-  // Phase 6: End behavior (Screen 12 - in ReviewScreen)
+  // Phase 7: End behavior (Screen 11 - in ReviewScreen)
   endBehavior: CommitmentEndBehavior
 
   // Activation
@@ -111,13 +107,9 @@ export const initialFormState: CommitmentSetupFormState = {
   accountabilityPhone: '',
   accountabilityMethod: 'sms',
   notifyOnCompletion: true,
-  notifyOnSkip: false,
 
-  // Phase 5: Safety
+  // Grace periods
   gracePeriodCount: 3,
-
-  // Phase 5: Stakes
-  stakesAcknowledged: false,
 
   // Phase 6: Celebration
   celebrationRitual: '',

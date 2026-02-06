@@ -6,7 +6,7 @@
  * - Engagement Rate: Focus Time / Session Duration * 100
  * - Longest Streak: Longest continuous period without gaze breaking away
  *
- * Scientific basis: Time spent tracking the orb drives amygdala deactivation,
+ * Scientific basis: Time spent tracking the orb drives stress response reduction,
  * not the precision of tracking. These metrics measure therapeutic engagement.
  */
 
@@ -45,29 +45,46 @@ const BREAK_THRESHOLD_MS = 500
 const MAX_TIMESTAMP_DIFF = 100
 
 /**
- * Find orb position closest to a given timestamp
- * Returns null if no orb within acceptable time range
+ * Find orb position closest to a given timestamp using binary search.
+ * orbHistory must be sorted by timestamp (chronological order).
+ * Returns the closest orb and a hint index for the next sequential search.
  */
-function findClosestOrb(timestamp: number, orbHistory: OrbPosition[]): OrbPosition | null {
-  if (orbHistory.length === 0) return null
+function findClosestOrb(
+  timestamp: number,
+  orbHistory: OrbPosition[],
+  startHint = 0
+): { orb: OrbPosition | null; nextHint: number } {
+  if (orbHistory.length === 0) return { orb: null, nextHint: 0 }
 
-  let closest = orbHistory[0]
-  let minDiff = Math.abs(timestamp - orbHistory[0].timestamp)
+  let low = Math.max(0, startHint)
+  let high = orbHistory.length - 1
 
-  for (const orb of orbHistory) {
-    const diff = Math.abs(timestamp - orb.timestamp)
-    if (diff < minDiff) {
-      minDiff = diff
-      closest = orb
+  while (low < high) {
+    const mid = (low + high) >>> 1
+    if (orbHistory[mid].timestamp < timestamp) {
+      low = mid + 1
+    } else {
+      high = mid
     }
   }
 
-  // Only return if within acceptable time range
-  if (minDiff > MAX_TIMESTAMP_DIFF) {
-    return null
+  // Check low and low-1 for closest match
+  let closestIdx = low
+  let minDiff = Math.abs(timestamp - orbHistory[low].timestamp)
+
+  if (low > 0) {
+    const prevDiff = Math.abs(timestamp - orbHistory[low - 1].timestamp)
+    if (prevDiff < minDiff) {
+      closestIdx = low - 1
+      minDiff = prevDiff
+    }
   }
 
-  return closest
+  if (minDiff > MAX_TIMESTAMP_DIFF) {
+    return { orb: null, nextHint: closestIdx }
+  }
+
+  return { orb: orbHistory[closestIdx], nextHint: closestIdx }
 }
 
 /**
@@ -90,18 +107,19 @@ function calculateFocusTime(
   if (gazeHistory.length < 2 || orbHistory.length === 0) return 0
 
   let focusTimeMs = 0
+  let hint = 0
 
   for (let i = 1; i < gazeHistory.length; i++) {
     const gaze = gazeHistory[i]
     const prevGaze = gazeHistory[i - 1]
-    const orb = findClosestOrb(gaze.timestamp, orbHistory)
+    const result = findClosestOrb(gaze.timestamp, orbHistory, hint)
+    hint = result.nextHint
 
-    if (!orb) continue
+    if (!result.orb) continue
 
-    const distance = calculateDistance(gaze, orb)
+    const distance = calculateDistance(gaze, result.orb)
 
     if (distance < threshold) {
-      // Gaze is within threshold - add the time delta since previous gaze point
       const timeDelta = gaze.timestamp - prevGaze.timestamp
       focusTimeMs += timeDelta
     }
@@ -125,14 +143,16 @@ function calculateLongestStreak(
   let longestStreakMs = 0
   let currentStreakStartMs: number | null = null
   let outsideStartMs: number | null = null
+  let hint = 0
 
   for (let i = 0; i < gazeHistory.length; i++) {
     const gaze = gazeHistory[i]
-    const orb = findClosestOrb(gaze.timestamp, orbHistory)
+    const result = findClosestOrb(gaze.timestamp, orbHistory, hint)
+    hint = result.nextHint
 
-    if (!orb) continue
+    if (!result.orb) continue
 
-    const distance = calculateDistance(gaze, orb)
+    const distance = calculateDistance(gaze, result.orb)
     const isWithinThreshold = distance < threshold
 
     if (isWithinThreshold) {

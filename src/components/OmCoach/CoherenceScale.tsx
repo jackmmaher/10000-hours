@@ -8,7 +8,7 @@
  *
  * Features:
  * - Full gradient bar from orange (low) to green (high)
- * - Percentage display with "Vocal Coherence" label
+ * - Percentage display with "Technique" label
  * - Glow effect intensifies at higher coherence
  * - Theme-aware colors
  */
@@ -66,14 +66,14 @@ function getGlowIntensity(coherence: number): number {
  * Get feedback label for coherence level
  */
 function getCoherenceLabel(coherence: number, isBreathing: boolean, showBeginCue: boolean): string {
-  if (showBeginCue) return 'Begin chanting...'
-  if (isBreathing) return 'Breathe in deeply'
-  if (coherence >= 90) return 'Excellent stability'
-  if (coherence >= 75) return 'Great stability'
-  if (coherence >= 60) return 'Good stability'
-  if (coherence >= 45) return 'Building stability'
-  if (coherence >= 30) return 'Finding rhythm'
-  return 'Warming up'
+  if (showBeginCue) return 'Begin...'
+  if (isBreathing) return 'Breathe deeply'
+  if (coherence >= 90) return 'Deep resonance'
+  if (coherence >= 75) return 'Steady resonance'
+  if (coherence >= 60) return 'Good tone'
+  if (coherence >= 45) return 'Settling in'
+  if (coherence >= 30) return 'Finding tone'
+  return 'Let it come'
 }
 
 export function CoherenceScale({
@@ -145,7 +145,7 @@ export function CoherenceScale({
             {Math.round(displayScore)}%
           </span>
         )}
-        <span className="text-xs text-ink/50">Vocal Coherence</span>
+        <span className="text-xs text-ink/50">Technique</span>
       </div>
 
       {/* Scale container */}

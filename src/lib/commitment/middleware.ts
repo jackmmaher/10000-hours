@@ -5,9 +5,10 @@
  * Called after each meditation session to:
  * 1. Check if commitment is active
  * 2. Validate session meets requirements (duration, window)
- * 3. Roll RNG for bonus/near-miss outcomes
- * 4. Log the day's outcome
- * 5. Update commitment settings (RNG index, analytics)
+ * 3. Log the day as completed
+ * 4. Update streak, consistency, and analytics
+ * 5. Check for milestone
+ * 6. Return SessionCompletionResult
  */
 
 import {
@@ -16,12 +17,21 @@ import {
   addCommitmentDayLog,
   getCommitmentDayLog,
 } from '../db/commitmentSettings'
-import { addBonusHours } from '../hourBank'
 import { sendAccountabilityMessage } from '../accountability'
 import { getUserPreferences } from '../db/preferences'
-import { createCommitmentRNG } from './rng'
-import { calculateSessionCompletion, type SessionOutcome } from './outcomes'
-import { isDayRequired, isWithinWindow, getStartOfDay, getDayOfWeek } from './schedule'
+import {
+  isDayRequired,
+  isWithinWindow,
+  getStartOfDay,
+  getDayOfWeek,
+  getTotalRequiredDays,
+} from './schedule'
+import { getStreakMilestone } from './milestones'
+import {
+  calculateConsistencyScore,
+  calculateDayNumber,
+  type SessionCompletionResult,
+} from './outcomes'
 
 /** Pre-window buffer in milliseconds (60 minutes before window start still counts) */
 const PRE_WINDOW_BUFFER_MS = 60 * 60 * 1000
@@ -40,8 +50,8 @@ export interface CommitmentSessionResult {
   metMinimumDuration: boolean
   /** Whether the session counted toward the commitment (all requirements met) */
   sessionCounted: boolean
-  /** The outcome (bonus, mystery, near-miss, none) if session counted */
-  outcome: SessionOutcome | null
+  /** Completion result with consistency, streak, milestone info */
+  completionResult: SessionCompletionResult | null
   /** Any error message */
   error?: string
 }
@@ -71,7 +81,7 @@ export async function processCommitmentSession(
       wasWithinWindow: true,
       metMinimumDuration: true,
       sessionCounted: false,
-      outcome: null,
+      completionResult: null,
     }
   }
 
@@ -111,7 +121,7 @@ export async function processCommitmentSession(
       wasWithinWindow: withinWindow,
       metMinimumDuration: metMinDuration,
       sessionCounted: false,
-      outcome: null,
+      completionResult: null,
       error: 'Day already completed',
     }
   }
@@ -120,37 +130,24 @@ export async function processCommitmentSession(
   const sessionCounts = dayRequired && withinWindow && metMinDuration
 
   if (!sessionCounts) {
-    // Session doesn't count but isn't an error - just doesn't meet requirements
     return {
       isCommitmentActive: true,
       wasDayRequired: dayRequired,
       wasWithinWindow: withinWindow,
       metMinimumDuration: metMinDuration,
       sessionCounted: false,
-      outcome: null,
+      completionResult: null,
     }
   }
 
-  // Session counts! Roll for outcome
-  const rng = createCommitmentRNG(settings.rngSeed, settings.rngSequenceIndex)
-  const outcome = calculateSessionCompletion(rng)
-
-  // Log the day
+  // Session counts! Log the day
   await addCommitmentDayLog({
     date: sessionDate,
     outcome: 'completed',
     sessionUuid,
-    minutesAdjustment: outcome.minutesChange,
-    adjustmentType: outcome.type,
-    wasNearMiss: outcome.wasNearMiss,
+    presenceRating: null,
+    reflection: null,
   })
-
-  // Apply bonus to hour bank if earned
-  if (outcome.minutesChange > 0) {
-    const bonusHours = outcome.minutesChange / 60
-    const source = outcome.type === 'mystery' ? 'commitment-mystery' : 'commitment-bonus'
-    await addBonusHours(bonusHours, source, sessionUuid)
-  }
 
   // Calculate new streak
   const wasConsecutive = settings.lastSessionDate
@@ -158,17 +155,25 @@ export async function processCommitmentSession(
     : true
   const newStreakDays = wasConsecutive ? settings.currentStreakDays + 1 : 1
   const newLongestStreak = Math.max(settings.longestStreakDays, newStreakDays)
+  const isNewPersonalBest = newStreakDays > settings.longestStreakDays
+
+  // Calculate consistency score
+  const totalRequired = getTotalRequiredDays(settings)
+  const newCompleted = settings.totalSessionsCompleted + 1
+  const dayNumber = calculateDayNumber(settings.commitmentStartDate, sessionDate)
+  const consistencyScore = calculateConsistencyScore(newCompleted, totalRequired)
+
+  // Check for milestone
+  const milestone = getStreakMilestone(newStreakDays)
 
   // Update day-of-week completion tracking
   const dayOfWeek = getDayOfWeek(sessionStartTime)
   const newCompletionsByDay = [...(settings.completionsByDayOfWeek || [0, 0, 0, 0, 0, 0, 0])]
   newCompletionsByDay[dayOfWeek] = (newCompletionsByDay[dayOfWeek] || 0) + 1
 
-  // Update settings with new RNG index, streak, and analytics
+  // Update settings with streak and analytics
   await updateCommitmentSettings({
-    rngSequenceIndex: rng.currentIndex,
-    totalSessionsCompleted: settings.totalSessionsCompleted + 1,
-    totalBonusMinutesEarned: settings.totalBonusMinutesEarned + Math.max(0, outcome.minutesChange),
+    totalSessionsCompleted: newCompleted,
     lastSessionDate: sessionDate,
     currentStreakDays: newStreakDays,
     longestStreakDays: newLongestStreak,
@@ -185,15 +190,24 @@ export async function processCommitmentSession(
       const userPrefs = await getUserPreferences()
       const userName = userPrefs.displayName || 'User'
       await sendAccountabilityMessage({
-        type: 'completion',
         phone: settings.accountabilityPhone,
         method: settings.accountabilityMethod || 'sms',
         durationMinutes: Math.round(durationSeconds / 60),
         userName,
+        dayNumber,
       })
     } catch (err) {
       console.warn('[Commitment] Failed to send accountability message:', err)
     }
+  }
+
+  const completionResult: SessionCompletionResult = {
+    dayNumber,
+    totalDays: settings.commitmentDuration,
+    consistencyScore,
+    streakDays: newStreakDays,
+    milestone,
+    isNewPersonalBest,
   }
 
   return {
@@ -202,7 +216,7 @@ export async function processCommitmentSession(
     wasWithinWindow: withinWindow,
     metMinimumDuration: metMinDuration,
     sessionCounted: true,
-    outcome,
+    completionResult,
   }
 }
 
@@ -282,9 +296,8 @@ export async function consumeGracePeriod(): Promise<boolean> {
   await addCommitmentDayLog({
     date: today,
     outcome: 'grace',
-    minutesAdjustment: 0,
-    adjustmentType: 'none',
-    wasNearMiss: false,
+    presenceRating: null,
+    reflection: null,
   })
 
   await updateCommitmentSettings({

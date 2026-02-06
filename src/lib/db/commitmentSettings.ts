@@ -52,7 +52,6 @@ export function getDefaultCommitmentSettings(): CommitmentSettings {
     accountabilityPhone: null,
     accountabilityMethod: 'sms',
     notifyOnCompletion: true,
-    notifyOnSkip: false,
 
     // Celebration
     celebrationRitual: null,
@@ -70,10 +69,6 @@ export function getDefaultCommitmentSettings(): CommitmentSettings {
     reminderStyle: 'simple',
     customReminderMessage: null,
 
-    // RNG (for deterministic rewards)
-    rngSeed: 0,
-    rngSequenceIndex: 0,
-
     // Streak tracking
     currentStreakDays: 0,
     longestStreakDays: 0,
@@ -81,11 +76,19 @@ export function getDefaultCommitmentSettings(): CommitmentSettings {
     // Analytics
     totalSessionsCompleted: 0,
     totalSessionsMissed: 0,
-    totalBonusMinutesEarned: 0,
-    totalPenaltyMinutesDeducted: 0,
     totalFallbackSessions: 0,
     completionsByDayOfWeek: [0, 0, 0, 0, 0, 0, 0],
     lastSessionDate: null,
+
+    // Practice quality
+    averagePresenceRating: null,
+    totalPresenceRatings: 0,
+
+    // Pause feature
+    isPaused: false,
+    pauseStartDate: null,
+    pauseEndDate: null,
+    totalPauseDays: 0,
   }
 }
 
@@ -101,7 +104,13 @@ export async function getCommitmentSettings(): Promise<CommitmentSettings> {
   const existing = await db.commitmentSettings.get(1)
 
   if (existing) {
-    return existing
+    // Backfill new fields for backward compatibility (pre-v18 data)
+    const defaults = getDefaultCommitmentSettings()
+    return {
+      ...defaults,
+      ...existing,
+      id: 1,
+    }
   }
 
   // Initialize with defaults

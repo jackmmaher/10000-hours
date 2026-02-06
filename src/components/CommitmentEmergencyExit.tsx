@@ -1,11 +1,8 @@
 /**
- * CommitmentEmergencyExit - Early exit flow for active commitments
+ * CommitmentEmergencyExit - Reflective exit flow for active commitments
  *
- * Safety valve that allows users to exit a commitment early, with a cost.
- * Cost formula: (days_remaining / total_days) * base_fee
- * Base fees: 30-day = 1h, 60-day = 2h, 90-day = 3h
- *
- * Requires 3 confirmations before executing to prevent accidents.
+ * Offers three paths: pause, adjust schedule, or end commitment.
+ * No penalties or hour bank deductions. Archives commitment with stats.
  */
 
 import { useState, useEffect, useCallback } from 'react'
@@ -15,68 +12,15 @@ import {
   getCommitmentSettings,
   updateCommitmentSettings,
   archiveCommitment,
+  resetCommitmentSettings,
 } from '../lib/db/commitmentSettings'
-import { consumeCommitmentPenalty } from '../lib/hourBank'
 import type { CommitmentSettings } from '../lib/db/types'
 
 interface CommitmentEmergencyExitProps {
   isOpen: boolean
   onClose: () => void
   onComplete: () => void
-}
-
-/**
- * Get base exit cost in hours based on commitment duration
- */
-function getBaseCostHours(duration: 30 | 60 | 90): number {
-  switch (duration) {
-    case 30:
-      return 1
-    case 60:
-      return 2
-    case 90:
-      return 3
-    default:
-      return 1
-  }
-}
-
-/**
- * Calculate pro-rated exit cost
- * Cost decreases as you progress through the commitment
- */
-function calculateExitCost(settings: CommitmentSettings): number {
-  const now = Date.now()
-  const start = settings.commitmentStartDate
-  const end = settings.commitmentEndDate
-  const total = end - start
-  const elapsed = Math.max(0, now - start)
-  const remaining = Math.max(0, total - elapsed)
-
-  const baseCostHours = getBaseCostHours(settings.commitmentDuration)
-  const proportionRemaining = remaining / total
-
-  // Cost in minutes, rounded to nearest 5
-  const costMinutes = Math.round((baseCostHours * 60 * proportionRemaining) / 5) * 5
-
-  return Math.max(5, costMinutes) // Minimum 5 minutes
-}
-
-/**
- * Calculate days remaining
- */
-function getDaysRemaining(settings: CommitmentSettings): number {
-  const startOfDay = (timestamp: number) => {
-    const d = new Date(timestamp)
-    d.setHours(0, 0, 0, 0)
-    return d.getTime()
-  }
-
-  const today = startOfDay(Date.now())
-  const end = startOfDay(settings.commitmentEndDate)
-  const remaining = Math.ceil((end - today) / (24 * 60 * 60 * 1000))
-
-  return Math.max(0, remaining)
+  onAdjustSchedule?: () => void
 }
 
 /**
@@ -96,109 +40,101 @@ function getCurrentDayNumber(settings: CommitmentSettings): number {
   return Math.max(1, Math.min(daysSinceStart + 1, settings.commitmentDuration))
 }
 
-const CONFIRMATION_STEPS = [
-  {
-    title: 'Are you sure?',
-    message: "Exiting early means you'll lose time from your hour bank.",
-    buttonText: 'Yes, show me the cost',
-  },
-  {
-    title: 'This will cost you',
-    message: '', // Filled dynamically
-    buttonText: 'I understand the cost',
-  },
-  {
-    title: 'Final confirmation',
-    message: 'This cannot be undone. Your commitment will end immediately.',
-    buttonText: 'Exit commitment now',
-  },
-]
-
 export function CommitmentEmergencyExit({
   isOpen,
   onClose,
   onComplete,
+  onAdjustSchedule,
 }: CommitmentEmergencyExitProps) {
   const haptic = useTapFeedback()
   const [settings, setSettings] = useState<CommitmentSettings | null>(null)
-  const [step, setStep] = useState(0)
+  const [reflectionText, setReflectionText] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
-  const [exitCostMinutes, setExitCostMinutes] = useState(0)
+  const [showEndConfirm, setShowEndConfirm] = useState(false)
 
   // Load settings when modal opens
   useEffect(() => {
     if (isOpen) {
-      setStep(0)
+      setShowEndConfirm(false)
+      setReflectionText('')
       const loadSettings = async () => {
         const s = await getCommitmentSettings()
         setSettings(s)
-        if (s.isActive) {
-          setExitCostMinutes(calculateExitCost(s))
-        }
       }
       loadSettings()
     }
   }, [isOpen])
 
-  const handleBack = useCallback(() => {
-    haptic.light()
-    if (step > 0) {
-      setStep(step - 1)
-    } else {
-      onClose()
-    }
-  }, [step, haptic, onClose])
-
-  const handleNext = useCallback(async () => {
-    haptic.medium()
-
-    if (step < CONFIRMATION_STEPS.length - 1) {
-      setStep(step + 1)
-      return
-    }
-
-    // Final step - execute exit
-    if (!settings) return
+  const handlePause = useCallback(async () => {
+    if (!settings || isProcessing) return
 
     setIsProcessing(true)
+    haptic.medium()
 
     try {
-      // Calculate completion rate
-      const totalRequired = settings.commitmentDuration // Simplified - actual calculation would account for schedule
-      const completed = settings.totalSessionsCompleted
-      const completionRate = completed / totalRequired
+      const now = Date.now()
+      const pauseEnd = now + 7 * 24 * 60 * 60 * 1000 // 7 days from now
 
-      // Deduct exit cost from hour bank
-      const costHours = exitCostMinutes / 60
-      await consumeCommitmentPenalty(costHours)
-
-      // Archive the commitment
-      await archiveCommitment({
-        startDate: settings.commitmentStartDate,
-        endDate: Date.now(),
-        duration: settings.commitmentDuration,
-        completionRate,
-        netMinutesChange:
-          settings.totalBonusMinutesEarned - settings.totalPenaltyMinutesDeducted - exitCostMinutes,
-        endReason: 'emergency-exit',
-      })
-
-      // Deactivate commitment
       await updateCommitmentSettings({
-        isActive: false,
+        isPaused: true,
+        pauseStartDate: now,
+        pauseEndDate: pauseEnd,
+        totalPauseDays: settings.totalPauseDays + 7,
+        // Extend commitment end date by 7 days
+        commitmentEndDate: settings.commitmentEndDate + 7 * 24 * 60 * 60 * 1000,
       })
 
       haptic.success()
       onComplete()
     } catch (error) {
-      console.error('Failed to process emergency exit:', error)
+      console.error('Failed to pause commitment:', error)
       haptic.error()
     } finally {
       setIsProcessing(false)
     }
-  }, [step, settings, exitCostMinutes, haptic, onComplete])
+  }, [settings, isProcessing, haptic, onComplete])
 
-  // Block touch propagation to prevent swipe navigation
+  const handleAdjustSchedule = useCallback(() => {
+    haptic.light()
+    onClose()
+    onAdjustSchedule?.()
+  }, [haptic, onClose, onAdjustSchedule])
+
+  const handleEndCommitment = useCallback(async () => {
+    if (!settings || isProcessing) return
+
+    setIsProcessing(true)
+    haptic.warning()
+
+    try {
+      const totalRequired = settings.commitmentDuration
+      const completed = settings.totalSessionsCompleted
+      const completionRate = totalRequired > 0 ? completed / totalRequired : 0
+
+      // Archive without any hour deduction
+      await archiveCommitment({
+        startDate: settings.commitmentStartDate,
+        endDate: Date.now(),
+        duration: settings.commitmentDuration,
+        completionRate,
+        netMinutesChange: 0,
+        endReason: 'ended-early',
+      })
+
+      // Reset commitment settings to defaults
+      await resetCommitmentSettings()
+
+      haptic.success()
+      onComplete()
+    } catch (error) {
+      console.error('Failed to end commitment:', error)
+      haptic.error()
+    } finally {
+      setIsProcessing(false)
+    }
+  }, [settings, isProcessing, haptic, onComplete])
+
+  // Block touch propagation
   const handleTouchEvent = (e: React.TouchEvent) => {
     e.stopPropagation()
   }
@@ -208,14 +144,7 @@ export function CommitmentEmergencyExit({
   }
 
   const currentDay = getCurrentDayNumber(settings)
-  const daysRemaining = getDaysRemaining(settings)
-  const currentStepConfig = CONFIRMATION_STEPS[step]
-
-  // Dynamic message for step 2 (cost display)
-  const stepMessage =
-    step === 1
-      ? `You're on day ${currentDay} of ${settings.commitmentDuration} with ${daysRemaining} days remaining.`
-      : currentStepConfig.message
+  const completionPercent = Math.round((currentDay / settings.commitmentDuration) * 100)
 
   return (
     <AnimatePresence>
@@ -239,86 +168,143 @@ export function CommitmentEmergencyExit({
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div
-              className="p-5 border-b"
-              style={{
-                borderColor: 'var(--border-subtle)',
-                background: 'color-mix(in oklab, var(--danger, #ef4444) 5%, transparent)',
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
-                  style={{
-                    background: 'color-mix(in oklab, var(--danger, #ef4444) 15%, transparent)',
-                  }}
-                >
-                  <span role="img" aria-label="warning">
-                    ⚠️
-                  </span>
-                </div>
-                <div>
-                  <h2 className="font-serif text-lg" style={{ color: 'var(--text-primary)' }}>
-                    Emergency Exit
-                  </h2>
-                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                    Step {step + 1} of {CONFIRMATION_STEPS.length}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Content */}
             <div className="p-5">
               <AnimatePresence mode="wait">
-                <motion.div
-                  key={step}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <h3
-                    className="text-xl font-serif font-medium mb-2"
-                    style={{ color: 'var(--text-primary)' }}
+                {!showEndConfirm ? (
+                  <motion.div
+                    key="options"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
                   >
-                    {currentStepConfig.title}
-                  </h3>
+                    {/* Progress summary */}
+                    <p className="text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>
+                      You've completed {currentDay} of {settings.commitmentDuration} days (
+                      {completionPercent}%).
+                    </p>
+                    <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>
+                      That's real progress.
+                    </p>
 
-                  {/* Cost display for step 2 */}
-                  {step === 1 && (
-                    <div
-                      className="p-4 rounded-xl mb-4"
+                    {/* Reflection input */}
+                    <div className="mb-5">
+                      <label className="block text-xs mb-2" style={{ color: 'var(--text-muted)' }}>
+                        What would help you continue?
+                      </label>
+                      <textarea
+                        value={reflectionText}
+                        onChange={(e) => setReflectionText(e.target.value)}
+                        placeholder="Optional"
+                        rows={2}
+                        className="w-full px-4 py-3 rounded-xl text-sm outline-none resize-none transition-colors"
+                        style={{
+                          backgroundColor: 'var(--bg-elevated)',
+                          color: 'var(--text-primary)',
+                          border: '1px solid var(--border-subtle)',
+                        }}
+                      />
+                    </div>
+
+                    {/* Option 1: Pause */}
+                    <button
+                      onClick={handlePause}
+                      disabled={isProcessing}
+                      className="w-full p-4 rounded-xl text-left mb-3 transition-all active:scale-[0.99] disabled:opacity-50"
                       style={{
-                        background: 'color-mix(in oklab, var(--danger, #ef4444) 10%, transparent)',
-                        border:
-                          '1px solid color-mix(in oklab, var(--danger, #ef4444) 30%, transparent)',
+                        background: 'color-mix(in oklab, var(--accent) 8%, transparent)',
+                        border: '1px solid var(--accent)',
                       }}
                     >
                       <p
-                        className="text-3xl font-bold text-center"
-                        style={{ color: 'var(--danger, #ef4444)' }}
+                        className="text-sm font-medium mb-0.5"
+                        style={{ color: 'var(--text-primary)' }}
                       >
-                        -{exitCostMinutes} min
+                        Pause for a week
                       </p>
+                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        Freeze all requirements. Your commitment resumes where you left off.
+                      </p>
+                    </button>
+
+                    {/* Option 2: Adjust schedule */}
+                    {onAdjustSchedule && (
+                      <button
+                        onClick={handleAdjustSchedule}
+                        disabled={isProcessing}
+                        className="w-full p-4 rounded-xl text-left mb-3 transition-all active:scale-[0.99] disabled:opacity-50"
+                        style={{
+                          background: 'color-mix(in oklab, var(--accent) 8%, transparent)',
+                          border: '1px solid var(--accent)',
+                        }}
+                      >
+                        <p
+                          className="text-sm font-medium mb-0.5"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Adjust my schedule
+                        </p>
+                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                          Change your schedule type or practice window. All progress is preserved.
+                        </p>
+                      </button>
+                    )}
+
+                    {/* Option 3: End commitment */}
+                    <button
+                      onClick={() => {
+                        haptic.light()
+                        setShowEndConfirm(true)
+                      }}
+                      disabled={isProcessing}
+                      className="w-full p-4 rounded-xl text-left mb-4 transition-all active:scale-[0.99] disabled:opacity-50"
+                      style={{
+                        background: 'var(--bg-elevated)',
+                        border: '1px solid var(--border-subtle)',
+                      }}
+                    >
                       <p
-                        className="text-xs text-center mt-1"
-                        style={{ color: 'var(--text-muted)' }}
+                        className="text-sm font-medium mb-0.5"
+                        style={{ color: 'var(--text-secondary)' }}
                       >
-                        from your hour bank
+                        End commitment
                       </p>
-                    </div>
-                  )}
+                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        Archive this commitment with your progress. No penalties.
+                      </p>
+                    </button>
 
-                  <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
-                    {stepMessage}
-                  </p>
+                    {/* Cancel */}
+                    <button
+                      onClick={onClose}
+                      className="w-full text-sm transition-opacity hover:opacity-80"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
+                      Cancel
+                    </button>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="confirm-end"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {/* End commitment confirmation */}
+                    <h3
+                      className="font-serif text-lg mb-2"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
+                      End this commitment?
+                    </h3>
+                    <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
+                      Your progress will be saved in your history.
+                    </p>
 
-                  {/* Progress summary (shown on final step) */}
-                  {step === 2 && (
+                    {/* Quick stats */}
                     <div
-                      className="p-3 rounded-xl mb-4"
+                      className="p-3 rounded-xl mb-5"
                       style={{
                         background: 'var(--bg-elevated)',
                         border: '1px solid var(--border-subtle)',
@@ -327,7 +313,7 @@ export function CommitmentEmergencyExit({
                       <div className="grid grid-cols-2 gap-3 text-center">
                         <div>
                           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                            Sessions completed
+                            Sessions
                           </p>
                           <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
                             {settings.totalSessionsCompleted}
@@ -335,47 +321,48 @@ export function CommitmentEmergencyExit({
                         </div>
                         <div>
                           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                            Days completed
+                            Days
                           </p>
                           <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
-                            {currentDay - 1}
+                            {currentDay}
                           </p>
                         </div>
                       </div>
                     </div>
-                  )}
-                </motion.div>
-              </AnimatePresence>
-            </div>
 
-            {/* Footer buttons */}
-            <div className="p-5 pt-0 flex gap-3">
-              <button
-                onClick={handleBack}
-                disabled={isProcessing}
-                className="flex-1 py-3 rounded-xl text-sm font-medium transition-all active:scale-[0.98] disabled:opacity-50"
-                style={{
-                  background: 'var(--bg-elevated)',
-                  color: 'var(--text-primary)',
-                  border: '1px solid var(--border-subtle)',
-                }}
-              >
-                {step === 0 ? 'Cancel' : 'Back'}
-              </button>
-              <button
-                onClick={handleNext}
-                disabled={isProcessing}
-                className="flex-1 py-3 rounded-xl text-sm font-medium transition-all active:scale-[0.98] disabled:opacity-50"
-                style={{
-                  background:
-                    step === CONFIRMATION_STEPS.length - 1
-                      ? 'var(--danger, #ef4444)'
-                      : 'var(--accent)',
-                  color: 'var(--text-on-accent)',
-                }}
-              >
-                {isProcessing ? 'Processing...' : currentStepConfig.buttonText}
-              </button>
+                    {/* Buttons */}
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => {
+                          haptic.light()
+                          setShowEndConfirm(false)
+                        }}
+                        disabled={isProcessing}
+                        className="flex-1 py-3 rounded-xl text-sm font-medium transition-all active:scale-[0.98] disabled:opacity-50"
+                        style={{
+                          background: 'var(--bg-elevated)',
+                          color: 'var(--text-primary)',
+                          border: '1px solid var(--border-subtle)',
+                        }}
+                      >
+                        Back
+                      </button>
+                      <button
+                        onClick={handleEndCommitment}
+                        disabled={isProcessing}
+                        className="flex-1 py-3 rounded-xl text-sm font-medium transition-all active:scale-[0.98] disabled:opacity-50"
+                        style={{
+                          background: 'var(--bg-elevated)',
+                          color: 'var(--text-secondary)',
+                          border: '1px solid var(--border-subtle)',
+                        }}
+                      >
+                        {isProcessing ? 'Ending...' : 'End commitment'}
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         </motion.div>

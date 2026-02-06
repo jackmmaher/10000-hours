@@ -12,6 +12,8 @@ import {
   isWithinWindow,
   getStartOfDay,
   formatWindowForDisplay,
+  getTotalRequiredDays,
+  calculateConsistencyScore,
 } from '../lib/commitment'
 
 export interface TodayCommitmentState {
@@ -35,6 +37,8 @@ export interface TodayCommitmentState {
   gracePeriodsRemaining: number
   /** Current streak days */
   streakDays: number
+  /** Consistency score (0-1): completedDays / requiredDays */
+  consistencyScore: number
   /** Celebration ritual text */
   celebrationRitual: string | null
   /** Anchor routine text (habit stacking) */
@@ -45,6 +49,8 @@ export interface TodayCommitmentState {
   minimumFallbackMinutes: number
   /** Identity statement from setup */
   identityStatement: string | null
+  /** Whether commitment is currently paused */
+  isPaused: boolean
   /** Loading state */
   isLoading: boolean
   /** Refresh from database */
@@ -63,11 +69,13 @@ export function useTodayCommitment(): TodayCommitmentState {
     totalDays: 30,
     gracePeriodsRemaining: 0,
     streakDays: 0,
+    consistencyScore: 1,
     celebrationRitual: null,
     anchorRoutine: null,
     obstacles: [],
     minimumFallbackMinutes: 2,
     identityStatement: null,
+    isPaused: false,
   })
   const [isLoading, setIsLoading] = useState(true)
 
@@ -101,6 +109,10 @@ export function useTodayCommitment(): TodayCommitmentState {
       // Grace periods remaining
       const graceRemaining = settings.gracePeriodCount - settings.gracePeriodUsed
 
+      // Calculate consistency score
+      const totalRequired = getTotalRequiredDays(settings)
+      const score = calculateConsistencyScore(settings.totalSessionsCompleted, totalRequired)
+
       setState({
         isActive: true,
         isRequired: required,
@@ -112,11 +124,13 @@ export function useTodayCommitment(): TodayCommitmentState {
         totalDays: settings.commitmentDuration,
         gracePeriodsRemaining: graceRemaining,
         streakDays: settings.currentStreakDays || 0,
+        consistencyScore: score,
         celebrationRitual: settings.celebrationRitual || null,
         anchorRoutine: settings.anchorRoutine || null,
         obstacles: settings.obstacles || [],
         minimumFallbackMinutes: settings.minimumFallbackMinutes || 2,
         identityStatement: settings.identityStatement || null,
+        isPaused: settings.isPaused || false,
       })
     } catch (error) {
       console.error('[useTodayCommitment] Failed to load:', error)

@@ -1,40 +1,16 @@
 /**
  * Commitment Mode Module
  *
- * Casino-style habit formation with financial stakes via the hour bank.
+ * Evidence-based habit formation with consistency tracking.
  */
 
-// RNG for deterministic rewards
+// Outcome calculation & types
 export {
-  generateCommitmentSeed,
-  createCommitmentRNG,
-  randomInt,
-  randomChance,
-  type CommitmentRNG,
-} from './rng'
-
-// Outcome calculation
-export {
-  // Constants
-  BONUS_PROBABILITY,
-  MYSTERY_PROBABILITY,
-  NEAR_MISS_PROBABILITY,
-  BONUS_MIN_MINUTES,
-  BONUS_MAX_MINUTES,
-  MYSTERY_MIN_MINUTES,
-  MYSTERY_MAX_MINUTES,
-  PENALTY_MIN_MINUTES,
-  PENALTY_MAX_MINUTES,
-  // Functions
-  calculateSessionCompletion,
-  calculateMissedPenalty,
-  calculateExpectedValue,
-  calculateBreakEvenRate,
-  formatOutcomeForDisplay,
-  // Types
-  type SessionOutcomeType,
-  type SessionOutcome,
-  type MissedPenalty,
+  calculateConsistencyScore,
+  calculateDayNumber,
+  getEncouragementMessage,
+  type SessionCompletionResult,
+  type MissedDayNotice,
 } from './outcomes'
 
 // Schedule checking
@@ -72,12 +48,11 @@ export {
   processMidnightCheck,
   getPendingMissedDaysCount,
   formatMissedDaysForDisplay,
-  type MissedDayResult,
   type MidnightCheckResult,
 } from './midnightCheck'
 
 // Streak milestones
-export { getStreakMilestone } from './milestones'
+export { getStreakMilestone, type StreakMilestone } from './milestones'
 
 // Reminders service
 export {

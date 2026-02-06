@@ -3,7 +3,7 @@
  *
  * "How long will you commit?"
  * Big visual choice: 30 / 60 / 90 days
- * Shows what's at stake and grace periods scale
+ * Shows grace periods per duration
  */
 
 import { motion } from 'framer-motion'
@@ -16,28 +16,24 @@ const DURATION_OPTIONS: Array<{
   label: string
   description: string
   gracePeriods: number
-  exitCostHours: number
 }> = [
   {
     days: 30,
     label: '30 Days',
     description: 'Build the foundation',
     gracePeriods: 3,
-    exitCostHours: 1,
   },
   {
     days: 60,
     label: '60 Days',
     description: 'Solidify the habit',
     gracePeriods: 6,
-    exitCostHours: 2,
   },
   {
     days: 90,
     label: '90 Days',
     description: 'Transform your practice',
     gracePeriods: 9,
-    exitCostHours: 3,
   },
 ]
 
@@ -139,27 +135,11 @@ export function CommitmentDurationScreen({ formState, updateForm, onNext, onBack
                 </div>
               </div>
 
-              {/* Stats row */}
-              <div
-                className="flex gap-4 mt-4 pt-4 border-t"
-                style={{ borderColor: 'var(--border-subtle)' }}
-              >
-                <div>
-                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                    Grace periods
-                  </p>
-                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                    {option.gracePeriods}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                    Emergency exit cost
-                  </p>
-                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                    {option.exitCostHours}h maximum
-                  </p>
-                </div>
+              {/* Grace period note */}
+              <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  Includes {option.gracePeriods} grace periods for days life gets in the way
+                </p>
               </div>
             </button>
           )
@@ -180,11 +160,7 @@ export function CommitmentDurationScreen({ formState, updateForm, onNext, onBack
         >
           <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
             You'll have <strong>{selectedOption.gracePeriods} grace periods</strong> to use when
-            life gets in the way. If you need to exit early, the maximum cost is{' '}
-            <strong>
-              {selectedOption.exitCostHours} hour{selectedOption.exitCostHours > 1 ? 's' : ''}
-            </strong>{' '}
-            from your bank.
+            life gets in the way. You can pause, adjust, or stop at any time.
           </p>
         </motion.div>
       )}

@@ -394,6 +394,9 @@ export function MeditationPlanner({
                 frequency={state.repeatFrequency}
                 customDays={state.repeatCustomDays}
                 onChange={state.handleRepeatChange}
+                endDate={state.repeatEndDate}
+                onEndDateChange={state.setRepeatEndDate}
+                validationError={state.validationError}
               />
             </div>
           ) : (
@@ -741,6 +744,9 @@ export function MeditationPlanner({
                     frequency={state.repeatFrequency}
                     customDays={state.repeatCustomDays}
                     onChange={state.handleRepeatChange}
+                    endDate={state.repeatEndDate}
+                    onEndDateChange={state.setRepeatEndDate}
+                    validationError={state.validationError}
                   />
                 )}
 
@@ -791,6 +797,19 @@ export function MeditationPlanner({
             </button>
           )}
 
+          {state.overlapWarning && (
+            <p
+              style={{
+                fontSize: 12,
+                color: 'var(--text-secondary)',
+                textAlign: 'center',
+                marginBottom: 8,
+              }}
+            >
+              {state.overlapWarning}
+            </p>
+          )}
+
           <button
             onClick={state.handleSave}
             disabled={state.isSaving || state.isLoading}
@@ -806,12 +825,76 @@ export function MeditationPlanner({
           </button>
 
           {state.existingPlan && !state.isSessionMode && (
-            <button
-              onClick={state.handleDelete}
-              className="w-full py-3 rounded-xl text-sm font-medium border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 transition-colors active:scale-[0.98]"
-            >
-              Delete Plan
-            </button>
+            <>
+              <button
+                onClick={state.handleDelete}
+                className="w-full py-3 rounded-xl text-sm font-medium border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 transition-colors active:scale-[0.98]"
+              >
+                Delete Plan
+              </button>
+
+              {state.showDeleteConfirm && (
+                <div
+                  style={{
+                    background: 'var(--surface-2)',
+                    borderRadius: 8,
+                    padding: 12,
+                    marginTop: 8,
+                    display: 'flex',
+                    flexDirection: 'column' as const,
+                    gap: 8,
+                  }}
+                >
+                  <p style={{ fontSize: 13, color: 'var(--text-secondary)', textAlign: 'center' }}>
+                    This is a recurring session
+                  </p>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      onClick={state.handleDeleteSingle}
+                      style={{
+                        flex: 1,
+                        padding: '8px 12px',
+                        borderRadius: 8,
+                        fontSize: 13,
+                        background: 'transparent',
+                        border: '1px solid var(--border)',
+                        color: 'var(--text-primary)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Just This One
+                    </button>
+                    <button
+                      onClick={state.handleDeleteAllFuture}
+                      style={{
+                        flex: 1,
+                        padding: '8px 12px',
+                        borderRadius: 8,
+                        fontSize: 13,
+                        background: '#e74c3c',
+                        border: 'none',
+                        color: 'white',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      All Future
+                    </button>
+                  </div>
+                  <button
+                    onClick={state.handleCancelDelete}
+                    style={{
+                      fontSize: 12,
+                      color: 'var(--text-muted)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

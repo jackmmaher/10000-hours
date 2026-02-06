@@ -7,7 +7,7 @@
  * - Glow pulse timing
  *
  * Scientific basis:
- * - Horizontal bilateral eye movements deactivate the amygdala
+ * - Horizontal bilateral eye movements transiently deactivate the amygdala
  *   (de Voogd et al. 2018, Journal of Neuroscience)
  * - Smooth pursuit at 0.2-0.5 Hz aligns with cardiac coherence/HRV resonance
  *   (Lehrer & Gevirtz 2014, Frontiers in Psychology)

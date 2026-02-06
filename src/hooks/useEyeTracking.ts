@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import webgazer from 'webgazer'
+import { stopWebGazerCamera } from '../lib/stopWebGazerCamera'
 
 export interface GazePoint {
   x: number
@@ -29,8 +30,8 @@ export interface UseEyeTrackingResult {
   startTracking: () => Promise<boolean>
   /** Stop eye tracking */
   stopTracking: () => Promise<void>
-  /** History of gaze points for analysis */
-  gazeHistory: GazePoint[]
+  /** Get a snapshot of the gaze history (reads from ref, no React state) */
+  getGazeHistory: () => GazePoint[]
   /** Clear gaze history */
   clearHistory: () => void
 }
@@ -45,12 +46,9 @@ export function useEyeTracking(maxHistorySize = 1800): UseEyeTrackingResult {
   const [isTracking, setIsTracking] = useState(false)
   const [isSupported, setIsSupported] = useState<boolean | null>(null)
   const [trackingQuality, setTrackingQuality] = useState(0)
-  const [gazeHistory, setGazeHistory] = useState<GazePoint[]>([])
-
   const gazeHistoryRef = useRef<GazePoint[]>([])
   const isInitializedRef = useRef(false)
   const isBeginCalledRef = useRef(false) // Track if webgazer.begin() was called (even if not complete)
-  const updateCountRef = useRef(0)
 
   // Check support on mount - WebGazer needs getUserMedia
   useEffect(() => {
@@ -116,17 +114,10 @@ export function useEyeTracking(maxHistorySize = 1800): UseEyeTrackingResult {
         setGazePoint(point)
         setTrackingQuality(0.8)
 
-        // Add to history (use ref for performance)
+        // Add to history (ref only — no React state updates during tracking)
         gazeHistoryRef.current.push(point)
         if (gazeHistoryRef.current.length > maxHistorySize) {
           gazeHistoryRef.current.shift()
-        }
-
-        // Update state less frequently to avoid re-renders
-        // Only update every 30th point (roughly once per second at 30fps)
-        updateCountRef.current++
-        if (updateCountRef.current % 30 === 0) {
-          setGazeHistory([...gazeHistoryRef.current])
         }
       })
 
@@ -149,8 +140,6 @@ export function useEyeTracking(maxHistorySize = 1800): UseEyeTrackingResult {
 
       isInitializedRef.current = true
       gazeHistoryRef.current = []
-      updateCountRef.current = 0
-      setGazeHistory([])
       setIsTracking(true)
 
       return true
@@ -165,34 +154,14 @@ export function useEyeTracking(maxHistorySize = 1800): UseEyeTrackingResult {
   const stopTracking = useCallback(async () => {
     console.debug('[useEyeTracking] Stopping and releasing camera...')
     try {
-      // Final history update before stopping
-      setGazeHistory([...gazeHistoryRef.current])
-
       // Clear listener first
       webgazer.clearGazeListener()
 
       // End WebGazer completely to release the camera
       // Check isBeginCalledRef to handle cancellation during initialization
       if (isInitializedRef.current || isBeginCalledRef.current) {
-        // CRITICAL: Explicitly stop all camera media tracks BEFORE calling webgazer.end()
-        // WebGazer.end() doesn't always properly release the camera, leaving it recording
-        // We must manually stop the MediaStream tracks to turn off the camera indicator
-        try {
-          // WebGazer creates a video element with id 'webgazerVideoFeed'
-          const videoElement = document.getElementById(
-            'webgazerVideoFeed'
-          ) as HTMLVideoElement | null
-          if (videoElement?.srcObject) {
-            const mediaStream = videoElement.srcObject as MediaStream
-            mediaStream.getTracks().forEach((track) => {
-              track.stop()
-              console.debug('[useEyeTracking] Stopped track:', track.kind)
-            })
-            videoElement.srcObject = null
-          }
-        } catch (mediaError) {
-          console.warn('[useEyeTracking] Error stopping media tracks:', mediaError)
-        }
+        // Explicitly stop camera tracks BEFORE webgazer.end() to ensure camera indicator turns off
+        stopWebGazerCamera()
 
         // Now call webgazer.end() to clean up the rest
         webgazer.end()
@@ -208,11 +177,14 @@ export function useEyeTracking(maxHistorySize = 1800): UseEyeTrackingResult {
     }
   }, [])
 
+  // Get gaze history snapshot (reads from ref, no React state involved)
+  const getGazeHistory = useCallback((): GazePoint[] => {
+    return [...gazeHistoryRef.current]
+  }, [])
+
   // Clear history
   const clearHistory = useCallback(() => {
     gazeHistoryRef.current = []
-    updateCountRef.current = 0
-    setGazeHistory([])
   }, [])
 
   // Cleanup on unmount - ensure camera is released in all cases
@@ -222,15 +194,7 @@ export function useEyeTracking(maxHistorySize = 1800): UseEyeTrackingResult {
       if (isInitializedRef.current || isBeginCalledRef.current) {
         console.debug('[useEyeTracking] Cleanup - ending WebGazer')
         try {
-          // CRITICAL: Explicitly stop all camera media tracks first
-          const videoElement = document.getElementById(
-            'webgazerVideoFeed'
-          ) as HTMLVideoElement | null
-          if (videoElement?.srcObject) {
-            const mediaStream = videoElement.srcObject as MediaStream
-            mediaStream.getTracks().forEach((track) => track.stop())
-            videoElement.srcObject = null
-          }
+          stopWebGazerCamera()
           webgazer.end()
           isInitializedRef.current = false
           isBeginCalledRef.current = false
@@ -248,7 +212,7 @@ export function useEyeTracking(maxHistorySize = 1800): UseEyeTrackingResult {
     trackingQuality,
     startTracking,
     stopTracking,
-    gazeHistory,
+    getGazeHistory,
     clearHistory,
   }
 }

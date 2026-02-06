@@ -40,6 +40,13 @@ export type { AppView } from './useNavigationStore'
 
 type TimerPhase = 'idle' | 'preparing' | 'running' | 'complete'
 
+export interface CompletedPlanInfo {
+  planTitle?: string
+  plannedDurationMinutes?: number
+  actualDurationSeconds: number
+  discipline?: string
+}
+
 interface SessionState {
   // Sessions
   sessions: Session[]
@@ -89,6 +96,8 @@ interface SessionState {
   resetGoalCompleted: () => void
   clearCommitmentOutcome: () => void
   clearMidnightCheckResult: () => void
+  lastCompletedPlan: CompletedPlanInfo | null
+  clearCompletedPlan: () => void
   // Dev-only: Override total seconds for testing milestone modals
   devSetTotalSeconds: (seconds: number) => void
 }
@@ -111,6 +120,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   lastPlanChange: 0,
   lastCommitmentOutcome: null,
   lastMidnightCheckResult: null,
+  lastCompletedPlan: null,
 
   triggerPlanChange: () => {
     set({ lastPlanChange: Date.now() })
@@ -180,10 +190,10 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     })
 
     // Run commitment midnight check to detect/process missed sessions
-    // This runs on app launch to apply penalties for any missed days
+    // This runs on app launch to log missed days and update streaks
     try {
       const midnightResult = await processMidnightCheck()
-      if (midnightResult.missedDays.length > 0) {
+      if (midnightResult.missedDaysCount > 0) {
         set({ lastMidnightCheckResult: midnightResult })
       }
     } catch (err) {
@@ -263,6 +273,16 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     if (linkedPlan) {
       set({ lastPlanChange: Date.now() })
     }
+
+    // Build completed plan info for UI toast
+    const completedPlanInfo: CompletedPlanInfo | null = linkedPlan
+      ? {
+          planTitle: linkedPlan.title,
+          plannedDurationMinutes: linkedPlan.duration,
+          actualDurationSeconds: durationSeconds,
+          discipline: linkedPlan.discipline,
+        }
+      : null
 
     // Track community template completion if this session was linked to a community template
     if (linkedPlan?.sourceTemplateId && supabase) {
@@ -389,6 +409,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         goalCompleted: true, // Mark goal as completed immediately
         justAchievedMilestone: achievedMilestone,
         lastCommitmentOutcome: commitmentOutcome,
+        lastCompletedPlan: completedPlanInfo,
       })
     } else {
       set({
@@ -402,6 +423,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         totalSeconds: newTotalSeconds,
         justAchievedMilestone: achievedMilestone,
         lastCommitmentOutcome: commitmentOutcome,
+        lastCompletedPlan: completedPlanInfo,
       })
     }
   },
@@ -461,6 +483,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   clearMidnightCheckResult: () => {
     set({ lastMidnightCheckResult: null })
   },
+
+  clearCompletedPlan: () => set({ lastCompletedPlan: null }),
 
   // Dev-only: Override total seconds for testing milestone modals
   devSetTotalSeconds: (seconds: number) => {

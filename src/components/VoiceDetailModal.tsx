@@ -7,6 +7,7 @@
  * Uses living theme colors with opacity variations for visual harmony.
  */
 
+import { useEffect, useRef } from 'react'
 import { VoiceScore, getVoiceVisual, VoiceLevel, getVoiceTier, getNextTier } from '../lib/voice'
 import { PRACTICE_PROGRESSIONS } from '../lib/featureUnlocks'
 
@@ -43,6 +44,17 @@ function getVoiceHeader(score: number): string {
 }
 
 export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    modalRef.current?.focus()
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   const visual = getVoiceVisual(voice.total)
   const tier = getVoiceTier(voice.total)
   const nextTier = getNextTier(tier.tier)
@@ -59,9 +71,14 @@ export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 backdrop-blur-sm"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Voice score details"
     >
       <div
-        className="bg-cream rounded-t-3xl w-full max-w-lg max-h-[calc(90vh-env(safe-area-inset-top,0px))] flex flex-col shadow-xl animate-slide-up"
+        ref={modalRef}
+        tabIndex={-1}
+        className="bg-cream rounded-t-3xl w-full max-w-lg max-h-[calc(90vh-env(safe-area-inset-top,0px))] flex flex-col shadow-xl animate-slide-up outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Handle bar */}
@@ -139,7 +156,7 @@ export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
               score={voice.practice}
               max={30}
               opacity={1}
-              description="Depth and consistency of your meditation"
+              description="Meditation depth, consistency, and exercise engagement"
             />
             <ComponentBar
               label="Contribution"
@@ -185,6 +202,12 @@ export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
                 value={`${voice.factors.consistency.value.toFixed(1)}/week`}
                 score={voice.factors.consistency.score}
                 max={voice.factors.consistency.max}
+              />
+              <Factor
+                label="Exercise engagement"
+                value={`${voice.factors.exerciseEngagement.value} sessions`}
+                score={voice.factors.exerciseEngagement.score}
+                max={voice.factors.exerciseEngagement.max}
               />
             </FactorSection>
 
@@ -255,9 +278,10 @@ export function VoiceDetailModal({ voice, onClose }: VoiceDetailModalProps) {
           {/* Explanation */}
           <div className="mt-6 p-4 bg-cream-deep rounded-xl">
             <p className="text-xs text-ink/50 leading-relaxed">
-              Voice measures meditation credibility across practice depth, contribution, and two-way
-              validation. It rewards both sharing wisdom AND engaging with others' content. High
-              scores require giving to the community as much as receiving recognition.
+              Voice measures meditation credibility across practice depth, exercise engagement,
+              contribution, and two-way validation. It rewards both sharing wisdom AND engaging with
+              others' content. Using practice tools like Aum Coach and Racing Mind strengthens your
+              practice score.
             </p>
           </div>
         </div>

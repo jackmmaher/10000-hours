@@ -20,12 +20,9 @@ import { formatAvailableHours } from '../lib/hourBank'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import { useTapFeedback } from '../hooks/useTapFeedback'
 import { useAudioFeedback } from '../hooks/useAudioFeedback'
-import { useMeditationLock } from '../hooks/useMeditationLock'
 import { trackHideTimeToggle } from '../lib/analytics'
 import type { ClockFace } from '../lib/db/types'
 import { exportData } from '../lib/export'
-import { LockSetupFlow } from './LockSetupFlow'
-import { LockComingSoonModal } from './LockComingSoonModal'
 import { CommitmentStatus } from './CommitmentStatus'
 import { CommitmentEmergencyExit } from './CommitmentEmergencyExit'
 
@@ -58,9 +55,6 @@ export function Settings({
   const { available, isLifetime } = useHourBankStore()
   const haptic = useTapFeedback()
   const audio = useAudioFeedback()
-  const meditationLock = useMeditationLock()
-  const [showLockSetupFlow, setShowLockSetupFlow] = useState(false)
-  const [showLockComingSoon, setShowLockComingSoon] = useState(false)
   const [showDisplaySettings, setShowDisplaySettings] = useState(false)
   const [showNotificationSettings, setShowNotificationSettings] = useState(false)
   const [showEmergencyExit, setShowEmergencyExit] = useState(false)
@@ -595,25 +589,6 @@ export function Settings({
         <p className="font-serif text-xs text-ink/25 italic">Still Hours · v3.0.0</p>
         <p className="text-xs text-ink/20">© 2026 Still Hours. All rights reserved.</p>
       </footer>
-
-      {/* Lock Coming Soon modal - shows before setup when Screen Time isn't ready */}
-      <LockComingSoonModal
-        isOpen={showLockComingSoon}
-        onClose={() => setShowLockComingSoon(false)}
-        onContinueSetup={() => setShowLockSetupFlow(true)}
-      />
-
-      {/* Lock Setup Flow modal */}
-      {showLockSetupFlow && (
-        <LockSetupFlow
-          onComplete={() => {
-            setShowLockSetupFlow(false)
-            // Refresh the meditation lock status
-            meditationLock.refreshStatus?.()
-          }}
-          onClose={() => setShowLockSetupFlow(false)}
-        />
-      )}
 
       {/* Commitment Emergency Exit modal */}
       <CommitmentEmergencyExit

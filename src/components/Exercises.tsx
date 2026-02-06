@@ -6,12 +6,12 @@
  *
  * Layout:
  * - Header: "Exercises" with subtitle
- * - Active features: Meditation Lock, Aum Coach, Racing Mind (hero cards)
+ * - Active features: Aum Coach, Racing Mind (hero cards)
  * - "Coming Soon" label divider
  * - Coming soon features: Perfect Posture (muted hero cards)
  *
  * Interaction:
- * - Pull-to-refresh: Refreshes meditation lock status
+ * - Pull-to-refresh: Refreshes feature status
  * - Swipe navigation: Timer (down/right), Progress (left)
  */
 
@@ -19,25 +19,19 @@ import { useRef } from 'react'
 import { useNavigationStore } from '../stores/useNavigationStore'
 import { useSwipe } from '../hooks/useSwipe'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
-import { useMeditationLock } from '../hooks/useMeditationLock'
 import { PracticeHeroCard } from './Journey/PracticeHeroCard'
 import {
   getActiveFeatures,
   getComingSoonFeatures,
   type PracticeFeatureConfig,
 } from './Journey/practiceFeatureConfig'
-import { LockSetupFlow } from './LockSetupFlow'
-import { LockComingSoonModal } from './LockComingSoonModal'
 import { CommitmentSetupFlow } from './CommitmentSetupFlow'
 import { useState } from 'react'
 
 export function Exercises() {
   const { setView } = useNavigationStore()
-  const meditationLock = useMeditationLock()
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  const [showLockSetupFlow, setShowLockSetupFlow] = useState(false)
-  const [showLockComingSoon, setShowLockComingSoon] = useState(false)
   const [showCommitmentSetupFlow, setShowCommitmentSetupFlow] = useState(false)
 
   // Pull-to-refresh
@@ -48,7 +42,6 @@ export function Exercises() {
     handlers: pullHandlers,
   } = usePullToRefresh({
     onRefresh: async () => {
-      meditationLock.refreshStatus?.()
       await new Promise((resolve) => setTimeout(resolve, 500))
     },
   })
@@ -70,25 +63,17 @@ export function Exercises() {
     }
 
     switch (feature.action) {
-      case 'open-lock-modal':
-        // Match Settings behavior: check authorization status first
-        if (meditationLock.authorizationStatus === 'authorized') {
-          setShowLockSetupFlow(true)
-        } else {
-          setShowLockComingSoon(true)
-        }
-        break
       case 'navigate-om-coach':
         setView('om-coach')
         break
       case 'navigate-racing-mind':
         setView('racing-mind')
         break
+      case 'navigate-breath-pacer':
+        setView('breath-pacer')
+        break
       case 'navigate-posture':
         setView('posture')
-        break
-      case 'navigate-resonance-anchor':
-        setView('resonance-anchor')
         break
       case 'open-commitment-modal':
         setShowCommitmentSetupFlow(true)
@@ -166,7 +151,6 @@ export function Exercises() {
             <PracticeHeroCard
               key={feature.id}
               feature={feature}
-              lockSettings={feature.id === 'meditation-lock' ? meditationLock.settings : undefined}
               onPress={() => handleFeaturePress(feature)}
             />
           ))}
@@ -194,27 +178,6 @@ export function Exercises() {
           ))}
         </div>
       </div>
-
-      {/* Lock Coming Soon modal - shows before setup when Screen Time isn't ready */}
-      <LockComingSoonModal
-        isOpen={showLockComingSoon}
-        onClose={() => setShowLockComingSoon(false)}
-        onContinueSetup={() => {
-          setShowLockComingSoon(false)
-          setShowLockSetupFlow(true)
-        }}
-      />
-
-      {showLockSetupFlow && (
-        <LockSetupFlow
-          onComplete={() => {
-            setShowLockSetupFlow(false)
-            // Refresh meditation lock status after setup completes
-            meditationLock.refreshStatus?.()
-          }}
-          onClose={() => setShowLockSetupFlow(false)}
-        />
-      )}
 
       {showCommitmentSetupFlow && (
         <CommitmentSetupFlow

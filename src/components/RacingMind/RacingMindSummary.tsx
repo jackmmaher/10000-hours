@@ -24,6 +24,8 @@ interface RacingMindSummaryProps {
   trackingMetrics: TrackingMetrics | null
   /** Whether user had a valid (non-stale) eye tracking calibration during this session */
   isCalibrated?: boolean
+  /** Session number (1-based). Omit if unavailable. */
+  sessionNumber?: number
   onClose: () => void
   onPracticeAgain: () => void
   onMeditateNow?: () => void
@@ -43,11 +45,22 @@ function formatFocusTime(seconds: number): string {
   return `${mins}m ${secs}s`
 }
 
+/** Get a milestone message for notable session numbers */
+function getMilestoneMessage(sessionNumber: number): string | null {
+  if (sessionNumber === 1) return 'Your first session. Welcome.'
+  if (sessionNumber === 5) return 'Five sessions in. A habit is forming.'
+  if (sessionNumber === 10) return 'Ten sessions. A real practice is taking shape.'
+  if (sessionNumber === 25) return 'Twenty-five sessions. This is dedication.'
+  if (sessionNumber === 50) return 'Fifty sessions. Remarkable commitment.'
+  return null
+}
+
 export function RacingMindSummary({
   durationSeconds,
   preSessionScore,
   trackingMetrics,
   isCalibrated = false,
+  sessionNumber,
   onClose,
   onPracticeAgain,
   onMeditateNow,
@@ -132,7 +145,15 @@ export function RacingMindSummary({
             </svg>
           </div>
 
-          <h1 className="font-serif text-2xl text-ink mb-6">Practice Complete</h1>
+          <h1 className="font-serif text-2xl text-ink mb-1">Practice Complete</h1>
+
+          {/* Session number + milestone message */}
+          {sessionNumber != null && sessionNumber > 0 && (
+            <p className="text-xs text-ink/50 mb-5">
+              {getMilestoneMessage(sessionNumber) ?? `Session #${sessionNumber}`}
+            </p>
+          )}
+          {(!sessionNumber || sessionNumber <= 0) && <div className="mb-5" />}
 
           {/* Mind State Assessment - Always visible at top */}
           <div className="w-full max-w-sm bg-elevated rounded-xl p-5 mb-4 shadow-sm">

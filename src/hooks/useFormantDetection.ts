@@ -15,7 +15,7 @@
  * Scientific foundation:
  * - "Ah" produces an open vocal tract shape
  * - "Uu" narrows the vocal tract
- * - "Mm" (humming) boosts nasal NO ~15x; amygdala deactivation observed during full Om chant (Kalyani et al. 2011, n=12)
+ * - "Mm" (humming) boosts nasal NO ~15x (Weitzberg & Lundberg 2002); preliminary fMRI shows amygdala deactivation during Om (Kalyani et al. 2011, n=12, needs replication)
  */
 
 import { useRef, useCallback, useEffect } from 'react'
@@ -96,29 +96,31 @@ const BUFFER_SIZE = 2048
 const CONFIDENCE_THRESHOLD = 0.3
 
 /**
- * Calculate Euclidean distance between two MFCC vectors
+ * Calculate variance-normalized (Mahalanobis-like) distance between MFCC vectors.
+ * Each dimension is scaled by its inverse variance from calibration, so
+ * dimensions with high natural variance don't dominate the distance.
  */
-function mfccDistance(a: number[], b: number[]): number {
+function mfccDistance(a: number[], b: number[], variance?: number[]): number {
   if (a.length !== b.length) return Infinity
   let sum = 0
   for (let i = 0; i < a.length; i++) {
     const diff = a[i] - b[i]
-    sum += diff * diff
+    // Per-dimension normalization: divide by variance (clamped to avoid div-by-zero)
+    const v = variance && i < variance.length ? Math.max(variance[i], 0.01) : 1
+    sum += (diff * diff) / v
   }
   return Math.sqrt(sum)
 }
 
 /**
- * Calculate MFCC confidence based on distance from baseline
- * Returns 0-1 confidence score
+ * Calculate MFCC confidence based on Mahalanobis-like distance from baseline.
+ * Returns 0-1 confidence score.
  */
 function mfccConfidence(mfcc: number[], baseline: MfccBaseline): number {
-  const distance = mfccDistance(mfcc, baseline.mean)
-  // Normalize by expected variance
-  const avgVariance = baseline.variance.reduce((a, b) => a + b, 0) / baseline.variance.length
-  const normalizedDistance = distance / Math.sqrt(avgVariance * mfcc.length + 0.001)
-  // Convert to confidence (closer = higher confidence)
-  return Math.max(0, 1 - normalizedDistance / 10)
+  const distance = mfccDistance(mfcc, baseline.mean, baseline.variance)
+  // With per-dimension normalization, distance is already in units of
+  // standard deviations. A distance of ~3 means "3 sigma away" overall.
+  return Math.max(0, 1 - distance / (mfcc.length * 0.8))
 }
 
 /**
@@ -139,18 +141,33 @@ function classifyPhoneme(
   const lowerEnergy = lowEnergy + 0.001 // Avoid division by zero
   const upperLowerRatio = upperEnergy / lowerEnergy
 
-  // Mm detection: high flatness (nasal resonance creates broader spectrum)
+  // Mm detection: band energy pattern (humming concentrates energy in low band)
+  // Spectral flatness alone is unreliable — M's nasal resonance doesn't guarantee
+  // a flat spectrum. Instead, use low-band dominance as the primary signal.
+  const totalBandEnergy = lowEnergy + midEnergy + highEnergy + 0.001
+  const lowDominance = lowEnergy / totalBandEnergy
+
+  // M should have a ratio well below Uu (calibrated or default)
+  const mmRatioThreshold = calibration?.ooRatio ? calibration.ooRatio * 0.6 : 0.7
   const mmFlatnessThreshold = calibration?.mmFlatness
-    ? calibration.mmFlatness * 0.8 // Use 80% of calibrated value for easier M detection
+    ? calibration.mmFlatness * 0.8
     : DEFAULT_THRESHOLDS.mmFlatnessMin * 0.8
 
-  if (flatness > mmFlatnessThreshold) {
-    let confidence = Math.min(1, flatness / (mmFlatnessThreshold * 1.5))
+  // Two paths to M detection:
+  // 1. Band energy: very low ratio + strong low-band dominance (primary, more reliable)
+  // 2. High flatness + moderate low dominance (secondary, backward compat)
+  const isMByBandEnergy = upperLowerRatio < mmRatioThreshold && lowDominance > 0.55
+  const isMByFlatness = flatness > mmFlatnessThreshold && lowDominance > 0.4
+
+  if (isMByBandEnergy || isMByFlatness) {
+    let confidence = isMByBandEnergy
+      ? Math.min(1, lowDominance * 1.5) // Higher low dominance = higher confidence
+      : Math.min(1, flatness / (mmFlatnessThreshold * 1.5))
 
     // MFCC confirmation if available
     if (mfcc && calibration?.mmMfcc) {
       const mfccConf = mfccConfidence(mfcc, calibration.mmMfcc)
-      confidence = confidence * 0.6 + mfccConf * 0.4 // Weighted combination
+      confidence = confidence * 0.6 + mfccConf * 0.4
     }
 
     return { phoneme: 'M', confidence }

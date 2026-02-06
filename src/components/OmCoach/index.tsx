@@ -39,10 +39,11 @@ import { OmCoachPractice } from './OmCoachPractice'
 import { OmCoachResults } from './OmCoachResults'
 import { OmCoachErrorBoundary } from './OmCoachErrorBoundary'
 import { PhonemeCalibration } from './PhonemeCalibration'
+import { IntegrationSilence } from './IntegrationSilence'
 import { Paywall } from '../Paywall'
 import { LowHoursWarning } from '../LowHoursWarning'
 
-type OmCoachPhase = 'setup' | 'calibration' | 'practice' | 'results'
+type OmCoachPhase = 'setup' | 'calibration' | 'practice' | 'integration' | 'results'
 
 interface OmCoachProps {
   onClose: () => void
@@ -413,7 +414,6 @@ export function OmCoach({ onClose }: OmCoachProps) {
 
     if (result) {
       setSessionResult(result)
-      setPhase('results')
     } else {
       // If session save failed, still show results with estimated data
       setSessionResult({
@@ -425,8 +425,11 @@ export function OmCoach({ onClose }: OmCoachProps) {
           vocalizationSeconds: Math.round(omSession.getElapsedSeconds() * vocalizationRatio),
         },
       })
-      setPhase('results')
     }
+
+    // Transition to integration silence instead of directly to results
+    // This is the Turiya — the most important part of Aum practice
+    setPhase('integration')
   }, [audioCapture, omSession, vocalCoherence, guidedCycle])
 
   // Keep handleEndSession ref in sync for use in handleSessionComplete callback
@@ -591,9 +594,9 @@ export function OmCoach({ onClose }: OmCoachProps) {
     }
   }, [phase, processAudio])
 
-  // Fullscreen mode during practice - hides app header/navigation
+  // Fullscreen mode during practice and integration - hides app header/navigation
   useEffect(() => {
-    setFullscreen(phase === 'practice')
+    setFullscreen(phase === 'practice' || phase === 'integration')
     return () => setFullscreen(false)
   }, [phase, setFullscreen])
 
@@ -611,8 +614,8 @@ export function OmCoach({ onClose }: OmCoachProps) {
   return (
     <OmCoachErrorBoundary onError={handleBoundaryError}>
       <div className="flex flex-col h-full bg-base pb-20">
-        {/* Header - hidden during calibration (calibration has its own header) */}
-        {phase !== 'calibration' && (
+        {/* Header - hidden during calibration and integration silence */}
+        {phase !== 'calibration' && phase !== 'integration' && (
           <div className="flex-none flex items-center justify-between px-4 py-3 border-b border-border-subtle">
             <button
               onClick={phase === 'practice' ? handleCancel : onClose}
@@ -666,6 +669,8 @@ export function OmCoach({ onClose }: OmCoachProps) {
               onCelebrationDismiss={handleCelebrationDismiss}
             />
           )}
+
+          {phase === 'integration' && <IntegrationSilence onComplete={() => setPhase('results')} />}
 
           {phase === 'results' && sessionResult && (
             <OmCoachResults

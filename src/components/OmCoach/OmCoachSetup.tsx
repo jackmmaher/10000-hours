@@ -107,49 +107,46 @@ export function OmCoachSetup({
           <p className="text-sm text-ink/60">Guided A-U-M practice with real-time feedback</p>
         </div>
 
-        {/* Instructions */}
-        <div className="bg-elevated rounded-xl p-4 mb-6">
-          <div className="space-y-3">
-            <div className="flex gap-3">
-              <div className="w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-[10px] font-semibold text-accent">1</span>
-              </div>
-              <p className="text-sm text-ink">Follow the phases: Breathe In → Ah → Uu → Mm</p>
+        {/* Intention-setting framing */}
+        <div className="bg-elevated rounded-xl p-5 mb-6">
+          <p className="text-sm text-ink/80 leading-relaxed mb-3">
+            Sit comfortably. Spine tall, shoulders relaxed. Breathe in fully through your nose, then
+            let the sound carry your exhale through three shapes:
+          </p>
+          <div className="flex items-center justify-center gap-4 py-3">
+            <div className="text-center">
+              <span className="font-serif text-lg text-ink">Ah</span>
+              <p className="text-[10px] text-ink/40 mt-0.5">open</p>
             </div>
-
-            <div className="flex gap-3">
-              <div className="w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-[10px] font-semibold text-accent">2</span>
-              </div>
-              <p className="text-sm text-ink">
-                Sustain a steady, comfortable tone through each phase
-              </p>
+            <span className="text-ink/20">→</span>
+            <div className="text-center">
+              <span className="font-serif text-lg text-ink">Uu</span>
+              <p className="text-[10px] text-ink/40 mt-0.5">round</p>
             </div>
-
-            <div className="flex gap-3">
-              <div className="w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-[10px] font-semibold text-accent">3</span>
-              </div>
-              <p className="text-sm text-ink">
-                Build coherence by keeping your voice smooth and continuous
-              </p>
+            <span className="text-ink/20">→</span>
+            <div className="text-center">
+              <span className="font-serif text-lg text-ink">Mm</span>
+              <p className="text-[10px] text-ink/40 mt-0.5">hum</p>
             </div>
           </div>
+          <p className="text-xs text-ink/50 text-center">
+            Find one comfortable pitch and let it be steady.
+          </p>
 
           <button
             onClick={() => setShowDetails(!showDetails)}
-            className="mt-4 text-xs text-accent hover:underline"
+            className="mt-4 text-xs text-accent hover:underline block mx-auto"
           >
-            {showDetails ? 'Hide' : 'Show'} science
+            {showDetails ? 'Hide' : 'Why this works'}
           </button>
 
           {showDetails && (
             <div className="mt-3 p-3 bg-base rounded-lg">
               <p className="text-xs text-ink/70 leading-relaxed">
-                Sustained humming increases nasal nitric oxide production ~15x (Weitzberg & Lundberg
-                2002). Extended exhalation activates the parasympathetic nervous system. The A-U-M
-                sequence naturally emerges at the optimal frequency through correct technique -
-                focus on steady breath support rather than hitting a specific pitch.
+                Sustained humming increases nasal nitric oxide ~15x (Weitzberg & Lundberg 2002), a
+                vasodilator linked to calm. Extended exhalation activates the parasympathetic
+                nervous system. The silence after the final Mm — called Turiya — is where the
+                meditative state deepens. The app guides you there.
               </p>
             </div>
           )}

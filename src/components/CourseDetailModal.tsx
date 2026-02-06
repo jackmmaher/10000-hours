@@ -5,7 +5,7 @@
  * and start/continue CTA.
  */
 
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { SessionTemplate } from './SessionDetailModal'
 import { getCourseProgress, startCourse, UserCourseProgress } from '../lib/db'
 
@@ -81,6 +81,17 @@ export function CourseDetailModal({
 
   const difficulty = DIFFICULTY_LABELS[course.difficulty] || DIFFICULTY_LABELS.beginner
 
+  const modalRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    modalRef.current?.focus()
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   // Block swipe navigation when modal is open
   const handleTouchEvent = (e: React.TouchEvent) => {
     e.stopPropagation()
@@ -93,9 +104,14 @@ export function CourseDetailModal({
       onTouchEnd={handleTouchEvent}
       onTouchMove={handleTouchEvent}
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Course details: ${course.title}`}
     >
       <div
-        className="bg-cream rounded-t-3xl w-full max-w-lg max-h-[calc(90vh-env(safe-area-inset-top,0px))] flex flex-col shadow-xl animate-slide-up"
+        ref={modalRef}
+        tabIndex={-1}
+        className="bg-cream rounded-t-3xl w-full max-w-lg max-h-[calc(90vh-env(safe-area-inset-top,0px))] flex flex-col shadow-xl animate-slide-up outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Handle bar */}

@@ -3,19 +3,18 @@
  *
  * Defines visual configuration and metadata for practice features displayed
  * in the Practice section (hero cards at bottom of Journey tab):
- * - Meditation Lock (active) - Opens LockSetupFlow modal
  * - Aum Coach (active) - Navigates to om-coach view
- * - Racing Mind (coming soon)
- * - Perfect Posture (coming soon)
+ * - Racing Mind (active)
+ * - Perfect Posture (active)
+ * - Commitment (active)
  */
 
 import { ORB_COLORS } from '../../lib/animations'
 
 export type FeatureId =
-  | 'meditation-lock'
   | 'aum-coach'
   | 'racing-mind'
-  | 'resonance-anchor'
+  | 'breath-pacer'
   | 'perfect-posture'
   | 'commitment'
 export type FeatureStatus = 'active' | 'coming-soon'
@@ -32,10 +31,9 @@ export interface PracticeFeatureConfig {
   status: FeatureStatus
   /** For active features, defines what action to take on press */
   action?:
-    | 'open-lock-modal'
     | 'navigate-om-coach'
     | 'navigate-racing-mind'
-    | 'navigate-resonance-anchor'
+    | 'navigate-breath-pacer'
     | 'navigate-posture'
     | 'open-commitment-modal'
   /** Orb color configuration */
@@ -53,16 +51,11 @@ export interface PracticeFeatureConfig {
  * Designed to evoke the essence of each practice
  *
  * Each feature has a unique color identity:
- * - Focus Mode: Slate/Indigo - discipline, stability
  * - Aum Coach: Moss/Sand - organic, voice, growth
  * - Racing Mind: Cyan/Teal - mental clarity, calming electric energy
  * - Perfect Posture: Coral/Terracotta - body, earth, physical grounding
  */
 export const FEATURE_ORB_COLORS: Record<FeatureId, OrbColors> = {
-  'meditation-lock': {
-    primary: ORB_COLORS.slate, // Stability, focus
-    secondary: ORB_COLORS.indigo, // Depth, discipline
-  },
   'aum-coach': {
     primary: ORB_COLORS.moss, // Growth, life
     secondary: '#D4A574', // Warm sand - voice/sound
@@ -71,9 +64,9 @@ export const FEATURE_ORB_COLORS: Record<FeatureId, OrbColors> = {
     primary: '#22D3EE', // Cyan - electric clarity
     secondary: '#0891B2', // Deep teal - settling into calm
   },
-  'resonance-anchor': {
-    primary: '#4B0082', // Indigo - deep resonance
-    secondary: '#00CED1', // Cyan - locked-in state
+  'breath-pacer': {
+    primary: '#00CED1', // Turquoise - rhythm, flow
+    secondary: '#20B2AA', // Sea green - calm, natural
   },
   'perfect-posture': {
     primary: '#F97316', // Coral/orange - body warmth
@@ -86,21 +79,6 @@ export const FEATURE_ORB_COLORS: Record<FeatureId, OrbColors> = {
 }
 
 export const PRACTICE_FEATURES: PracticeFeatureConfig[] = [
-  {
-    id: 'meditation-lock',
-    title: 'Focus Mode',
-    description: 'Block distracting apps until you meditate',
-    status: 'active',
-    action: 'open-lock-modal',
-    orbColors: FEATURE_ORB_COLORS['meditation-lock'],
-    ctaText: 'Configure',
-    categoryLabel: 'PRACTICE TOOL',
-    teaserFeatures: [
-      'Blocks distracting apps',
-      'Behavioral science-backed',
-      'Emergency skips built-in',
-    ],
-  },
   {
     id: 'aum-coach',
     title: 'Aum Coach',
@@ -128,19 +106,15 @@ export const PRACTICE_FEATURES: PracticeFeatureConfig[] = [
     teaserFeatures: ['Hypnotic visual focus', 'Blue light calming', 'Pre-meditation primer'],
   },
   {
-    id: 'resonance-anchor',
-    title: 'Resonance Anchor',
-    description: 'Find your center through sound and vibration',
+    id: 'breath-pacer',
+    title: 'Breath Pacer',
+    description: 'Follow the ball. Guided visual breathing with haptic rhythm.',
     status: 'active',
-    action: 'navigate-resonance-anchor',
-    orbColors: FEATURE_ORB_COLORS['resonance-anchor'],
+    action: 'navigate-breath-pacer',
+    orbColors: FEATURE_ORB_COLORS['breath-pacer'],
     ctaText: 'Begin Practice',
     categoryLabel: 'PRACTICE TOOL',
-    teaserFeatures: [
-      'Disguised breath training',
-      'Haptic resonance feedback',
-      'Articulatory suppression',
-    ],
+    teaserFeatures: ['5 breath patterns', 'Visual terrain animation', 'Haptic phase cues'],
   },
   {
     id: 'perfect-posture',
@@ -157,13 +131,13 @@ export const PRACTICE_FEATURES: PracticeFeatureConfig[] = [
     id: 'commitment',
     title: 'Commitment',
     description:
-      'Lock into 30-90 day meditation commitments with financial stakes from your hour bank.',
+      'Build a 30-90 day meditation habit with consistency tracking and gentle accountability.',
     status: 'active',
     action: 'open-commitment-modal',
     orbColors: FEATURE_ORB_COLORS['commitment'],
     ctaText: 'Start Commitment',
     categoryLabel: 'HABIT FORMATION',
-    teaserFeatures: ['Casino-style rewards', 'Grace periods built-in', 'Emergency exit available'],
+    teaserFeatures: ['Consistency scoring', 'Grace periods built-in', 'Pause & adjust anytime'],
   },
 ]
 

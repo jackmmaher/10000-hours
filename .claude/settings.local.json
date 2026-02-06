@@ -122,7 +122,30 @@
       "WebFetch(domain:one-sec.app)",
       "Skill(superpowers:verification-before-completion)",
       "Skill(human-crafted-design)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "WebFetch(domain:play.google.com)",
+      "WebFetch(domain:www.mdpi.com)",
+      "Bash(npm uninstall:*)",
+      "WebFetch(domain:caniuse.com)",
+      "Bash(yarn list:*)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:pmc.ncbi.nlm.nih.gov)",
+      "WebFetch(domain:www.ucdavis.edu)",
+      "WebFetch(domain:link.springer.com)",
+      "Bash(cd:*)",
+      "Bash(powershell Compress-Archive:*)",
+      "Bash(powershell \"Get-ChildItem -Recurse racing-mind-export | Select-Object FullName\")",
+      "Bash(steady, relaxed chanting\" - affirming technique without making\n   130 Hz feel like a target.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "WebFetch(domain:lottiefiles.com)",
+      "Bash(timeout:*)",
+      "Skill(gsd:execute-plan)",
+      "Bash(del tsconfig.tsbuildinfo tsconfig.node.tsbuildinfo)",
+      "Bash(npx vite build)",
+      "Bash(echo:*)",
+      "Bash(git stash:*)",
+      "Bash(if exist \"src\\\\components\\\\TodaysPlanCard.tsx\" echo \"TodaysPlanCard.tsx EXISTS\")",
+      "Bash(if exist \"src\\\\lib\\\\planStreaks.ts\" echo \"planStreaks.ts EXISTS\")",
+      "Bash(test:*)"
     ]
   }
 }

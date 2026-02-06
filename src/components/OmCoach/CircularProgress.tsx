@@ -60,8 +60,8 @@ export function CircularProgress({
   timingMode,
   size = 220,
 }: CircularProgressProps) {
-  // Note: phaseProgress and cycleProgress kept in props for API compatibility but unused
-  void _phaseProgress
+  // Note: cycleProgress kept in props for API compatibility but unused
+  // phaseProgress is used for the breathing pacer animation
   void _cycleProgress
   const center = size / 2
   const strokeWidth = 6
@@ -261,11 +261,27 @@ export function CircularProgress({
           />
         </svg>
 
+        {/* Breathing pacer — expanding circle during breathe phase */}
+        {isBreathing && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div
+              className="rounded-full"
+              style={{
+                width: `${20 + _phaseProgress * 70}%`,
+                height: `${20 + _phaseProgress * 70}%`,
+                backgroundColor: 'var(--accent)',
+                opacity: 0.06 + _phaseProgress * 0.06,
+                transition: 'width 200ms ease-out, height 200ms ease-out, opacity 200ms ease-out',
+              }}
+            />
+          </div>
+        )}
+
         {/* Center content with crossfade */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           {/* Phase label with crossfade transition */}
           <div
-            className={`font-serif font-semibold ${isBreathing ? 'animate-pulse' : ''}`}
+            className="font-serif font-semibold"
             style={{
               fontSize: isBreathing ? '1.75rem' : '3rem',
               lineHeight: 1,

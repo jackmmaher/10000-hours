@@ -98,6 +98,43 @@ export function OmCoachPractice({
   const isPractice = guidedState.isPractice
   const showSessionStart = guidedState.showSessionStart
 
+  // Progressive UI dimming — fade secondary elements as session deepens
+  // 0.0 = start of scored session, 1.0 = final cycle
+  const sessionProgress =
+    !isPractice && guidedState.totalCycles > 0
+      ? Math.min(1, (guidedState.currentCycle - 1) / guidedState.totalCycles)
+      : 0
+  // Secondary elements fade from 1.0 → 0.3 over the session
+  const secondaryOpacity = Math.max(0.3, 1 - sessionProgress * 0.7)
+  // Coherence scale fades from 1.0 → 0.0 over the last third
+  const coherenceOpacity =
+    sessionProgress < 0.66 ? 1 : Math.max(0, 1 - (sessionProgress - 0.66) * 3)
+
+  // Haptic phase transitions — enable eyes-closed practice
+  const prevPhaseForHapticRef = useRef(guidedState.currentPhase)
+  useEffect(() => {
+    if (guidedState.currentPhase !== prevPhaseForHapticRef.current) {
+      prevPhaseForHapticRef.current = guidedState.currentPhase
+      if ('vibrate' in navigator) {
+        // Distinct haptic patterns per phase transition
+        switch (guidedState.currentPhase) {
+          case 'breathe':
+            navigator.vibrate(20) // Single gentle tap — cycle boundary
+            break
+          case 'ah':
+            navigator.vibrate([15, 30, 15]) // Double tap — begin chanting
+            break
+          case 'oo':
+            navigator.vibrate(15) // Single light tap
+            break
+          case 'mm':
+            navigator.vibrate(15) // Single light tap
+            break
+        }
+      }
+    }
+  }, [guidedState.currentPhase])
+
   // Calculate time remaining in current phase
   const phaseDurations = getPhaseDurations(guidedState.timingMode)
   let currentPhaseDuration =
@@ -175,8 +212,11 @@ export function OmCoachPractice({
         {/* Spacer */}
         <div className="h-6" />
 
-        {/* Coherence scale */}
-        <div className="w-full max-w-sm">
+        {/* Coherence scale — fades out in final third of session */}
+        <div
+          className="w-full max-w-sm transition-opacity duration-1000"
+          style={{ opacity: coherenceOpacity }}
+        >
           <CoherenceScale
             coherence={coherence.score}
             currentPhase={guidedState.currentPhase}
@@ -187,8 +227,11 @@ export function OmCoachPractice({
         {/* Spacer */}
         <div className="h-6" />
 
-        {/* Cycle progress counter - Practice or Scored */}
-        <div className="text-center">
+        {/* Cycle progress counter - Practice or Scored — fades with session */}
+        <div
+          className="text-center transition-opacity duration-1000"
+          style={{ opacity: isPractice ? 1 : secondaryOpacity }}
+        >
           {isPractice ? (
             <>
               {/* Practice cycle label */}
@@ -243,6 +286,19 @@ export function OmCoachPractice({
                   }}
                 />
               </div>
+              {/* Evolving guidance — shifts from instructional to contemplative */}
+              {sessionProgress < 0.8 && (
+                <div
+                  className="text-xs mt-2 transition-opacity duration-1000"
+                  style={{ color: 'var(--text-tertiary)', opacity: secondaryOpacity }}
+                >
+                  {sessionProgress < 0.25
+                    ? 'Find your rhythm'
+                    : sessionProgress < 0.5
+                      ? 'Let the sound carry you'
+                      : 'Close your eyes'}
+                </div>
+              )}
             </>
           )}
         </div>
@@ -251,10 +307,10 @@ export function OmCoachPractice({
       {/* Session elapsed time - Fixed at bottom */}
       <div className="flex-none px-4 pb-4 safe-area-bottom">
         <div
-          className="flex items-baseline justify-center gap-3 font-serif transition-opacity duration-300"
+          className="flex items-baseline justify-center gap-3 font-serif transition-opacity duration-1000"
           style={{
             fontVariantNumeric: 'tabular-nums lining-nums',
-            opacity: isPractice ? 0.4 : 1,
+            opacity: isPractice ? 0.4 : secondaryOpacity,
           }}
         >
           {/* Minutes */}

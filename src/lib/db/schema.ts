@@ -24,7 +24,6 @@ import type {
   RepeatRule,
   UserAffinities,
   HourBank,
-  MeditationLockSettings,
   CommitmentSettings,
   CommitmentDayLog,
   CommitmentHistory,
@@ -49,7 +48,6 @@ export class MeditationDB extends Dexie {
   repeatRules!: Table<RepeatRule>
   userAffinities!: Table<UserAffinities>
   hourBank!: Table<HourBank>
-  meditationLockSettings!: Table<MeditationLockSettings>
   commitmentSettings!: Table<CommitmentSettings>
   commitmentDayLogs!: Table<CommitmentDayLog>
   commitmentHistory!: Table<CommitmentHistory>
@@ -294,7 +292,7 @@ export class MeditationDB extends Dexie {
       hourBank: 'id', // Singleton table for hour tracking
     })
 
-    // v15: Add meditationLockSettings table for Screen Time integration
+    // v15: Schema version kept for migration chain (meditationLockSettings removed)
     this.version(15).stores({
       sessions: '++id, uuid, startTime, endTime',
       appState: 'id',
@@ -314,7 +312,6 @@ export class MeditationDB extends Dexie {
       repeatRules: '++id, createdAt',
       userAffinities: 'id',
       hourBank: 'id',
-      meditationLockSettings: 'id', // Singleton table for meditation lock
     })
 
     // v16: Add sessionType, practiceToolId, omCoachMetrics to sessions for practice tools
@@ -338,7 +335,6 @@ export class MeditationDB extends Dexie {
       repeatRules: '++id, createdAt',
       userAffinities: 'id',
       hourBank: 'id',
-      meditationLockSettings: 'id',
     })
 
     // v17: Add commitment mode tables for habit formation with financial stakes
@@ -361,11 +357,73 @@ export class MeditationDB extends Dexie {
       repeatRules: '++id, createdAt',
       userAffinities: 'id',
       hourBank: 'id',
-      meditationLockSettings: 'id',
       commitmentSettings: 'id', // Singleton table for commitment settings
       commitmentDayLogs: '++id, date', // Day-by-day outcome tracking
       commitmentHistory: '++id, startDate', // Archive of past commitments
     })
+
+    // v18: Commitment refactor — remove casino mechanics, add presence tracking & pause
+    this.version(18)
+      .stores({
+        sessions: '++id, uuid, startTime, endTime',
+        appState: 'id',
+        profile: 'id',
+        settings: 'id',
+        insights: 'id, sessionId, createdAt, sharedPearlId',
+        plannedSessions: '++id, date, createdAt, linkedSessionUuid, courseId, repeatRuleId',
+        courseProgress: 'id, courseId, status',
+        savedTemplates: 'id, templateId, savedAt',
+        pearlDrafts: 'id, insightId, updatedAt',
+        templateDrafts: 'id, updatedAt',
+        userPreferences: 'id',
+        wellbeingDimensions: 'id, name, createdAt',
+        wellbeingCheckIns: 'id, dimensionId, createdAt',
+        wellbeingSettings: 'id',
+        notifications: 'id, type, createdAt, readAt',
+        repeatRules: '++id, createdAt',
+        userAffinities: 'id',
+        hourBank: 'id',
+        commitmentSettings: 'id',
+        commitmentDayLogs: '++id, date',
+        commitmentHistory: '++id, startDate',
+      })
+      .upgrade(async (tx) => {
+        // Migrate commitmentSettings: remove casino fields, add new fields
+        await tx
+          .table('commitmentSettings')
+          .toCollection()
+          .modify((settings) => {
+            // Remove casino mechanics fields
+            delete settings.rngSeed
+            delete settings.rngSequenceIndex
+            delete settings.totalBonusMinutesEarned
+            delete settings.totalPenaltyMinutesDeducted
+            // Remove shame-based accountability field
+            delete settings.notifyOnSkip
+            // Add practice quality fields
+            settings.averagePresenceRating = null
+            settings.totalPresenceRatings = 0
+            // Add pause feature fields
+            settings.isPaused = false
+            settings.pauseStartDate = null
+            settings.pauseEndDate = null
+            settings.totalPauseDays = 0
+          })
+
+        // Migrate commitmentDayLogs: remove casino fields, add reflection fields
+        await tx
+          .table('commitmentDayLogs')
+          .toCollection()
+          .modify((log) => {
+            // Remove casino fields
+            delete log.minutesAdjustment
+            delete log.adjustmentType
+            delete log.wasNearMiss
+            // Add new fields
+            log.presenceRating = null
+            log.reflection = null
+          })
+      })
   }
 }
 

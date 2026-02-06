@@ -13,21 +13,13 @@ import { useToast } from '../../stores/useErrorStore'
 import { getIntentionGradient } from '../../lib/animations'
 import type { Pearl } from '../../lib/pearls'
 import type { FeedItem, SessionWithStatus, ExploreInteractionProps } from './types'
+import { calculateFallbackVoice } from '../../lib/voiceUtils'
 
 interface HeroCardProps extends ExploreInteractionProps {
   item: FeedItem
   onTap: () => void
   onVote: (id: string, hasVoted: boolean) => Promise<void>
   onSave: (id: string, hasSaved: boolean) => Promise<void>
-}
-
-/**
- * Fallback Voice score calculation
- */
-function calculateFallbackVoice(karma: number, saves: number): number {
-  const karmaScore = Math.min(Math.sqrt(karma) * 3, 30)
-  const savesScore = Math.min(Math.sqrt(saves) * 4, 30)
-  return Math.round(karmaScore + savesScore)
 }
 
 export function HeroCard({

@@ -1,7 +1,7 @@
 /**
- * CommitmentSetupFlow - 12-screen guided setup for Commitment Mode
+ * CommitmentSetupFlow - 11-screen guided setup for Commitment Mode
  *
- * Casino-style habit formation with financial stakes via the hour bank.
+ * Contemplative habit formation focused on consistency and intrinsic motivation.
  *
  * Phase 1: WHO (1 screen) - Identity framing
  *   1. IdentityScreen
@@ -19,22 +19,20 @@
  *   7. ObstacleScreen
  *   8. AccountabilityScreen
  *
- * Phase 5: SAFETY (2 screens) - Forgiveness & stakes
- *   9. GracePeriodScreen
- *   10. StakesScreen
+ * Phase 5: EXPECT (1 screen) - What to expect
+ *   9. StakesScreen (What to Expect)
  *
  * Phase 6: RITUAL (1 screen) - Celebration
- *   11. CelebrationScreen
+ *   10. CelebrationScreen
  *
  * Phase 7: LAUNCH (1 screen) - Summary & activation
- *   12. ReviewScreen
+ *   11. ReviewScreen
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTapFeedback } from '../../hooks/useTapFeedback'
 import { getCommitmentSettings, updateCommitmentSettings } from '../../lib/db/commitmentSettings'
-import { generateCommitmentSeed } from '../../lib/commitment'
 import { CommitmentSetupFormState, initialFormState } from './types'
 
 // Screen components
@@ -46,7 +44,6 @@ import { MinSessionScreen } from './screens/MinSessionScreen'
 import { CommitmentDurationScreen } from './screens/CommitmentDurationScreen'
 import { ObstacleScreen } from './screens/ObstacleScreen'
 import { AccountabilityScreen } from './screens/AccountabilityScreen'
-import { GracePeriodScreen } from './screens/GracePeriodScreen'
 import { StakesScreen } from './screens/StakesScreen'
 import { CelebrationScreen } from './screens/CelebrationScreen'
 import { ReviewScreen } from './screens/ReviewScreen'
@@ -56,7 +53,7 @@ interface CommitmentSetupFlowProps {
   onClose: () => void
 }
 
-const TOTAL_SCREENS = 12
+const TOTAL_SCREENS = 11
 const STORAGE_KEY = 'commitmentSetupDraft'
 
 // Phase definitions for progress indicator
@@ -65,9 +62,9 @@ const PHASES = [
   { name: 'Schedule', screens: [2, 3, 4] },
   { name: 'Commitment', screens: [5, 6] },
   { name: 'Obstacles', screens: [7, 8] },
-  { name: 'Safety', screens: [9, 10] },
-  { name: 'Ritual', screens: [11] },
-  { name: 'Launch', screens: [12] },
+  { name: 'Expect', screens: [9] },
+  { name: 'Ritual', screens: [10] },
+  { name: 'Launch', screens: [11] },
 ]
 
 export function CommitmentSetupFlow({ onComplete, onClose }: CommitmentSetupFlowProps) {
@@ -119,9 +116,7 @@ export function CommitmentSetupFlow({ onComplete, onClose }: CommitmentSetupFlow
             accountabilityPhone: '',
             accountabilityMethod: 'sms',
             notifyOnCompletion: true,
-            notifyOnSkip: false,
             gracePeriodCount: settings.gracePeriodCount,
-            stakesAcknowledged: false,
             celebrationRitual: '',
             endBehavior: settings.endBehavior,
             activationDate: 0,
@@ -212,7 +207,6 @@ export function CommitmentSetupFlow({ onComplete, onClose }: CommitmentSetupFlow
       accountabilityPhone: formState.accountabilityPhone || null,
       accountabilityMethod: formState.accountabilityMethod,
       notifyOnCompletion: formState.notifyOnCompletion,
-      notifyOnSkip: formState.notifyOnSkip,
 
       // Celebration
       celebrationRitual: formState.celebrationRitual || null,
@@ -230,10 +224,6 @@ export function CommitmentSetupFlow({ onComplete, onClose }: CommitmentSetupFlow
       reminderStyle: 'simple',
       customReminderMessage: null,
 
-      // RNG
-      rngSeed: generateCommitmentSeed(startDate),
-      rngSequenceIndex: 0,
-
       // Reset streak tracking
       currentStreakDays: 0,
       longestStreakDays: 0,
@@ -241,8 +231,6 @@ export function CommitmentSetupFlow({ onComplete, onClose }: CommitmentSetupFlow
       // Reset analytics
       totalSessionsCompleted: 0,
       totalSessionsMissed: 0,
-      totalBonusMinutesEarned: 0,
-      totalPenaltyMinutesDeducted: 0,
       totalFallbackSessions: 0,
       completionsByDayOfWeek: [0, 0, 0, 0, 0, 0, 0],
       lastSessionDate: null,
@@ -426,10 +414,9 @@ export function CommitmentSetupFlow({ onComplete, onClose }: CommitmentSetupFlow
               {currentScreen === 6 && <CommitmentDurationScreen {...screenProps} />}
               {currentScreen === 7 && <ObstacleScreen {...screenProps} />}
               {currentScreen === 8 && <AccountabilityScreen {...screenProps} />}
-              {currentScreen === 9 && <GracePeriodScreen {...screenProps} />}
-              {currentScreen === 10 && <StakesScreen {...screenProps} />}
-              {currentScreen === 11 && <CelebrationScreen {...screenProps} />}
-              {currentScreen === 12 && <ReviewScreen {...screenProps} />}
+              {currentScreen === 9 && <StakesScreen {...screenProps} />}
+              {currentScreen === 10 && <CelebrationScreen {...screenProps} />}
+              {currentScreen === 11 && <ReviewScreen {...screenProps} />}
             </div>
           </motion.div>
         </AnimatePresence>

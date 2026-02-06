@@ -23,6 +23,7 @@ import {
   getSessionByUuid,
   createRepeatRuleWithSessions,
 } from '../../lib/db'
+import { getAllPlansForDate } from '../../lib/db/plans'
 import { DURATION_CATEGORIES } from '../../lib/meditation-options'
 import { createScheduledReminder, cancelScheduledReminder } from '../../lib/reminders'
 import type { SessionEdits, DayItem } from './types'
@@ -92,6 +93,11 @@ export function usePlannerState({
 
   // Enforce goal state - auto-complete timer at planned duration
   const [enforceGoal, setEnforceGoal] = useState(false)
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [overlapWarning, setOverlapWarning] = useState<string | null>(null)
+  const [validationError, setValidationError] = useState<string | null>(null)
+  const [repeatEndDate, setRepeatEndDate] = useState<string>('')
 
   // Local refresh key for pendingPlans (incremented after saving a new plan)
   const [plansLocalRefreshKey, setPlansLocalRefreshKey] = useState(0)
@@ -391,14 +397,14 @@ export function usePlannerState({
         if (repeatFrequency) {
           // Validate custom days selection
           if (repeatFrequency === 'custom' && repeatCustomDays.length === 0) {
-            // Don't save - user needs to select at least one day
-            // Just return without error - the UI should show they need to select days
+            setValidationError('Select at least one day for custom repeat')
             return
           }
 
           await createRepeatRuleWithSessions({
             frequency: repeatFrequency,
             customDays: repeatFrequency === 'custom' ? repeatCustomDays : undefined,
+            endDate: repeatEndDate ? new Date(repeatEndDate).getTime() : undefined,
             plannedTime: plannedTime || undefined,
             duration: duration || undefined,
             title: planTitle || undefined,
@@ -418,6 +424,23 @@ export function usePlannerState({
           // Small delay to ensure React processes state updates before unmount
           setTimeout(() => onClose(), 50)
           return
+        }
+
+        // Overlap check (non-blocking warning)
+        if (plannedTime) {
+          const existingPlans = await getAllPlansForDate(dateStart)
+          const otherPlans = existingPlans.filter((p: PlannedSession) => p.id !== existingPlan?.id)
+          for (const other of otherPlans) {
+            if (other.plannedTime) {
+              const [h1, m1] = plannedTime.split(':').map(Number)
+              const [h2, m2] = other.plannedTime.split(':').map(Number)
+              const diff = Math.abs(h1 * 60 + m1 - (h2 * 60 + m2))
+              if (diff < 30) {
+                setOverlapWarning(`Another session is planned nearby at ${other.plannedTime}`)
+                break
+              }
+            }
+          }
         }
 
         // Single session save (existing logic)
@@ -505,8 +528,12 @@ export function usePlannerState({
 
   const handleDelete = useCallback(async () => {
     if (!existingPlan?.id) return
+    // For recurring sessions, show delete confirmation instead of deleting immediately
+    if (existingPlan.repeatRuleId) {
+      setShowDeleteConfirm(true)
+      return
+    }
     try {
-      // Cancel any scheduled reminder for this plan
       await cancelScheduledReminder(existingPlan.id)
       await deletePlannedSession(existingPlan.id)
       onSave()
@@ -515,6 +542,28 @@ export function usePlannerState({
       console.error('Failed to delete plan:', err)
     }
   }, [existingPlan, onSave, onClose])
+
+  const handleDeleteSingle = useCallback(async () => {
+    if (!existingPlan?.id) return
+    await cancelScheduledReminder(existingPlan.id)
+    await deletePlannedSession(existingPlan.id)
+    setShowDeleteConfirm(false)
+    onSave()
+    onClose()
+  }, [existingPlan, onSave, onClose])
+
+  const handleDeleteAllFuture = useCallback(async () => {
+    if (!existingPlan?.repeatRuleId) return
+    const { deleteRepeatRule } = await import('../../lib/db/repeatRules')
+    await deleteRepeatRule(existingPlan.repeatRuleId)
+    setShowDeleteConfirm(false)
+    onSave()
+    onClose()
+  }, [existingPlan, onSave, onClose])
+
+  const handleCancelDelete = useCallback(() => {
+    setShowDeleteConfirm(false)
+  }, [])
 
   const handleDateChange = useCallback((newDate: Date) => {
     setSelectedDate(newDate)
@@ -528,8 +577,12 @@ export function usePlannerState({
     setPlanNotes('')
     setRepeatFrequency(null)
     setRepeatCustomDays([])
+    setRepeatEndDate('')
     setAttachedPearl(null)
     setEnforceGoal(false)
+    setShowDeleteConfirm(false)
+    setOverlapWarning(null)
+    setValidationError(null)
   }, [])
 
   const handleDurationCategoryChange = useCallback(
@@ -559,6 +612,7 @@ export function usePlannerState({
 
   const handleRepeatChange = useCallback(
     (frequency: RepeatFrequency | null, customDays?: number[]) => {
+      setValidationError(null)
       setRepeatFrequency(frequency)
       if (customDays !== undefined) {
         setRepeatCustomDays(customDays)
@@ -568,8 +622,8 @@ export function usePlannerState({
   )
 
   // Handle pearl attachment
-  const handlePearlSelect = useCallback((pearl: { id: string; text: string }) => {
-    if (pearl.id) {
+  const handlePearlSelect = useCallback((pearl: { id: string; text: string } | null) => {
+    if (pearl?.id) {
       setAttachedPearl({ id: pearl.id, text: pearl.text })
     } else {
       setAttachedPearl(null)
@@ -663,5 +717,22 @@ export function usePlannerState({
     // Goal enforcement
     enforceGoal,
     setEnforceGoal,
+
+    // Delete confirmation for recurring
+    showDeleteConfirm,
+    handleDeleteSingle,
+    handleDeleteAllFuture,
+    handleCancelDelete,
+
+    // Overlap warning
+    overlapWarning,
+
+    // Validation error
+    validationError,
+    setValidationError,
+
+    // Repeat end date
+    repeatEndDate,
+    setRepeatEndDate,
   }
 }

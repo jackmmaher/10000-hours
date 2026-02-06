@@ -10,7 +10,7 @@ import type { NotificationPreferences } from '../notifications'
 export type SessionType = 'meditation' | 'practice'
 
 // Practice tool identifiers
-export type PracticeToolId = 'om-coach' | 'racing-mind' | 'posture-training' | 'resonance-anchor'
+export type PracticeToolId = 'om-coach' | 'racing-mind' | 'posture-training' | 'breath-pacer'
 
 // Aum Coach specific metrics
 export interface OmCoachMetrics {
@@ -26,17 +26,6 @@ export interface OmCoachMetrics {
   rawAmplitudeCV?: number // Raw CV for threshold adaptation
 }
 
-// Resonance Anchor specific metrics (breath training via humming)
-export interface ResonanceAnchorMetrics {
-  // Self-assessment scores (1-10 scale)
-  preSessionScore?: number
-  postSessionScore?: number
-  // Practice metrics
-  totalHummingSeconds?: number // Time spent humming during exhale phases
-  averageStability?: number // 0-100 hum steadiness score
-  cyclesCompleted?: number // Number of full breath cycles
-}
-
 // Racing Mind specific metrics (self-assessment + eye tracking)
 export interface RacingMindMetrics {
   // Self-assessment scores (1-10 scale)
@@ -47,6 +36,21 @@ export interface RacingMindMetrics {
   trackingAccuracy?: number // 0-100
   saccadeCount?: number
   improvementPercent?: number // First half vs second half smoothness
+}
+
+// Posture training specific metrics
+export interface PostureMetrics {
+  goodPosturePercent: number // 0-100
+  correctionCount: number // Number of haptic alerts triggered
+  source: 'airpods' | 'camera' // Tracking mode used
+  shoulderSymmetryScore?: number // Camera-only: 0-100
+}
+
+// Breath Pacer specific metrics
+export interface BreathPacerMetrics {
+  completedCycles: number
+  patternId: string // e.g. 'box-breathing', '4-7-8'
+  patternName: string // Display name
 }
 
 export interface Session {
@@ -67,8 +71,10 @@ export interface Session {
   omCoachMetrics?: OmCoachMetrics
   // Racing Mind specific metrics (when practiceToolId === 'racing-mind')
   racingMindMetrics?: RacingMindMetrics
-  // Resonance Anchor specific metrics (when practiceToolId === 'resonance-anchor')
-  resonanceAnchorMetrics?: ResonanceAnchorMetrics
+  // Posture training specific metrics (when practiceToolId === 'posture-training')
+  postureMetrics?: PostureMetrics
+  // Breath Pacer specific metrics (when practiceToolId === 'breath-pacer')
+  breathPacerMetrics?: BreathPacerMetrics
 }
 
 export interface AppState {
@@ -364,90 +370,11 @@ export interface HourBank {
   purchases: PurchaseRecord[] // Purchase history
 }
 
-// Authorization status from FamilyControls
-export type MeditationLockAuthorizationStatus = 'authorized' | 'denied' | 'notDetermined'
-
 // Accountability method options
 export type AccountabilityMethod = 'sms' | 'whatsapp' | 'choose'
 
 // Reminder style options
 export type ReminderStyle = 'motivational' | 'simple' | 'custom'
-
-// Obstacle with coping response
-export interface MeditationLockObstacle {
-  obstacle: string
-  copingResponse: string
-}
-
-// Schedule window for blocking
-export interface MeditationLockScheduleWindow {
-  startHour: number
-  startMinute: number
-  endHour: number
-  endMinute: number
-}
-
-// Meditation Lock settings (singleton table)
-export interface MeditationLockSettings {
-  id: 1 // Singleton
-  enabled: boolean
-  authorizationStatus: MeditationLockAuthorizationStatus
-  activationDate: number // Fresh start timestamp
-
-  // Identity Framing
-  identityStatement: string
-  whyItMatters: string | null
-
-  // Implementation Intentions (Anchor)
-  anchorRoutine: string
-  anchorLocation: string
-  anchorTimeHour: number
-  anchorTimeMinute: number
-  backupAnchor: string | null
-  backupAnchorTimeHour: number | null
-  backupAnchorTimeMinute: number | null
-
-  // Commitment & Tiny Habits
-  unlockDurationMinutes: number // 5, 10, 12, 15, 20, 30, 45, 60
-  minimumFallbackMinutes: number // 2, 3, 5
-  celebrationRitual: string | null
-
-  // Obstacle Anticipation
-  obstacles: MeditationLockObstacle[]
-
-  // Accountability
-  accountabilityEnabled: boolean
-  accountabilityPhone: string | null
-  accountabilityMethod: AccountabilityMethod
-  notifyOnCompletion: boolean
-  notifyOnSkip: boolean
-
-  // Apps & Schedule
-  blockedAppTokens: string[]
-  scheduleWindows: MeditationLockScheduleWindow[]
-  activeDays: boolean[] // [Sun...Sat]
-
-  // Forgiveness & Safety
-  streakFreezesPerMonth: number
-  streakFreezesRemaining: number
-  gracePeriodMinutes: number | null
-  safetyAutoUnlockHours: number | null
-  lastFreezeResetAt: number | null // Timestamp of last monthly freeze reset
-
-  // Reminders
-  reminderEnabled: boolean
-  reminderMinutesBefore: number
-  reminderStyle: ReminderStyle
-  customReminderMessage: string | null
-
-  // Analytics
-  totalUnlocks: number
-  totalSkipsUsed: number
-  totalHardDayFallbacks: number
-  lastUnlockAt: number | null
-  streakDays: number
-  completionsByDayOfWeek: number[] // [Sun...Sat] — which days are hardest
-}
 
 // ============================================================================
 // Commitment Mode Types
@@ -500,7 +427,6 @@ export interface CommitmentSettings {
   accountabilityPhone: string | null
   accountabilityMethod: AccountabilityMethod
   notifyOnCompletion: boolean
-  notifyOnSkip: boolean
 
   // Celebration
   celebrationRitual: string | null
@@ -518,10 +444,6 @@ export interface CommitmentSettings {
   reminderStyle: 'simple' | 'motivational' | 'custom'
   customReminderMessage: string | null
 
-  // RNG (for deterministic rewards)
-  rngSeed: number
-  rngSequenceIndex: number
-
   // Streak tracking
   currentStreakDays: number
   longestStreakDays: number
@@ -529,22 +451,29 @@ export interface CommitmentSettings {
   // Analytics
   totalSessionsCompleted: number
   totalSessionsMissed: number
-  totalBonusMinutesEarned: number
-  totalPenaltyMinutesDeducted: number
   totalFallbackSessions: number // Hard day sessions
   completionsByDayOfWeek: number[] // [Sun...Sat]
   lastSessionDate: number | null
+
+  // Practice quality
+  averagePresenceRating: number | null
+  totalPresenceRatings: number
+
+  // Pause feature
+  isPaused: boolean
+  pauseStartDate: number | null
+  pauseEndDate: number | null
+  totalPauseDays: number
 }
 
 // Day-by-day log for commitment tracking
 export interface CommitmentDayLog {
   id?: number
   date: number // Start of day timestamp
-  outcome: 'completed' | 'missed' | 'grace' | 'not-required'
+  outcome: 'completed' | 'missed' | 'grace' | 'not-required' | 'paused'
   sessionUuid?: string
-  minutesAdjustment: number
-  adjustmentType: 'bonus' | 'penalty' | 'mystery' | 'near-miss' | 'none'
-  wasNearMiss: boolean
+  presenceRating: number | null
+  reflection: string | null
 }
 
 // History of past commitments
@@ -555,5 +484,5 @@ export interface CommitmentHistory {
   duration: 30 | 60 | 90
   completionRate: number
   netMinutesChange: number
-  endReason: 'completed' | 'emergency-exit'
+  endReason: 'completed' | 'emergency-exit' | 'ended-early' | 'paused-indefinitely'
 }

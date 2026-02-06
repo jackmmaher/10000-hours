@@ -8,7 +8,7 @@
  * Requires sign-in to post.
  */
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useAuthStore } from '../stores/useAuthStore'
 import { createPearl } from '../lib/pearls'
 import { getPearlDraft, savePearlDraft, deletePearlDraft } from '../lib/db'
@@ -39,6 +39,7 @@ export function SharePearl({
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [hasDraft, setHasDraft] = useState(false)
   const [draftSaved, setDraftSaved] = useState(false)
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Load existing draft on mount
   useEffect(() => {
@@ -51,6 +52,12 @@ export function SharePearl({
     }
     loadDraft()
   }, [insightId])
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+    }
+  }, [])
 
   const charCount = text.length
   const isOverLimit = charCount > MAX_PEARL_LENGTH
@@ -68,7 +75,7 @@ export function SharePearl({
       setHasDraft(true)
       setDraftSaved(true)
       // Brief visual feedback then close
-      setTimeout(() => {
+      closeTimerRef.current = setTimeout(() => {
         onClose()
       }, 800)
     } catch (err) {

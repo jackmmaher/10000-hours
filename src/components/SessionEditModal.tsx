@@ -8,8 +8,9 @@
  * - Delete the session entirely
  */
 
-import { useState, useCallback } from 'react'
-import { Session, updateSessionFull, deleteSession } from '../lib/db'
+import { useState, useCallback, useEffect } from 'react'
+import { Session, updateSessionFull, deleteSession, PlannedSession } from '../lib/db'
+import { getPlannedSessionByLinkedUuid } from '../lib/db/plans'
 import { formatDuration } from '../lib/format'
 
 interface SessionEditModalProps {
@@ -45,6 +46,22 @@ export function SessionEditModal({ session, onClose, onSave, onDelete }: Session
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
+  const [linkedPlan, setLinkedPlan] = useState<PlannedSession | undefined>(undefined)
+
+  useEffect(() => {
+    let cancelled = false
+    if (session?.uuid) {
+      getPlannedSessionByLinkedUuid(session.uuid)
+        .then((plan) => {
+          if (!cancelled) setLinkedPlan(plan)
+        })
+        .catch(() => {})
+    }
+    return () => {
+      cancelled = true
+    }
+  }, [session?.uuid])
 
   const handleSave = useCallback(async () => {
     setIsSaving(true)
@@ -117,6 +134,34 @@ export function SessionEditModal({ session, onClose, onSave, onDelete }: Session
             Original: {formatDuration(session.durationSeconds)} on{' '}
             {new Date(session.startTime).toLocaleDateString()}
           </p>
+
+          {/* Planned session indicator */}
+          {linkedPlan && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: 12,
+                color: 'var(--accent)',
+                marginBottom: 8,
+              }}
+            >
+              <span>✓</span>
+              <span>Planned session</span>
+            </div>
+          )}
+
+          {/* Duration comparison for planned sessions */}
+          {linkedPlan?.duration && (
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 12 }}>
+              Planned: {linkedPlan.duration} min | Actual:{' '}
+              {Math.round(session.durationSeconds / 60)} min
+              {session.durationSeconds / 60 >= linkedPlan.duration && (
+                <span style={{ color: 'var(--accent)', marginLeft: 6 }}>Goal met</span>
+              )}
+            </div>
+          )}
 
           {/* Date */}
           <div>

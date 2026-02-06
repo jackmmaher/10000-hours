@@ -12,7 +12,7 @@ import { useAuthStore } from '../../stores/useAuthStore'
 interface PearlPickerProps {
   isOpen: boolean
   onClose: () => void
-  onSelect: (pearl: Pearl) => void
+  onSelect: (pearl: Pearl | null) => void
   selectedPearlId?: string
 }
 
@@ -103,14 +103,7 @@ export function PearlPicker({ isOpen, onClose, onSelect, selectedPearlId }: Pear
           <div className="p-4 border-t border-ink/10">
             <button
               onClick={() => {
-                onSelect({
-                  id: '',
-                  text: '',
-                  userId: '',
-                  upvotes: 0,
-                  saves: 0,
-                  createdAt: '',
-                } as Pearl)
+                onSelect(null)
                 onClose()
               }}
               className="w-full py-3 text-ink/50 hover:text-ink transition-colors touch-manipulation"

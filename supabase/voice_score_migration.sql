@@ -167,6 +167,16 @@ CREATE OR REPLACE FUNCTION update_voice_score(
 )
 RETURNS void AS $$
 BEGIN
+  -- Authenticate: only the user can update their own score
+  IF auth.uid() IS NULL OR auth.uid() != p_user_id THEN
+    RAISE EXCEPTION 'Unauthorized: can only update own voice score';
+  END IF;
+
+  -- Validate range
+  IF p_voice_score < 0 OR p_voice_score > 100 THEN
+    RAISE EXCEPTION 'Invalid voice score: must be between 0 and 100';
+  END IF;
+
   UPDATE public.profiles
   SET voice_score = p_voice_score
   WHERE id = p_user_id;

@@ -1,227 +1,106 @@
 /**
- * Outcome Calculator for Commitment Mode
+ * Session Completion & Missed Day Logic for Commitment Mode
  *
- * Calculates rewards and penalties using casino-style psychology.
- * Probabilities are based on clinical psychology research on intermittent reinforcement.
- *
- * Key design: Net effect is always slightly negative over a commitment period
- * (the house always wins), but users gain the habit.
- *
- * Break-even point: ~90% completion rate
+ * Evidence-based behavioral model replacing casino mechanics.
+ * Provides consistency scoring, contextual encouragement,
+ * and simple completion tracking.
  */
 
-import { CommitmentRNG, randomChance, randomInt } from './rng'
-
-// ============================================================================
-// Probability Constants (based on clinical psychology)
-// ============================================================================
-
-/** Probability of getting a bonus on session completion */
-export const BONUS_PROBABILITY = 0.12 // 12%
-
-/** Probability of getting a mystery bonus (rare, exciting) */
-export const MYSTERY_PROBABILITY = 0.03 // 3%
-
-/** Probability of near-miss display (drives engagement) */
-export const NEAR_MISS_PROBABILITY = 0.25 // 25%
-
-// ============================================================================
-// Amount Ranges (in minutes)
-// ============================================================================
-
-/** Bonus amount range for regular completion bonus */
-export const BONUS_MIN_MINUTES = 15
-export const BONUS_MAX_MINUTES = 45
-
-/** Mystery bonus amount range (slightly different to feel special) */
-export const MYSTERY_MIN_MINUTES = 20
-export const MYSTERY_MAX_MINUTES = 40
-
-/** Penalty amount range for missed sessions */
-export const PENALTY_MIN_MINUTES = 25
-export const PENALTY_MAX_MINUTES = 50
+import { getStartOfDay } from './schedule'
+import type { StreakMilestone } from './milestones'
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export type SessionOutcomeType =
-  | 'bonus' // Regular completion bonus (12%)
-  | 'mystery' // Rare mystery bonus (3%)
-  | 'near-miss' // Almost got a bonus, shown to user (25%)
-  | 'none' // Standard completion, no special outcome
-
-export interface SessionOutcome {
-  type: SessionOutcomeType
-  minutesChange: number // Positive for bonus, 0 for near-miss/none
-  wasNearMiss: boolean
-  message: string // Display message for the outcome
+export interface SessionCompletionResult {
+  /** Current day number in commitment, e.g. 14 */
+  dayNumber: number
+  /** Total days in commitment, e.g. 30 */
+  totalDays: number
+  /** Ratio of completedDays / requiredDays so far (0-1) */
+  consistencyScore: number
+  /** Current consecutive streak */
+  streakDays: number
+  /** Milestone hit on this session, if any */
+  milestone: StreakMilestone | null
+  /** Whether this streak exceeds the user's previous longest */
+  isNewPersonalBest: boolean
 }
 
-export interface MissedPenalty {
-  minutesChange: number // Always negative
-  message: string
-}
-
-// ============================================================================
-// Outcome Calculation
-// ============================================================================
-
-/**
- * Calculate the outcome for a completed session
- *
- * Order of checks:
- * 1. Mystery bonus (3%) - rarest, most exciting
- * 2. Regular bonus (12%) - intermittent reinforcement
- * 3. Near-miss (25%) - "so close!" engagement driver
- * 4. None - standard completion
- *
- * @param rng - Seeded RNG for deterministic results
- * @returns SessionOutcome with type, amount, and message
- */
-export function calculateSessionCompletion(rng: CommitmentRNG): SessionOutcome {
-  // Check for mystery bonus first (rarest)
-  if (randomChance(rng, MYSTERY_PROBABILITY)) {
-    const minutes = randomInt(rng, MYSTERY_MIN_MINUTES, MYSTERY_MAX_MINUTES)
-    return {
-      type: 'mystery',
-      minutesChange: minutes,
-      wasNearMiss: false,
-      message: `Mystery bonus! +${minutes} minutes`,
-    }
-  }
-
-  // Check for regular bonus
-  if (randomChance(rng, BONUS_PROBABILITY)) {
-    const minutes = randomInt(rng, BONUS_MIN_MINUTES, BONUS_MAX_MINUTES)
-    return {
-      type: 'bonus',
-      minutesChange: minutes,
-      wasNearMiss: false,
-      message: `Bonus! +${minutes} minutes`,
-    }
-  }
-
-  // Check for near-miss (no actual reward, but shown to user)
-  if (randomChance(rng, NEAR_MISS_PROBABILITY)) {
-    return {
-      type: 'near-miss',
-      minutesChange: 0,
-      wasNearMiss: true,
-      message: 'So close! Almost got a bonus',
-    }
-  }
-
-  // Standard completion
-  return {
-    type: 'none',
-    minutesChange: 0,
-    wasNearMiss: false,
-    message: 'Session complete',
-  }
-}
-
-/**
- * Calculate the penalty for a missed session
- *
- * @param rng - Seeded RNG for deterministic results
- * @returns MissedPenalty with amount and message
- */
-export function calculateMissedPenalty(rng: CommitmentRNG): MissedPenalty {
-  const minutes = randomInt(rng, PENALTY_MIN_MINUTES, PENALTY_MAX_MINUTES)
-  return {
-    minutesChange: -minutes,
-    message: `Missed session: -${minutes} minutes`,
-  }
+export interface MissedDayNotice {
+  /** Number of days missed since last session */
+  daysMissed: number
+  /** Updated consistency score including the misses */
+  consistencyScore: number
+  /** Contextual encouragement message */
+  encouragement: string
+  /** Next date that requires a session, or null if commitment is over */
+  nextRequiredDay: Date | null
 }
 
 // ============================================================================
-// Analytics Helpers
+// Utility Functions
 // ============================================================================
 
 /**
- * Calculate expected value per session at a given completion rate
- * Used for break-even analysis and UI explanations
- *
- * @param completionRate - Rate of completed sessions (0-1)
- * @returns Expected minutes change per required session
+ * Calculate consistency score as completedDays / requiredDays.
+ * Returns 1 when no days are required yet (avoid division by zero).
  */
-export function calculateExpectedValue(completionRate: number): number {
-  // Expected gain from completed sessions
-  const avgBonus = (BONUS_MIN_MINUTES + BONUS_MAX_MINUTES) / 2
-  const avgMystery = (MYSTERY_MIN_MINUTES + MYSTERY_MAX_MINUTES) / 2
-  const expectedGain =
-    completionRate * (BONUS_PROBABILITY * avgBonus + MYSTERY_PROBABILITY * avgMystery)
-
-  // Expected loss from missed sessions
-  const avgPenalty = (PENALTY_MIN_MINUTES + PENALTY_MAX_MINUTES) / 2
-  const expectedLoss = (1 - completionRate) * avgPenalty
-
-  return expectedGain - expectedLoss
+export function calculateConsistencyScore(completedDays: number, requiredDays: number): number {
+  if (requiredDays <= 0) return 1
+  return Math.min(1, completedDays / requiredDays)
 }
 
 /**
- * Calculate the break-even completion rate
- * This is the rate at which expected gains equal expected losses
+ * Calculate the day number within a commitment period.
+ * Day 1 = the start date itself.
  *
- * @returns Completion rate needed to break even (approximately 0.90)
+ * @param startDate - Commitment start timestamp
+ * @param currentDate - The date to check
+ * @returns 1-based day number
  */
-export function calculateBreakEvenRate(): number {
-  const avgBonus = (BONUS_MIN_MINUTES + BONUS_MAX_MINUTES) / 2
-  const avgMystery = (MYSTERY_MIN_MINUTES + MYSTERY_MAX_MINUTES) / 2
-  const avgPenalty = (PENALTY_MIN_MINUTES + PENALTY_MAX_MINUTES) / 2
-
-  const gainPerCompletion = BONUS_PROBABILITY * avgBonus + MYSTERY_PROBABILITY * avgMystery
-  const lossPerMiss = avgPenalty
-
-  // breakEven * gainPerCompletion = (1 - breakEven) * lossPerMiss
-  // breakEven * gainPerCompletion = lossPerMiss - breakEven * lossPerMiss
-  // breakEven * (gainPerCompletion + lossPerMiss) = lossPerMiss
-  // breakEven = lossPerMiss / (gainPerCompletion + lossPerMiss)
-  return lossPerMiss / (gainPerCompletion + lossPerMiss)
+export function calculateDayNumber(startDate: number, currentDate: number): number {
+  const startDay = getStartOfDay(startDate)
+  const currentDay = getStartOfDay(currentDate)
+  const diffMs = currentDay - startDay
+  const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000))
+  return diffDays + 1
 }
 
 /**
- * Format outcome for display in UI
+ * Generate a contextual encouragement message for missed days.
  *
- * @param outcome - The session outcome
- * @returns Object with display properties
+ * Message priority:
+ * 1. First miss → reassurance with score
+ * 2. Multiple misses (2-3) → gentle nudge toward minimum
+ * 3. Long streak broken (>14) → acknowledge the streak
+ * 4. Near end of commitment (<14 days left) → momentum
+ * 5. Default → the seat is always here
  */
-export function formatOutcomeForDisplay(outcome: SessionOutcome): {
-  title: string
-  subtitle: string
-  showConfetti: boolean
-  color: 'gold' | 'purple' | 'gray' | 'green'
-} {
-  switch (outcome.type) {
-    case 'mystery':
-      return {
-        title: 'Mystery Bonus!',
-        subtitle: `+${outcome.minutesChange} minutes added to your bank`,
-        showConfetti: true,
-        color: 'purple',
-      }
-    case 'bonus':
-      return {
-        title: 'Bonus!',
-        subtitle: `+${outcome.minutesChange} minutes added to your bank`,
-        showConfetti: true,
-        color: 'gold',
-      }
-    case 'near-miss':
-      return {
-        title: 'So Close!',
-        subtitle: 'You almost got a bonus. Keep going!',
-        showConfetti: false,
-        color: 'gray',
-      }
-    case 'none':
-    default:
-      return {
-        title: 'Complete',
-        subtitle: 'Session logged successfully',
-        showConfetti: false,
-        color: 'green',
-      }
+export function getEncouragementMessage(context: {
+  daysMissed: number
+  previousStreak: number
+  daysRemaining: number
+  consistencyScore: number
+}): string {
+  const scorePercent = Math.round(context.consistencyScore * 100)
+
+  if (context.daysMissed === 1) {
+    return `Missing one day doesn't undo your progress. ${scorePercent}% is still strong.`
   }
+
+  if (context.daysMissed >= 2 && context.daysMissed <= 3) {
+    return `It's been ${context.daysMissed} days. No judgement. Start with your 2-minute minimum?`
+  }
+
+  if (context.previousStreak > 14) {
+    return `${context.previousStreak} days of consistency. One miss doesn't erase that.`
+  }
+
+  if (context.daysRemaining > 0 && context.daysRemaining < 14) {
+    return `${context.daysRemaining} days left. You've already built something real.`
+  }
+
+  return `The seat is always here. Your consistency is ${scorePercent}%.`
 }

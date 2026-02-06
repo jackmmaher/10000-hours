@@ -8,6 +8,9 @@ interface RepeatPickerProps {
   frequency: RepeatFrequency | null
   customDays: number[]
   onChange: (frequency: RepeatFrequency | null, customDays?: number[]) => void
+  endDate?: string
+  onEndDateChange?: (date: string) => void
+  validationError?: string | null
 }
 
 const FREQUENCY_OPTIONS: { value: RepeatFrequency | null; label: string }[] = [
@@ -20,7 +23,14 @@ const FREQUENCY_OPTIONS: { value: RepeatFrequency | null; label: string }[] = [
 
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
 
-export function RepeatPicker({ frequency, customDays, onChange }: RepeatPickerProps) {
+export function RepeatPicker({
+  frequency,
+  customDays,
+  onChange,
+  endDate,
+  onEndDateChange,
+  validationError,
+}: RepeatPickerProps) {
   const handleFrequencyChange = (newFreq: RepeatFrequency | null) => {
     if (newFreq === 'custom') {
       // Default to current day when switching to custom
@@ -91,6 +101,49 @@ export function RepeatPicker({ frequency, customDays, onChange }: RepeatPickerPr
           {frequency === 'weekly' && 'Same day each week'}
           {frequency === 'weekdays' && 'Monday through Friday'}
         </p>
+      )}
+
+      {/* End date picker */}
+      {frequency && onEndDateChange && (
+        <div style={{ marginTop: 12 }}>
+          <label className="text-xs text-ink-soft block mb-1">Repeat until</label>
+          <input
+            type="date"
+            value={endDate || ''}
+            onChange={(e) => onEndDateChange(e.target.value)}
+            min={new Date().toISOString().split('T')[0]}
+            style={{
+              background: 'var(--surface-2)',
+              border: '1px solid var(--border)',
+              borderRadius: 8,
+              padding: '8px 12px',
+              color: 'var(--text-primary)',
+              fontSize: 14,
+              width: '100%',
+            }}
+          />
+          {endDate && (
+            <button
+              type="button"
+              onClick={() => onEndDateChange('')}
+              style={{
+                fontSize: 11,
+                color: 'var(--text-muted)',
+                background: 'none',
+                border: 'none',
+                marginTop: 4,
+                cursor: 'pointer',
+              }}
+            >
+              Clear end date
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Validation error */}
+      {validationError && (
+        <p style={{ fontSize: 12, color: '#e74c3c', marginTop: 8 }}>{validationError}</p>
       )}
     </div>
   )
